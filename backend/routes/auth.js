@@ -1,108 +1,65 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { merchantQueries, staffQueries } = require('../database');
-const {
-  authenticateStaff,
-  generateStaffToken,
-  staffCookieOptions,
-  checkAccountLock,
-  computeLockUntil,
-  MAX_FAILED_ATTEMPTS,
-} = require('../middleware/auth');
-const { logAudit, auditCtx } = require('../middleware/audit');
-const { normalizeEmail, normalizeVAT, isValidEmail } = require('../services/normalizer');
-const { sendRegistrationConfirmationEmail } = require('../services/email');
+const { adminQueries } = require('../../database');
+const { authenticateAdmin, generateAdminToken, adminCookieOptions } = require('../../middleware/admin-auth');
+const { logAudit, auditCtx } = require('../../middleware/audit');
 
 const router = express.Router();
 
 // ═══════════════════════════════════════════════════════
-// POST /api/auth/register — Inscription merchant (→ pending)
+// GET /api/admin/auth/needs-setup — Check if first admin needs to be created
 // ═══════════════════════════════════════════════════════
 
-router.post('/register', async (req, res) => {
+router.get('/needs-setup', (req, res) => {
+  const { count } = adminQueries.count.get();
+  res.json({ needsSetup: count === 0 });
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/admin/auth/setup — Create first super admin (one-time)
+// ═══════════════════════════════════════════════════════
+
+router.post('/setup', async (req, res) => {
   try {
-    let {
-      businessName, address, vatNumber,
-      email, phone, ownerPhone,
-      ownerEmail, ownerPassword, ownerName,
-    } = req.body;
-
-    // ── Validate required fields ──
-    if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
-      return res.status(400).json({ error: 'Tous les champs du commerce sont requis' });
-    }
-    if (!ownerEmail || !ownerPassword || !ownerName) {
-      return res.status(400).json({ error: 'Email, mot de passe et nom du responsable requis' });
-    }
-    if (ownerPassword.length < 6) {
-      return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
+    const { count } = adminQueries.count.get();
+    if (count > 0) {
+      return res.status(403).json({ error: 'Setup déjà effectué' });
     }
 
-    // ── Normalize ──
-    const normalizedOwnerEmail = normalizeEmail(ownerEmail);
-    if (!normalizedOwnerEmail) {
-      return res.status(400).json({ error: 'Email du responsable invalide' });
+    const { email, password, name } = req.body;
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, mot de passe et nom requis' });
+    }
+    if (password.length < 8) {
+      return res.status(400).json({ error: 'Mot de passe minimum 8 caractères' });
     }
 
-    const normalizedVat = normalizeVAT(vatNumber);
-    if (!normalizedVat) {
-      return res.status(400).json({ error: 'Numéro de TVA invalide (format: BE0123456789)' });
-    }
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const result = adminQueries.create.run(email.toLowerCase().trim(), hashedPassword, name.trim());
 
-    email = email.toLowerCase().trim();
+    const token = generateAdminToken({ id: result.lastInsertRowid, email: email.toLowerCase().trim() });
+    res.cookie('admin_token', token, adminCookieOptions);
 
-    // ── Uniqueness checks ──
-    const existingMerchant = merchantQueries.findByVat.get(normalizedVat);
-    if (existingMerchant) {
-      return res.status(400).json({ error: 'Ce numéro de TVA est déjà enregistré' });
-    }
-
-    const existingStaff = staffQueries.findByEmail.get(normalizedOwnerEmail);
-    if (existingStaff) {
-      return res.status(400).json({ error: 'Cet email est déjà utilisé pour un compte' });
-    }
-
-    // ── Create merchant (status: pending) ──
-    const merchantResult = merchantQueries.create.run(
-      businessName.trim(), address.trim(), normalizedVat,
-      email, phone.trim(), ownerPhone.trim()
-    );
-    const merchantId = merchantResult.lastInsertRowid;
-
-    // ── Create owner staff account (is_active: 0 — awaiting validation) ──
-    const hashedPassword = await bcrypt.hash(ownerPassword, 10);
-    staffQueries.create.run(
-      merchantId, normalizedOwnerEmail, hashedPassword,
-      ownerName.trim(), 'owner', 0
-    );
-
-    // ── Audit ──
     logAudit({
       ...auditCtx(req),
-      actorType: 'system',
-      merchantId,
-      action: 'merchant_registered',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: { businessName, vatNumber: normalizedVat, ownerEmail: normalizedOwnerEmail },
+      actorType: 'super_admin',
+      actorId: result.lastInsertRowid,
+      action: 'admin_setup',
+      targetType: 'super_admin',
+      targetId: result.lastInsertRowid,
     });
 
-    // ── Fire-and-forget confirmation email ──
-    sendRegistrationConfirmationEmail(normalizedOwnerEmail, businessName.trim());
-
-    res.status(201).json({
-      message: 'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
-      merchantId,
-    });
+    res.status(201).json({ message: 'Super admin créé', adminId: result.lastInsertRowid });
   } catch (error) {
-    console.error('Erreur inscription:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'inscription' });
+    console.error('Erreur setup admin:', error);
+    res.status(500).json({ error: 'Erreur lors du setup' });
   }
 });
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/auth/login — Login staff (with brute force protection)
+// POST /api/admin/auth/login
 // ═══════════════════════════════════════════════════════
 
 router.post('/login', async (req, res) => {
@@ -112,181 +69,58 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Email et mot de passe requis' });
     }
 
-    email = normalizeEmail(email);
-    if (!email) {
-      return res.status(400).json({ error: 'Email invalide' });
+    email = email.toLowerCase().trim();
+    const admin = adminQueries.findByEmail.get(email);
+
+    if (!admin || !(await bcrypt.compare(password, admin.password))) {
+      return res.status(401).json({ error: 'Identifiants incorrects' });
     }
 
-    // Find staff account
-    const staff = staffQueries.findByEmail.get(email);
-    if (!staff) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
-    }
-
-    // ── Brute force: check lock ──
-    const { locked, minutesRemaining } = checkAccountLock(staff);
-    if (locked) {
-      return res.status(429).json({
-        error: `Compte temporairement verrouillé. Réessayez dans ${minutesRemaining} minute(s).`,
-      });
-    }
-
-    // ── Verify password ──
-    const validPassword = await bcrypt.compare(password, staff.password);
-    if (!validPassword) {
-      // Increment failed count
-      staffQueries.incrementFailedLogin.run(staff.id);
-
-      const newCount = staff.failed_login_count + 1;
-      if (newCount >= MAX_FAILED_ATTEMPTS) {
-        const lockUntil = computeLockUntil();
-        staffQueries.lockAccount.run(lockUntil, staff.id);
-
-        logAudit({
-          ...auditCtx(req),
-          actorType: 'system',
-          merchantId: staff.merchant_id,
-          action: 'account_locked',
-          targetType: 'staff',
-          targetId: staff.id,
-          details: { failedAttempts: newCount },
-        });
-      }
-
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
-    }
-
-    // ── Check account status ──
-    if (!staff.is_active) {
-      const merchant = merchantQueries.findById.get(staff.merchant_id);
-      if (!merchant) {
-        return res.status(403).json({ error: 'Commerce non trouvé' });
-      }
-
-      const statusMessages = {
-        pending: 'Votre commerce est en attente de validation. Vous recevrez un email une fois approuvé.',
-        suspended: 'Votre commerce est suspendu. Contactez le support.',
-        rejected: `Votre demande a été refusée${merchant.rejection_reason ? ' : ' + merchant.rejection_reason : '.'}`,
-        cancelled: 'Ce commerce a été résilié.',
-      };
-
-      const msg = statusMessages[merchant.status] || 'Votre compte est désactivé.';
-      return res.status(403).json({ error: msg });
-    }
-
-    // Verify merchant is active
-    const merchant = merchantQueries.findById.get(staff.merchant_id);
-    if (!merchant || merchant.status !== 'active') {
-      return res.status(403).json({ error: 'Votre commerce n\'est pas actif.' });
-    }
-
-    // ── Success: reset failed count, generate token ──
-    staffQueries.updateLastLogin.run(staff.id);
-
-    const token = generateStaffToken(staff);
-    res.cookie('staff_token', token, staffCookieOptions(staff.role));
+    const token = generateAdminToken(admin);
+    res.cookie('admin_token', token, adminCookieOptions);
 
     logAudit({
       ...auditCtx(req),
-      actorType: 'staff',
-      actorId: staff.id,
-      merchantId: staff.merchant_id,
-      action: 'staff_login',
-      targetType: 'staff',
-      targetId: staff.id,
+      actorType: 'super_admin',
+      actorId: admin.id,
+      action: 'admin_login',
     });
 
-    const { password: _, ...staffData } = staff;
-    res.json({
-      message: 'Connexion réussie',
-      staff: staffData,
-      merchant,
-    });
+    const { password: _, ...adminData } = admin;
+    res.json({ message: 'Connexion admin réussie', admin: adminData });
   } catch (error) {
-    console.error('Erreur login:', error);
+    console.error('Erreur login admin:', error);
     res.status(500).json({ error: 'Erreur lors de la connexion' });
   }
 });
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/auth/verify — Vérifier le token courant
+// GET /api/admin/auth/verify
 // ═══════════════════════════════════════════════════════
 
-router.get('/verify', authenticateStaff, (req, res) => {
-  const staff = staffQueries.findById.get(req.staff.id);
-  if (!staff) {
-    return res.status(404).json({ error: 'Compte non trouvé' });
+router.get('/verify', authenticateAdmin, (req, res) => {
+  const admin = adminQueries.findById.get(req.admin.id);
+  if (!admin) {
+    return res.status(404).json({ error: 'Admin non trouvé' });
   }
 
-  const merchant = merchantQueries.findById.get(staff.merchant_id);
-  if (!merchant) {
-    return res.status(404).json({ error: 'Commerce non trouvé' });
-  }
-
-  const { password: _, ...staffData } = staff;
-  res.json({ staff: staffData, merchant });
+  const { password: _, ...adminData } = admin;
+  res.json({ admin: adminData });
 });
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/auth/logout
+// POST /api/admin/auth/logout
 // ═══════════════════════════════════════════════════════
 
 router.post('/logout', (req, res) => {
-  res.clearCookie('staff_token', {
+  res.clearCookie('admin_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
   });
   res.json({ message: 'Déconnecté' });
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/auth/settings — Update merchant settings (owner only)
-// ═══════════════════════════════════════════════════════
-
-router.put('/settings', authenticateStaff, (req, res) => {
-  if (req.staff.role !== 'owner') {
-    return res.status(403).json({ error: 'Seul le propriétaire peut modifier les paramètres' });
-  }
-
-  try {
-    const { pointsPerEuro, pointsForReward, rewardDescription } = req.body;
-
-    const ppe = parseFloat(pointsPerEuro);
-    const pfr = parseInt(pointsForReward);
-
-    if (isNaN(ppe) || ppe <= 0) {
-      return res.status(400).json({ error: 'Points par euro invalide' });
-    }
-    if (isNaN(pfr) || pfr <= 0) {
-      return res.status(400).json({ error: 'Points pour récompense invalide' });
-    }
-
-    merchantQueries.updateSettings.run(
-      ppe, pfr,
-      rewardDescription || 'Récompense offerte',
-      req.staff.merchant_id
-    );
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId: req.staff.merchant_id,
-      action: 'settings_updated',
-      targetType: 'merchant',
-      targetId: req.staff.merchant_id,
-      details: { pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription },
-    });
-
-    res.json({ message: 'Paramètres mis à jour' });
-  } catch (error) {
-    console.error('Erreur update settings:', error);
-    res.status(500).json({ error: 'Erreur lors de la mise à jour' });
-  }
 });
 
 
