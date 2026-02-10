@@ -179,7 +179,7 @@ router.post('/reward', (req, res) => {
     if (!merchantClientId) return res.status(400).json({ error: 'ID client requis' });
     const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null });
     if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta } });
-    res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction });
+    res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction, rewardLabel: result.rewardLabel || null });
   } catch (error) { console.error('Erreur reward:', error); res.status(error.message.includes('insuffisant') ? 400 : 500).json({ error: error.message }); }
 });
 
@@ -444,7 +444,7 @@ router.get('/lookup', (req, res) => {
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
     if (!mc) return res.json({ found: true, isNew: true, client: { name: endUser.name, email: endUser.email, phone: endUser.phone } });
     const merchant = merchantQueries.findById.get(merchantId);
-    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: merchant.reward_description, can_redeem: mc.points_balance >= merchant.points_for_reward } });
+    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: mc.custom_reward || merchant.reward_description, custom_reward: mc.custom_reward || null, can_redeem: mc.points_balance >= merchant.points_for_reward } });
   } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
 
@@ -463,8 +463,8 @@ router.get('/search', requireRole('owner', 'manager'), (req, res) => {
 router.get('/export/csv', requireRole('owner'), (req, res) => {
   try {
     const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id);
-    let csv = 'Email,Téléphone,Nom,Points,Total dépensé,Visites,Première visite,Dernière visite,Email validé,Bloqué\n';
-    clients.forEach(c => { csv += `"${c.email||''}","${c.phone||''}","${c.name||''}",${c.points_balance},${c.total_spent},${c.visit_count},"${c.first_visit}","${c.last_visit}",${c.email_validated?'Oui':'Non'},${c.is_blocked?'Oui':'Non'}\n`; });
+    let csv = 'Email,Téléphone,Nom,Points,Total dépensé,Visites,Première visite,Dernière visite,Email validé,Bloqué,Récompense perso\n';
+    clients.forEach(c => { csv += `"${c.email||''}","${c.phone||''}","${c.name||''}",${c.points_balance},${c.total_spent},${c.visit_count},"${c.first_visit}","${c.last_visit}",${c.email_validated?'Oui':'Non'},${c.is_blocked?'Oui':'Non'},"${c.custom_reward||''}"\n`; });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=clients.csv');
     res.send('\uFEFF' + csv);
@@ -480,11 +480,51 @@ router.get('/:id', requireRole('owner', 'manager'), (req, res) => {
     const m = merchantQueries.findById.get(req.staff.merchant_id);
     res.json({
       client: { ...mc, email: eu?.email, phone: eu?.phone, name: eu?.name, email_validated: eu?.email_validated,
-        reward_threshold: m.points_for_reward, reward_description: m.reward_description,
+        reward_threshold: m.points_for_reward, reward_description: mc.custom_reward || m.reward_description,
+        custom_reward: mc.custom_reward || null, default_reward: m.reward_description,
         can_redeem: mc.points_balance >= m.points_for_reward },
       transactions: txs,
     });
   } catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/clients/:id/custom-reward — Set custom reward (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.put('/:id/custom-reward', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const mcId = parseInt(req.params.id);
+    const merchantId = req.staff.merchant_id;
+    const { customReward } = req.body;
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    // null or empty string = clear custom reward (back to default)
+    const value = (customReward && customReward.trim()) ? customReward.trim() : null;
+
+    merchantClientQueries.setCustomReward.run(value, mcId);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'staff',
+      actorId: req.staff.id,
+      merchantId,
+      action: value ? 'custom_reward_set' : 'custom_reward_cleared',
+      targetType: 'merchant_client',
+      targetId: mcId,
+      details: { customReward: value },
+    });
+
+    res.json({
+      message: value ? 'Récompense personnalisée définie' : 'Récompense par défaut restaurée',
+      customReward: value,
+    });
+  } catch (error) {
+    console.error('Erreur custom-reward:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 router.post('/:id/block', requireRole('owner', 'manager'), (req, res) => {
