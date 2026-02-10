@@ -641,6 +641,7 @@
               <div class="reward-banner" onclick="redeemReward(${c.id})">
                 🎁 Récompense disponible ! Cliquez pour l'appliquer<br>
                 <small>${c.reward_description || merchant.reward_description}</small>
+                ${c.custom_reward ? '<br><span style="background:rgba(255,255,255,0.25);padding:1px 8px;border-radius:10px;font-size:0.65rem;margin-top:4px;display:inline-block">⭐ Perso</span>' : ''}
               </div>
             `;
           }
@@ -667,7 +668,7 @@
       if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
       try {
         const result = await API.clients.reward({ merchantClientId });
-        UI.showAlert('credit-alert', `🎁 Récompense appliquée ! Nouveau solde : ${result.client.points_balance} pts`, 'success');
+        UI.showAlert('credit-alert', `🎁 Récompense appliquée : <strong>${result.rewardLabel || 'Récompense'}</strong><br>Nouveau solde : ${result.client.points_balance} pts`, 'success');
         triggerLookup();
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
