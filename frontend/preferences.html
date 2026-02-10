@@ -43,8 +43,6 @@
     }
     .theme-dot:hover { transform: scale(1.15); }
     .theme-dot.active { border-color: var(--text); box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text); }
-    .theme-dot .dl { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--text-light); white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
-    .theme-dot:hover .dl, .theme-dot.active .dl { opacity: 1; }
 
     /* Toggle rows */
     .opt-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
@@ -112,13 +110,13 @@
         <div class="pref-panel-title">Apparence</div>
         <label class="form-label">Thème</label>
         <div class="theme-row" id="theme-row">
-          <div class="theme-dot" data-theme="teal" onclick="selectTheme('teal')" style="background:linear-gradient(135deg,#0891B2,#0E7490)"><span class="dl">Teal</span></div>
-          <div class="theme-dot" data-theme="navy" onclick="selectTheme('navy')" style="background:linear-gradient(135deg,#1E40AF,#1E3A8A)"><span class="dl">Navy</span></div>
-          <div class="theme-dot" data-theme="violet" onclick="selectTheme('violet')" style="background:linear-gradient(135deg,#7C3AED,#6D28D9)"><span class="dl">Violet</span></div>
-          <div class="theme-dot" data-theme="forest" onclick="selectTheme('forest')" style="background:linear-gradient(135deg,#059669,#047857)"><span class="dl">Forêt</span></div>
-          <div class="theme-dot" data-theme="brick" onclick="selectTheme('brick')" style="background:linear-gradient(135deg,#DC2626,#B91C1C)"><span class="dl">Brique</span></div>
-          <div class="theme-dot" data-theme="amber" onclick="selectTheme('amber')" style="background:linear-gradient(135deg,#D97706,#B45309)"><span class="dl">Ambre</span></div>
-          <div class="theme-dot" data-theme="slate" onclick="selectTheme('slate')" style="background:linear-gradient(135deg,#475569,#334155)"><span class="dl">Ardoise</span></div>
+          <div class="theme-dot" data-theme="teal" onclick="selectTheme('teal')" style="background:linear-gradient(135deg,#0891B2,#0E7490)"></div>
+          <div class="theme-dot" data-theme="navy" onclick="selectTheme('navy')" style="background:linear-gradient(135deg,#1E40AF,#1E3A8A)"></div>
+          <div class="theme-dot" data-theme="violet" onclick="selectTheme('violet')" style="background:linear-gradient(135deg,#7C3AED,#6D28D9)"></div>
+          <div class="theme-dot" data-theme="forest" onclick="selectTheme('forest')" style="background:linear-gradient(135deg,#059669,#047857)"></div>
+          <div class="theme-dot" data-theme="brick" onclick="selectTheme('brick')" style="background:linear-gradient(135deg,#DC2626,#B91C1C)"></div>
+          <div class="theme-dot" data-theme="amber" onclick="selectTheme('amber')" style="background:linear-gradient(135deg,#D97706,#B45309)"></div>
+          <div class="theme-dot" data-theme="slate" onclick="selectTheme('slate')" style="background:linear-gradient(135deg,#475569,#334155)"></div>
         </div>
         <div class="pref-sep"></div>
         <div class="fr2">
