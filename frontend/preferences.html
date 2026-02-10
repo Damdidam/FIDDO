@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Préférences — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Préférences</h1>
+    <div id="global-alert"></div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 1. THEME PICKER                                -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">🎨 Thème de couleur</div>
+      <p class="text-muted text-sm mb-2">Choisissez le thème qui correspond à votre établissement.</p>
+
+      <div class="theme-grid" id="theme-grid">
+        <div class="theme-card" data-theme="teal" onclick="selectTheme('teal')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #0891B2, #0E7490);"></div>
+          <div class="theme-name">Teal</div>
+        </div>
+        <div class="theme-card" data-theme="navy" onclick="selectTheme('navy')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #1E40AF, #1E3A8A);"></div>
+          <div class="theme-name">Navy</div>
+        </div>
+        <div class="theme-card" data-theme="violet" onclick="selectTheme('violet')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #7C3AED, #6D28D9);"></div>
+          <div class="theme-name">Violet</div>
+        </div>
+        <div class="theme-card" data-theme="forest" onclick="selectTheme('forest')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #059669, #047857);"></div>
+          <div class="theme-name">Forêt</div>
+        </div>
+        <div class="theme-card" data-theme="brick" onclick="selectTheme('brick')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #DC2626, #B91C1C);"></div>
+          <div class="theme-name">Brique</div>
+        </div>
+        <div class="theme-card" data-theme="amber" onclick="selectTheme('amber')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #D97706, #B45309);"></div>
+          <div class="theme-name">Ambre</div>
+        </div>
+        <div class="theme-card" data-theme="slate" onclick="selectTheme('slate')">
+          <div class="theme-swatch" style="background: linear-gradient(135deg, #475569, #334155);"></div>
+          <div class="theme-name">Ardoise</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 2. NOTIFICATIONS                               -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">🔔 Notifications</div>
+      <p class="text-muted text-sm mb-2">Choisissez quelles notifications vous souhaitez recevoir par email.</p>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Nouveau client</div>
+          <div class="toggle-desc">Recevoir un email quand un nouveau client est créé</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notify-new-client">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Récompense disponible</div>
+          <div class="toggle-desc">Recevoir un email quand un client atteint le seuil de récompense</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notify-reward-ready">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <div class="toggle-row">
+        <div>
+          <div class="toggle-label">Rapport hebdomadaire</div>
+          <div class="toggle-desc">Recevoir un résumé chaque lundi (clients, CA, transactions)</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="notify-weekly-report">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 3. REWARD MESSAGE                              -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">🎁 Message de récompense</div>
+      <p class="text-muted text-sm mb-2">Ce message sera affiché au client quand il atteint le seuil de points.</p>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <textarea id="reward-message" class="form-control" rows="2" placeholder="Félicitations ! Vous avez gagné votre récompense ! 🎁" maxlength="200"></textarea>
+        <small class="form-help"><span id="reward-msg-count">0</span>/200 caractères</small>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 4. LANGUAGE & TIMEZONE                         -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">🌐 Langue et fuseau horaire</div>
+
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Langue de l'interface</label>
+          <select id="pref-language" class="form-control">
+            <option value="fr">🇫🇷 Français</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="en">🇬🇧 English</option>
+          </select>
+          <small class="form-help">Les traductions NL et EN arrivent bientôt</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fuseau horaire</label>
+          <select id="pref-timezone" class="form-control">
+            <option value="Europe/Brussels">Europe/Brussels (GMT+1/+2)</option>
+            <option value="Europe/Paris">Europe/Paris (GMT+1/+2)</option>
+            <option value="Europe/Amsterdam">Europe/Amsterdam (GMT+1/+2)</option>
+            <option value="Europe/Luxembourg">Europe/Luxembourg (GMT+1/+2)</option>
+            <option value="Europe/London">Europe/London (GMT+0/+1)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 5. SAVE BUTTON                                 -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div style="text-align: right; margin-bottom: 2rem;">
+      <button class="btn btn-primary" onclick="savePreferences()" id="save-btn">
+        💾 Enregistrer les préférences
+      </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 6. BACKUP & RESTORE                            -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">💾 Sauvegarde & Restauration</div>
+
+      <div class="grid grid-2">
+        <!-- Export -->
+        <div>
+          <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">📤 Exporter mes données</h3>
+          <p class="text-muted text-sm mb-2">
+            Téléchargez un fichier JSON contenant toutes vos données : clients, transactions, paramètres.
+            Conservez-le en lieu sûr.
+          </p>
+          <div id="last-backup-info" class="text-sm text-muted mb-1"></div>
+          <button class="btn btn-primary btn-block" onclick="exportBackup()" id="export-btn">
+            📥 Télécharger le backup
+          </button>
+        </div>
+
+        <!-- Import -->
+        <div>
+          <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">📥 Restaurer depuis un backup</h3>
+          <p class="text-muted text-sm mb-2">
+            Importez un fichier de backup pour restaurer vos données. 
+            <strong class="text-danger">Cette action remplace toutes vos données actuelles.</strong>
+          </p>
+
+          <div class="backup-zone" id="import-zone"
+               ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+            <div class="backup-zone-icon">📁</div>
+            <p>Glissez un fichier .json ici<br>ou <strong style="color: var(--primary);">cliquez pour parcourir</strong></p>
+            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleFileSelect(event)">
+          </div>
+
+          <!-- Preview (hidden by default) -->
+          <div id="import-preview" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Import Confirmation Modal -->
+  <div id="import-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>⚠️ Confirmer la restauration</h2>
+        <button class="close-modal" onclick="closeImportModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-warning">
+          <strong>Attention :</strong> cette action va <strong>remplacer toutes vos données</strong> (clients, transactions, points) par celles du fichier de backup. Cette action est irréversible.
+        </div>
+        <div id="import-modal-preview"></div>
+        <div id="import-alert"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeImportModal()">Annuler</button>
+        <button class="btn btn-danger" onclick="confirmImport()" id="confirm-import-btn">
+          🔄 Oui, restaurer mes données
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireOwner()) throw 'Not authorized';
+
+    const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
+    let currentPrefs = null;
+    let pendingBackupData = null;
+
+    // ═══════════════════════════════════════════════════
+    // LOAD PREFERENCES
+    // ═══════════════════════════════════════════════════
+
+    async function loadPreferences() {
+      try {
+        const data = await API.call('/preferences');
+        currentPrefs = data.preferences;
+        applyToForm(currentPrefs);
+      } catch (err) {
+        console.error('Erreur chargement prefs:', err);
+      }
+    }
+
+    function applyToForm(prefs) {
+      // Theme
+      document.querySelectorAll('.theme-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.theme === prefs.theme);
+      });
+
+      // Notifications
+      document.getElementById('notify-new-client').checked = !!prefs.notify_new_client;
+      document.getElementById('notify-reward-ready').checked = !!prefs.notify_reward_ready;
+      document.getElementById('notify-weekly-report').checked = !!prefs.notify_weekly_report;
+
+      // Reward message
+      const msgEl = document.getElementById('reward-message');
+      msgEl.value = prefs.reward_message || '';
+      document.getElementById('reward-msg-count').textContent = msgEl.value.length;
+
+      // Language & timezone
+      document.getElementById('pref-language').value = prefs.language || 'fr';
+      document.getElementById('pref-timezone').value = prefs.timezone || 'Europe/Brussels';
+
+      // Last backup info
+      const info = document.getElementById('last-backup-info');
+      if (prefs.last_backup_at) {
+        info.innerHTML = `✅ Dernier backup : ${Format.datetime(prefs.last_backup_at)}`;
+      } else {
+        info.innerHTML = `⚠️ Aucun backup effectué`;
+      }
+    }
+
+    // Character count for reward message
+    document.getElementById('reward-message').addEventListener('input', (e) => {
+      document.getElementById('reward-msg-count').textContent = e.target.value.length;
+    });
+
+
+    // ═══════════════════════════════════════════════════
+    // THEME SELECTION (instant preview)
+    // ═══════════════════════════════════════════════════
+
+    function selectTheme(theme) {
+      // Visual selection
+      document.querySelectorAll('.theme-card').forEach(card => {
+        card.classList.toggle('active', card.dataset.theme === theme);
+      });
+
+      // Instant preview: apply theme to document
+      document.documentElement.setAttribute('data-theme', theme);
+
+      // Save to server in background
+      API.call('/preferences/theme', {
+        method: 'PATCH',
+        body: JSON.stringify({ theme }),
+      }).then(() => {
+        // Update local session
+        sessionStorage.setItem('fiddo_theme', theme);
+      }).catch(err => {
+        console.error('Erreur theme:', err);
+      });
+    }
+
+
+    // ═══════════════════════════════════════════════════
+    // SAVE ALL PREFERENCES
+    // ═══════════════════════════════════════════════════
+
+    async function savePreferences() {
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true;
+
+      try {
+        const activeTheme = document.querySelector('.theme-card.active');
+
+        const prefs = {
+          theme: activeTheme ? activeTheme.dataset.theme : 'teal',
+          language: document.getElementById('pref-language').value,
+          timezone: document.getElementById('pref-timezone').value,
+          reward_message: document.getElementById('reward-message').value.trim(),
+          notify_new_client: document.getElementById('notify-new-client').checked,
+          notify_reward_ready: document.getElementById('notify-reward-ready').checked,
+          notify_weekly_report: document.getElementById('notify-weekly-report').checked,
+        };
+
+        const data = await API.call('/preferences', {
+          method: 'PUT',
+          body: JSON.stringify(prefs),
+        });
+
+        currentPrefs = data.preferences;
+        sessionStorage.setItem('fiddo_theme', prefs.theme);
+
+        UI.showAlert('global-alert', 'Préférences enregistrées !', 'success');
+        setTimeout(() => UI.clearAlert('global-alert'), 3000);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        UI.showAlert('global-alert', err.message, 'error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════
+    // BACKUP EXPORT
+    // ═══════════════════════════════════════════════════
+
+    async function exportBackup() {
+      const btn = document.getElementById('export-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Export en cours...';
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/preferences/backup/export`, {
+          credentials: 'include',
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.error || 'Erreur export');
+        }
+
+        // Download the file
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+
+        // Extract filename from Content-Disposition or generate one
+        const cd = response.headers.get('Content-Disposition');
+        const match = cd && cd.match(/filename="(.+)"/);
+        a.download = match ? match[1] : `fiddo-backup-${new Date().toISOString().slice(0, 10)}.json`;
+
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        // Update last backup display
+        document.getElementById('last-backup-info').innerHTML =
+          `✅ Dernier backup : ${Format.datetime(new Date().toISOString())}`;
+
+        UI.showAlert('global-alert', 'Backup téléchargé avec succès !', 'success');
+        setTimeout(() => UI.clearAlert('global-alert'), 3000);
+      } catch (err) {
+        UI.showAlert('global-alert', err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '📥 Télécharger le backup';
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════
+    // BACKUP IMPORT (drag & drop + click)
+    // ═══════════════════════════════════════════════════
+
+    // Click to browse
+    document.getElementById('import-zone').addEventListener('click', () => {
+      document.getElementById('import-file').click();
+    });
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('dragover');
+    }
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) processImportFile(file);
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) processImportFile(file);
+    }
+
+    async function processImportFile(file) {
+      if (!file.name.endsWith('.json')) {
+        UI.showAlert('global-alert', 'Seuls les fichiers .json sont acceptés', 'error');
+        return;
+      }
+
+      // 10MB limit
+      if (file.size > 10 * 1024 * 1024) {
+        UI.showAlert('global-alert', 'Fichier trop volumineux (max 10 Mo)', 'error');
+        return;
+      }
+
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        // Validate with server
+        const validation = await API.call('/preferences/backup/validate', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+
+        if (!validation.valid) {
+          const previewEl = document.getElementById('import-preview');
+          previewEl.style.display = 'block';
+          previewEl.innerHTML = `
+            <div class="alert alert-error mt-1">
+              <strong>Fichier invalide :</strong><br>
+              ${validation.errors.map(e => `• ${e}`).join('<br>')}
+            </div>
+          `;
+          return;
+        }
+
+        // Show preview
+        pendingBackupData = data;
+        showImportPreview(validation.preview);
+
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          UI.showAlert('global-alert', 'Fichier JSON invalide', 'error');
+        } else {
+          UI.showAlert('global-alert', err.message, 'error');
+        }
+      }
+    }
+
+    function showImportPreview(preview) {
+      // Inline preview
+      const previewEl = document.getElementById('import-preview');
+      previewEl.style.display = 'block';
+      previewEl.innerHTML = `
+        <div class="backup-preview">
+          <strong>✅ Fichier valide</strong> — ${preview.business_name}
+          <br><small class="text-muted">Exporté le ${Format.datetime(preview.exported_at)} (v${preview.version})</small>
+          <div class="backup-preview-grid">
+            <div class="backup-preview-item">
+              <div class="backup-preview-value">${preview.clients}</div>
+              <div class="backup-preview-label">Clients</div>
+            </div>
+            <div class="backup-preview-item">
+              <div class="backup-preview-value">${preview.transactions}</div>
+              <div class="backup-preview-label">Transactions</div>
+            </div>
+            <div class="backup-preview-item">
+              <div class="backup-preview-value">${preview.total_points}</div>
+              <div class="backup-preview-label">Points totaux</div>
+            </div>
+            <div class="backup-preview-item">
+              <div class="backup-preview-value">${Format.currency(preview.total_spent)}</div>
+              <div class="backup-preview-label">CA total</div>
+            </div>
+          </div>
+          <button class="btn btn-danger btn-block mt-2" onclick="openImportModal()">
+            🔄 Restaurer ces données
+          </button>
+        </div>
+      `;
+
+      // Also prepare modal preview
+      document.getElementById('import-modal-preview').innerHTML = `
+        <div class="backup-preview" style="margin-bottom: 1rem;">
+          <strong>${preview.business_name}</strong> — ${Format.datetime(preview.exported_at)}
+          <div class="backup-preview-grid">
+            <div class="backup-preview-item">
+              <div class="backup-preview-value">${preview.clients}</div>
+              <div class="backup-preview-label">Clients</div>
+            </div>
+            <div class="backup-preview-item">
+              <div class="backup-preview-value">${preview.transactions}</div>
+              <div class="backup-preview-label">Transactions</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function openImportModal() {
+      document.getElementById('import-modal').classList.add('active');
+    }
+    function closeImportModal() {
+      document.getElementById('import-modal').classList.remove('active');
+    }
+    document.getElementById('import-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'import-modal') closeImportModal();
+    });
+
+    async function confirmImport() {
+      if (!pendingBackupData) return;
+
+      const btn = document.getElementById('confirm-import-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Restauration en cours...';
+
+      try {
+        const result = await API.call('/preferences/backup/import', {
+          method: 'POST',
+          body: JSON.stringify({
+            data: pendingBackupData,
+            confirmReplace: true,
+          }),
+        });
+
+        closeImportModal();
+        pendingBackupData = null;
+        document.getElementById('import-preview').style.display = 'none';
+
+        UI.showAlert('global-alert',
+          `✅ Données restaurées : ${result.result.clients_restored} clients, ${result.result.transactions_restored} transactions`,
+          'success'
+        );
+
+      } catch (err) {
+        UI.showAlert('import-alert', err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '🔄 Oui, restaurer mes données';
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════
+
+    loadPreferences();
+  </script>
+</body>
+</html>
