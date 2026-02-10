@@ -98,7 +98,7 @@ router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
     const clients = db.prepare(`
       SELECT mc.id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.first_visit, mc.last_visit, mc.is_blocked, mc.created_at,
-             mc.end_user_id, mc.notes_private,
+             mc.end_user_id, mc.notes_private, mc.custom_reward,
              eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
              last_tx.staff_name as last_credited_by,
              last_tx.created_at as last_tx_at,
