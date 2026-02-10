@@ -2,152 +2,31 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Créditer — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
-    /* ── Compact credit page ── */
-    .credit-container { max-width: 480px; margin: 0 auto; padding: 0.75rem; }
-
-    .credit-header {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white; border-radius: 12px; padding: 1rem;
-      text-align: center; margin-bottom: 0.75rem;
+    .lookup-result {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s;
     }
-    .credit-header h2 { font-size: 2.5rem; margin: 0; line-height: 1; }
-    .credit-header p { margin: 0.25rem 0 0; opacity: 0.85; font-size: 0.85rem; }
-
-    .credit-card {
-      background: white; border-radius: 12px; padding: 1rem;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 0.75rem;
-    }
-
-    /* ── Toggle email / phone ── */
-    .toggle-row {
-      display: flex; gap: 0; margin-bottom: 0.75rem;
-      background: var(--light); border-radius: 8px; padding: 3px;
-    }
-    .toggle-btn {
-      flex: 1; padding: 8px; border: none; background: none;
-      border-radius: 6px; font-size: 0.85rem; font-weight: 600;
-      cursor: pointer; color: var(--text-light); transition: all 0.2s;
-    }
-    .toggle-btn.active {
-      background: white; color: var(--primary);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
-    }
-
-    /* ── Input with clear btn ── */
-    .input-wrap {
-      position: relative;
-    }
-    .input-wrap .form-control { padding-right: 36px; }
-    .input-clear {
-      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-      border: none; background: none; font-size: 1.1rem; color: var(--text-light);
-      cursor: pointer; padding: 4px; line-height: 1; display: none;
-    }
-    .input-wrap .form-control:not(:placeholder-shown) ~ .input-clear,
-    .input-wrap .form-control.has-value ~ .input-clear { display: block; }
-
-    /* ── Typo suggestion ── */
-    .typo-hint {
-      background: #FEF3C7; color: #92400E; font-size: 0.8rem;
-      padding: 6px 10px; border-radius: 6px; margin-top: 4px;
-      cursor: pointer; display: none;
-    }
-    .typo-hint:hover { background: #FDE68A; }
-    .typo-hint.show { display: block; }
-
-    /* ── Search results dropdown ── */
-    .search-results {
-      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
-      background: white; border: 2px solid var(--primary);
-      border-top: none; border-radius: 0 0 8px 8px;
-      max-height: 200px; overflow-y: auto; display: none;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-    .search-results.open { display: block; }
-    .search-item {
-      padding: 8px 12px; cursor: pointer; font-size: 0.85rem;
-      border-bottom: 1px solid var(--border); transition: background 0.1s;
-    }
-    .search-item:last-child { border-bottom: none; }
-    .search-item:hover, .search-item.selected { background: #ECFEFF; }
-    .search-item .name { font-weight: 600; }
-    .search-item .detail { color: var(--text-light); font-size: 0.8rem; }
-    .search-item .badge { margin-left: 4px; }
-    .search-no-result {
-      padding: 8px 12px; font-size: 0.85rem; color: var(--text-light);
-    }
-
-    /* ── Client preview ── */
-    .client-preview {
-      border: 2px solid var(--border); border-radius: 10px;
-      padding: 0.75rem; margin-bottom: 0.75rem; transition: border-color 0.3s;
-      display: none;
-    }
-    .client-preview.found { display: block; border-color: var(--success); background: #F0FDF4; }
-    .client-preview.new-client { display: block; border-color: var(--primary); background: #ECFEFF; }
-    .client-preview .preview-header {
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .client-preview .preview-name { font-weight: 600; font-size: 0.95rem; }
-    .client-preview .preview-points {
-      font-size: 1.3rem; font-weight: bold; color: var(--primary);
-    }
-    .client-preview .preview-meta {
-      font-size: 0.8rem; color: var(--text-light); margin-top: 4px;
-    }
-
-    /* ── Reward banner ── */
+    .lookup-result.found { border-color: var(--success); }
+    .lookup-result.new { border-color: var(--primary); }
     .reward-banner {
       background: linear-gradient(135deg, var(--success), #059669);
-      color: white; padding: 0.75rem; border-radius: 8px;
-      text-align: center; margin-top: 0.5rem; cursor: pointer;
-      font-size: 0.9rem; font-weight: 600; transition: transform 0.2s;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
     }
     .reward-banner:hover { transform: scale(1.02); }
-    .reward-banner small { font-weight: 400; opacity: 0.9; }
-
-    /* ── Progress mini ── */
-    .progress-mini { height: 6px; background: #e5e7eb; border-radius: 3px; margin-top: 6px; }
-    .progress-mini-fill { height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.4s; }
-
-    /* ── Amount input large ── */
-    .amount-input {
-      font-size: 1.5rem !important; font-weight: 700; text-align: center;
-      padding: 12px !important; letter-spacing: 1px;
-    }
-
-    /* ── Success message ── */
-    .success-box {
-      background: #F0FDF4; border: 2px solid var(--success);
-      border-radius: 10px; padding: 1rem; text-align: center;
-      margin-bottom: 0.75rem; display: none;
-    }
-    .success-box.show { display: block; }
-    .success-box h3 { color: var(--success); margin: 0 0 0.5rem; }
-    .success-details {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;
-      font-size: 0.85rem; text-align: left; margin: 0.5rem 0;
-    }
-    .success-details dt { color: var(--text-light); }
-    .success-details dd { font-weight: 600; margin: 0; }
-
-    /* ── Config info compact ── */
-    .config-info {
-      font-size: 0.75rem; color: var(--text-light);
-      text-align: center; padding: 4px 0;
-    }
-    .config-info span { margin: 0 6px; }
-
-    /* ── Responsive ── */
-    @media (max-width: 480px) {
-      .credit-container { padding: 0.5rem; }
-      .credit-card { padding: 0.75rem; }
-      .credit-header h2 { font-size: 2rem; }
-    }
   </style>
 </head>
 <body>
@@ -156,91 +35,65 @@
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="credit-container">
-    <!-- Points preview -->
-    <div class="credit-header">
-      <h2 id="preview-points">0</h2>
-      <p>points à créditer</p>
-    </div>
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Créditer des points</h1>
 
-    <!-- Success message -->
-    <div class="success-box" id="success-box">
-      <h3>✅ Points crédités !</h3>
-      <div class="success-details" id="success-details"></div>
-      <button class="btn btn-primary btn-block btn-sm" onclick="resetForm()" style="margin-top: 0.5rem;">
-        Nouveau crédit
-      </button>
-    </div>
+    <div class="grid grid-2">
+      <!-- Left: Form -->
+      <div>
+        <div class="card">
+          <div class="card-header">Nouveau passage client</div>
+          <div id="credit-alert"></div>
 
-    <!-- Alert -->
-    <div id="credit-alert"></div>
+          <form id="credit-form">
+            <div class="form-group">
+              <label class="form-label">Email du client</label>
+              <input type="email" id="client-email" class="form-control" placeholder="client@email.com">
+              <small class="form-help">Recommandé pour recevoir les confirmations</small>
+            </div>
 
-    <!-- Main form -->
-    <form id="credit-form">
-      <div class="credit-card">
-        <!-- Toggle email / phone -->
-        <div class="toggle-row">
-          <button type="button" class="toggle-btn active" id="toggle-email" onclick="setMode('email')">📧 Email</button>
-          <button type="button" class="toggle-btn" id="toggle-phone" onclick="setMode('phone')">📱 Téléphone</button>
-        </div>
+            <div class="form-group">
+              <label class="form-label">OU Téléphone</label>
+              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56">
+            </div>
 
-        <!-- Email field -->
-        <div class="form-group" id="email-group">
-          <div class="input-wrap" style="position: relative;">
-            <input type="email" id="client-email" class="form-control" placeholder="client@email.com"
-                   autocomplete="off" autocapitalize="none" spellcheck="false">
-            <button type="button" class="input-clear" onclick="clearField('client-email')">✕</button>
-            <div class="search-results" id="search-results"></div>
-          </div>
-          <div class="typo-hint" id="email-typo" onclick="applyTypoFix()"></div>
-        </div>
+            <div class="form-group">
+              <label class="form-label">Montant dépensé (€) *</label>
+              <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required>
+            </div>
 
-        <!-- Phone field -->
-        <div class="form-group" id="phone-group" style="display: none;">
-          <div class="input-wrap" style="position: relative;">
-            <input type="tel" id="client-phone" class="form-control" placeholder="0497 12 34 56"
-                   autocomplete="off">
-            <button type="button" class="input-clear" onclick="clearField('client-phone')">✕</button>
-            <div class="search-results" id="search-results-phone"></div>
-          </div>
-          <small class="form-help">Formats acceptés : 0497..., +32497..., 0032497...</small>
-        </div>
+            <div class="form-group">
+              <label class="form-label">Notes (optionnel)</label>
+              <input type="text" id="notes" class="form-control" placeholder="Ex: Menu midi">
+            </div>
 
-        <!-- Name (optional) -->
-        <div class="form-group">
-          <div class="input-wrap">
-            <input type="text" id="client-name" class="form-control" placeholder="Nom ou surnom (optionnel)"
-                   autocomplete="off">
-            <button type="button" class="input-clear" onclick="clearField('client-name')">✕</button>
-          </div>
+            <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+              ✅ Créditer les points
+            </button>
+          </form>
         </div>
       </div>
 
-      <!-- Client preview (appears when found) -->
-      <div class="client-preview" id="client-preview"></div>
-
-      <!-- Amount + notes -->
-      <div class="credit-card">
-        <div class="form-group" style="margin-bottom: 0.75rem;">
-          <input type="number" id="amount" class="form-control amount-input" step="0.01" min="0.01"
-                 placeholder="0.00 €" required inputmode="decimal">
+      <!-- Right: Preview + Lookup -->
+      <div>
+        <!-- Points preview -->
+        <div class="card">
+          <div class="credit-preview">
+            <h2 id="preview-points">0</h2>
+            <p>points seront crédités</p>
+          </div>
+          <div id="merchant-info" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);"></div>
         </div>
 
-        <div class="form-group" style="margin-bottom: 0.5rem;">
-          <div class="input-wrap">
-            <input type="text" id="notes" class="form-control" placeholder="Notes (optionnel)" style="font-size: 0.85rem;">
-            <button type="button" class="input-clear" onclick="clearField('notes')">✕</button>
+        <!-- Client lookup result -->
+        <div id="lookup-container" style="display: none;">
+          <div class="card" style="padding: 0;">
+            <div class="card-header" style="padding: 1rem 1.25rem; margin-bottom: 0;">Client trouvé</div>
+            <div id="lookup-result" style="padding: 0 1.25rem 1.25rem;"></div>
           </div>
         </div>
-
-        <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
-          ✅ Créditer les points
-        </button>
       </div>
-
-      <!-- Config reminder -->
-      <div class="config-info" id="config-info"></div>
-    </form>
+    </div>
   </div>
 
   <script src="/js/app.js"></script>
@@ -249,317 +102,156 @@
 
     const merchant = Auth.getMerchant();
     const staff = Auth.getStaff();
-    let currentMode = 'email';
-    let selectedClient = null; // { id, name, email, phone, points_balance, ... }
-    let searchTimeout = null;
 
-    // ── Config info ──
-    document.getElementById('config-info').innerHTML =
-      `<span>${merchant.points_per_euro} pt/€</span>·` +
-      `<span>Récompense : ${merchant.points_for_reward} pts</span>` +
-      (staff.role === 'cashier' ? `·<span>Max 200€</span>` : '');
+    // ═══════════════════════════════════════════════════════
+    // PRE-FILL FROM URL PARAMS
+    // (when coming from client modal "➕ Créditer" button)
+    // ═══════════════════════════════════════════════════════
+    (function prefillFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email');
+      const phone = params.get('phone');
 
-    // ════════════════════════════════════════
-    // EMAIL TYPO DETECTION
-    // ════════════════════════════════════════
-
-    const DOMAIN_CORRECTIONS = {
-      'gmial.com': 'gmail.com', 'gmai.com': 'gmail.com', 'gamil.com': 'gmail.com',
-      'gmal.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.be': 'gmail.com',
-      'gnail.com': 'gmail.com', 'gmaill.com': 'gmail.com', 'gmail.om': 'gmail.com',
-      'hotmal.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmial.com': 'hotmail.com',
-      'hotamil.com': 'hotmail.com', 'hotmail.co': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
-      'outloo.com': 'outlook.com', 'outlok.com': 'outlook.com', 'outllook.com': 'outlook.com',
-      'outlook.co': 'outlook.com',
-      'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahoo.co': 'yahoo.com',
-      'yhoo.com': 'yahoo.com',
-      'iclud.com': 'icloud.com', 'icoud.com': 'icloud.com', 'icloud.co': 'icloud.com',
-      'protonmal.com': 'protonmail.com', 'protonmai.com': 'protonmail.com',
-    };
-
-    let suggestedEmail = null;
-
-    function checkEmailTypo(email) {
-      const typoEl = document.getElementById('email-typo');
-      suggestedEmail = null;
-
-      if (!email || !email.includes('@')) { typoEl.classList.remove('show'); return; }
-
-      const parts = email.split('@');
-      if (parts.length !== 2) return;
-
-      const domain = parts[1].toLowerCase();
-      const correction = DOMAIN_CORRECTIONS[domain];
-
-      if (correction) {
-        suggestedEmail = parts[0] + '@' + correction;
-        typoEl.textContent = `💡 Vouliez-vous dire ${suggestedEmail} ?`;
-        typoEl.classList.add('show');
-      } else {
-        typoEl.classList.remove('show');
+      if (email) {
+        const el = document.getElementById('client-email');
+        if (el) el.value = email;
       }
-    }
-
-    function applyTypoFix() {
-      if (!suggestedEmail) return;
-      document.getElementById('client-email').value = suggestedEmail;
-      document.getElementById('email-typo').classList.remove('show');
-      suggestedEmail = null;
-      triggerSearch();
-    }
-
-    // ════════════════════════════════════════
-    // TOGGLE EMAIL / PHONE
-    // ════════════════════════════════════════
-
-    function setMode(mode) {
-      currentMode = mode;
-      document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
-      document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
-      document.getElementById('email-group').style.display = mode === 'email' ? 'block' : 'none';
-      document.getElementById('phone-group').style.display = mode === 'phone' ? 'block' : 'none';
-
-      // Clear the hidden field
-      if (mode === 'email') {
-        document.getElementById('client-phone').value = '';
-        closeSearchDropdown('search-results-phone');
-      } else {
-        document.getElementById('client-email').value = '';
-        document.getElementById('email-typo').classList.remove('show');
-        closeSearchDropdown('search-results');
-      }
-      clearClientPreview();
-    }
-
-    // ════════════════════════════════════════
-    // CLEAR HELPERS
-    // ════════════════════════════════════════
-
-    function clearField(id) {
-      const el = document.getElementById(id);
-      el.value = '';
-      el.focus();
-      if (id === 'client-email' || id === 'client-phone') {
-        clearClientPreview();
-        closeSearchDropdown('search-results');
-        closeSearchDropdown('search-results-phone');
-        document.getElementById('email-typo').classList.remove('show');
-      }
-    }
-
-    function clearClientPreview() {
-      selectedClient = null;
-      const preview = document.getElementById('client-preview');
-      preview.className = 'client-preview';
-      preview.innerHTML = '';
-    }
-
-    function closeSearchDropdown(id) {
-      document.getElementById(id).classList.remove('open');
-    }
-
-    function resetForm() {
-      document.getElementById('credit-form').reset();
-      document.getElementById('preview-points').textContent = '0';
-      document.getElementById('success-box').classList.remove('show');
-      document.getElementById('credit-form').style.display = 'block';
-      clearClientPreview();
-      closeSearchDropdown('search-results');
-      closeSearchDropdown('search-results-phone');
-      document.getElementById('email-typo').classList.remove('show');
-      UI.clearAlert('credit-alert');
-    }
-
-    // ════════════════════════════════════════
-    // SEARCH (3+ chars) → dropdown
-    // ════════════════════════════════════════
-
-    function triggerSearch() {
-      clearTimeout(searchTimeout);
-      const value = currentMode === 'email'
-        ? document.getElementById('client-email').value.trim()
-        : document.getElementById('client-phone').value.trim();
-
-      const dropdownId = currentMode === 'email' ? 'search-results' : 'search-results-phone';
-
-      if (value.length < 3) {
-        closeSearchDropdown(dropdownId);
-        clearClientPreview();
-        return;
+      if (phone) {
+        const el = document.getElementById('client-phone');
+        if (el) el.value = phone;
       }
 
-      // Check email typos
-      if (currentMode === 'email') {
-        checkEmailTypo(value);
+      // Trigger lookup after a short delay (triggerLookup defined below)
+      if (email || phone) {
+        setTimeout(() => {
+          if (typeof triggerLookup === 'function') triggerLookup();
+        }, 500);
       }
 
-      searchTimeout = setTimeout(async () => {
-        try {
-          const params = {};
-          if (currentMode === 'email') params.email = value;
-          else params.phone = value;
-          params.q = value;
-
-          const data = await API.call(`/clients/quick-search?q=${encodeURIComponent(value)}&mode=${currentMode}`);
-          renderSearchResults(data.results, dropdownId);
-        } catch (err) {
-          console.error('Search error:', err);
-        }
-      }, 300);
-    }
-
-    function renderSearchResults(results, dropdownId) {
-      const dropdown = document.getElementById(dropdownId);
-
-      if (!results || results.length === 0) {
-        dropdown.innerHTML = '<div class="search-no-result">🆕 Nouveau client — sera créé automatiquement</div>';
-        dropdown.classList.add('open');
-        clearClientPreview();
-        showNewClientPreview();
-        return;
+      // Clean URL without reload
+      if (params.toString()) {
+        window.history.replaceState({}, '', window.location.pathname);
       }
+    })();
 
-      let html = '';
-      results.forEach((r, i) => {
-        const contact = r.email || r.phone || '';
-        const name = r.name || '';
-        const pts = r.points_balance !== undefined ? r.points_balance : null;
+    // Show merchant config
+    document.getElementById('merchant-info').innerHTML = `
+      <p><strong>Configuration :</strong></p>
+      <p>• ${merchant.points_per_euro} point(s) par euro</p>
+      <p>• Récompense à ${merchant.points_for_reward} points</p>
+      <p>• ${merchant.reward_description}</p>
+      ${staff.role === 'cashier' ? '<p class="text-muted mt-1">⚠️ Limite caissier : 200€ max</p>' : ''}
+    `;
 
-        html += `<div class="search-item" onclick="selectSearchResult(${i})" data-index="${i}">
-          <div class="name">${name || contact}</div>
-          <div class="detail">
-            ${name && contact ? contact + ' · ' : ''}
-            ${pts !== null ? `<strong style="color:var(--primary)">${pts} pts</strong>` : 'Nouveau chez vous'}
-            ${r.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
-          </div>
-        </div>`;
-      });
-
-      dropdown.innerHTML = html;
-      dropdown.classList.add('open');
-
-      // Store results for selection
-      dropdown._results = results;
-    }
-
-    function selectSearchResult(index) {
-      const dropdownId = currentMode === 'email' ? 'search-results' : 'search-results-phone';
-      const dropdown = document.getElementById(dropdownId);
-      const result = dropdown._results[index];
-
-      if (!result) return;
-
-      // Fill fields
-      if (result.email) document.getElementById('client-email').value = result.email;
-      if (result.phone) document.getElementById('client-phone').value = result.phone;
-      if (result.name) document.getElementById('client-name').value = result.name;
-
-      closeSearchDropdown(dropdownId);
-      document.getElementById('email-typo').classList.remove('show');
-
-      // Show preview
-      showClientPreview(result);
-
-      // Focus amount
-      document.getElementById('amount').focus();
-    }
-
-    function showClientPreview(client) {
-      selectedClient = client;
-      const preview = document.getElementById('client-preview');
-
-      if (client.points_balance === undefined || client.points_balance === null) {
-        // Known user but new to this merchant
-        preview.className = 'client-preview new-client';
-        preview.innerHTML = `
-          <div class="preview-header">
-            <span class="preview-name">🆕 Première visite ici</span>
-          </div>
-          <div class="preview-meta">${client.name || ''} ${client.email || client.phone || ''}</div>
-        `;
-        return;
-      }
-
-      const progress = Math.min((client.points_balance / merchant.points_for_reward) * 100, 100);
-      const canRedeem = client.points_balance >= merchant.points_for_reward;
-
-      preview.className = 'client-preview found';
-      preview.innerHTML = `
-        <div class="preview-header">
-          <span class="preview-name">${client.name || client.email || client.phone}</span>
-          <span class="preview-points">${client.points_balance} pts</span>
-        </div>
-        <div class="preview-meta">${client.visit_count || 0} visite(s) · ${client.points_balance}/${merchant.points_for_reward} pts</div>
-        <div class="progress-mini"><div class="progress-mini-fill" style="width:${progress}%"></div></div>
-        ${canRedeem ? `<div class="reward-banner" onclick="redeemReward(${client.id})">
-          🎁 Récompense dispo ! Cliquez ici<br><small>${merchant.reward_description}</small>
-        </div>` : ''}
-      `;
-    }
-
-    function showNewClientPreview() {
-      const preview = document.getElementById('client-preview');
-      preview.className = 'client-preview new-client';
-      preview.innerHTML = `
-        <div class="preview-header">
-          <span class="preview-name">🆕 Nouveau client</span>
-        </div>
-        <div class="preview-meta">Sera créé automatiquement au crédit</div>
-      `;
-    }
-
-    // ════════════════════════════════════════
-    // REDEEM REWARD
-    // ════════════════════════════════════════
-
-    async function redeemReward(merchantClientId) {
-      if (!confirm('🎁 Appliquer la récompense ?')) return;
-      try {
-        const result = await API.clients.reward({ merchantClientId });
-        UI.showAlert('credit-alert', `🎁 Récompense appliquée ! Solde : ${result.client.points_balance} pts`, 'success');
-        // Refresh preview
-        if (selectedClient) {
-          selectedClient.points_balance = result.client.points_balance;
-          showClientPreview(selectedClient);
-        }
-      } catch (err) {
-        UI.showAlert('credit-alert', err.message, 'error');
-      }
-    }
-
-    // ════════════════════════════════════════
-    // POINTS PREVIEW
-    // ════════════════════════════════════════
-
+    // Points preview
     document.getElementById('amount').addEventListener('input', (e) => {
       const amount = parseFloat(e.target.value) || 0;
       document.getElementById('preview-points').textContent = Math.floor(amount * merchant.points_per_euro);
     });
 
-    // ════════════════════════════════════════
-    // INPUT LISTENERS
-    // ════════════════════════════════════════
+    // Client lookup on input
+    let lookupTimeout;
+    function triggerLookup() {
+      clearTimeout(lookupTimeout);
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
 
-    document.getElementById('client-email').addEventListener('input', triggerSearch);
-    document.getElementById('client-phone').addEventListener('input', triggerSearch);
-
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.input-wrap')) {
-        closeSearchDropdown('search-results');
-        closeSearchDropdown('search-results-phone');
+      if (!email && !phone) {
+        document.getElementById('lookup-container').style.display = 'none';
+        return;
       }
-    });
 
-    // ════════════════════════════════════════
-    // SUBMIT CREDIT
-    // ════════════════════════════════════════
+      lookupTimeout = setTimeout(async () => {
+        try {
+          const params = {};
+          if (email) params.email = email;
+          if (phone) params.phone = phone;
 
+          const data = await API.clients.lookup(params);
+          const container = document.getElementById('lookup-container');
+          const result = document.getElementById('lookup-result');
+
+          if (!data.found) {
+            container.style.display = 'block';
+            result.innerHTML = `
+              <div class="lookup-result new">
+                <strong>🆕 Nouveau client</strong>
+                <p class="text-muted text-sm">Ce client sera créé automatiquement lors du crédit.</p>
+              </div>
+            `;
+            return;
+          }
+
+          container.style.display = 'block';
+          const c = data.client;
+
+          if (data.isNew) {
+            result.innerHTML = `
+              <div class="lookup-result new">
+                <strong>🆕 Première visite ici</strong>
+                <p class="text-sm text-muted">Ce client existe dans le système mais n'est jamais venu chez vous.</p>
+                ${c.name ? `<p class="text-sm">Nom : ${c.name}</p>` : ''}
+              </div>
+            `;
+            return;
+          }
+
+          const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+
+          let html = `
+            <div class="lookup-result found">
+              <div class="flex-between">
+                <div>
+                  <strong>${c.name || c.email || c.phone}</strong>
+                  ${c.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
+                </div>
+                <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
+              </div>
+              <p class="text-sm text-muted mt-1">${c.visit_count} visite(s)</p>
+              <div class="progress-bar mt-1">
+                <div class="progress-fill" style="width: ${progress}%;"></div>
+              </div>
+              <p class="text-sm text-muted">${c.points_balance}/${c.reward_threshold} points</p>
+          `;
+
+          if (c.can_redeem) {
+            html += `
+              <div class="reward-banner mt-1" onclick="redeemReward(${c.id})">
+                🎁 Récompense disponible ! Cliquez pour l'appliquer<br>
+                <small>${c.reward_description || merchant.reward_description}</small>
+              </div>
+            `;
+          }
+
+          html += '</div>';
+          result.innerHTML = html;
+
+        } catch (err) {
+          console.error('Lookup error:', err);
+        }
+      }, 400);
+    }
+
+    document.getElementById('client-email').addEventListener('input', triggerLookup);
+    document.getElementById('client-phone').addEventListener('input', triggerLookup);
+
+    // Redeem reward
+    async function redeemReward(merchantClientId) {
+      if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
+      try {
+        const result = await API.clients.reward({ merchantClientId });
+        UI.showAlert('credit-alert', `Récompense appliquée ! Nouveau solde : ${result.client.points_balance} pts`, 'success');
+        triggerLookup(); // Refresh
+      } catch (err) {
+        UI.showAlert('credit-alert', err.message, 'error');
+      }
+    }
+
+    // Submit credit
     document.getElementById('credit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('client-email').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
-      const name = document.getElementById('client-name').value.trim();
       const amount = parseFloat(document.getElementById('amount').value);
       const notes = document.getElementById('notes').value.trim();
 
@@ -567,36 +259,29 @@
         UI.showAlert('credit-alert', 'Email ou téléphone requis', 'error');
         return;
       }
-      if (!amount || amount <= 0) {
-        UI.showAlert('credit-alert', 'Montant invalide', 'error');
-        return;
-      }
 
       try {
         document.getElementById('submit-btn').disabled = true;
-        UI.showAlert('credit-alert', 'Traitement...', 'info');
+        UI.showAlert('credit-alert', 'Traitement en cours...', 'info');
 
         const result = await API.clients.credit({
           email: email || undefined,
           phone: phone || undefined,
-          name: name || undefined,
           amount,
           notes: notes || undefined,
         });
 
-        UI.clearAlert('credit-alert');
+        UI.showAlert('credit-alert',
+          `<strong>+${result.transaction.points_delta} points crédités !</strong><br>
+           Nouveau solde : ${result.client.points_balance} points
+           ${result.isNewClient ? '<br><em>Nouveau client créé</em>' : ''}`,
+          'success'
+        );
 
-        // Show success with details
-        const box = document.getElementById('success-box');
-        document.getElementById('success-details').innerHTML = `
-          <dt>Client</dt><dd>${result.client.name || result.client.email || result.client.phone}</dd>
-          <dt>Points gagnés</dt><dd style="color:var(--success)">+${result.transaction.points_delta}</dd>
-          <dt>Nouveau solde</dt><dd style="color:var(--primary)">${result.client.points_balance} pts</dd>
-          <dt>Montant</dt><dd>${Format.currency(result.transaction.amount)}</dd>
-          ${result.isNewClient ? '<dt>Statut</dt><dd><span class="badge badge-info">Nouveau</span></dd>' : ''}
-        `;
-        box.classList.add('show');
-        document.getElementById('credit-form').style.display = 'none';
+        // Reset form
+        document.getElementById('credit-form').reset();
+        document.getElementById('preview-points').textContent = '0';
+        document.getElementById('lookup-container').style.display = 'none';
 
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
