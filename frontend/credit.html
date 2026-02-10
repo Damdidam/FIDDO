@@ -281,19 +281,27 @@
         </div>
       </div>
 
-      <!-- ══════ RIGHT: Preview + Lookup ══════ -->
-      <div>
-        <!-- Points preview -->
-        <div class="card" style="padding: 0;">
-          <div class="credit-preview">
+      <!-- ══════ RIGHT: Preview + Lookup + QR (bottom-aligned) ══════ -->
+      <div style="display: flex; flex-direction: column;">
+        <!-- Points preview (replaced by success after credit) -->
+        <div id="preview-card" class="card" style="padding: 0;">
+          <div class="credit-preview" id="preview-box">
             <h2 id="preview-points">0</h2>
             <p>points seront crédités</p>
           </div>
           <div id="merchant-info" style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-light);"></div>
         </div>
 
-        <!-- QR Code: client scans to fill form -->
-        <div class="card qr-card" id="qr-card">
+        <!-- Client lookup result -->
+        <div id="lookup-container" style="display: none;">
+          <div class="card" style="padding: 0;">
+            <div class="card-header" style="padding: 0.75rem 1rem; margin-bottom: 0; font-size: 1rem;" id="lookup-header">Client trouvé</div>
+            <div id="lookup-result" style="padding: 0 1rem 1rem;"></div>
+          </div>
+        </div>
+
+        <!-- QR Code: pushed to bottom to align with form end -->
+        <div class="card qr-card" id="qr-card" style="margin-top: auto;">
           <button type="button" class="qr-toggle" id="qr-toggle-btn" onclick="toggleQR()">
             <div class="qr-icon"><span>📱</span></div>
             <div>
@@ -321,17 +329,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Client lookup result -->
-        <div id="lookup-container" style="display: none;">
-          <div class="card" style="padding: 0;">
-            <div class="card-header" style="padding: 0.75rem 1rem; margin-bottom: 0; font-size: 1rem;" id="lookup-header">Client trouvé</div>
-            <div id="lookup-result" style="padding: 0 1rem 1rem;"></div>
-          </div>
-        </div>
-
-        <!-- Success result (appears after credit) -->
-        <div id="success-container" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -348,10 +345,14 @@
     // ═══════════════════════════════════════════════════════
     // MERCHANT CONFIG DISPLAY
     // ═══════════════════════════════════════════════════════
-    document.getElementById('merchant-info').innerHTML = `
-      <strong>Config :</strong> ${merchant.points_per_euro} pt/€ · Récompense à ${merchant.points_for_reward} pts · ${merchant.reward_description}
-      ${staff.role === 'cashier' ? '<br><span class="text-muted">⚠️ Limite caissier : 200€ max</span>' : ''}
-    `;
+    function showMerchantInfo() {
+      const el = document.getElementById('merchant-info');
+      if (el) el.innerHTML = `
+        <strong>Config :</strong> ${merchant.points_per_euro} pt/€ · Récompense à ${merchant.points_for_reward} pts · ${merchant.reward_description}
+        ${staff.role === 'cashier' ? '<br><span class="text-muted">⚠️ Limite caissier : 200€ max</span>' : ''}
+      `;
+    }
+    showMerchantInfo();
 
     // ═══════════════════════════════════════════════════════
     // PRE-FILL FROM URL PARAMS
@@ -411,7 +412,8 @@
       el.focus();
       el.dispatchEvent(new Event('input'));
       if (id === 'amount') {
-        document.getElementById('preview-points').textContent = '0';
+        const pp = document.getElementById('preview-points');
+        if (pp) pp.textContent = '0';
       }
     }
 
@@ -427,7 +429,8 @@
     // ═══════════════════════════════════════════════════════
     document.getElementById('amount').addEventListener('input', (e) => {
       const amount = parseFloat(e.target.value) || 0;
-      document.getElementById('preview-points').textContent = Math.floor(amount * merchant.points_per_euro);
+      const pp = document.getElementById('preview-points');
+      if (pp) pp.textContent = Math.floor(amount * merchant.points_per_euro);
     });
 
     // ═══════════════════════════════════════════════════════
@@ -716,10 +719,10 @@
         // Hide loading alert
         UI.clearAlert('credit-alert');
 
-        // Show rich success message
+        // Show success in place of the blue preview card
         const clientDisplay = result.client.name || result.client.email || result.client.phone || 'Client';
-        document.getElementById('success-container').style.display = 'block';
-        document.getElementById('success-container').innerHTML = `
+        const previewCard = document.getElementById('preview-card');
+        previewCard.innerHTML = `
           <div class="credit-success">
             <div class="big-pts">+${result.transaction.points_delta} pts</div>
             <div class="client-info">
@@ -738,11 +741,6 @@
         // Hide lookup
         document.getElementById('lookup-container').style.display = 'none';
 
-        // Reset form but keep it ready
-        document.getElementById('credit-form').reset();
-        document.getElementById('preview-points').textContent = '0';
-        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
-
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
       } finally {
@@ -751,14 +749,28 @@
     });
 
     function resetForm() {
-      document.getElementById('success-container').style.display = 'none';
-      document.getElementById('success-container').innerHTML = '';
+      // Restore the preview card
+      const previewCard = document.getElementById('preview-card');
+      previewCard.innerHTML = `
+        <div class="credit-preview" id="preview-box">
+          <h2 id="preview-points">0</h2>
+          <p>points seront crédités</p>
+        </div>
+        <div id="merchant-info" style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-light);"></div>
+      `;
+      // Re-fill merchant info
+      showMerchantInfo();
+      // Re-bind amount preview
+      document.getElementById('amount').value = '';
+
       document.getElementById('lookup-container').style.display = 'none';
       UI.clearAlert('credit-alert');
+      document.getElementById('credit-form').reset();
+      document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
       // Reset QR confirmed info (keep QR open if it was open)
       document.getElementById('qr-confirmed-container').innerHTML = '';
       if (document.getElementById('qr-body').style.display === 'block') {
-        refreshQR(); // Generate fresh QR for next client
+        refreshQR();
       }
       // Focus the active identifier field
       if (currentMode === 'email') {
