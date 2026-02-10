@@ -128,15 +128,14 @@
     <div class="stats-grid" style="margin-bottom: 0.75rem;">
       <div class="stat-card"><div class="stat-value" id="total-clients">0</div><div class="stat-label">Clients</div></div>
       <div class="stat-card"><div class="stat-value" id="active-clients">0</div><div class="stat-label">Actifs (30j)</div></div>
-      <div class="stat-card"><div class="stat-value" id="total-revenue">0 €</div><div class="stat-label">CA total</div></div>
       <div class="stat-card"><div class="stat-value" id="total-points">0</div><div class="stat-label">Points émis</div></div>
+      <div class="stat-card"><div class="stat-value" id="reward-ready">0</div><div class="stat-label">🎁 Récompenses dispo</div></div>
     </div>
 
     <!-- Tabs -->
     <div class="client-tabs" id="tabs-row">
       <button class="client-tab active" data-tab="all">👥 Tous <span class="tab-count" id="cnt-all">0</span></button>
       <button class="client-tab" data-tab="top-points">🏆 Top Points</button>
-      <button class="client-tab" data-tab="top-spent">💰 Top CA</button>
       <button class="client-tab" data-tab="top-visits">🔄 Plus fréquents</button>
       <button class="client-tab" data-tab="recent">🕐 Récents</button>
       <button class="client-tab" data-tab="inactive">😴 Inactifs</button>
@@ -264,12 +263,13 @@
     function updateStats() {
       const total = allClients.length;
       const active = allClients.filter(c => daysSince(c.last_visit) <= 30).length;
-      const revenue = allClients.reduce((s, c) => s + c.total_spent, 0);
       const pts = allClients.reduce((s, c) => s + c.points_balance, 0);
+      const merchant = Auth.getMerchant();
+      const rewardReady = merchant ? allClients.filter(c => c.points_balance >= merchant.points_for_reward).length : 0;
       document.getElementById('total-clients').textContent = total;
       document.getElementById('active-clients').textContent = active;
-      document.getElementById('total-revenue').textContent = Format.currency(revenue);
       document.getElementById('total-points').textContent = pts.toLocaleString('fr-FR');
+      document.getElementById('reward-ready').textContent = rewardReady;
       document.getElementById('cnt-all').textContent = total;
     }
 
@@ -292,7 +292,6 @@
 
       clients.sort((a, b) => {
         if (currentTab === 'top-points') return b.points_balance - a.points_balance;
-        if (currentTab === 'top-spent') return b.total_spent - a.total_spent;
         if (currentTab === 'top-visits') return b.visit_count - a.visit_count;
         let va = a[currentSort.key] ?? '', vb = b[currentSort.key] ?? '';
         if (currentSort.key.includes('visit') || currentSort.key.includes('_at')) { va = new Date(va || 0).getTime(); vb = new Date(vb || 0).getTime(); }
@@ -332,15 +331,14 @@
       const container = document.getElementById('clients-container');
       if (clients.length === 0) { container.innerHTML = '<div class="empty-state" style="padding:2rem"><div class="empty-state-icon">👥</div><p>Aucun client trouvé</p></div>'; return; }
 
-      const showRank = ['top-points', 'top-spent', 'top-visits'].includes(currentTab);
+      const showRank = ['top-points', 'top-visits'].includes(currentTab);
       const maxPts = Math.max(...clients.map(c => c.points_balance), 1);
 
       const cols = [
         ...(showRank ? [{ key: '_rank', label: '#', noSort: true }] : []),
         { key: 'name', label: 'Client' },
         { key: 'points_balance', label: 'Points' },
-        { key: 'total_spent', label: 'CA' },
-        { key: 'visit_count', label: 'Visites', hide: 'hide-mobile' },
+        { key: 'visit_count', label: 'Visites' },
         { key: 'last_credited_by', label: 'Par', hide: 'hide-mobile' },
         { key: 'last_visit', label: 'Dernière visite' },
       ];
@@ -362,10 +360,9 @@
         html += `<tr onclick="showDetails(${c.id})">`;
         if (showRank) html += `<td class="rank ${i<3?'rank-'+(i+1):''}">${medal}</td>`;
         html += `
-          <td><strong>${esc(display)}</strong>${sub?`<br><span class="staff-sm">${esc(sub)}</span>`:''}${c.is_blocked?' <span class="badge badge-danger">Bloqué</span>':''}</td>
+          <td><strong>${esc(display)}</strong>${c.custom_reward?' ⭐':''}${sub?`<br><span class="staff-sm">${esc(sub)}</span>`:''}${c.is_blocked?' <span class="badge badge-danger">Bloqué</span>':''}</td>
           <td><div class="pts-bar"><strong style="color:var(--primary)">${c.points_balance}</strong><div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div></div></td>
-          <td>${Format.currency(c.total_spent)}</td>
-          <td class="hide-mobile">${c.visit_count}</td>
+          <td>${c.visit_count}</td>
           <td class="hide-mobile"><span class="staff-sm">${esc(c.last_credited_by||'—')}</span></td>
           <td><span class="staff-sm">${fmtDate(c.last_visit)}</span>${daysSince(c.last_visit)>30?'<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>':''}</td>
         </tr>`;
@@ -389,7 +386,7 @@
       document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
-      const defaults = { 'all':'last_visit','top-points':'points_balance','top-spent':'total_spent','top-visits':'visit_count','recent':'last_visit','inactive':'last_visit' };
+      const defaults = { 'all':'last_visit','top-points':'points_balance','top-visits':'visit_count','recent':'last_visit','inactive':'last_visit' };
       currentSort = { key: defaults[currentTab]||'last_visit', dir: currentTab==='inactive'?'asc':'desc' };
       applyFilters();
     });
@@ -433,16 +430,46 @@
         // ── Stats ──
         html += `<div class="stats-grid" style="margin-bottom:0.5rem;grid-template-columns:repeat(3,1fr);gap:0.4rem;">
           <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${c.points_balance}</div><div class="stat-label">Points</div></div>
-          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
           <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${c.visit_count}</div><div class="stat-label">Visites</div></div>
+          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${Format.date(c.first_visit)}</div><div class="stat-label">Client depuis</div></div>
         </div>`;
 
         // ── Progress ──
         html += `<div style="margin-bottom:0.5rem;">
           <div class="flex-between" style="font-size:0.78rem"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
           <div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${progress}%"></div></div>
-          ${c.can_redeem ? '<div class="alert alert-success" style="padding:5px 10px;font-size:0.78rem;margin-top:3px">🎁 Récompense disponible !</div>' : ''}
+          ${c.can_redeem ? `<div class="alert alert-success" style="padding:5px 10px;font-size:0.78rem;margin-top:3px">🎁 Récompense disponible : <strong>${esc(c.reward_description)}</strong></div>` : ''}
         </div>`;
+
+        // ── Reward section ──
+        if (isManager) {
+          const isCustom = !!c.custom_reward;
+          html += `<div class="modal-section" style="margin-bottom:0.5rem">
+            <div class="flex-between" style="align-items:center">
+              <div style="font-size:0.83rem">
+                <strong>🎁 Récompense :</strong>
+                <span id="reward-display">${esc(c.reward_description)}</span>
+                ${isCustom
+                  ? '<span class="badge badge-info" style="margin-left:4px;font-size:0.6rem">Perso</span>'
+                  : '<span class="badge badge-neutral" style="margin-left:4px;font-size:0.6rem">Défaut</span>'}
+              </div>
+              <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="toggleRewardEdit()">✏️</button>
+            </div>
+            <div id="reward-edit-section" style="display:none;margin-top:0.5rem">
+              <div id="reward-alert"></div>
+              <div style="display:flex;gap:0.5rem;align-items:flex-end">
+                <div class="form-group" style="flex:1;margin-bottom:0">
+                  <label class="form-label" style="font-size:0.75rem">Récompense sur mesure</label>
+                  <input type="text" id="custom-reward-input" class="form-control" style="font-size:0.85rem"
+                    value="${esc(c.custom_reward||'')}" placeholder="${esc(c.default_reward || merchant.reward_description)}"
+                    maxlength="150">
+                  <small class="form-help">Laisser vide = récompense par défaut (${esc(c.default_reward || merchant.reward_description)})</small>
+                </div>
+                <button class="btn btn-primary btn-sm" style="margin-bottom:3px;white-space:nowrap" onclick="saveCustomReward()">💾</button>
+              </div>
+            </div>
+          </div>`;
+        }
 
 
         // ── Action buttons grid ──
@@ -568,6 +595,20 @@
       } catch (err) { alert('Erreur : ' + err.message); }
     }
 
+    // ── Custom Reward ──
+    function toggleRewardEdit() {
+      const el = document.getElementById('reward-edit-section');
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    async function saveCustomReward() {
+      try {
+        const value = document.getElementById('custom-reward-input').value.trim();
+        await API.clients.setCustomReward(currentClientId, value || null);
+        showDetails(currentClientId); // refresh modal
+      } catch (err) { UI.showAlert('reward-alert', err.message, 'error'); }
+    }
+
     // ── Resend email ──
     async function resendEmail() {
       try {
@@ -652,7 +693,7 @@
         const dd = document.getElementById('merge-results');
         dd.innerHTML = results.length === 0
           ? '<div style="padding:8px 10px;font-size:0.83rem;color:var(--text-light)">Aucun résultat</div>'
-          : results.map(r => `<div class="merge-item" onclick="selectMergeSource(${r.id})"><div class="m-name">${esc(r.name||r.email||r.phone||'#'+r.id)}</div><div class="m-detail">${r.points_balance} pts · ${r.visit_count} vis. · ${Format.currency(r.total_spent)}</div></div>`).join('');
+          : results.map(r => `<div class="merge-item" onclick="selectMergeSource(${r.id})"><div class="m-name">${esc(r.name||r.email||r.phone||'#'+r.id)}</div><div class="m-detail">${r.points_balance} pts · ${r.visit_count} vis.</div></div>`).join('');
         dd.classList.add('open');
       }, 200);
     });
