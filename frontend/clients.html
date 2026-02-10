@@ -5,6 +5,88 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clients — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    /* ── Toolbar ── */
+    .toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem; }
+    .toolbar-left { display: flex; gap: 0.5rem; flex: 1; min-width: 200px; flex-wrap: wrap; align-items: center; }
+    .toolbar-right { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+    .search-compact {
+      flex: 1; min-width: 180px; padding: 8px 10px 8px 32px;
+      border: 2px solid var(--border); border-radius: 6px; font-size: 0.85rem;
+    }
+    .search-compact:focus { outline: none; border-color: var(--primary); }
+    .search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .search-wrap .search-ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; }
+
+    /* Date pills */
+    .date-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+    .date-pill {
+      padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px;
+      font-size: 0.75rem; cursor: pointer; background: white; color: var(--text-light);
+      transition: all 0.15s; white-space: nowrap;
+    }
+    .date-pill:hover { border-color: var(--primary); color: var(--primary); }
+    .date-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    .date-range { display: flex; gap: 4px; align-items: center; }
+    .date-input {
+      padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
+      font-size: 0.75rem; width: 120px;
+    }
+
+    /* ── Tabs ── */
+    .client-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 0.75rem; overflow-x: auto; }
+    .client-tab {
+      padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; font-weight: 500; color: var(--text-light); font-size: 0.85rem;
+      transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
+      white-space: nowrap;
+    }
+    .client-tab:hover { color: var(--text); }
+    .client-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* ── Sortable table ── */
+    .clients-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    .clients-table thead { background: var(--secondary); color: white; position: sticky; top: 0; z-index: 2; }
+    .clients-table th {
+      padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.73rem;
+      text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; user-select: none;
+      white-space: nowrap; position: relative;
+    }
+    .clients-table th:hover { background: #374151; }
+    .clients-table th .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.5; }
+    .clients-table th.sorted .sort-arrow { opacity: 1; }
+    .clients-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
+    .clients-table tbody tr { cursor: pointer; transition: background 0.1s; }
+    .clients-table tbody tr:hover { background: #f0fdf4; }
+
+    .table-scroll { overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: white; }
+
+    /* Rank column */
+    .rank { font-weight: 700; color: var(--text-light); text-align: center; min-width: 30px; }
+    .rank-1 { color: #F59E0B; } .rank-2 { color: #9CA3AF; } .rank-3 { color: #D97706; }
+
+    /* Points bar mini */
+    .pts-bar { display: flex; align-items: center; gap: 6px; }
+    .pts-bar-fill { height: 4px; border-radius: 2px; background: var(--primary); min-width: 2px; }
+    .pts-bar-track { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+
+    .staff-sm { font-size: 0.75rem; color: var(--text-light); }
+
+    /* Counters */
+    .tab-count { font-size: 0.7rem; background: var(--light); color: var(--text-light); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+      .toolbar { flex-direction: column; }
+      .toolbar-left, .toolbar-right { width: 100%; }
+      .hide-mobile { display: none; }
+      .clients-table { font-size: 0.8rem; }
+      .clients-table th, .clients-table td { padding: 6px 6px; }
+      .date-input { width: 100px; }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
@@ -13,29 +95,56 @@
   </nav>
 
   <div class="container">
-    <h1 style="margin: 1.5rem 0;">Mes clients</h1>
+    <h1 style="margin: 1rem 0 0.5rem; font-size: 1.3rem;">Mes clients</h1>
 
-    <div class="search-box">
-      <span class="search-icon">🔍</span>
-      <input type="text" id="search-input" class="search-input" placeholder="Rechercher par email, téléphone ou nom...">
+    <!-- Stats row -->
+    <div class="stats-grid" style="margin-bottom: 0.75rem;">
+      <div class="stat-card"><div class="stat-value" id="total-clients">0</div><div class="stat-label">Clients</div></div>
+      <div class="stat-card"><div class="stat-value" id="active-clients">0</div><div class="stat-label">Actifs (30j)</div></div>
+      <div class="stat-card"><div class="stat-value" id="total-revenue">0 €</div><div class="stat-label">CA total</div></div>
+      <div class="stat-card"><div class="stat-value" id="total-points">0</div><div class="stat-label">Points émis</div></div>
     </div>
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="total-clients">0</div>
-        <div class="stat-label">Clients total</div>
+    <!-- Tabs -->
+    <div class="client-tabs" id="tabs-row">
+      <button class="client-tab active" data-tab="all">👥 Tous <span class="tab-count" id="cnt-all">0</span></button>
+      <button class="client-tab" data-tab="top-points">🏆 Top Points</button>
+      <button class="client-tab" data-tab="top-spent">💰 Top CA</button>
+      <button class="client-tab" data-tab="top-visits">🔄 Plus fréquents</button>
+      <button class="client-tab" data-tab="recent">🕐 Récents</button>
+      <button class="client-tab" data-tab="inactive">😴 Inactifs</button>
+    </div>
+
+    <!-- Toolbar: search + dates + export -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="search-wrap">
+          <span class="search-ico">🔍</span>
+          <input type="text" id="search-input" class="search-compact" placeholder="Rechercher...">
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-value" id="active-clients">0</div>
-        <div class="stat-label">Actifs (30j)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="total-revenue">0 €</div>
-        <div class="stat-label">CA total</div>
+      <div class="toolbar-right">
+        <div class="date-pills" id="date-pills">
+          <button class="date-pill active" data-period="all">Tout</button>
+          <button class="date-pill" data-period="today">Auj.</button>
+          <button class="date-pill" data-period="yesterday">Hier</button>
+          <button class="date-pill" data-period="week">Semaine</button>
+          <button class="date-pill" data-period="month">Mois</button>
+          <button class="date-pill" data-period="custom">📅</button>
+        </div>
+        <div class="date-range" id="date-range" style="display:none;">
+          <input type="date" id="date-from" class="date-input">
+          <span style="font-size:0.8rem;color:var(--text-light);">→</span>
+          <input type="date" id="date-to" class="date-input">
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Exporter CSV">📥 CSV</button>
       </div>
     </div>
 
-    <div id="clients-container"></div>
+    <!-- Table -->
+    <div class="table-scroll">
+      <div id="clients-container"></div>
+    </div>
   </div>
 
   <!-- Client Detail Modal -->
@@ -50,7 +159,7 @@
     </div>
   </div>
 
-  <!-- Adjust Points Modal -->
+  <!-- Adjust Modal -->
   <div id="adjust-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -60,12 +169,12 @@
       <div class="modal-body">
         <div id="adjust-alert"></div>
         <div class="form-group">
-          <label class="form-label">Ajustement (positif ou négatif)</label>
+          <label class="form-label">Ajustement (+ ou -)</label>
           <input type="number" id="adjust-delta" class="form-control" placeholder="-10 ou +20">
         </div>
         <div class="form-group">
           <label class="form-label">Raison *</label>
-          <input type="text" id="adjust-reason" class="form-control" placeholder="Correction erreur de saisie">
+          <input type="text" id="adjust-reason" class="form-control" placeholder="Correction erreur...">
         </div>
         <button class="btn btn-primary" onclick="submitAdjustment()">Confirmer</button>
       </div>
@@ -79,16 +188,23 @@
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
     let allClients = [];
+    let filteredClients = [];
+    let currentTab = 'all';
+    let currentSort = { key: 'last_visit', dir: 'desc' };
+    let currentPeriod = 'all';
     let currentClientId = null;
 
-    // ─── Load Clients ───
+    // ════════════════════════════════════════
+    // LOAD
+    // ════════════════════════════════════════
+
     async function loadClients() {
       try {
         UI.showLoading('clients-container');
-        const data = await API.clients.getAll();
+        const data = await API.call('/clients/enriched');
         allClients = data.clients;
         updateStats();
-        renderClients(allClients);
+        applyFilters();
       } catch (err) {
         UI.showError('clients-container', err.message);
       }
@@ -96,66 +212,271 @@
 
     function updateStats() {
       const total = allClients.length;
-      const active = allClients.filter(c => (Date.now() - new Date(c.last_visit)) / 86400000 <= 30).length;
+      const active = allClients.filter(c => daysSince(c.last_visit) <= 30).length;
       const revenue = allClients.reduce((s, c) => s + c.total_spent, 0);
+      const pts = allClients.reduce((s, c) => s + c.points_balance, 0);
 
       document.getElementById('total-clients').textContent = total;
       document.getElementById('active-clients').textContent = active;
       document.getElementById('total-revenue').textContent = Format.currency(revenue);
+      document.getElementById('total-points').textContent = pts.toLocaleString('fr-FR');
+      document.getElementById('cnt-all').textContent = total;
     }
 
-    function renderClients(clients) {
+    // ════════════════════════════════════════
+    // FILTER + SORT
+    // ════════════════════════════════════════
+
+    function applyFilters() {
+      let clients = [...allClients];
+
+      // Search
+      const q = document.getElementById('search-input').value.trim().toLowerCase();
+      if (q.length >= 2) {
+        clients = clients.filter(c =>
+          (c.email || '').toLowerCase().includes(q) ||
+          (c.phone || '').toLowerCase().includes(q) ||
+          (c.name || '').toLowerCase().includes(q)
+        );
+      }
+
+      // Date filter
+      const { from, to } = getDateRange();
+      if (from) {
+        clients = clients.filter(c => {
+          const lv = new Date(c.last_visit);
+          return lv >= from && (!to || lv <= to);
+        });
+      }
+
+      // Tab filter
+      switch (currentTab) {
+        case 'inactive':
+          clients = clients.filter(c => daysSince(c.last_visit) > 30);
+          break;
+        case 'recent':
+          clients = clients.filter(c => daysSince(c.last_visit) <= 7);
+          break;
+      }
+
+      // Sort
+      clients.sort((a, b) => {
+        // Tab-specific default sort
+        if (currentTab === 'top-points') return b.points_balance - a.points_balance;
+        if (currentTab === 'top-spent') return b.total_spent - a.total_spent;
+        if (currentTab === 'top-visits') return b.visit_count - a.visit_count;
+
+        let va = a[currentSort.key];
+        let vb = b[currentSort.key];
+
+        // Handle nulls
+        if (va === null || va === undefined) va = '';
+        if (vb === null || vb === undefined) vb = '';
+
+        // Dates
+        if (currentSort.key.includes('visit') || currentSort.key.includes('_at')) {
+          va = new Date(va || 0).getTime();
+          vb = new Date(vb || 0).getTime();
+        }
+
+        // Strings
+        if (typeof va === 'string') va = va.toLowerCase();
+        if (typeof vb === 'string') vb = vb.toLowerCase();
+
+        if (va < vb) return currentSort.dir === 'asc' ? -1 : 1;
+        if (va > vb) return currentSort.dir === 'asc' ? 1 : -1;
+        return 0;
+      });
+
+      filteredClients = clients;
+      renderTable(clients);
+    }
+
+    function getDateRange() {
+      if (currentPeriod === 'all') return {};
+      if (currentPeriod === 'custom') {
+        const f = document.getElementById('date-from').value;
+        const t = document.getElementById('date-to').value;
+        return { from: f ? new Date(f) : null, to: t ? endOfDay(new Date(t)) : null };
+      }
+
+      const now = new Date();
+      const today = startOfDay(now);
+
+      switch (currentPeriod) {
+        case 'today': return { from: today, to: endOfDay(now) };
+        case 'yesterday': {
+          const y = new Date(today); y.setDate(y.getDate() - 1);
+          return { from: y, to: endOfDay(y) };
+        }
+        case 'week': {
+          const w = new Date(today); w.setDate(w.getDate() - 7);
+          return { from: w, to: endOfDay(now) };
+        }
+        case 'month': {
+          const m = new Date(today); m.setMonth(m.getMonth() - 1);
+          return { from: m, to: endOfDay(now) };
+        }
+      }
+      return {};
+    }
+
+    function startOfDay(d) { const r = new Date(d); r.setHours(0,0,0,0); return r; }
+    function endOfDay(d) { const r = new Date(d); r.setHours(23,59,59,999); return r; }
+    function daysSince(d) { return (Date.now() - new Date(d)) / 86400000; }
+
+    // ════════════════════════════════════════
+    // RENDER TABLE
+    // ════════════════════════════════════════
+
+    function renderTable(clients) {
       const container = document.getElementById('clients-container');
+
       if (clients.length === 0) {
-        UI.showEmptyState('clients-container', '👥', 'Aucun client trouvé');
+        container.innerHTML = '<div class="empty-state" style="padding:2rem;"><div class="empty-state-icon">👥</div><p>Aucun client trouvé</p></div>';
         return;
       }
 
-      let html = '<div class="grid grid-2">';
-      clients.forEach(c => {
-        const isActive = (Date.now() - new Date(c.last_visit)) / 86400000 <= 30;
-        html += `
-          <div class="client-card" onclick="showDetails(${c.id})">
-            <div class="header">
-              <div>
-                <div class="contact">${c.email || c.phone || c.name || 'N/A'}</div>
-                ${c.name && (c.email || c.phone) ? `<span class="text-sm text-muted">${c.name}</span>` : ''}
-                <div style="margin-top: 0.25rem;">
-                  ${c.email_validated ? '<span class="badge badge-success">Validé</span>' : ''}
-                  ${isActive ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Inactif</span>'}
-                  ${c.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
-                </div>
-              </div>
-              <span class="points">${c.points_balance} pts</span>
-            </div>
-            <div class="meta">
-              <div><span class="meta-value">${Format.currency(c.total_spent)}</span><br>Dépensé</div>
-              <div><span class="meta-value">${c.visit_count}</span><br>Visites</div>
-              <div><span class="meta-value">${Format.timeSince(c.last_visit)}</span><br>Dernière</div>
-            </div>
-          </div>
-        `;
+      const showRank = ['top-points', 'top-spent', 'top-visits'].includes(currentTab);
+      const maxPts = Math.max(...clients.map(c => c.points_balance), 1);
+
+      const cols = [
+        ...(showRank ? [{ key: '_rank', label: '#', noSort: true }] : []),
+        { key: 'name', label: 'Client' },
+        { key: 'points_balance', label: 'Points' },
+        { key: 'total_spent', label: 'CA' },
+        { key: 'visit_count', label: 'Visites', hideClass: 'hide-mobile' },
+        { key: 'last_credited_by', label: 'Par', hideClass: 'hide-mobile' },
+        { key: 'last_visit', label: 'Dernière visite' },
+      ];
+
+      let html = '<table class="clients-table"><thead><tr>';
+      cols.forEach(col => {
+        const isSorted = currentSort.key === col.key;
+        const arrow = col.noSort ? '' : `<span class="sort-arrow">${isSorted ? (currentSort.dir === 'asc' ? '▲' : '▼') : '⇅'}</span>`;
+        const cls = [col.hideClass || '', isSorted ? 'sorted' : ''].filter(Boolean).join(' ');
+        const onclick = col.noSort ? '' : `onclick="sortBy('${col.key}')"`;
+        html += `<th class="${cls}" ${onclick}>${col.label}${arrow}</th>`;
       });
-      html += '</div>';
+      html += '</tr></thead><tbody>';
+
+      clients.forEach((c, i) => {
+        const display = c.name || c.email || c.phone || 'N/A';
+        const sub = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
+        const isActive = daysSince(c.last_visit) <= 30;
+        const progress = Math.min(c.points_balance / maxPts * 100, 100);
+
+        html += `<tr onclick="showDetails(${c.id})">`;
+
+        if (showRank) {
+          const rankCls = i < 3 ? `rank rank-${i+1}` : 'rank';
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
+          html += `<td class="${rankCls}">${medal}</td>`;
+        }
+
+        html += `
+          <td>
+            <strong>${escHtml(display)}</strong>
+            ${sub ? `<br><span class="staff-sm">${escHtml(sub)}</span>` : ''}
+            ${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}
+          </td>
+          <td>
+            <div class="pts-bar">
+              <strong style="color:var(--primary)">${c.points_balance}</strong>
+              <div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div>
+            </div>
+          </td>
+          <td>${Format.currency(c.total_spent)}</td>
+          <td class="hide-mobile">${c.visit_count}</td>
+          <td class="hide-mobile">
+            ${c.last_credited_by ? `<span class="staff-sm">${escHtml(c.last_credited_by)}</span>` : '<span class="staff-sm">—</span>'}
+          </td>
+          <td>
+            <span class="staff-sm">${formatShortDate(c.last_visit)}</span>
+            ${!isActive ? '<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>' : ''}
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
       container.innerHTML = html;
     }
 
-    // ─── Search ───
-    let searchTimeout;
-    document.getElementById('search-input').addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      clearTimeout(searchTimeout);
-      if (q.length === 0) { renderClients(allClients); return; }
-      if (q.length < 2) return;
-      searchTimeout = setTimeout(async () => {
-        try {
-          const data = await API.clients.search(q);
-          renderClients(data.clients);
-        } catch (err) { console.error(err); }
-      }, 300);
+    // ════════════════════════════════════════
+    // SORT
+    // ════════════════════════════════════════
+
+    function sortBy(key) {
+      if (currentSort.key === key) {
+        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        currentSort = { key, dir: key === 'name' ? 'asc' : 'desc' };
+      }
+      applyFilters();
+    }
+
+    // ════════════════════════════════════════
+    // TABS
+    // ════════════════════════════════════════
+
+    document.getElementById('tabs-row').addEventListener('click', (e) => {
+      const tab = e.target.closest('.client-tab');
+      if (!tab) return;
+      document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentTab = tab.dataset.tab;
+
+      // Reset sort per tab
+      const sortDefaults = {
+        'all': { key: 'last_visit', dir: 'desc' },
+        'top-points': { key: 'points_balance', dir: 'desc' },
+        'top-spent': { key: 'total_spent', dir: 'desc' },
+        'top-visits': { key: 'visit_count', dir: 'desc' },
+        'recent': { key: 'last_visit', dir: 'desc' },
+        'inactive': { key: 'last_visit', dir: 'asc' },
+      };
+      currentSort = sortDefaults[currentTab] || { key: 'last_visit', dir: 'desc' };
+      applyFilters();
     });
 
-    // ─── Client Detail Modal ───
+    // ════════════════════════════════════════
+    // DATE PILLS
+    // ════════════════════════════════════════
+
+    document.getElementById('date-pills').addEventListener('click', (e) => {
+      const pill = e.target.closest('.date-pill');
+      if (!pill) return;
+      document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentPeriod = pill.dataset.period;
+
+      document.getElementById('date-range').style.display = currentPeriod === 'custom' ? 'flex' : 'none';
+      if (currentPeriod !== 'custom') applyFilters();
+    });
+
+    document.getElementById('date-from').addEventListener('change', applyFilters);
+    document.getElementById('date-to').addEventListener('change', applyFilters);
+
+    // ════════════════════════════════════════
+    // SEARCH
+    // ════════════════════════════════════════
+
+    let searchTimeout;
+    document.getElementById('search-input').addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(applyFilters, 200);
+    });
+
+    // ════════════════════════════════════════
+    // CSV EXPORT
+    // ════════════════════════════════════════
+
+    function exportCSV() { window.location.href = `${API_BASE_URL}/clients/export/csv`; }
+
+    // ════════════════════════════════════════
+    // CLIENT DETAIL MODAL
+    // ════════════════════════════════════════
+
     async function showDetails(mcId) {
       try {
         currentClientId = mcId;
@@ -168,29 +489,21 @@
         const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
 
         let html = `
-          <div class="stats-grid" style="margin-bottom: 1.5rem;">
+          <div class="stats-grid" style="margin-bottom: 1rem;">
             <div class="stat-card"><div class="stat-value">${c.points_balance}</div><div class="stat-label">Points</div></div>
             <div class="stat-card"><div class="stat-value">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
             <div class="stat-card"><div class="stat-value">${c.visit_count}</div><div class="stat-label">Visites</div></div>
-            <div class="stat-card"><div class="stat-value">${Format.date(c.first_visit)}</div><div class="stat-label">Depuis</div></div>
           </div>
-
-          <div style="margin-bottom: 1.5rem;">
-            <div class="flex-between text-sm">
-              <span>Progression vers récompense</span>
-              <span>${c.points_balance}/${c.reward_threshold}</span>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${progress}%;"></div>
-            </div>
-            ${c.can_redeem ? `<div class="alert alert-success mt-1">🎁 Récompense disponible : ${c.reward_description}</div>` : ''}
+          <div style="margin-bottom: 1rem;">
+            <div class="flex-between text-sm"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+            ${c.can_redeem ? '<div class="alert alert-success mt-1" style="padding:6px 10px;font-size:0.85rem;">🎁 Récompense disponible</div>' : ''}
           </div>
-
-          <h3 style="margin-bottom: 0.75rem;">Historique</h3>
+          <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Historique</h3>
         `;
 
         if (txs.length === 0) {
-          html += '<p class="text-muted text-center">Aucun historique</p>';
+          html += '<p class="text-muted text-center" style="font-size:0.85rem;">Aucun historique</p>';
         } else {
           html += '<div class="timeline">';
           txs.forEach(t => {
@@ -199,61 +512,45 @@
             const color = type === 'reward' ? 'var(--success)' : type === 'adjustment' ? 'var(--warning)' : 'var(--primary)';
             html += `
               <div class="timeline-item ${type}">
-                <div class="timeline-date">${Format.datetime(t.created_at)} ${t.staff_name ? `— ${t.staff_name}` : ''}</div>
+                <div class="timeline-date">${Format.datetime(t.created_at)}${t.staff_name ? ` — <strong>${escHtml(t.staff_name)}</strong>` : ''}</div>
                 <div class="timeline-content">
-                  <strong style="color: ${color};">${sign}${t.points_delta} pts</strong>
+                  <strong style="color:${color}">${sign}${t.points_delta} pts</strong>
                   ${t.amount ? ` pour ${Format.currency(t.amount)}` : ''}
-                  <span class="badge badge-neutral" style="margin-left: 0.5rem;">${type}</span>
-                  ${t.notes ? `<br><small class="text-muted">${t.notes}</small>` : ''}
+                  <span class="badge badge-neutral" style="margin-left:4px">${type}</span>
+                  ${t.notes ? `<br><small class="text-muted">${escHtml(t.notes)}</small>` : ''}
                 </div>
-              </div>
-            `;
+              </div>`;
           });
           html += '</div>';
         }
 
         document.getElementById('modal-body').innerHTML = html;
 
-        // Footer actions (owner/manager)
         let footer = '';
-        if (staff.role === 'owner' || staff.role === 'manager') {
+        if (['owner', 'manager'].includes(staff.role)) {
           footer += `<button class="btn btn-outline btn-sm" onclick="showAdjustModal()">📏 Ajuster</button>`;
-          if (c.is_blocked) {
-            footer += `<button class="btn btn-success btn-sm" onclick="toggleBlock(false)">Débloquer</button>`;
-          } else {
-            footer += `<button class="btn btn-danger btn-sm" onclick="toggleBlock(true)">Bloquer</button>`;
-          }
+          footer += c.is_blocked
+            ? `<button class="btn btn-success btn-sm" onclick="toggleBlock(false)">Débloquer</button>`
+            : `<button class="btn btn-danger btn-sm" onclick="toggleBlock(true)">Bloquer</button>`;
         }
         document.getElementById('modal-footer').innerHTML = footer;
-
         document.getElementById('detail-modal').classList.add('active');
-      } catch (err) {
-        console.error(err);
-      }
+      } catch (err) { console.error(err); }
     }
 
     function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
     document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
 
-    // ─── Block / Unblock ───
     async function toggleBlock(block) {
       if (!currentClientId) return;
-      const action = block ? 'bloquer' : 'débloquer';
-      if (!confirm(`${block ? '🔒' : '🔓'} Voulez-vous ${action} ce client ?`)) return;
+      if (!confirm(`${block ? '🔒 Bloquer' : '🔓 Débloquer'} ce client ?`)) return;
       try {
-        if (block) {
-          await API.clients.block(currentClientId);
-        } else {
-          await API.clients.unblock(currentClientId);
-        }
-        closeModal();
-        loadClients();
-      } catch (err) {
-        alert('Erreur : ' + err.message);
-      }
+        if (block) await API.clients.block(currentClientId);
+        else await API.clients.unblock(currentClientId);
+        closeModal(); loadClients();
+      } catch (err) { alert(err.message); }
     }
 
-    // ─── Adjust Points ───
     function showAdjustModal() {
       document.getElementById('adjust-delta').value = '';
       document.getElementById('adjust-reason').value = '';
@@ -266,24 +563,32 @@
     async function submitAdjustment() {
       const delta = parseInt(document.getElementById('adjust-delta').value);
       const reason = document.getElementById('adjust-reason').value.trim();
-
-      if (!delta || delta === 0) { UI.showAlert('adjust-alert', 'Ajustement requis', 'error'); return; }
+      if (!delta) { UI.showAlert('adjust-alert', 'Ajustement requis', 'error'); return; }
       if (!reason) { UI.showAlert('adjust-alert', 'Raison requise', 'error'); return; }
-
       try {
-        await API.clients.adjust({
-          merchantClientId: currentClientId,
-          pointsDelta: delta,
-          reason,
-        });
-        closeAdjustModal();
-        showDetails(currentClientId); // Refresh
-        loadClients();
-      } catch (err) {
-        UI.showAlert('adjust-alert', err.message, 'error');
-      }
+        await API.clients.adjust({ merchantClientId: currentClientId, pointsDelta: delta, reason });
+        closeAdjustModal(); showDetails(currentClientId); loadClients();
+      } catch (err) { UI.showAlert('adjust-alert', err.message, 'error'); }
     }
 
+    // ════════════════════════════════════════
+    // HELPERS
+    // ════════════════════════════════════════
+
+    function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    function formatShortDate(d) {
+      if (!d) return '—';
+      const dt = new Date(d);
+      const days = Math.floor((Date.now() - dt) / 86400000);
+      const time = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      if (days === 0) return `Auj. ${time}`;
+      if (days === 1) return `Hier ${time}`;
+      if (days < 7) return `${dt.toLocaleDateString('fr-FR', { weekday: 'short' })} ${time}`;
+      return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + time;
+    }
+
+    // Init
     loadClients();
   </script>
 </body>
