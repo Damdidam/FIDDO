@@ -31,12 +31,13 @@
         <div class="form-group">
           <label class="form-label">Mot de passe</label>
           <input type="password" id="setup-password" class="form-control" minlength="8" required>
+          <small class="form-help">Minimum 8 caractères</small>
         </div>
         <button type="submit" class="btn btn-secondary btn-block">Créer le compte admin</button>
       </form>
 
       <!-- Login form -->
-      <form id="login-form">
+      <form id="login-form" style="display: none;">
         <h2 class="text-center mb-2" style="font-size: 1.1rem;">Connexion administrateur</h2>
         <div id="login-alert"></div>
         <div class="form-group">
@@ -49,6 +50,12 @@
         </div>
         <button type="submit" class="btn btn-secondary btn-block">Se connecter</button>
       </form>
+
+      <!-- Loading -->
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        Chargement...
+      </div>
     </div>
   </div>
 
@@ -68,13 +75,31 @@
       return data;
     }
 
-    // Check if already logged in
+    // On load: check if already logged in, then check if setup needed
     (async () => {
       try {
+        // Already logged in?
         await adminCall('/auth/verify');
         window.location.href = '/admin/dashboard';
+        return;
       } catch (e) {
-        // Not logged in, show form
+        // Not logged in — continue
+      }
+
+      try {
+        // Check if first admin needs to be created
+        const { needsSetup } = await adminCall('/auth/needs-setup');
+        document.getElementById('loading').style.display = 'none';
+
+        if (needsSetup) {
+          document.getElementById('setup-form').style.display = 'block';
+        } else {
+          document.getElementById('login-form').style.display = 'block';
+        }
+      } catch (e) {
+        // Fallback: show login
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('login-form').style.display = 'block';
       }
     })();
 
