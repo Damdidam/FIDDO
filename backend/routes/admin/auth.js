@@ -7,6 +7,15 @@ const { logAudit, auditCtx } = require('../../middleware/audit');
 const router = express.Router();
 
 // ═══════════════════════════════════════════════════════
+// GET /api/admin/auth/needs-setup
+// ═══════════════════════════════════════════════════════
+
+router.get('/needs-setup', (req, res) => {
+  const { count } = adminQueries.count.get();
+  res.json({ needsSetup: count === 0 });
+});
+
+// ═══════════════════════════════════════════════════════
 // POST /api/admin/auth/setup — Create first super admin (one-time)
 // ═══════════════════════════════════════════════════════
 
@@ -47,7 +56,6 @@ router.post('/setup', async (req, res) => {
   }
 });
 
-
 // ═══════════════════════════════════════════════════════
 // POST /api/admin/auth/login
 // ═══════════════════════════════════════════════════════
@@ -84,7 +92,6 @@ router.post('/login', async (req, res) => {
   }
 });
 
-
 // ═══════════════════════════════════════════════════════
 // GET /api/admin/auth/verify
 // ═══════════════════════════════════════════════════════
@@ -99,7 +106,6 @@ router.get('/verify', authenticateAdmin, (req, res) => {
   res.json({ admin: adminData });
 });
 
-
 // ═══════════════════════════════════════════════════════
 // POST /api/admin/auth/logout
 // ═══════════════════════════════════════════════════════
@@ -112,6 +118,5 @@ router.post('/logout', (req, res) => {
   });
   res.json({ message: 'Déconnecté' });
 });
-
 
 module.exports = router;
