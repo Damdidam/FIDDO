@@ -153,7 +153,97 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════ -->
-    <!-- 6. BACKUP & RESTORE                            -->
+    <!-- 6. INFORMATIONS DU COMMERCE (owner only)       -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">🏪 Informations du commerce</div>
+      <p class="text-muted text-sm mb-2">Modifiez les informations de votre établissement. Les changements seront vérifiés par notre équipe.</p>
+
+      <div id="merchant-info-alert"></div>
+
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Nom du commerce *</label>
+          <input type="text" id="mi-business-name" class="form-control" placeholder="Mon Restaurant">
+        </div>
+        <div class="form-group">
+          <label class="form-label">N° TVA *</label>
+          <input type="text" id="mi-vat" class="form-control" placeholder="BE0123456789">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Adresse *</label>
+        <input type="text" id="mi-address" class="form-control" placeholder="1 Rue de la Paix, 1000 Bruxelles">
+      </div>
+
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Email du commerce *</label>
+          <input type="email" id="mi-email" class="form-control" placeholder="contact@monresto.be">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone commerce *</label>
+          <input type="tel" id="mi-phone" class="form-control" placeholder="+32 2 123 45 67">
+        </div>
+      </div>
+
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Nom du responsable</label>
+          <input type="text" id="mi-owner-name" class="form-control" placeholder="Jean Dupont">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Téléphone personnel *</label>
+          <input type="tel" id="mi-owner-phone" class="form-control" placeholder="+32 497 12 34 56">
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <button class="btn btn-primary" onclick="saveMerchantInfo()" id="mi-save-btn">
+          Mettre à jour les informations
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 7. MOT DE PASSE                                -->
+    <!-- ═══════════════════════════════════════════════ -->
+
+    <div class="pref-section">
+      <div class="pref-section-title">🔐 Mot de passe</div>
+      <p class="text-muted text-sm mb-2">Changez votre mot de passe de connexion.</p>
+
+      <div id="password-alert"></div>
+
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Mot de passe actuel</label>
+          <input type="password" id="pw-current" class="form-control" placeholder="••••••••">
+        </div>
+        <div></div>
+      </div>
+      <div class="grid grid-2">
+        <div class="form-group">
+          <label class="form-label">Nouveau mot de passe</label>
+          <input type="password" id="pw-new" class="form-control" placeholder="Minimum 6 caractères">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmer le nouveau mot de passe</label>
+          <input type="password" id="pw-confirm" class="form-control" placeholder="Retapez le mot de passe">
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <button class="btn btn-primary" onclick="changePassword()" id="pw-save-btn">
+          Changer le mot de passe
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- 8. BACKUP & RESTORE                            -->
     <!-- ═══════════════════════════════════════════════ -->
 
     <div class="pref-section">
@@ -339,6 +429,119 @@
         UI.showAlert('global-alert', err.message, 'error');
       } finally {
         btn.disabled = false;
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════
+    // MERCHANT INFO (owner only)
+    // ═══════════════════════════════════════════════════
+
+    async function loadMerchantInfo() {
+      try {
+        const data = await API.call('/preferences/merchant-info');
+        document.getElementById('mi-business-name').value = data.businessName || '';
+        document.getElementById('mi-vat').value = data.vatNumber || '';
+        document.getElementById('mi-address').value = data.address || '';
+        document.getElementById('mi-email').value = data.email || '';
+        document.getElementById('mi-phone').value = data.phone || '';
+        document.getElementById('mi-owner-name').value = data.ownerName || '';
+        document.getElementById('mi-owner-phone').value = data.ownerPhone || '';
+      } catch (err) {
+        console.error('Erreur chargement merchant-info:', err);
+      }
+    }
+
+    async function saveMerchantInfo() {
+      const btn = document.getElementById('mi-save-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Mise à jour...';
+
+      try {
+        const payload = {
+          businessName: document.getElementById('mi-business-name').value.trim(),
+          address: document.getElementById('mi-address').value.trim(),
+          vatNumber: document.getElementById('mi-vat').value.trim(),
+          email: document.getElementById('mi-email').value.trim(),
+          phone: document.getElementById('mi-phone').value.trim(),
+          ownerPhone: document.getElementById('mi-owner-phone').value.trim(),
+          ownerName: document.getElementById('mi-owner-name').value.trim(),
+        };
+
+        if (!payload.businessName || !payload.address || !payload.vatNumber || !payload.email || !payload.phone || !payload.ownerPhone) {
+          UI.showAlert('merchant-info-alert', 'Tous les champs marqués * sont requis', 'error');
+          return;
+        }
+
+        const result = await API.call('/preferences/merchant-info', {
+          method: 'PUT',
+          body: JSON.stringify(payload),
+        });
+
+        // Update local session if merchant data changed
+        if (result.merchant) {
+          Auth.setSession(staff, result.merchant);
+        }
+
+        if (result.changes && result.changes.length > 0) {
+          const changeList = result.changes.map(c => `<strong>${c.field}</strong> : ${c.old} → ${c.new}`).join('<br>');
+          UI.showAlert('merchant-info-alert', `✅ Informations mises à jour !<br><small>${changeList}</small><br><small class="text-muted">L'équipe FIDDO a été notifiée.</small>`, 'success');
+        } else {
+          UI.showAlert('merchant-info-alert', 'Aucune modification détectée', 'info');
+        }
+
+        setTimeout(() => UI.clearAlert('merchant-info-alert'), 8000);
+      } catch (err) {
+        UI.showAlert('merchant-info-alert', err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Mettre à jour les informations';
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════
+    // PASSWORD CHANGE
+    // ═══════════════════════════════════════════════════
+
+    async function changePassword() {
+      const btn = document.getElementById('pw-save-btn');
+      const current = document.getElementById('pw-current').value;
+      const newPw = document.getElementById('pw-new').value;
+      const confirm = document.getElementById('pw-confirm').value;
+
+      if (!current || !newPw) {
+        UI.showAlert('password-alert', 'Mot de passe actuel et nouveau requis', 'error');
+        return;
+      }
+      if (newPw.length < 6) {
+        UI.showAlert('password-alert', 'Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
+        return;
+      }
+      if (newPw !== confirm) {
+        UI.showAlert('password-alert', 'Les mots de passe ne correspondent pas', 'error');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = '⏳ Modification...';
+
+      try {
+        await API.call('/preferences/password', {
+          method: 'PUT',
+          body: JSON.stringify({ currentPassword: current, newPassword: newPw }),
+        });
+
+        UI.showAlert('password-alert', '✅ Mot de passe modifié avec succès !', 'success');
+        document.getElementById('pw-current').value = '';
+        document.getElementById('pw-new').value = '';
+        document.getElementById('pw-confirm').value = '';
+        setTimeout(() => UI.clearAlert('password-alert'), 5000);
+      } catch (err) {
+        UI.showAlert('password-alert', err.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Changer le mot de passe';
       }
     }
 
@@ -568,6 +771,7 @@
     // ═══════════════════════════════════════════════════
 
     loadPreferences();
+    loadMerchantInfo();
   </script>
 </body>
 </html>
