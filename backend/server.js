@@ -15,7 +15,7 @@ const PORT = process.env.PORT || 3000;
 // ═══════════════════════════════════════════════════════
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' })); // 10mb for backup imports
 app.use(cookieParser());
 app.use(requestIdMiddleware); // Attach unique request ID to every request
 
@@ -35,13 +35,16 @@ app.use('/api/clients', require('./routes/clients'));
 // QR code sessions (client self-identification)
 app.use('/api/qr', require('./routes/qr'));
 
+// Preferences (themes, backups, notifications)
+app.use('/api/preferences', require('./routes/preferences'));
+
 // Super admin
 app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '3.2.0', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: '3.3.0', timestamp: new Date().toISOString() });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -54,6 +57,7 @@ app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../fronte
 app.get('/clients',   (req, res) => res.sendFile(path.join(__dirname, '../frontend/clients.html')));
 app.get('/credit',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
 app.get('/staff',     (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
+app.get('/preferences', (req, res) => res.sendFile(path.join(__dirname, '../frontend/preferences.html')));
 
 // Client self-identification (public — scanned via QR)
 app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
@@ -89,7 +93,7 @@ app.get('/validate', (req, res) => {
 // ═══════════════════════════════════════════════════════
 
 app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V3.2 Multi-Tenant — Port ${PORT}`);
+  console.log(`🐕 FIDDO V3.3 Multi-Tenant — Port ${PORT}`);
 });
 
 module.exports = app;
