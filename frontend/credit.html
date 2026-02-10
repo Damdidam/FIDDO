@@ -625,6 +625,7 @@
               <div class="flex-between">
                 <div>
                   <strong>${c.name || c.email || c.phone}</strong>
+                  ${c.custom_reward ? ' <span style="color:#f59e0b;font-size:0.75rem" title="Récompense personnalisée">⭐</span>' : ''}
                   ${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}
                 </div>
                 <span style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
@@ -634,6 +635,7 @@
                 <div class="progress-fill" style="width: ${progress}%;"></div>
               </div>
               <p class="text-sm text-muted">${c.points_balance}/${c.reward_threshold} points</p>
+              ${c.custom_reward ? `<p class="text-sm" style="margin-top:0.3rem;color:var(--primary)">🎁 ${c.reward_description}</p>` : ''}
           `;
 
           if (c.can_redeem) {
