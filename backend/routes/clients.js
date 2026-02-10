@@ -1,5 +1,5 @@
 const express = require('express');
-const { merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries } = require('../database');
+const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
@@ -13,16 +13,96 @@ router.use(authenticateStaff);
 
 
 // ═══════════════════════════════════════════════════════
+// GET /api/clients/quick-search?q=...&mode=email|phone
+// Lightweight search for credit screen (all staff).
+// Searches globally across end_users, then enriches with
+// merchant-specific data if a relationship exists.
+// ═══════════════════════════════════════════════════════
+
+router.get('/quick-search', (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const { q, mode } = req.query;
+
+    if (!q || q.length < 3) {
+      return res.json({ results: [] });
+    }
+
+    const term = `%${q.toLowerCase().replace(/[\s\-().+]/g, '')}%`;
+    const termLike = `%${q.toLowerCase()}%`;
+
+    // Search end_users globally (not deleted)
+    // For phone: strip formatting chars before comparing
+    // For email: simple LIKE on email_lower
+    // Also search by name
+    let endUsers;
+
+    if (mode === 'phone') {
+      // Strip non-digit chars for phone comparison
+      const digits = q.replace(/[^\d]/g, '');
+      if (digits.length < 3) return res.json({ results: [] });
+      const phoneTerm = `%${digits}%`;
+
+      endUsers = db.prepare(`
+        SELECT id, email, phone, phone_e164, name
+        FROM end_users
+        WHERE deleted_at IS NULL
+          AND (
+            REPLACE(REPLACE(REPLACE(REPLACE(phone_e164, '+', ''), ' ', ''), '-', ''), '.', '') LIKE ?
+            OR name LIKE ?
+          )
+        ORDER BY updated_at DESC
+        LIMIT 10
+      `).all(phoneTerm, termLike);
+    } else {
+      endUsers = db.prepare(`
+        SELECT id, email, phone, phone_e164, name
+        FROM end_users
+        WHERE deleted_at IS NULL
+          AND (
+            email_lower LIKE ?
+            OR name LIKE ?
+          )
+        ORDER BY updated_at DESC
+        LIMIT 10
+      `).all(termLike, termLike);
+    }
+
+    // Enrich with merchant_client data if relationship exists
+    const results = endUsers.map(eu => {
+      const mc = merchantClientQueries.find.get(merchantId, eu.id);
+      return {
+        end_user_id: eu.id,
+        email: eu.email,
+        phone: eu.phone,
+        name: eu.name,
+        // merchant-specific (null if no relationship yet)
+        id: mc ? mc.id : null,
+        points_balance: mc ? mc.points_balance : undefined,
+        visit_count: mc ? mc.visit_count : undefined,
+        total_spent: mc ? mc.total_spent : undefined,
+        is_blocked: mc ? mc.is_blocked : false,
+      };
+    });
+
+    res.json({ results, count: results.length });
+  } catch (error) {
+    console.error('Erreur quick-search:', error);
+    res.status(500).json({ error: 'Erreur lors de la recherche' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // POST /api/clients/credit — Credit points (cashier+)
 // ═══════════════════════════════════════════════════════
 
 router.post('/credit', (req, res) => {
   try {
-    const merchantId = req.staff.merchant_id; // ALWAYS from JWT
+    const merchantId = req.staff.merchant_id;
     const staffId = req.staff.id;
     const { email, phone, name, amount, notes, idempotencyKey } = req.body;
 
-    // Validate input
     if (!email && !phone) {
       return res.status(400).json({ error: 'Email ou téléphone requis' });
     }
@@ -30,7 +110,6 @@ router.post('/credit', (req, res) => {
       return res.status(400).json({ error: 'Montant invalide' });
     }
 
-    // Cashier transaction limit (200€)
     if (req.staff.role === 'cashier' && parseFloat(amount) > 200) {
       return res.status(403).json({ error: 'Montant maximum de 200€ pour un caissier' });
     }
@@ -47,7 +126,6 @@ router.post('/credit', (req, res) => {
       source: 'manual',
     });
 
-    // Audit (skip if idempotent return)
     if (!result.idempotent) {
       logAudit({
         ...auditCtx(req),
@@ -64,7 +142,6 @@ router.post('/credit', (req, res) => {
         },
       });
 
-      // Fire-and-forget emails
       const merchant = merchantQueries.findById.get(merchantId);
       if (result.isNewClient && result.endUser.email) {
         sendValidationEmail(result.endUser.email, result.endUser.validation_token, merchant.business_name);
@@ -197,8 +274,6 @@ router.post('/adjust', requireRole('owner', 'manager'), (req, res) => {
 
 // ═══════════════════════════════════════════════════════
 // GET /api/clients/lookup?email=...&phone=...
-// Minimal info for cashier credit screen.
-// Returns: name, balance, reward progress. NOT full history.
 // ═══════════════════════════════════════════════════════
 
 router.get('/lookup', (req, res) => {
@@ -213,7 +288,6 @@ router.get('/lookup', (req, res) => {
     const emailLower = normalizeEmail(email);
     const phoneE164 = normalizePhone(phone);
 
-    // Use the same 3-step lookup as the points service but read-only
     let endUser = null;
     if (emailLower) {
       endUser = endUserQueries.findByEmailLower.get(emailLower);
@@ -221,25 +295,19 @@ router.get('/lookup', (req, res) => {
     if (!endUser && phoneE164) {
       endUser = endUserQueries.findByPhoneE164.get(phoneE164);
     }
-    // Check aliases (post-merge identifiers)
     if (!endUser && emailLower) {
       const alias = aliasQueries.findByValue.get(emailLower);
-      if (alias) {
-        endUser = endUserQueries.findById.get(alias.end_user_id);
-      }
+      if (alias) endUser = endUserQueries.findById.get(alias.end_user_id);
     }
     if (!endUser && phoneE164) {
       const alias = aliasQueries.findByValue.get(phoneE164);
-      if (alias) {
-        endUser = endUserQueries.findById.get(alias.end_user_id);
-      }
+      if (alias) endUser = endUserQueries.findById.get(alias.end_user_id);
     }
 
     if (!endUser) {
       return res.json({ found: false });
     }
 
-    // Check merchant_client relationship
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
     if (!mc) {
       return res.json({
@@ -249,7 +317,6 @@ router.get('/lookup', (req, res) => {
       });
     }
 
-    // Get merchant settings for reward progress
     const merchant = merchantQueries.findById.get(merchantId);
 
     res.json({
@@ -283,7 +350,6 @@ router.get('/', requireRole('owner', 'manager'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const clients = merchantClientQueries.getByMerchant.all(merchantId);
-
     res.json({ count: clients.length, clients });
   } catch (error) {
     console.error('Erreur liste clients:', error);
@@ -307,7 +373,6 @@ router.get('/search', requireRole('owner', 'manager'), (req, res) => {
 
     const term = `%${q.toLowerCase()}%`;
     const clients = merchantClientQueries.searchByMerchant.all(merchantId, term, term, term);
-
     res.json({ count: clients.length, clients });
   } catch (error) {
     console.error('Erreur recherche:', error);
@@ -333,7 +398,7 @@ router.get('/export/csv', requireRole('owner'), (req, res) => {
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=clients.csv');
-    res.send('\uFEFF' + csv); // BOM for Excel UTF-8
+    res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Erreur export CSV:', error);
     res.status(500).json({ error: 'Erreur lors de l\'export' });
