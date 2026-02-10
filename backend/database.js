@@ -155,6 +155,7 @@ function initDatabase() {
 
       is_blocked     INTEGER NOT NULL DEFAULT 0,
       notes_private  TEXT,
+      custom_reward  TEXT,
 
       first_visit    TEXT NOT NULL DEFAULT (datetime('now')),
       last_visit     TEXT NOT NULL DEFAULT (datetime('now')),
@@ -289,7 +290,12 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
   `);
 
-  console.log('✅ Database V3.3 initialized');
+  // ───────────────────────────────────────────
+  // MIGRATIONS (safe for existing DBs)
+  // ───────────────────────────────────────────
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
+
+  console.log('✅ Database V3.4 initialized');
 }
 
 // Init on require
@@ -472,6 +478,7 @@ const merchantClientQueries = {
   `),
 
   setPoints: db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
+  setCustomReward: db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
   block:     db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
   unblock:   db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
 
