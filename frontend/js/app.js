@@ -213,7 +213,7 @@ function requireAuth() {
 function requireOwner() {
   if (!requireAuth()) return false;
   if (!Auth.hasRole('owner')) {
-    window.location.href = '/dashboard';
+    window.location.href = '/credit';
     return false;
   }
   return true;
