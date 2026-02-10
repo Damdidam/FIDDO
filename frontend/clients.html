@@ -138,10 +138,9 @@
     .action-toolbar {
       display: flex;
       gap: 3px;
-      flex-wrap: nowrap;
+      flex-wrap: wrap;
+      justify-content: center;
       padding: 10px 0;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
     }
     .action-btn {
       display: inline-flex;
@@ -176,7 +175,7 @@
     .expand-header:hover { background: #f3f4f6; }
     .expand-arrow { transition: transform 0.2s; font-size: 0.7rem; color: var(--text-light); }
     .expand-section.open .expand-arrow { transform: rotate(90deg); }
-    .expand-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); max-height: 350px; overflow-y: auto; }
+    .expand-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); }
     .expand-section.open .expand-body { display: block; }
 
     /* Notes */
@@ -243,7 +242,7 @@
       .client-hero-name { font-size: 1.1rem; }
       .client-stats-row { margin: -16px 0.75rem 0; }
       .client-stat-val { font-size: 1.1rem; }
-      .action-toolbar { gap: 2px; }
+      .action-toolbar { gap: 3px; }
       .action-btn { padding: 4px 6px; font-size: 0.65rem; }
     }
   </style>
@@ -305,7 +304,7 @@
 
   <!-- ═══ Client Detail Modal ═══ -->
   <div id="detail-modal" class="modal">
-    <div class="modal-content" style="max-width:580px;padding:0;overflow:hidden;">
+    <div class="modal-content" style="max-width:580px;padding:0;overflow-y:auto;">
       <div id="modal-body"></div>
     </div>
   </div>
