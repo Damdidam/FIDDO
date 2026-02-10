@@ -4,138 +4,949 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FIDDO — Connexion</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <style>
-    #register-form { display: none; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-    .section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin: 1.5rem 0 0.75rem; font-weight: 600; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --accent: #0891B2;
+      --accent-dark: #0E7490;
+      --accent-glow: rgba(8, 145, 178, 0.15);
+      --bg-brand: #0C4A5E;
+      --bg-brand-deep: #072F3B;
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      background: #F8FAFB;
+      color: #1F2937;
+      line-height: 1.5;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SPLIT LAYOUT
+       ═══════════════════════════════════════════════════ */
+
+    .login-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ─── Left: Brand Panel ─────────────────────────── */
+
+    .brand-panel {
+      background: linear-gradient(160deg, var(--bg-brand) 0%, var(--bg-brand-deep) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Subtle animated dots pattern */
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+      pointer-events: none;
+    }
+
+    /* Soft glow orb */
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(8,145,178,0.2) 0%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: orb-pulse 6s ease-in-out infinite;
+    }
+
+    @keyframes orb-pulse {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); }
+    }
+
+    .brand-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      max-width: 420px;
+    }
+
+    .brand-logo {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 4rem;
+      font-weight: 700;
+      color: white;
+      letter-spacing: 2px;
+      margin-bottom: 0.25rem;
+    }
+
+    .brand-logo .dog {
+      display: inline-block;
+      font-size: 3.2rem;
+      margin-left: 0.3rem;
+      animation: wag 2s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+
+    @keyframes wag {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(8deg); }
+      75% { transform: rotate(-8deg); }
+    }
+
+    .brand-tagline {
+      color: rgba(255,255,255,0.7);
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-bottom: 3rem;
+    }
+
+    .brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      text-align: left;
+    }
+
+    .brand-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+    }
+
+    .brand-feature-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      backdrop-filter: blur(4px);
+    }
+
+    .brand-feature strong {
+      display: block;
+      color: white;
+      font-weight: 600;
+      margin-bottom: 0.1rem;
+    }
+
+    .brand-feature span {
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .brand-footer {
+      position: absolute;
+      bottom: 1.5rem;
+      left: 0;
+      right: 0;
+      text-align: center;
+      color: rgba(255,255,255,0.3);
+      font-size: 0.78rem;
+      z-index: 1;
+    }
+
+    /* ─── Right: Form Panel ─────────────────────────── */
+
+    .form-panel {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 3rem 2rem;
+      overflow-y: auto;
+    }
+
+    .form-container {
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .form-header {
+      margin-bottom: 2rem;
+    }
+
+    .form-header h1 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #111827;
+      margin-bottom: 0.3rem;
+    }
+
+    .form-header p {
+      color: #6B7280;
+      font-size: 0.95rem;
+    }
+
+    /* ─── Alert Messages (persistent!) ──────────────── */
+
+    .login-alert {
+      border-radius: 12px;
+      padding: 1rem 1.15rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      display: none;
+      animation: alert-in 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+    }
+
+    @keyframes alert-in {
+      from { opacity: 0; transform: translateY(-8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .login-alert.visible { display: flex; gap: 0.75rem; align-items: flex-start; }
+
+    .login-alert .alert-icon {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      line-height: 1.4;
+    }
+
+    .login-alert .alert-body { flex: 1; }
+    .login-alert .alert-title { font-weight: 700; margin-bottom: 0.15rem; }
+    .login-alert .alert-text { opacity: 0.85; }
+    .login-alert .alert-hint { font-size: 0.82rem; opacity: 0.6; margin-top: 0.4rem; }
+
+    .login-alert .alert-close {
+      position: absolute;
+      top: 0.6rem;
+      right: 0.75rem;
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      cursor: pointer;
+      opacity: 0.4;
+      transition: opacity 0.2s;
+      color: inherit;
+    }
+    .login-alert .alert-close:hover { opacity: 0.8; }
+
+    /* Alert types */
+    .login-alert.error {
+      background: #FEF2F2;
+      color: #991B1B;
+      border: 1px solid #FECACA;
+    }
+    .login-alert.warning {
+      background: #FFFBEB;
+      color: #92400E;
+      border: 1px solid #FDE68A;
+    }
+    .login-alert.info {
+      background: #F0F9FF;
+      color: #0C4A6E;
+      border: 1px solid #BAE6FD;
+    }
+    .login-alert.success {
+      background: #F0FDF4;
+      color: #166534;
+      border: 1px solid #BBF7D0;
+    }
+
+    /* ─── Form Fields ───────────────────────────────── */
+
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.88rem;
+      color: #374151;
+      margin-bottom: 0.4rem;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid #E5E7EB;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.2s;
+      background: white;
+      color: #111827;
+    }
+
+    .field-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .field-input.shake {
+      animation: field-shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+    }
+
+    @keyframes field-shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 50%, 90% { transform: translateX(-4px); }
+      30%, 70% { transform: translateX(4px); }
+    }
+
+    .field-input.error-field {
+      border-color: #FCA5A5;
+      background: #FFF5F5;
+    }
+
+    /* ─── Password field with toggle ────────────────── */
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper .field-input {
+      padding-right: 48px;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      border-radius: 8px;
+      transition: background 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .password-toggle:hover { background: #F3F4F6; }
+
+    /* ─── Submit Button ─────────────────────────────── */
+
+    .login-btn {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+      background: var(--accent);
+      color: white;
+    }
+
+    .login-btn:hover:not(:disabled) {
+      background: var(--accent-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(8, 145, 178, 0.35);
+    }
+
+    .login-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .login-btn .spinner-inline {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.5rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ─── Divider ───────────────────────────────────── */
+
+    .form-divider {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 2rem 0;
+      color: #9CA3AF;
+      font-size: 0.82rem;
+    }
+
+    .form-divider::before,
+    .form-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E5E7EB;
+    }
+
+    /* ─── Register Toggle ───────────────────────────── */
+
+    .form-toggle {
+      text-align: center;
+      color: #6B7280;
+      font-size: 0.9rem;
+    }
+
+    .form-toggle a {
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .form-toggle a:hover { color: var(--accent-dark); text-decoration: underline; }
+
+    /* ─── Register Form extras ──────────────────────── */
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .section-label {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--accent);
+      font-weight: 700;
+      margin: 1.75rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E5E7EB;
+    }
+
+    .field-hint {
+      color: #9CA3AF;
+      font-size: 0.78rem;
+      margin-top: 0.3rem;
+    }
+
+    /* ─── Screen transitions ────────────────────────── */
+
+    .screen { display: none; }
+    .screen.active {
+      display: block;
+      animation: screen-in 0.3s ease;
+    }
+
+    @keyframes screen-in {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ─── Mobile Responsive ─────────────────────────── */
+
+    @media (max-width: 900px) {
+      .login-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .brand-panel {
+        padding: 2rem 1.5rem 1.5rem;
+        min-height: auto;
+      }
+
+      .brand-logo { font-size: 2.5rem; }
+      .brand-tagline { font-size: 0.95rem; margin-bottom: 1.5rem; }
+      .brand-features { display: none; }
+      .brand-footer { display: none; }
+      .brand-panel::after { display: none; }
+
+      .form-panel { padding: 2rem 1.25rem; }
+      .form-header h1 { font-size: 1.4rem; }
+      .form-row { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-box">
-      <div class="auth-logo">FIDDO 🐕</div>
-      <p class="auth-subtitle">Programme de fidélité pour restaurateurs</p>
 
-      <!-- ═══ LOGIN ═══ -->
-      <form id="login-form">
-        <h2 class="text-center mb-2" style="font-size: 1.2rem;">Connexion</h2>
-        <div id="login-alert"></div>
+  <div class="login-layout">
 
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="login-email" class="form-control" placeholder="votre@email.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mot de passe</label>
-          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
-        <div class="toggle-form">
-          Pas encore de compte ? <a class="toggle-link" onclick="showRegister()">S'inscrire</a>
-        </div>
-      </form>
+    <!-- ═══ LEFT: BRAND ═══ -->
+    <div class="brand-panel">
+      <div class="brand-content">
+        <div class="brand-logo">FIDDO <span class="dog">🐕</span></div>
+        <div class="brand-tagline">Programme de fidélité pour restaurateurs</div>
 
-      <!-- ═══ REGISTER ═══ -->
-      <form id="register-form">
-        <h2 class="text-center mb-2" style="font-size: 1.2rem;">Inscription</h2>
-        <div id="register-alert"></div>
-
-        <div class="section-title">🏪 Votre commerce</div>
-        <div class="form-group">
-          <label class="form-label">Nom du commerce *</label>
-          <input type="text" id="reg-business" class="form-control" placeholder="Mon Restaurant" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Adresse *</label>
-          <input type="text" id="reg-address" class="form-control" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">N° TVA *</label>
-            <input type="text" id="reg-vat" class="form-control" placeholder="BE0123456789" required>
+        <div class="brand-features">
+          <div class="brand-feature">
+            <div class="brand-feature-icon">⚡</div>
+            <div>
+              <strong>Simple et rapide</strong>
+              <span>Créditez des points en quelques secondes</span>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Téléphone commerce *</label>
-            <input type="tel" id="reg-phone" class="form-control" placeholder="+32 2 123 45 67" required>
+          <div class="brand-feature">
+            <div class="brand-feature-icon">👥</div>
+            <div>
+              <strong>Multi-équipe</strong>
+              <span>Propriétaires, managers et caissiers</span>
+            </div>
+          </div>
+          <div class="brand-feature">
+            <div class="brand-feature-icon">📊</div>
+            <div>
+              <strong>Tableau de bord complet</strong>
+              <span>Suivez vos clients et votre chiffre d'affaires</span>
+            </div>
+          </div>
+          <div class="brand-feature">
+            <div class="brand-feature-icon">📱</div>
+            <div>
+              <strong>QR Code intelligent</strong>
+              <span>Vos clients s'identifient depuis leur téléphone</span>
+            </div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Email commerce *</label>
-          <input type="email" id="reg-biz-email" class="form-control" placeholder="contact@monresto.be" required>
-        </div>
+      </div>
 
-        <div class="section-title">👤 Responsable (propriétaire)</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Nom complet *</label>
-            <input type="text" id="reg-owner-name" class="form-control" placeholder="Jean Dupont" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Téléphone personnel *</label>
-            <input type="tel" id="reg-owner-phone" class="form-control" placeholder="+32 497 12 34 56" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email de connexion *</label>
-          <input type="email" id="reg-owner-email" class="form-control" placeholder="jean@email.com" required>
-          <small class="form-help">Cet email sera utilisé pour vous connecter</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mot de passe *</label>
-          <input type="password" id="reg-password" class="form-control" placeholder="••••••••" minlength="6" required>
-          <small class="form-help">Minimum 6 caractères</small>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
-        <div class="toggle-form">
-          Déjà un compte ? <a class="toggle-link" onclick="showLogin()">Se connecter</a>
-        </div>
-      </form>
+      <div class="brand-footer">
+        FIDDO v3.3 — Propulsé en Belgique 🇧🇪
+      </div>
     </div>
+
+    <!-- ═══ RIGHT: FORM ═══ -->
+    <div class="form-panel">
+      <div class="form-container">
+
+        <!-- ═══ LOGIN SCREEN ═══ -->
+        <div id="login-screen" class="screen active">
+          <div class="form-header">
+            <h1>Bon retour ! 👋</h1>
+            <p>Connectez-vous à votre espace FIDDO</p>
+          </div>
+
+          <!-- Alert zone — PERSISTENT until dismissed -->
+          <div class="login-alert" id="login-alert" role="alert">
+            <div class="alert-icon" id="login-alert-icon"></div>
+            <div class="alert-body">
+              <div class="alert-title" id="login-alert-title"></div>
+              <div class="alert-text" id="login-alert-text"></div>
+              <div class="alert-hint" id="login-alert-hint"></div>
+            </div>
+            <button class="alert-close" onclick="hideLoginAlert()" aria-label="Fermer">×</button>
+          </div>
+
+          <form id="login-form" novalidate>
+            <div class="field-group">
+              <label class="field-label" for="login-email">Adresse email</label>
+              <input type="email" id="login-email" class="field-input" placeholder="votre@email.com"
+                     autocomplete="email" required>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="login-password">Mot de passe</label>
+              <div class="password-wrapper">
+                <input type="password" id="login-password" class="field-input" placeholder="••••••••"
+                       autocomplete="current-password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword()" title="Afficher/masquer" tabindex="-1">
+                  <span id="eye-icon">👁</span>
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" class="login-btn" id="login-btn">Se connecter</button>
+          </form>
+
+          <div class="form-divider">Pas encore de compte ?</div>
+
+          <div class="form-toggle">
+            <a onclick="showScreen('register')">Inscrire mon commerce →</a>
+          </div>
+        </div>
+
+        <!-- ═══ REGISTER SCREEN ═══ -->
+        <div id="register-screen" class="screen">
+          <div class="form-header">
+            <h1>Créer mon compte</h1>
+            <p>Inscrivez votre commerce en quelques minutes</p>
+          </div>
+
+          <!-- Alert zone -->
+          <div class="login-alert" id="register-alert" role="alert">
+            <div class="alert-icon" id="register-alert-icon"></div>
+            <div class="alert-body">
+              <div class="alert-title" id="register-alert-title"></div>
+              <div class="alert-text" id="register-alert-text"></div>
+              <div class="alert-hint" id="register-alert-hint"></div>
+            </div>
+            <button class="alert-close" onclick="hideAlert('register-alert')" aria-label="Fermer">×</button>
+          </div>
+
+          <form id="register-form" novalidate>
+            <div class="section-label">🏪 Votre commerce</div>
+
+            <div class="field-group">
+              <label class="field-label">Nom du commerce *</label>
+              <input type="text" id="reg-business" class="field-input" placeholder="Mon Restaurant" required>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Adresse *</label>
+              <input type="text" id="reg-address" class="field-input" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
+            </div>
+
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label">N° TVA *</label>
+                <input type="text" id="reg-vat" class="field-input" placeholder="BE0123456789" required>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Tél. commerce *</label>
+                <input type="tel" id="reg-phone" class="field-input" placeholder="+32 2 123 45 67" required>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Email commerce *</label>
+              <input type="email" id="reg-biz-email" class="field-input" placeholder="contact@monresto.be" required>
+            </div>
+
+            <div class="section-label">👤 Responsable</div>
+
+            <div class="form-row">
+              <div class="field-group">
+                <label class="field-label">Nom complet *</label>
+                <input type="text" id="reg-owner-name" class="field-input" placeholder="Jean Dupont" required>
+              </div>
+              <div class="field-group">
+                <label class="field-label">Tél. personnel *</label>
+                <input type="tel" id="reg-owner-phone" class="field-input" placeholder="+32 497 12 34 56" required>
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Email de connexion *</label>
+              <input type="email" id="reg-owner-email" class="field-input" placeholder="jean@email.com" required>
+              <div class="field-hint">Cet email sera utilisé pour vous connecter</div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label">Mot de passe *</label>
+              <input type="password" id="reg-password" class="field-input" placeholder="Minimum 6 caractères" minlength="6" required>
+            </div>
+
+            <button type="submit" class="login-btn" id="register-btn">Créer mon compte</button>
+          </form>
+
+          <div class="form-divider">Déjà un compte ?</div>
+
+          <div class="form-toggle">
+            <a onclick="showScreen('login')">← Se connecter</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
   <script src="/js/app.js"></script>
   <script>
+    // ═══════════════════════════════════════════════════════
+    // AUTO-REDIRECT IF ALREADY LOGGED IN
+    // ═══════════════════════════════════════════════════════
+
     if (Auth.isAuthenticated()) {
       const staff = Auth.getStaff();
       window.location.href = (staff.role === 'cashier') ? '/credit' : '/dashboard';
     }
 
-    function showRegister() {
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('register-form').style.display = 'block';
-    }
-    function showLogin() {
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('login-form').style.display = 'block';
+    // ═══════════════════════════════════════════════════════
+    // SCREEN SWITCHING
+    // ═══════════════════════════════════════════════════════
+
+    function showScreen(screen) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(`${screen}-screen`).classList.add('active');
+      // Clear all alerts when switching
+      hideLoginAlert();
+      hideAlert('register-alert');
     }
 
-    // ─── Login ───
+    // ═══════════════════════════════════════════════════════
+    // PASSWORD TOGGLE
+    // ═══════════════════════════════════════════════════════
+
+    function togglePassword() {
+      const input = document.getElementById('login-password');
+      const icon = document.getElementById('eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = '🔒';
+      } else {
+        input.type = 'password';
+        icon.textContent = '👁';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // ALERT SYSTEM — Persistent, user-friendly
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Error code → alert configuration
+     * Each errorCode from the backend maps to specific UI treatment
+     */
+    const ERROR_CONFIG = {
+      MISSING_FIELDS: {
+        type: 'warning',
+        icon: '✏️',
+        title: 'Champs requis',
+        hint: null,
+      },
+      INVALID_EMAIL: {
+        type: 'warning',
+        icon: '📧',
+        title: 'Email invalide',
+        hint: 'Vérifiez le format de votre adresse email.',
+      },
+      INVALID_CREDENTIALS: {
+        type: 'error',
+        icon: '🔐',
+        title: 'Identifiants incorrects',
+        hint: null, // attemptsRemaining will be handled dynamically
+      },
+      ACCOUNT_LOCKED: {
+        type: 'error',
+        icon: '🔒',
+        title: 'Compte verrouillé',
+        hint: null,
+      },
+      ACCOUNT_JUST_LOCKED: {
+        type: 'error',
+        icon: '🚫',
+        title: 'Compte verrouillé',
+        hint: 'Trop de tentatives. Patientez 15 minutes ou contactez le support.',
+      },
+      MERCHANT_PENDING: {
+        type: 'info',
+        icon: '⏳',
+        title: 'Inscription en cours de validation',
+        hint: 'Notre équipe examine votre dossier. Cela prend généralement 24 à 48h.',
+      },
+      MERCHANT_SUSPENDED: {
+        type: 'error',
+        icon: '⏸️',
+        title: 'Commerce suspendu',
+        hint: null,
+      },
+      MERCHANT_REJECTED: {
+        type: 'error',
+        icon: '❌',
+        title: 'Inscription refusée',
+        hint: 'Vous pouvez soumettre une nouvelle demande avec les informations corrigées.',
+      },
+      MERCHANT_CANCELLED: {
+        type: 'error',
+        icon: '🚫',
+        title: 'Commerce résilié',
+        hint: null,
+      },
+      ACCOUNT_DISABLED: {
+        type: 'warning',
+        icon: '⚠️',
+        title: 'Compte désactivé',
+        hint: 'Contactez le propriétaire de votre commerce.',
+      },
+      MERCHANT_INACTIVE: {
+        type: 'warning',
+        icon: '⏳',
+        title: 'Commerce non actif',
+        hint: null,
+      },
+      SERVER_ERROR: {
+        type: 'error',
+        icon: '⚙️',
+        title: 'Erreur technique',
+        hint: 'Si le problème persiste, contactez support@fiddo.be',
+      },
+    };
+
+    function showLoginAlert(errorMessage, errorCode, extra = {}) {
+      const config = ERROR_CONFIG[errorCode] || {
+        type: 'error',
+        icon: '⚠️',
+        title: 'Erreur',
+        hint: null,
+      };
+
+      const el = document.getElementById('login-alert');
+      document.getElementById('login-alert-icon').textContent = config.icon;
+      document.getElementById('login-alert-title').textContent = config.title;
+      document.getElementById('login-alert-text').textContent = errorMessage;
+
+      // Dynamic hint for remaining attempts
+      let hint = config.hint || '';
+      if (errorCode === 'INVALID_CREDENTIALS' && extra.attemptsRemaining !== undefined) {
+        if (extra.attemptsRemaining <= 2) {
+          hint = `Attention : plus que ${extra.attemptsRemaining} tentative(s) avant le verrouillage du compte.`;
+        }
+      }
+      document.getElementById('login-alert-hint').textContent = hint;
+
+      // Set type
+      el.className = 'login-alert visible ' + config.type;
+
+      // Shake the form fields on credential errors
+      if (errorCode === 'INVALID_CREDENTIALS') {
+        document.getElementById('login-email').classList.add('shake', 'error-field');
+        document.getElementById('login-password').classList.add('shake', 'error-field');
+        setTimeout(() => {
+          document.getElementById('login-email').classList.remove('shake');
+          document.getElementById('login-password').classList.remove('shake');
+        }, 600);
+      }
+    }
+
+    function hideLoginAlert() {
+      const el = document.getElementById('login-alert');
+      el.classList.remove('visible');
+      document.getElementById('login-email').classList.remove('error-field');
+      document.getElementById('login-password').classList.remove('error-field');
+    }
+
+    function showRegisterAlert(message, type, title) {
+      const el = document.getElementById('register-alert');
+      const icons = { success: '🎉', error: '⚠️', info: 'ℹ️', warning: '⚠️' };
+      document.getElementById('register-alert-icon').textContent = icons[type] || '⚠️';
+      document.getElementById('register-alert-title').textContent = title || '';
+      document.getElementById('register-alert-text').textContent = message;
+      document.getElementById('register-alert-hint').textContent = '';
+      el.className = 'login-alert visible ' + type;
+    }
+
+    function hideAlert(id) {
+      document.getElementById(id).classList.remove('visible');
+    }
+
+    // Clear error styling on input focus
+    document.getElementById('login-email').addEventListener('focus', () => {
+      document.getElementById('login-email').classList.remove('error-field');
+    });
+    document.getElementById('login-password').addEventListener('focus', () => {
+      document.getElementById('login-password').classList.remove('error-field');
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // LOGIN SUBMIT
+    // ═══════════════════════════════════════════════════════
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById('login-email').value;
+      hideLoginAlert();
+
+      const email = document.getElementById('login-email').value.trim();
       const password = document.getElementById('login-password').value;
+      const btn = document.getElementById('login-btn');
+
+      // Client-side validation
+      if (!email || !password) {
+        showLoginAlert('Veuillez renseigner votre email et votre mot de passe.', 'MISSING_FIELDS');
+        return;
+      }
+
+      // Loading state
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-inline"></span> Connexion...';
+
       try {
-        UI.showAlert('login-alert', 'Connexion en cours...', 'info');
-        const data = await API.auth.login({ email, password });
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          // Show persistent error with context
+          showLoginAlert(
+            data.error || 'Une erreur est survenue.',
+            data.errorCode || 'SERVER_ERROR',
+            { attemptsRemaining: data.attemptsRemaining }
+          );
+          btn.disabled = false;
+          btn.textContent = 'Se connecter';
+          return;
+        }
+
+        // SUCCESS — show brief success, then redirect
         Auth.setSession(data.staff, data.merchant);
-        UI.showAlert('login-alert', 'Connexion réussie !', 'success');
+
+        btn.innerHTML = '✅ Connecté !';
+        btn.style.background = '#10B981';
+
         setTimeout(() => {
           window.location.href = (data.staff.role === 'cashier') ? '/credit' : '/dashboard';
-        }, 300);
+        }, 400);
+
       } catch (err) {
-        UI.showAlert('login-alert', err.message, 'error');
+        showLoginAlert(
+          'Impossible de joindre le serveur. Vérifiez votre connexion internet.',
+          'SERVER_ERROR'
+        );
+        btn.disabled = false;
+        btn.textContent = 'Se connecter';
       }
     });
 
-    // ─── Register ───
+    // ═══════════════════════════════════════════════════════
+    // REGISTER SUBMIT
+    // ═══════════════════════════════════════════════════════
+
     document.getElementById('register-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      hideAlert('register-alert');
+
+      const btn = document.getElementById('register-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-inline"></span> Création...';
+
       try {
-        UI.showAlert('register-alert', 'Création du compte...', 'info');
-        await API.auth.register({
+        const payload = {
           businessName: document.getElementById('reg-business').value,
           address: document.getElementById('reg-address').value,
           vatNumber: document.getElementById('reg-vat').value,
@@ -145,13 +956,41 @@
           ownerEmail: document.getElementById('reg-owner-email').value,
           ownerPassword: document.getElementById('reg-password').value,
           ownerName: document.getElementById('reg-owner-name').value,
+        };
+
+        const response = await fetch(`${API_BASE_URL}/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload),
         });
-        UI.showAlert('register-alert',
-          'Demande envoyée ! Votre compte sera activé après validation par notre équipe. Vous recevrez un email de confirmation.',
-          'success'
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          showRegisterAlert(data.error, 'error', 'Erreur d\'inscription');
+          btn.disabled = false;
+          btn.textContent = 'Créer mon compte';
+          return;
+        }
+
+        // Success!
+        showRegisterAlert(
+          'Votre demande a été envoyée ! Notre équipe va examiner votre dossier et vous recevrez un email dès que votre compte sera activé.',
+          'success',
+          'Inscription réussie !'
         );
+
+        btn.innerHTML = '✅ Demande envoyée';
+        btn.style.background = '#10B981';
+
+        // Disable form fields
+        document.querySelectorAll('#register-form input').forEach(i => i.disabled = true);
+
       } catch (err) {
-        UI.showAlert('register-alert', err.message, 'error');
+        showRegisterAlert('Impossible de joindre le serveur. Vérifiez votre connexion.', 'error', 'Erreur réseau');
+        btn.disabled = false;
+        btn.textContent = 'Créer mon compte';
       }
     });
   </script>
