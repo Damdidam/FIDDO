@@ -7,10 +7,10 @@
   <link rel="stylesheet" href="/css/styles.css">
   <style>
     /* ── Compact activity table ── */
-    .activity-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .activity-table thead { background: var(--secondary); color: white; position: sticky; top: 0; }
-    .activity-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; user-select: none; transition: background 0.15s; }
-    .activity-table th:hover { background: rgba(255,255,255,0.1); }
+    .activity-table { width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 0.85rem; }
+    .activity-table thead tr { background: var(--secondary); }
+    .activity-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; user-select: none; color: white; background: var(--secondary); border: none; }
+    .activity-table th:hover { background: #374151; }
     .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.4; }
     .sort-arrow.active { opacity: 1; }
     .activity-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
