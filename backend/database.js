@@ -15,7 +15,7 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 // ═══════════════════════════════════════════════════════
-// DDL — Schema V3.1 (post-review)
+// DDL — Schema V3.3 (preferences + backup)
 // ═══════════════════════════════════════════════════════
 
 function initDatabase() {
@@ -69,7 +69,6 @@ function initDatabase() {
 
   // ───────────────────────────────────────────
   // 3. STAFF ACCOUNTS
-  //    email = globalement unique (un humain = un login)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS staff_accounts (
@@ -93,10 +92,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 4. END USERS (identité globale)
-  //    email/phone   = valeurs brutes (affichage)
-  //    email_lower/phone_e164 = normalisées (unicité + recherche)
-  //    CHECK : au moins un identifiant, sauf si soft-deleted
+  // 4. END USERS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_users (
@@ -132,8 +128,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 5. END USER ALIASES (identifiants historiques post-fusion)
-  //    UNIQUE(alias_type, alias_value) → un alias ne peut pointer que vers un seul end_user
+  // 5. END USER ALIASES
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_user_aliases (
@@ -146,7 +141,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 6. MERCHANT CLIENTS (relation merchant ↔ end_user, points isolés)
+  // 6. MERCHANT CLIENTS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS merchant_clients (
@@ -171,10 +166,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 7. TRANSACTIONS (ledger — source de vérité comptable)
-  //    points_delta : signé (+credit, -reward, +/-adjustment, 0 merge-trace)
-  //    amount : nullable (merge/adjustment n'ont pas de montant)
-  //    idempotency_key : unique par merchant pour éviter les double-crédits
+  // 7. TRANSACTIONS (ledger)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -196,7 +188,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 8. AUDIT LOGS (immuable)
+  // 8. AUDIT LOGS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS audit_logs (
@@ -216,7 +208,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 9. END USER MERGES (traçabilité des fusions)
+  // 9. END USER MERGES
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_user_merges (
@@ -231,6 +223,36 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
+  // 10. MERCHANT PREFERENCES (V3.3)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS merchant_preferences (
+      merchant_id         INTEGER PRIMARY KEY REFERENCES merchants(id),
+
+      theme               TEXT NOT NULL DEFAULT 'teal'
+                          CHECK(theme IN ('teal','navy','violet','forest','brick','amber','slate')),
+
+      language            TEXT NOT NULL DEFAULT 'fr'
+                          CHECK(language IN ('fr','nl','en')),
+      timezone            TEXT NOT NULL DEFAULT 'Europe/Brussels',
+
+      reward_message      TEXT DEFAULT 'Félicitations ! Vous avez gagné votre récompense ! 🎁',
+
+      notify_new_client     INTEGER NOT NULL DEFAULT 1,
+      notify_reward_ready   INTEGER NOT NULL DEFAULT 1,
+      notify_weekly_report  INTEGER NOT NULL DEFAULT 0,
+
+      logo_url            TEXT,
+
+      backup_frequency    TEXT NOT NULL DEFAULT 'manual'
+                          CHECK(backup_frequency IN ('manual','daily','twice','thrice')),
+      last_backup_at      TEXT,
+
+      updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
   db.exec(`
@@ -238,15 +260,15 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_merchants_status ON merchants(status);
     CREATE INDEX IF NOT EXISTS ix_merchants_vat    ON merchants(vat_number);
 
-    -- staff_accounts (email already has implicit UNIQUE index)
+    -- staff_accounts
     CREATE INDEX IF NOT EXISTS ix_staff_merchant ON staff_accounts(merchant_id);
 
-    -- end_users (normalized columns for lookup)
+    -- end_users
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_email_lower ON end_users(email_lower);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_phone_e164  ON end_users(phone_e164);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_qr_token    ON end_users(qr_token);
 
-    -- end_user_aliases (unique alias → one owner only)
+    -- end_user_aliases
     CREATE UNIQUE INDEX IF NOT EXISTS ux_alias_type_value ON end_user_aliases(alias_type, alias_value);
     CREATE INDEX IF NOT EXISTS ix_alias_end_user          ON end_user_aliases(end_user_id);
 
@@ -254,7 +276,7 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_mc_merchant ON merchant_clients(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_mc_enduser  ON merchant_clients(end_user_id);
 
-    -- transactions (idempotency: unique per merchant, only when key is present)
+    -- transactions
     CREATE UNIQUE INDEX IF NOT EXISTS ux_tx_idempotency
       ON transactions(merchant_id, idempotency_key)
       WHERE idempotency_key IS NOT NULL;
@@ -267,7 +289,7 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
   `);
 
-  console.log('✅ Database V3.1 initialized');
+  console.log('✅ Database V3.3 initialized');
 }
 
 // Init on require
@@ -530,6 +552,43 @@ const mergeQueries = {
   getAll: db.prepare('SELECT * FROM end_user_merges ORDER BY created_at DESC'),
 };
 
+// ─── Merchant Preferences (V3.3) ─────────────────────
+
+const preferencesQueries = {
+  get: db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?'),
+
+  upsert: db.prepare(`
+    INSERT INTO merchant_preferences
+      (merchant_id, theme, language, timezone, reward_message,
+       notify_new_client, notify_reward_ready, notify_weekly_report,
+       logo_url, backup_frequency, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    ON CONFLICT(merchant_id) DO UPDATE SET
+      theme = excluded.theme,
+      language = excluded.language,
+      timezone = excluded.timezone,
+      reward_message = excluded.reward_message,
+      notify_new_client = excluded.notify_new_client,
+      notify_reward_ready = excluded.notify_reward_ready,
+      notify_weekly_report = excluded.notify_weekly_report,
+      logo_url = excluded.logo_url,
+      backup_frequency = excluded.backup_frequency,
+      updated_at = datetime('now')
+  `),
+
+  updateTheme: db.prepare(`
+    INSERT INTO merchant_preferences (merchant_id, theme, updated_at)
+    VALUES (?, ?, datetime('now'))
+    ON CONFLICT(merchant_id) DO UPDATE SET theme = excluded.theme, updated_at = datetime('now')
+  `),
+
+  markBackup: db.prepare(`
+    INSERT INTO merchant_preferences (merchant_id, last_backup_at, updated_at)
+    VALUES (?, datetime('now'), datetime('now'))
+    ON CONFLICT(merchant_id) DO UPDATE SET last_backup_at = datetime('now'), updated_at = datetime('now')
+  `),
+};
+
 
 // ═══════════════════════════════════════════════════════
 // EXPORTS
@@ -547,4 +606,5 @@ module.exports = {
   transactionQueries,
   auditQueries,
   mergeQueries,
+  preferencesQueries,
 };
