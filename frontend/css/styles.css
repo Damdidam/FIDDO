@@ -1,13 +1,16 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO V3.1 — Stylesheet
-   Palette: Teal #0891B2 / Dark #1F2937
+   FIDDO V3.3 — Stylesheet
+   Theme system + Preferences
    ═══════════════════════════════════════════════════════ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-:root {
+/* ─── Default Theme: Teal ───────────────────────────── */
+
+:root, [data-theme="teal"] {
   --primary: #0891B2;
   --primary-dark: #0E7490;
+  --primary-light: #CFFAFE;
   --secondary: #1F2937;
   --success: #10B981;
   --danger: #EF4444;
@@ -17,6 +20,67 @@
   --border: #ddd;
   --text: #333;
   --text-light: #666;
+  --gradient: linear-gradient(135deg, #0891B2, #0E7490);
+}
+
+/* ─── Theme: Navy ───────────────────────────────────── */
+
+[data-theme="navy"] {
+  --primary: #1E40AF;
+  --primary-dark: #1E3A8A;
+  --primary-light: #DBEAFE;
+  --secondary: #1E293B;
+  --gradient: linear-gradient(135deg, #1E40AF, #1E3A8A);
+}
+
+/* ─── Theme: Violet ─────────────────────────────────── */
+
+[data-theme="violet"] {
+  --primary: #7C3AED;
+  --primary-dark: #6D28D9;
+  --primary-light: #EDE9FE;
+  --secondary: #1E1B4B;
+  --gradient: linear-gradient(135deg, #7C3AED, #6D28D9);
+}
+
+/* ─── Theme: Forest ─────────────────────────────────── */
+
+[data-theme="forest"] {
+  --primary: #059669;
+  --primary-dark: #047857;
+  --primary-light: #D1FAE5;
+  --secondary: #1A2E1A;
+  --gradient: linear-gradient(135deg, #059669, #047857);
+}
+
+/* ─── Theme: Brick ──────────────────────────────────── */
+
+[data-theme="brick"] {
+  --primary: #DC2626;
+  --primary-dark: #B91C1C;
+  --primary-light: #FEE2E2;
+  --secondary: #2D1B1B;
+  --gradient: linear-gradient(135deg, #DC2626, #B91C1C);
+}
+
+/* ─── Theme: Amber ──────────────────────────────────── */
+
+[data-theme="amber"] {
+  --primary: #D97706;
+  --primary-dark: #B45309;
+  --primary-light: #FEF3C7;
+  --secondary: #2D2415;
+  --gradient: linear-gradient(135deg, #D97706, #B45309);
+}
+
+/* ─── Theme: Slate ──────────────────────────────────── */
+
+[data-theme="slate"] {
+  --primary: #475569;
+  --primary-dark: #334155;
+  --primary-light: #F1F5F9;
+  --secondary: #0F172A;
+  --gradient: linear-gradient(135deg, #475569, #334155);
 }
 
 body {
@@ -347,7 +411,7 @@ select.form-control { appearance: auto; }
 /* ─── Credit Preview ────────────────────────────────── */
 
 .credit-preview {
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--gradient);
   color: white;
   padding: 2rem;
   border-radius: 10px;
@@ -363,7 +427,7 @@ select.form-control { appearance: auto; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  background: var(--gradient);
 }
 .auth-box {
   background: white;
@@ -455,3 +519,127 @@ select.form-control { appearance: auto; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .gap-1 { gap: 0.5rem; }
 .gap-2 { gap: 1rem; }
+
+/* ─── Theme Picker ──────────────────────────────────── */
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1rem;
+}
+
+.theme-card {
+  border: 3px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  background: white;
+}
+.theme-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.theme-card.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
+
+.theme-swatch {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+.theme-name { font-weight: 600; font-size: 0.85rem; }
+
+/* ─── Preferences Sections ──────────────────────────── */
+
+.pref-section {
+  background: white;
+  border-radius: 12px;
+  padding: 1.75rem;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  margin-bottom: 1.5rem;
+}
+.pref-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* ─── Toggle Switch ─────────────────────────────────── */
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-weight: 500; }
+.toggle-desc { font-size: 0.8rem; color: var(--text-light); margin-top: 0.15rem; }
+
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
+}
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: #ccc;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+.toggle-slider:before {
+  content: '';
+  position: absolute;
+  height: 20px; width: 20px;
+  left: 3px; bottom: 3px;
+  background: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
+
+/* ─── Backup Zone ───────────────────────────────────── */
+
+.backup-zone {
+  border: 2px dashed var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+.backup-zone:hover { border-color: var(--primary); background: var(--primary-light); }
+.backup-zone.dragover { border-color: var(--primary); background: var(--primary-light); }
+.backup-zone-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+
+/* ─── Backup Preview ────────────────────────────────── */
+
+.backup-preview {
+  background: var(--light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+.backup-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.backup-preview-item {
+  text-align: center;
+  padding: 0.5rem;
+  background: white;
+  border-radius: 8px;
+}
+.backup-preview-value { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+.backup-preview-label { font-size: 0.75rem; color: var(--text-light); }
