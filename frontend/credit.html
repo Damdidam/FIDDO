@@ -6,27 +6,102 @@
   <title>Créditer — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
+    /* ── Compact layout ── */
+    .credit-container { max-width: 900px; margin: 0 auto; }
+    .credit-container h1 { margin: 1rem 0; font-size: 1.4rem; }
+    .credit-container .card { margin-bottom: 1rem; }
+    .credit-container .form-group { margin-bottom: 0.9rem; }
+
+    /* ── Toggle email/phone ── */
+    .id-toggle { display: flex; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
+    .id-toggle button {
+      flex: 1; padding: 0.6rem; border: none; background: white; font-weight: 600;
+      font-size: 0.9rem; cursor: pointer; transition: all 0.2s; color: var(--text-light);
+    }
+    .id-toggle button.active { background: var(--primary); color: white; }
+    .id-toggle button:first-child { border-right: 2px solid var(--border); }
+
+    /* ── Input with clear button ── */
+    .input-wrap { position: relative; }
+    .input-wrap .form-control { padding-right: 36px; }
+    .btn-clear {
+      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; font-size: 1.1rem; cursor: pointer;
+      color: var(--text-light); padding: 4px; line-height: 1; display: none;
+    }
+    .btn-clear:hover { color: var(--danger); }
+    .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
+    .input-wrap .form-control.has-value ~ .btn-clear { display: block; }
+
+    /* ── Typo warning ── */
+    .typo-warning {
+      background: #FFF7ED; border: 1px solid var(--warning); border-radius: 6px;
+      padding: 0.5rem 0.75rem; margin-top: 0.4rem; font-size: 0.82rem; color: #92400e;
+      display: flex; align-items: center; gap: 0.5rem;
+    }
+    .typo-warning button {
+      background: var(--warning); color: white; border: none; border-radius: 4px;
+      padding: 2px 8px; font-size: 0.78rem; cursor: pointer; font-weight: 600; white-space: nowrap;
+    }
+
+    /* ── Autocomplete dropdown ── */
+    .autocomplete-list {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+      background: white; border: 2px solid var(--primary); border-top: none;
+      border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.12); display: none;
+    }
+    .autocomplete-list.show { display: block; }
+    .ac-item {
+      padding: 0.6rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border);
+      font-size: 0.88rem; transition: background 0.15s;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.selected { background: #ECFEFF; }
+    .ac-item .ac-name { font-weight: 600; }
+    .ac-item .ac-meta { color: var(--text-light); font-size: 0.8rem; }
+    .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; }
+
+    /* ── Preview card (compact) ── */
+    .credit-preview {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: white; padding: 1.25rem; border-radius: 10px; text-align: center;
+    }
+    .credit-preview h2 { font-size: 2.5rem; margin: 0; line-height: 1.1; }
+    .credit-preview p { margin: 0.25rem 0 0; opacity: 0.9; font-size: 0.9rem; }
+
+    /* ── Lookup result ── */
     .lookup-result {
-      background: white;
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-      transition: border-color 0.3s;
+      background: white; border: 2px solid var(--border); border-radius: 10px;
+      padding: 1rem; transition: border-color 0.3s;
     }
     .lookup-result.found { border-color: var(--success); }
     .lookup-result.new { border-color: var(--primary); }
+
     .reward-banner {
       background: linear-gradient(135deg, var(--success), #059669);
-      color: white;
-      padding: 1rem 1.5rem;
-      border-radius: 10px;
-      text-align: center;
-      margin-top: 1rem;
-      cursor: pointer;
-      transition: transform 0.2s;
+      color: white; padding: 0.75rem 1rem; border-radius: 8px; text-align: center;
+      margin-top: 0.75rem; cursor: pointer; transition: transform 0.2s; font-size: 0.9rem;
     }
     .reward-banner:hover { transform: scale(1.02); }
+
+    /* ── Success result (after credit) ── */
+    .credit-success {
+      background: #ECFDF5; border: 2px solid var(--success); border-radius: 10px;
+      padding: 1.25rem; text-align: center;
+    }
+    .credit-success .big-pts { font-size: 2rem; font-weight: 800; color: var(--success); }
+    .credit-success .client-info { color: var(--text); margin-top: 0.5rem; font-size: 0.9rem; }
+
+    /* ── Responsive compact ── */
+    @media (max-width: 768px) {
+      .credit-container h1 { font-size: 1.2rem; margin: 0.75rem 0; }
+      .credit-preview h2 { font-size: 2rem; }
+      .credit-preview { padding: 1rem; }
+      .grid-credit { grid-template-columns: 1fr !important; }
+      .card { padding: 1rem; }
+      .card-header { font-size: 1.05rem; }
+    }
   </style>
 </head>
 <body>
@@ -35,36 +110,70 @@
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container">
-    <h1 style="margin: 1.5rem 0;">Créditer des points</h1>
+  <div class="container credit-container">
+    <h1>Créditer des points</h1>
 
-    <div class="grid grid-2">
-      <!-- Left: Form -->
+    <div class="grid grid-credit" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+
+      <!-- ══════ LEFT: Form ══════ -->
       <div>
         <div class="card">
           <div class="card-header">Nouveau passage client</div>
           <div id="credit-alert"></div>
 
-          <form id="credit-form">
-            <div class="form-group">
-              <label class="form-label">Email du client</label>
-              <input type="email" id="client-email" class="form-control" placeholder="client@email.com">
-              <small class="form-help">Recommandé pour recevoir les confirmations</small>
+          <form id="credit-form" autocomplete="off">
+
+            <!-- Toggle Email / Téléphone -->
+            <div class="id-toggle">
+              <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">📧 Email</button>
+              <button type="button" id="toggle-phone" onclick="switchMode('phone')">📱 Téléphone</button>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">OU Téléphone</label>
-              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56">
+            <!-- Email field -->
+            <div class="form-group" id="field-email">
+              <div class="input-wrap">
+                <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
+                <button type="button" class="btn-clear" onclick="clearField('client-email')" title="Effacer">×</button>
+                <div class="autocomplete-list" id="ac-email"></div>
+              </div>
+              <div id="typo-email"></div>
             </div>
 
+            <!-- Phone field -->
+            <div class="form-group" id="field-phone" style="display:none;">
+              <div class="input-wrap">
+                <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
+                <button type="button" class="btn-clear" onclick="clearField('client-phone')" title="Effacer">×</button>
+                <div class="autocomplete-list" id="ac-phone"></div>
+              </div>
+              <small class="form-help">Formats acceptés : +32…, 0032…, 04…</small>
+            </div>
+
+            <!-- Name (optional) -->
+            <div class="form-group">
+              <label class="form-label">Nom / surnom <span class="text-muted" style="font-weight:400;">(optionnel)</span></label>
+              <div class="input-wrap">
+                <input type="text" id="client-name" class="form-control" placeholder="Ex: Pierre, Table 5…" autocomplete="off">
+                <button type="button" class="btn-clear" onclick="clearField('client-name')" title="Effacer">×</button>
+              </div>
+            </div>
+
+            <!-- Amount -->
             <div class="form-group">
               <label class="form-label">Montant dépensé (€) *</label>
-              <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required>
+              <div class="input-wrap">
+                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
+                <button type="button" class="btn-clear" onclick="clearField('amount')" title="Effacer">×</button>
+              </div>
             </div>
 
+            <!-- Notes -->
             <div class="form-group">
-              <label class="form-label">Notes (optionnel)</label>
-              <input type="text" id="notes" class="form-control" placeholder="Ex: Menu midi">
+              <label class="form-label">Notes <span class="text-muted" style="font-weight:400;">(optionnel)</span></label>
+              <div class="input-wrap">
+                <input type="text" id="notes" class="form-control" placeholder="Ex: Menu midi, terrasse…" autocomplete="off">
+                <button type="button" class="btn-clear" onclick="clearField('notes')" title="Effacer">×</button>
+              </div>
             </div>
 
             <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
@@ -74,24 +183,27 @@
         </div>
       </div>
 
-      <!-- Right: Preview + Lookup -->
+      <!-- ══════ RIGHT: Preview + Lookup ══════ -->
       <div>
         <!-- Points preview -->
-        <div class="card">
+        <div class="card" style="padding: 0;">
           <div class="credit-preview">
             <h2 id="preview-points">0</h2>
             <p>points seront crédités</p>
           </div>
-          <div id="merchant-info" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);"></div>
+          <div id="merchant-info" style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-light);"></div>
         </div>
 
         <!-- Client lookup result -->
         <div id="lookup-container" style="display: none;">
           <div class="card" style="padding: 0;">
-            <div class="card-header" style="padding: 1rem 1.25rem; margin-bottom: 0;">Client trouvé</div>
-            <div id="lookup-result" style="padding: 0 1.25rem 1.25rem;"></div>
+            <div class="card-header" style="padding: 0.75rem 1rem; margin-bottom: 0; font-size: 1rem;" id="lookup-header">Client trouvé</div>
+            <div id="lookup-result" style="padding: 0 1rem 1rem;"></div>
           </div>
         </div>
+
+        <!-- Success result (appears after credit) -->
+        <div id="success-container" style="display: none;"></div>
       </div>
     </div>
   </div>
@@ -102,55 +214,235 @@
 
     const merchant = Auth.getMerchant();
     const staff = Auth.getStaff();
+    let currentMode = 'email'; // 'email' or 'phone'
+
+    // ═══════════════════════════════════════════════════════
+    // MERCHANT CONFIG DISPLAY
+    // ═══════════════════════════════════════════════════════
+    document.getElementById('merchant-info').innerHTML = `
+      <strong>Config :</strong> ${merchant.points_per_euro} pt/€ · Récompense à ${merchant.points_for_reward} pts · ${merchant.reward_description}
+      ${staff.role === 'cashier' ? '<br><span class="text-muted">⚠️ Limite caissier : 200€ max</span>' : ''}
+    `;
 
     // ═══════════════════════════════════════════════════════
     // PRE-FILL FROM URL PARAMS
-    // (when coming from client modal "➕ Créditer" button)
     // ═══════════════════════════════════════════════════════
     (function prefillFromURL() {
       const params = new URLSearchParams(window.location.search);
       const email = params.get('email');
       const phone = params.get('phone');
+      const name = params.get('name');
 
-      if (email) {
-        const el = document.getElementById('client-email');
-        if (el) el.value = email;
-      }
-      if (phone) {
-        const el = document.getElementById('client-phone');
-        if (el) el.value = phone;
+      if (phone && !email) {
+        switchMode('phone');
+        document.getElementById('client-phone').value = phone;
+      } else if (email) {
+        document.getElementById('client-email').value = email;
       }
 
-      // Trigger lookup after a short delay (triggerLookup defined below)
+      if (name) document.getElementById('client-name').value = name;
+
       if (email || phone) {
-        setTimeout(() => {
-          if (typeof triggerLookup === 'function') triggerLookup();
-        }, 500);
+        setTimeout(() => triggerLookup(), 500);
       }
 
-      // Clean URL without reload
       if (params.toString()) {
         window.history.replaceState({}, '', window.location.pathname);
       }
     })();
 
-    // Show merchant config
-    document.getElementById('merchant-info').innerHTML = `
-      <p><strong>Configuration :</strong></p>
-      <p>• ${merchant.points_per_euro} point(s) par euro</p>
-      <p>• Récompense à ${merchant.points_for_reward} points</p>
-      <p>• ${merchant.reward_description}</p>
-      ${staff.role === 'cashier' ? '<p class="text-muted mt-1">⚠️ Limite caissier : 200€ max</p>' : ''}
-    `;
+    // ═══════════════════════════════════════════════════════
+    // TOGGLE EMAIL / PHONE
+    // ═══════════════════════════════════════════════════════
+    function switchMode(mode) {
+      currentMode = mode;
+      document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
+      document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
+      document.getElementById('field-email').style.display = mode === 'email' ? 'block' : 'none';
+      document.getElementById('field-phone').style.display = mode === 'phone' ? 'block' : 'none';
 
-    // Points preview
+      // Clear the hidden field
+      if (mode === 'email') {
+        document.getElementById('client-phone').value = '';
+        document.getElementById('ac-phone').classList.remove('show');
+      } else {
+        document.getElementById('client-email').value = '';
+        document.getElementById('ac-email').classList.remove('show');
+        document.getElementById('typo-email').innerHTML = '';
+      }
+      document.getElementById('lookup-container').style.display = 'none';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CLEAR BUTTON
+    // ═══════════════════════════════════════════════════════
+    function clearField(id) {
+      const el = document.getElementById(id);
+      el.value = '';
+      el.focus();
+      el.dispatchEvent(new Event('input'));
+      if (id === 'amount') {
+        document.getElementById('preview-points').textContent = '0';
+      }
+    }
+
+    // Force clear button visibility (CSS :placeholder-shown doesn't work for programmatic)
+    document.querySelectorAll('.input-wrap .form-control').forEach(input => {
+      input.addEventListener('input', () => {
+        input.classList.toggle('has-value', input.value.length > 0);
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // POINTS PREVIEW
+    // ═══════════════════════════════════════════════════════
     document.getElementById('amount').addEventListener('input', (e) => {
       const amount = parseFloat(e.target.value) || 0;
       document.getElementById('preview-points').textContent = Math.floor(amount * merchant.points_per_euro);
     });
 
-    // Client lookup on input
+    // ═══════════════════════════════════════════════════════
+    // EMAIL TYPO DETECTION
+    // ═══════════════════════════════════════════════════════
+    const DOMAIN_TYPOS = {
+      'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com',
+      'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com', 'gmali.com': 'gmail.com',
+      'gmai.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.be': 'gmail.com',
+      'hotmal.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
+      'hotmial.com': 'hotmail.com', 'hotamil.com': 'hotmail.com',
+      'outloo.com': 'outlook.com', 'outlok.com': 'outlook.com',
+      'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahooo.fr': 'yahoo.fr',
+      'iclould.com': 'icloud.com', 'iclou.com': 'icloud.com',
+    };
+
+    function checkEmailTypo(email) {
+      const container = document.getElementById('typo-email');
+      container.innerHTML = '';
+      if (!email || !email.includes('@')) return;
+
+      const parts = email.split('@');
+      if (parts.length !== 2) return;
+      const domain = parts[1].toLowerCase();
+      const suggestion = DOMAIN_TYPOS[domain];
+
+      if (suggestion) {
+        const corrected = parts[0] + '@' + suggestion;
+        container.innerHTML = `
+          <div class="typo-warning">
+            <span>Vouliez-vous dire <strong>${corrected}</strong> ?</span>
+            <button type="button" onclick="applyTypoFix('${corrected}')">Corriger</button>
+          </div>
+        `;
+      }
+    }
+
+    function applyTypoFix(corrected) {
+      document.getElementById('client-email').value = corrected;
+      document.getElementById('typo-email').innerHTML = '';
+      triggerLookup();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // AUTOCOMPLETE SEARCH (3+ chars)
+    // ═══════════════════════════════════════════════════════
+    let searchTimeout;
+
+    function setupAutocomplete(inputId, acListId) {
+      const input = document.getElementById(inputId);
+      const acList = document.getElementById(acListId);
+
+      input.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        const val = input.value.trim();
+
+        // Close dropdown if too short
+        if (val.length < 3) {
+          acList.classList.remove('show');
+          triggerLookup();
+          if (inputId === 'client-email') checkEmailTypo(val);
+          return;
+        }
+
+        if (inputId === 'client-email') checkEmailTypo(val);
+
+        searchTimeout = setTimeout(async () => {
+          try {
+            const data = await API.clients.search(val);
+            if (!data.clients || data.clients.length === 0) {
+              acList.classList.remove('show');
+              triggerLookup();
+              return;
+            }
+
+            // Render suggestions
+            acList.innerHTML = data.clients.slice(0, 6).map(c => `
+              <div class="ac-item" data-email="${c.email || ''}" data-phone="${c.phone || ''}" data-name="${c.name || ''}">
+                <span class="ac-pts">${c.points_balance} pts</span>
+                <div class="ac-name">${c.name || c.email || c.phone || '?'}</div>
+                <div class="ac-meta">${c.email ? c.email : ''}${c.email && c.phone ? ' · ' : ''}${c.phone ? c.phone : ''} · ${c.visit_count} visite(s)</div>
+              </div>
+            `).join('');
+
+            acList.classList.add('show');
+
+            // Click handler on items
+            acList.querySelectorAll('.ac-item').forEach(item => {
+              item.addEventListener('click', () => {
+                const email = item.dataset.email;
+                const phone = item.dataset.phone;
+                const name = item.dataset.name;
+
+                if (currentMode === 'email' && email) {
+                  document.getElementById('client-email').value = email;
+                  document.getElementById('client-email').classList.add('has-value');
+                } else if (currentMode === 'phone' && phone) {
+                  document.getElementById('client-phone').value = phone;
+                  document.getElementById('client-phone').classList.add('has-value');
+                } else if (email) {
+                  switchMode('email');
+                  document.getElementById('client-email').value = email;
+                  document.getElementById('client-email').classList.add('has-value');
+                } else if (phone) {
+                  switchMode('phone');
+                  document.getElementById('client-phone').value = phone;
+                  document.getElementById('client-phone').classList.add('has-value');
+                }
+
+                if (name) {
+                  document.getElementById('client-name').value = name;
+                  document.getElementById('client-name').classList.add('has-value');
+                }
+
+                acList.classList.remove('show');
+                document.getElementById('typo-email').innerHTML = '';
+                triggerLookup();
+              });
+            });
+
+          } catch (err) {
+            acList.classList.remove('show');
+            // If search fails (e.g. cashier role), fallback to normal lookup
+            triggerLookup();
+          }
+        }, 350);
+      });
+
+      // Close dropdown on outside click
+      document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !acList.contains(e.target)) {
+          acList.classList.remove('show');
+        }
+      });
+    }
+
+    setupAutocomplete('client-email', 'ac-email');
+    setupAutocomplete('client-phone', 'ac-phone');
+
+    // ═══════════════════════════════════════════════════════
+    // CLIENT LOOKUP (existing client check)
+    // ═══════════════════════════════════════════════════════
     let lookupTimeout;
+
     function triggerLookup() {
       clearTimeout(lookupTimeout);
       const email = document.getElementById('client-email').value.trim();
@@ -170,13 +462,14 @@
           const data = await API.clients.lookup(params);
           const container = document.getElementById('lookup-container');
           const result = document.getElementById('lookup-result');
+          const header = document.getElementById('lookup-header');
 
           if (!data.found) {
             container.style.display = 'block';
+            header.textContent = '🆕 Nouveau client';
             result.innerHTML = `
               <div class="lookup-result new">
-                <strong>🆕 Nouveau client</strong>
-                <p class="text-muted text-sm">Ce client sera créé automatiquement lors du crédit.</p>
+                <strong>Ce client sera créé automatiquement lors du crédit.</strong>
               </div>
             `;
             return;
@@ -186,16 +479,23 @@
           const c = data.client;
 
           if (data.isNew) {
+            header.textContent = '🆕 Première visite ici';
             result.innerHTML = `
               <div class="lookup-result new">
-                <strong>🆕 Première visite ici</strong>
-                <p class="text-sm text-muted">Ce client existe dans le système mais n'est jamais venu chez vous.</p>
-                ${c.name ? `<p class="text-sm">Nom : ${c.name}</p>` : ''}
+                <strong>Ce client existe mais n'est jamais venu chez vous.</strong>
+                ${c.name ? `<p class="text-sm mt-1">Nom : ${c.name}</p>` : ''}
               </div>
             `;
+
+            // Auto-fill name if we got one
+            if (c.name && !document.getElementById('client-name').value) {
+              document.getElementById('client-name').value = c.name;
+              document.getElementById('client-name').classList.add('has-value');
+            }
             return;
           }
 
+          header.textContent = 'Client trouvé ✅';
           const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
 
           let html = `
@@ -203,12 +503,12 @@
               <div class="flex-between">
                 <div>
                   <strong>${c.name || c.email || c.phone}</strong>
-                  ${c.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
+                  ${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}
                 </div>
-                <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
+                <span style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
               </div>
-              <p class="text-sm text-muted mt-1">${c.visit_count} visite(s)</p>
-              <div class="progress-bar mt-1">
+              <p class="text-sm text-muted">${c.visit_count} visite(s)</p>
+              <div class="progress-bar" style="margin: 0.4rem 0;">
                 <div class="progress-fill" style="width: ${progress}%;"></div>
               </div>
               <p class="text-sm text-muted">${c.points_balance}/${c.reward_threshold} points</p>
@@ -216,7 +516,7 @@
 
           if (c.can_redeem) {
             html += `
-              <div class="reward-banner mt-1" onclick="redeemReward(${c.id})">
+              <div class="reward-banner" onclick="redeemReward(${c.id})">
                 🎁 Récompense disponible ! Cliquez pour l'appliquer<br>
                 <small>${c.reward_description || merchant.reward_description}</small>
               </div>
@@ -226,37 +526,49 @@
           html += '</div>';
           result.innerHTML = html;
 
+          // Auto-fill name
+          if (c.name && !document.getElementById('client-name').value) {
+            document.getElementById('client-name').value = c.name;
+            document.getElementById('client-name').classList.add('has-value');
+          }
+
         } catch (err) {
           console.error('Lookup error:', err);
         }
       }, 400);
     }
 
-    document.getElementById('client-email').addEventListener('input', triggerLookup);
-    document.getElementById('client-phone').addEventListener('input', triggerLookup);
-
-    // Redeem reward
+    // ═══════════════════════════════════════════════════════
+    // REDEEM REWARD
+    // ═══════════════════════════════════════════════════════
     async function redeemReward(merchantClientId) {
       if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
       try {
         const result = await API.clients.reward({ merchantClientId });
-        UI.showAlert('credit-alert', `Récompense appliquée ! Nouveau solde : ${result.client.points_balance} pts`, 'success');
-        triggerLookup(); // Refresh
+        UI.showAlert('credit-alert', `🎁 Récompense appliquée ! Nouveau solde : ${result.client.points_balance} pts`, 'success');
+        triggerLookup();
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
       }
     }
 
-    // Submit credit
+    // ═══════════════════════════════════════════════════════
+    // SUBMIT CREDIT
+    // ═══════════════════════════════════════════════════════
     document.getElementById('credit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('client-email').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
+      const name = document.getElementById('client-name').value.trim();
       const amount = parseFloat(document.getElementById('amount').value);
       const notes = document.getElementById('notes').value.trim();
 
       if (!email && !phone) {
         UI.showAlert('credit-alert', 'Email ou téléphone requis', 'error');
+        return;
+      }
+      if (!amount || amount <= 0) {
+        UI.showAlert('credit-alert', 'Montant invalide', 'error');
         return;
       }
 
@@ -267,21 +579,40 @@
         const result = await API.clients.credit({
           email: email || undefined,
           phone: phone || undefined,
+          name: name || undefined,
           amount,
           notes: notes || undefined,
         });
 
-        UI.showAlert('credit-alert',
-          `<strong>+${result.transaction.points_delta} points crédités !</strong><br>
-           Nouveau solde : ${result.client.points_balance} points
-           ${result.isNewClient ? '<br><em>Nouveau client créé</em>' : ''}`,
-          'success'
-        );
+        // Hide loading alert
+        UI.clearAlert('credit-alert');
 
-        // Reset form
+        // Show rich success message
+        const clientDisplay = result.client.name || result.client.email || result.client.phone || 'Client';
+        document.getElementById('success-container').style.display = 'block';
+        document.getElementById('success-container').innerHTML = `
+          <div class="credit-success">
+            <div class="big-pts">+${result.transaction.points_delta} pts</div>
+            <div class="client-info">
+              <strong>${clientDisplay}</strong><br>
+              Nouveau solde : <strong>${result.client.points_balance} points</strong><br>
+              ${result.client.email ? '📧 ' + result.client.email + '<br>' : ''}
+              ${result.client.phone ? '📱 ' + result.client.phone + '<br>' : ''}
+              ${result.isNewClient ? '<span class="badge badge-info" style="margin-top:0.4rem;">Nouveau client</span>' : ''}
+            </div>
+            <button class="btn btn-primary btn-block" style="margin-top:1rem;" onclick="resetForm()">
+              ➕ Nouveau crédit
+            </button>
+          </div>
+        `;
+
+        // Hide lookup
+        document.getElementById('lookup-container').style.display = 'none';
+
+        // Reset form but keep it ready
         document.getElementById('credit-form').reset();
         document.getElementById('preview-points').textContent = '0';
-        document.getElementById('lookup-container').style.display = 'none';
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
 
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
@@ -289,6 +620,19 @@
         document.getElementById('submit-btn').disabled = false;
       }
     });
+
+    function resetForm() {
+      document.getElementById('success-container').style.display = 'none';
+      document.getElementById('success-container').innerHTML = '';
+      document.getElementById('lookup-container').style.display = 'none';
+      UI.clearAlert('credit-alert');
+      // Focus the active identifier field
+      if (currentMode === 'email') {
+        document.getElementById('client-email').focus();
+      } else {
+        document.getElementById('client-phone').focus();
+      }
+    }
   </script>
 </body>
 </html>
