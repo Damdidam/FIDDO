@@ -11,71 +11,76 @@
     .toolbar-left { display: flex; gap: 0.5rem; flex: 1; min-width: 200px; flex-wrap: wrap; align-items: center; }
     .toolbar-right { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
 
-    .search-compact {
-      flex: 1; min-width: 180px; padding: 8px 10px 8px 32px;
-      border: 2px solid var(--border); border-radius: 6px; font-size: 0.85rem;
-    }
+    .search-compact { flex: 1; min-width: 180px; padding: 8px 10px 8px 32px; border: 2px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
     .search-compact:focus { outline: none; border-color: var(--primary); }
     .search-wrap { position: relative; flex: 1; min-width: 180px; }
     .search-wrap .search-ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; }
 
     /* Date pills */
     .date-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-    .date-pill {
-      padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px;
-      font-size: 0.75rem; cursor: pointer; background: white; color: var(--text-light);
-      transition: all 0.15s; white-space: nowrap;
-    }
+    .date-pill { padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; cursor: pointer; background: white; color: var(--text-light); transition: all 0.15s; white-space: nowrap; }
     .date-pill:hover { border-color: var(--primary); color: var(--primary); }
     .date-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-    .date-range { display: flex; gap: 4px; align-items: center; }
-    .date-input {
-      padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px;
-      font-size: 0.75rem; width: 120px;
-    }
+    .date-range { display: none; gap: 4px; align-items: center; }
+    .date-range.show { display: flex; }
+    .date-input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; width: 120px; -webkit-appearance: none; }
 
     /* ── Tabs ── */
-    .client-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 0.75rem; overflow-x: auto; }
-    .client-tab {
-      padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent;
-      margin-bottom: -2px; font-weight: 500; color: var(--text-light); font-size: 0.85rem;
-      transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none;
-      white-space: nowrap;
-    }
+    .client-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 0.75rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
+    .client-tabs::-webkit-scrollbar { display: none; }
+    .client-tab { padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 500; color: var(--text-light); font-size: 0.85rem; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap; }
     .client-tab:hover { color: var(--text); }
     .client-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
 
     /* ── Sortable table ── */
     .clients-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .clients-table thead { background: var(--secondary); color: white; position: sticky; top: 0; z-index: 2; }
-    .clients-table th {
-      padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.73rem;
-      text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; user-select: none;
-      white-space: nowrap; position: relative;
-    }
+    .clients-table thead { background: var(--secondary); color: white; }
+    .clients-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; user-select: none; white-space: nowrap; }
     .clients-table th:hover { background: #374151; }
-    .clients-table th .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.5; }
+    .clients-table th .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.5; display: inline; }
     .clients-table th.sorted .sort-arrow { opacity: 1; }
     .clients-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
     .clients-table tbody tr { cursor: pointer; transition: background 0.1s; }
     .clients-table tbody tr:hover { background: #f0fdf4; }
 
-    .table-scroll { overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: white; }
+    .table-scroll { overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: white; scrollbar-width: thin; }
+    .table-scroll::-webkit-scrollbar { height: 4px; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
 
-    /* Rank column */
+    /* Rank */
     .rank { font-weight: 700; color: var(--text-light); text-align: center; min-width: 30px; }
     .rank-1 { color: #F59E0B; } .rank-2 { color: #9CA3AF; } .rank-3 { color: #D97706; }
 
     /* Points bar mini */
     .pts-bar { display: flex; align-items: center; gap: 6px; }
-    .pts-bar-fill { height: 4px; border-radius: 2px; background: var(--primary); min-width: 2px; }
     .pts-bar-track { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
-
+    .pts-bar-fill { height: 100%; background: var(--primary); border-radius: 2px; min-width: 2px; }
     .staff-sm { font-size: 0.75rem; color: var(--text-light); }
-
-    /* Counters */
     .tab-count { font-size: 0.7rem; background: var(--light); color: var(--text-light); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+
+    /* ── Modal sections ── */
+    .modal-section { margin-bottom: 1rem; }
+    .modal-section-title { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
+    .actions-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    /* Edit form compact */
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .edit-grid .form-group { margin-bottom: 0; }
+    .edit-grid .form-label { font-size: 0.75rem; margin-bottom: 2px; }
+    .edit-grid .form-control { padding: 6px 8px; font-size: 0.85rem; }
+    .edit-grid .full-width { grid-column: 1 / -1; }
+
+    /* Merge search */
+    .merge-search-wrap { position: relative; }
+    .merge-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: white; border: 2px solid var(--primary); border-top: none; border-radius: 0 0 8px 8px; max-height: 160px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    .merge-results.open { display: block; }
+    .merge-item { padding: 8px 10px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .merge-item:hover { background: #ECFEFF; }
+    .merge-item .m-name { font-weight: 600; }
+    .merge-item .m-detail { font-size: 0.75rem; color: var(--text-light); }
+    .merge-selected { background: #F0FDF4; border: 2px solid var(--success); border-radius: 8px; padding: 8px 10px; font-size: 0.85rem; display: none; }
+    .merge-selected.show { display: flex; justify-content: space-between; align-items: center; }
 
     /* Mobile */
     @media (max-width: 768px) {
@@ -85,6 +90,8 @@
       .clients-table { font-size: 0.8rem; }
       .clients-table th, .clients-table td { padding: 6px 6px; }
       .date-input { width: 100px; }
+      .edit-grid { grid-template-columns: 1fr; }
+      .modal-content { width: 95%; }
     }
   </style>
 </head>
@@ -97,7 +104,7 @@
   <div class="container">
     <h1 style="margin: 1rem 0 0.5rem; font-size: 1.3rem;">Mes clients</h1>
 
-    <!-- Stats row -->
+    <!-- Stats -->
     <div class="stats-grid" style="margin-bottom: 0.75rem;">
       <div class="stat-card"><div class="stat-value" id="total-clients">0</div><div class="stat-label">Clients</div></div>
       <div class="stat-card"><div class="stat-value" id="active-clients">0</div><div class="stat-label">Actifs (30j)</div></div>
@@ -115,7 +122,7 @@
       <button class="client-tab" data-tab="inactive">😴 Inactifs</button>
     </div>
 
-    <!-- Toolbar: search + dates + export -->
+    <!-- Toolbar -->
     <div class="toolbar">
       <div class="toolbar-left">
         <div class="search-wrap">
@@ -132,51 +139,78 @@
           <button class="date-pill" data-period="month">Mois</button>
           <button class="date-pill" data-period="custom">📅</button>
         </div>
-        <div class="date-range" id="date-range" style="display:none;">
+        <div class="date-range" id="date-range">
           <input type="date" id="date-from" class="date-input">
-          <span style="font-size:0.8rem;color:var(--text-light);">→</span>
+          <span style="font-size:0.75rem;color:var(--text-light);">→</span>
           <input type="date" id="date-to" class="date-input">
         </div>
         <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Exporter CSV">📥 CSV</button>
       </div>
     </div>
 
-    <!-- Table -->
-    <div class="table-scroll">
-      <div id="clients-container"></div>
-    </div>
+    <div class="table-scroll"><div id="clients-container"></div></div>
   </div>
 
-  <!-- Client Detail Modal -->
+  <!-- ═══ Client Detail Modal ═══ -->
   <div id="detail-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
-        <h2 id="modal-title">Détails client</h2>
+        <h2 id="modal-title" style="font-size: 1.1rem;">Client</h2>
         <button class="close-modal" onclick="closeModal()">×</button>
       </div>
       <div class="modal-body" id="modal-body"></div>
-      <div class="modal-footer" id="modal-footer"></div>
     </div>
   </div>
 
-  <!-- Adjust Modal -->
+  <!-- ═══ Adjust Modal ═══ -->
   <div id="adjust-modal" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>Ajuster les points</h2>
-        <button class="close-modal" onclick="closeAdjustModal()">×</button>
-      </div>
+      <div class="modal-header"><h2>Ajuster les points</h2><button class="close-modal" onclick="closeAdjustModal()">×</button></div>
       <div class="modal-body">
         <div id="adjust-alert"></div>
-        <div class="form-group">
-          <label class="form-label">Ajustement (+ ou -)</label>
-          <input type="number" id="adjust-delta" class="form-control" placeholder="-10 ou +20">
+        <div class="form-group"><label class="form-label">Ajustement (+ ou -)</label><input type="number" id="adjust-delta" class="form-control" placeholder="-10 ou +20"></div>
+        <div class="form-group"><label class="form-label">Raison *</label><input type="text" id="adjust-reason" class="form-control" placeholder="Correction erreur..."></div>
+        <button class="btn btn-primary btn-block" onclick="submitAdjustment()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Merge Modal ═══ -->
+  <div id="merge-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header"><h2 style="font-size:1.1rem;">Fusionner les clients</h2><button class="close-modal" onclick="closeMergeModal()">×</button></div>
+      <div class="modal-body">
+        <div id="merge-alert"></div>
+
+        <div class="alert alert-info" style="font-size:0.8rem;padding:8px 10px;">
+          ⚠️ Le client source sera supprimé. Ses points, visites et historique seront transférés vers le client cible.
         </div>
-        <div class="form-group">
-          <label class="form-label">Raison *</label>
-          <input type="text" id="adjust-reason" class="form-control" placeholder="Correction erreur...">
+
+        <div class="modal-section">
+          <div class="modal-section-title">Client cible (conservé)</div>
+          <div id="merge-target" style="background:var(--light);border-radius:8px;padding:8px 10px;font-size:0.85rem;font-weight:600;"></div>
         </div>
-        <button class="btn btn-primary" onclick="submitAdjustment()">Confirmer</button>
+
+        <div class="modal-section">
+          <div class="modal-section-title">Client source (sera supprimé)</div>
+          <div class="merge-search-wrap">
+            <input type="text" id="merge-search" class="form-control" placeholder="Rechercher le client à fusionner..." style="font-size:0.85rem;">
+            <div class="merge-results" id="merge-results"></div>
+          </div>
+          <div class="merge-selected" id="merge-selected">
+            <span id="merge-selected-name"></span>
+            <button class="btn btn-sm" style="padding:2px 8px;font-size:0.75rem;" onclick="clearMergeSelection()">✕</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" style="font-size:0.8rem;">Raison (optionnel)</label>
+          <input type="text" id="merge-reason" class="form-control" placeholder="Ex: Doublon, couple..." style="font-size:0.85rem;">
+        </div>
+
+        <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="submitMerge()" disabled>
+          🔀 Confirmer la fusion
+        </button>
       </div>
     </div>
   </div>
@@ -188,11 +222,12 @@
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
     let allClients = [];
-    let filteredClients = [];
     let currentTab = 'all';
     let currentSort = { key: 'last_visit', dir: 'desc' };
     let currentPeriod = 'all';
     let currentClientId = null;
+    let currentClientData = null;
+    let mergeSourceId = null;
 
     // ════════════════════════════════════════
     // LOAD
@@ -205,9 +240,7 @@
         allClients = data.clients;
         updateStats();
         applyFilters();
-      } catch (err) {
-        UI.showError('clients-container', err.message);
-      }
+      } catch (err) { UI.showError('clients-container', err.message); }
     }
 
     function updateStats() {
@@ -215,7 +248,6 @@
       const active = allClients.filter(c => daysSince(c.last_visit) <= 30).length;
       const revenue = allClients.reduce((s, c) => s + c.total_spent, 0);
       const pts = allClients.reduce((s, c) => s + c.points_balance, 0);
-
       document.getElementById('total-clients').textContent = total;
       document.getElementById('active-clients').textContent = active;
       document.getElementById('total-revenue').textContent = Format.currency(revenue);
@@ -229,94 +261,47 @@
 
     function applyFilters() {
       let clients = [...allClients];
-
-      // Search
       const q = document.getElementById('search-input').value.trim().toLowerCase();
       if (q.length >= 2) {
-        clients = clients.filter(c =>
-          (c.email || '').toLowerCase().includes(q) ||
-          (c.phone || '').toLowerCase().includes(q) ||
-          (c.name || '').toLowerCase().includes(q)
-        );
+        clients = clients.filter(c => (c.email||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q) || (c.name||'').toLowerCase().includes(q));
       }
-
-      // Date filter
       const { from, to } = getDateRange();
-      if (from) {
-        clients = clients.filter(c => {
-          const lv = new Date(c.last_visit);
-          return lv >= from && (!to || lv <= to);
-        });
-      }
+      if (from) { clients = clients.filter(c => { const lv = new Date(c.last_visit); return lv >= from && (!to || lv <= to); }); }
 
-      // Tab filter
       switch (currentTab) {
-        case 'inactive':
-          clients = clients.filter(c => daysSince(c.last_visit) > 30);
-          break;
-        case 'recent':
-          clients = clients.filter(c => daysSince(c.last_visit) <= 7);
-          break;
+        case 'inactive': clients = clients.filter(c => daysSince(c.last_visit) > 30); break;
+        case 'recent': clients = clients.filter(c => daysSince(c.last_visit) <= 7); break;
       }
 
-      // Sort
       clients.sort((a, b) => {
-        // Tab-specific default sort
         if (currentTab === 'top-points') return b.points_balance - a.points_balance;
         if (currentTab === 'top-spent') return b.total_spent - a.total_spent;
         if (currentTab === 'top-visits') return b.visit_count - a.visit_count;
-
-        let va = a[currentSort.key];
-        let vb = b[currentSort.key];
-
-        // Handle nulls
-        if (va === null || va === undefined) va = '';
-        if (vb === null || vb === undefined) vb = '';
-
-        // Dates
-        if (currentSort.key.includes('visit') || currentSort.key.includes('_at')) {
-          va = new Date(va || 0).getTime();
-          vb = new Date(vb || 0).getTime();
-        }
-
-        // Strings
+        let va = a[currentSort.key], vb = b[currentSort.key];
+        if (va == null) va = ''; if (vb == null) vb = '';
+        if (currentSort.key.includes('visit') || currentSort.key.includes('_at')) { va = new Date(va || 0).getTime(); vb = new Date(vb || 0).getTime(); }
         if (typeof va === 'string') va = va.toLowerCase();
         if (typeof vb === 'string') vb = vb.toLowerCase();
-
         if (va < vb) return currentSort.dir === 'asc' ? -1 : 1;
         if (va > vb) return currentSort.dir === 'asc' ? 1 : -1;
         return 0;
       });
 
-      filteredClients = clients;
       renderTable(clients);
     }
 
     function getDateRange() {
       if (currentPeriod === 'all') return {};
       if (currentPeriod === 'custom') {
-        const f = document.getElementById('date-from').value;
-        const t = document.getElementById('date-to').value;
+        const f = document.getElementById('date-from').value, t = document.getElementById('date-to').value;
         return { from: f ? new Date(f) : null, to: t ? endOfDay(new Date(t)) : null };
       }
-
-      const now = new Date();
-      const today = startOfDay(now);
-
+      const now = new Date(), today = startOfDay(now);
       switch (currentPeriod) {
         case 'today': return { from: today, to: endOfDay(now) };
-        case 'yesterday': {
-          const y = new Date(today); y.setDate(y.getDate() - 1);
-          return { from: y, to: endOfDay(y) };
-        }
-        case 'week': {
-          const w = new Date(today); w.setDate(w.getDate() - 7);
-          return { from: w, to: endOfDay(now) };
-        }
-        case 'month': {
-          const m = new Date(today); m.setMonth(m.getMonth() - 1);
-          return { from: m, to: endOfDay(now) };
-        }
+        case 'yesterday': { const y = new Date(today); y.setDate(y.getDate()-1); return { from: y, to: endOfDay(y) }; }
+        case 'week': { const w = new Date(today); w.setDate(w.getDate()-7); return { from: w, to: endOfDay(now) }; }
+        case 'month': { const m = new Date(today); m.setMonth(m.getMonth()-1); return { from: m, to: endOfDay(now) }; }
       }
       return {};
     }
@@ -331,11 +316,7 @@
 
     function renderTable(clients) {
       const container = document.getElementById('clients-container');
-
-      if (clients.length === 0) {
-        container.innerHTML = '<div class="empty-state" style="padding:2rem;"><div class="empty-state-icon">👥</div><p>Aucun client trouvé</p></div>';
-        return;
-      }
+      if (clients.length === 0) { container.innerHTML = '<div class="empty-state" style="padding:2rem"><div class="empty-state-icon">👥</div><p>Aucun client trouvé</p></div>'; return; }
 
       const showRank = ['top-points', 'top-spent', 'top-visits'].includes(currentTab);
       const maxPts = Math.max(...clients.map(c => c.points_balance), 1);
@@ -363,38 +344,19 @@
       clients.forEach((c, i) => {
         const display = c.name || c.email || c.phone || 'N/A';
         const sub = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
-        const isActive = daysSince(c.last_visit) <= 30;
         const progress = Math.min(c.points_balance / maxPts * 100, 100);
+        const medal = showRank ? (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)) : null;
 
         html += `<tr onclick="showDetails(${c.id})">`;
-
-        if (showRank) {
-          const rankCls = i < 3 ? `rank rank-${i+1}` : 'rank';
-          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1);
-          html += `<td class="${rankCls}">${medal}</td>`;
-        }
+        if (showRank) html += `<td class="rank ${i < 3 ? 'rank-'+(i+1) : ''}">${medal}</td>`;
 
         html += `
-          <td>
-            <strong>${escHtml(display)}</strong>
-            ${sub ? `<br><span class="staff-sm">${escHtml(sub)}</span>` : ''}
-            ${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}
-          </td>
-          <td>
-            <div class="pts-bar">
-              <strong style="color:var(--primary)">${c.points_balance}</strong>
-              <div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div>
-            </div>
-          </td>
+          <td><strong>${esc(display)}</strong>${sub ? `<br><span class="staff-sm">${esc(sub)}</span>` : ''}${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}</td>
+          <td><div class="pts-bar"><strong style="color:var(--primary)">${c.points_balance}</strong><div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div></div></td>
           <td>${Format.currency(c.total_spent)}</td>
           <td class="hide-mobile">${c.visit_count}</td>
-          <td class="hide-mobile">
-            ${c.last_credited_by ? `<span class="staff-sm">${escHtml(c.last_credited_by)}</span>` : '<span class="staff-sm">—</span>'}
-          </td>
-          <td>
-            <span class="staff-sm">${formatShortDate(c.last_visit)}</span>
-            ${!isActive ? '<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>' : ''}
-          </td>
+          <td class="hide-mobile"><span class="staff-sm">${esc(c.last_credited_by || '—')}</span></td>
+          <td><span class="staff-sm">${fmtDate(c.last_visit)}</span>${daysSince(c.last_visit) > 30 ? '<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>' : ''}</td>
         </tr>`;
       });
 
@@ -402,16 +364,9 @@
       container.innerHTML = html;
     }
 
-    // ════════════════════════════════════════
-    // SORT
-    // ════════════════════════════════════════
-
     function sortBy(key) {
-      if (currentSort.key === key) {
-        currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
-      } else {
-        currentSort = { key, dir: key === 'name' ? 'asc' : 'desc' };
-      }
+      if (currentSort.key === key) currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+      else currentSort = { key, dir: key === 'name' ? 'asc' : 'desc' };
       applyFilters();
     }
 
@@ -420,22 +375,12 @@
     // ════════════════════════════════════════
 
     document.getElementById('tabs-row').addEventListener('click', (e) => {
-      const tab = e.target.closest('.client-tab');
-      if (!tab) return;
+      const tab = e.target.closest('.client-tab'); if (!tab) return;
       document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
-
-      // Reset sort per tab
-      const sortDefaults = {
-        'all': { key: 'last_visit', dir: 'desc' },
-        'top-points': { key: 'points_balance', dir: 'desc' },
-        'top-spent': { key: 'total_spent', dir: 'desc' },
-        'top-visits': { key: 'visit_count', dir: 'desc' },
-        'recent': { key: 'last_visit', dir: 'desc' },
-        'inactive': { key: 'last_visit', dir: 'asc' },
-      };
-      currentSort = sortDefaults[currentTab] || { key: 'last_visit', dir: 'desc' };
+      const defaults = { 'all': 'last_visit', 'top-points': 'points_balance', 'top-spent': 'total_spent', 'top-visits': 'visit_count', 'recent': 'last_visit', 'inactive': 'last_visit' };
+      currentSort = { key: defaults[currentTab] || 'last_visit', dir: currentTab === 'inactive' ? 'asc' : 'desc' };
       applyFilters();
     });
 
@@ -444,37 +389,24 @@
     // ════════════════════════════════════════
 
     document.getElementById('date-pills').addEventListener('click', (e) => {
-      const pill = e.target.closest('.date-pill');
-      if (!pill) return;
+      const pill = e.target.closest('.date-pill'); if (!pill) return;
       document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       currentPeriod = pill.dataset.period;
-
-      document.getElementById('date-range').style.display = currentPeriod === 'custom' ? 'flex' : 'none';
+      document.getElementById('date-range').classList.toggle('show', currentPeriod === 'custom');
       if (currentPeriod !== 'custom') applyFilters();
     });
-
     document.getElementById('date-from').addEventListener('change', applyFilters);
     document.getElementById('date-to').addEventListener('change', applyFilters);
 
-    // ════════════════════════════════════════
-    // SEARCH
-    // ════════════════════════════════════════
-
+    // Search
     let searchTimeout;
-    document.getElementById('search-input').addEventListener('input', () => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(applyFilters, 200);
-    });
-
-    // ════════════════════════════════════════
-    // CSV EXPORT
-    // ════════════════════════════════════════
+    document.getElementById('search-input').addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(applyFilters, 200); });
 
     function exportCSV() { window.location.href = `${API_BASE_URL}/clients/export/csv`; }
 
     // ════════════════════════════════════════
-    // CLIENT DETAIL MODAL
+    // CLIENT DETAIL MODAL (enhanced)
     // ════════════════════════════════════════
 
     async function showDetails(mcId) {
@@ -483,57 +415,88 @@
         const data = await API.clients.getById(mcId);
         const c = data.client;
         const txs = data.transactions;
+        currentClientData = c;
 
-        document.getElementById('modal-title').textContent = c.email || c.phone || c.name || `Client #${mcId}`;
+        document.getElementById('modal-title').textContent = c.name || c.email || c.phone || `Client #${mcId}`;
 
         const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+        const isOwner = staff.role === 'owner';
+        const isManager = ['owner', 'manager'].includes(staff.role);
 
-        let html = `
-          <div class="stats-grid" style="margin-bottom: 1rem;">
-            <div class="stat-card"><div class="stat-value">${c.points_balance}</div><div class="stat-label">Points</div></div>
-            <div class="stat-card"><div class="stat-value">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
-            <div class="stat-card"><div class="stat-value">${c.visit_count}</div><div class="stat-label">Visites</div></div>
-          </div>
-          <div style="margin-bottom: 1rem;">
-            <div class="flex-between text-sm"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
-            <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
-            ${c.can_redeem ? '<div class="alert alert-success mt-1" style="padding:6px 10px;font-size:0.85rem;">🎁 Récompense disponible</div>' : ''}
-          </div>
-          <h3 style="margin-bottom: 0.5rem; font-size: 1rem;">Historique</h3>
-        `;
+        let html = '';
+
+        // ── Stats row ──
+        html += `<div class="stats-grid" style="margin-bottom:0.75rem;grid-template-columns:repeat(3,1fr);">
+          <div class="stat-card" style="padding:0.75rem"><div class="stat-value" style="font-size:1.5rem">${c.points_balance}</div><div class="stat-label">Points</div></div>
+          <div class="stat-card" style="padding:0.75rem"><div class="stat-value" style="font-size:1.5rem">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
+          <div class="stat-card" style="padding:0.75rem"><div class="stat-value" style="font-size:1.5rem">${c.visit_count}</div><div class="stat-label">Visites</div></div>
+        </div>`;
+
+        // ── Progress ──
+        html += `<div style="margin-bottom:0.75rem;">
+          <div class="flex-between" style="font-size:0.8rem"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
+          <div class="progress-bar" style="height:8px"><div class="progress-fill" style="width:${progress}%"></div></div>
+          ${c.can_redeem ? '<div class="alert alert-success" style="padding:6px 10px;font-size:0.8rem;margin-top:4px">🎁 Récompense disponible !</div>' : ''}
+        </div>`;
+
+        // ── Actions row ──
+        if (isManager) {
+          html += `<div class="modal-section"><div class="actions-row">
+            <button class="btn btn-outline btn-sm" onclick="toggleEditForm()">✏️ Modifier</button>
+            <button class="btn btn-outline btn-sm" onclick="showAdjustModal()">📏 Ajuster pts</button>
+            ${isOwner ? `<button class="btn btn-outline btn-sm" onclick="showMergeModal()">🔀 Fusionner</button>` : ''}
+            ${c.is_blocked
+              ? `<button class="btn btn-success btn-sm" onclick="toggleBlock(false)">🔓 Débloquer</button>`
+              : `<button class="btn btn-danger btn-sm" onclick="toggleBlock(true)">🔒 Bloquer</button>`}
+          </div></div>`;
+        }
+
+        // ── Edit form (hidden by default) ──
+        if (isManager) {
+          html += `<div class="modal-section" id="edit-section" style="display:none;">
+            <div class="modal-section-title">✏️ Modifier les infos</div>
+            <div id="edit-alert"></div>
+            <div class="edit-grid">
+              <div class="form-group full-width"><label class="form-label">Nom / surnom</label>
+                <input type="text" id="edit-name" class="form-control" value="${esc(c.name || '')}"></div>
+              <div class="form-group"><label class="form-label">Email</label>
+                <input type="email" id="edit-email" class="form-control" value="${esc(c.email || '')}"></div>
+              <div class="form-group"><label class="form-label">Téléphone</label>
+                <input type="tel" id="edit-phone" class="form-control" value="${esc(c.phone || '')}"></div>
+              <div class="form-group full-width" style="text-align:right;">
+                <button class="btn btn-sm" onclick="toggleEditForm()" style="margin-right:0.5rem;">Annuler</button>
+                <button class="btn btn-primary btn-sm" onclick="saveEdit()">💾 Enregistrer</button>
+              </div>
+            </div>
+          </div>`;
+        }
+
+        // ── Transaction history ──
+        html += `<div class="modal-section">
+          <div class="modal-section-title">📜 Historique</div>`;
 
         if (txs.length === 0) {
-          html += '<p class="text-muted text-center" style="font-size:0.85rem;">Aucun historique</p>';
+          html += '<p class="text-muted" style="font-size:0.85rem;text-align:center;">Aucun historique</p>';
         } else {
           html += '<div class="timeline">';
           txs.forEach(t => {
-            const type = t.transaction_type;
             const sign = t.points_delta >= 0 ? '+' : '';
-            const color = type === 'reward' ? 'var(--success)' : type === 'adjustment' ? 'var(--warning)' : 'var(--primary)';
-            html += `
-              <div class="timeline-item ${type}">
-                <div class="timeline-date">${Format.datetime(t.created_at)}${t.staff_name ? ` — <strong>${escHtml(t.staff_name)}</strong>` : ''}</div>
-                <div class="timeline-content">
-                  <strong style="color:${color}">${sign}${t.points_delta} pts</strong>
-                  ${t.amount ? ` pour ${Format.currency(t.amount)}` : ''}
-                  <span class="badge badge-neutral" style="margin-left:4px">${type}</span>
-                  ${t.notes ? `<br><small class="text-muted">${escHtml(t.notes)}</small>` : ''}
-                </div>
-              </div>`;
+            const color = t.transaction_type === 'reward' ? 'var(--success)' : t.transaction_type === 'adjustment' ? 'var(--warning)' : t.transaction_type === 'merge' ? '#8b5cf6' : 'var(--primary)';
+            html += `<div class="timeline-item ${t.transaction_type}">
+              <div class="timeline-date">${Format.datetime(t.created_at)}${t.staff_name ? ` — <strong>${esc(t.staff_name)}</strong>` : ''}</div>
+              <div class="timeline-content">
+                <strong style="color:${color}">${sign}${t.points_delta} pts</strong>
+                ${t.amount ? ` pour ${Format.currency(t.amount)}` : ''}
+                <span class="badge badge-neutral" style="margin-left:4px;font-size:0.65rem">${t.transaction_type}</span>
+                ${t.notes ? `<br><small class="text-muted">${esc(t.notes)}</small>` : ''}
+              </div>
+            </div>`;
           });
           html += '</div>';
         }
+        html += '</div>';
 
         document.getElementById('modal-body').innerHTML = html;
-
-        let footer = '';
-        if (['owner', 'manager'].includes(staff.role)) {
-          footer += `<button class="btn btn-outline btn-sm" onclick="showAdjustModal()">📏 Ajuster</button>`;
-          footer += c.is_blocked
-            ? `<button class="btn btn-success btn-sm" onclick="toggleBlock(false)">Débloquer</button>`
-            : `<button class="btn btn-danger btn-sm" onclick="toggleBlock(true)">Bloquer</button>`;
-        }
-        document.getElementById('modal-footer').innerHTML = footer;
         document.getElementById('detail-modal').classList.add('active');
       } catch (err) { console.error(err); }
     }
@@ -541,8 +504,37 @@
     function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
     document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
 
+    // ── Toggle edit form ──
+    function toggleEditForm() {
+      const el = document.getElementById('edit-section');
+      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // ── Save edit ──
+    async function saveEdit() {
+      try {
+        const name = document.getElementById('edit-name').value.trim();
+        const email = document.getElementById('edit-email').value.trim();
+        const phone = document.getElementById('edit-phone').value.trim();
+
+        if (!email && !phone) {
+          UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error');
+          return;
+        }
+
+        await API.call(`/clients/${currentClientId}/edit`, {
+          method: 'PUT', body: JSON.stringify({ name: name || null, email: email || null, phone: phone || null }),
+        });
+
+        closeModal();
+        loadClients();
+      } catch (err) {
+        UI.showAlert('edit-alert', err.message, 'error');
+      }
+    }
+
+    // ── Block / unblock ──
     async function toggleBlock(block) {
-      if (!currentClientId) return;
       if (!confirm(`${block ? '🔒 Bloquer' : '🔓 Débloquer'} ce client ?`)) return;
       try {
         if (block) await API.clients.block(currentClientId);
@@ -550,6 +542,10 @@
         closeModal(); loadClients();
       } catch (err) { alert(err.message); }
     }
+
+    // ════════════════════════════════════════
+    // ADJUST MODAL
+    // ════════════════════════════════════════
 
     function showAdjustModal() {
       document.getElementById('adjust-delta').value = '';
@@ -572,15 +568,124 @@
     }
 
     // ════════════════════════════════════════
+    // MERGE MODAL
+    // ════════════════════════════════════════
+
+    function showMergeModal() {
+      mergeSourceId = null;
+      document.getElementById('merge-search').value = '';
+      document.getElementById('merge-results').classList.remove('open');
+      document.getElementById('merge-selected').classList.remove('show');
+      document.getElementById('merge-confirm-btn').disabled = true;
+      document.getElementById('merge-reason').value = '';
+      UI.clearAlert('merge-alert');
+
+      const c = currentClientData;
+      document.getElementById('merge-target').innerHTML =
+        `<strong>${esc(c.name || c.email || c.phone || '#'+currentClientId)}</strong>` +
+        ` — ${c.points_balance} pts, ${c.visit_count} visites`;
+
+      document.getElementById('merge-modal').classList.add('active');
+    }
+    function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
+    document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
+
+    // Merge search
+    let mergeSearchTimeout;
+    document.getElementById('merge-search').addEventListener('input', (e) => {
+      clearTimeout(mergeSearchTimeout);
+      const q = e.target.value.trim();
+      if (q.length < 2) { document.getElementById('merge-results').classList.remove('open'); return; }
+
+      mergeSearchTimeout = setTimeout(() => {
+        // Search in local allClients (already loaded)
+        const results = allClients.filter(c =>
+          c.id !== currentClientId &&
+          ((c.email||'').toLowerCase().includes(q.toLowerCase()) ||
+           (c.phone||'').toLowerCase().includes(q.toLowerCase()) ||
+           (c.name||'').toLowerCase().includes(q.toLowerCase()))
+        ).slice(0, 8);
+
+        const dropdown = document.getElementById('merge-results');
+        if (results.length === 0) {
+          dropdown.innerHTML = '<div style="padding:8px 10px;font-size:0.85rem;color:var(--text-light)">Aucun résultat</div>';
+        } else {
+          dropdown.innerHTML = results.map(r => `
+            <div class="merge-item" onclick="selectMergeSource(${r.id})">
+              <div class="m-name">${esc(r.name || r.email || r.phone || '#'+r.id)}</div>
+              <div class="m-detail">${r.points_balance} pts · ${r.visit_count} visites · ${Format.currency(r.total_spent)}</div>
+            </div>
+          `).join('');
+        }
+        dropdown.classList.add('open');
+      }, 200);
+    });
+
+    function selectMergeSource(id) {
+      mergeSourceId = id;
+      const c = allClients.find(x => x.id === id);
+      if (!c) return;
+
+      document.getElementById('merge-results').classList.remove('open');
+      document.getElementById('merge-search').style.display = 'none';
+
+      const sel = document.getElementById('merge-selected');
+      document.getElementById('merge-selected-name').innerHTML =
+        `<strong>${esc(c.name || c.email || c.phone)}</strong> — ${c.points_balance} pts, ${c.visit_count} vis.`;
+      sel.classList.add('show');
+
+      document.getElementById('merge-confirm-btn').disabled = false;
+    }
+
+    function clearMergeSelection() {
+      mergeSourceId = null;
+      document.getElementById('merge-selected').classList.remove('show');
+      document.getElementById('merge-search').style.display = 'block';
+      document.getElementById('merge-search').value = '';
+      document.getElementById('merge-confirm-btn').disabled = true;
+    }
+
+    async function submitMerge() {
+      if (!mergeSourceId) return;
+
+      const sourceClient = allClients.find(x => x.id === mergeSourceId);
+      const sourceName = sourceClient ? (sourceClient.name || sourceClient.email || sourceClient.phone) : '#' + mergeSourceId;
+
+      if (!confirm(`⚠️ ATTENTION\n\nLe client "${sourceName}" sera SUPPRIMÉ.\nSes points et historique seront transférés vers le client actuel.\n\nCette action est irréversible. Continuer ?`)) return;
+
+      try {
+        const reason = document.getElementById('merge-reason').value.trim();
+        await API.call(`/clients/${currentClientId}/merge`, {
+          method: 'POST',
+          body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason || 'Fusion manuelle' }),
+        });
+
+        closeMergeModal();
+        closeModal();
+        loadClients();
+
+        // Brief success feedback
+        setTimeout(() => showDetails(currentClientId), 300);
+      } catch (err) {
+        UI.showAlert('merge-alert', err.message, 'error');
+      }
+    }
+
+    // Close merge dropdown on outside click
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.merge-search-wrap')) {
+        document.getElementById('merge-results').classList.remove('open');
+      }
+    });
+
+    // ════════════════════════════════════════
     // HELPERS
     // ════════════════════════════════════════
 
-    function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-    function formatShortDate(d) {
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function fmtDate(d) {
       if (!d) return '—';
-      const dt = new Date(d);
-      const days = Math.floor((Date.now() - dt) / 86400000);
+      const dt = new Date(d), days = Math.floor((Date.now() - dt) / 86400000);
       const time = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
       if (days === 0) return `Auj. ${time}`;
       if (days === 1) return `Hier ${time}`;
@@ -588,7 +693,6 @@
       return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + time;
     }
 
-    // Init
     loadClients();
   </script>
 </body>
