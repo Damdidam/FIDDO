@@ -11,6 +11,7 @@ const {
 } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { normalizeEmail, normalizeVAT, isValidEmail } = require('../services/normalizer');
+const { sendRegistrationConfirmationEmail } = require('../services/email');
 
 const router = express.Router();
 
@@ -85,6 +86,9 @@ router.post('/register', async (req, res) => {
       targetId: merchantId,
       details: { businessName, vatNumber: normalizedVat, ownerEmail: normalizedOwnerEmail },
     });
+
+    // ── Fire-and-forget confirmation email ──
+    sendRegistrationConfirmationEmail(normalizedOwnerEmail, businessName.trim());
 
     res.status(201).json({
       message: 'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
