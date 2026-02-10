@@ -9,7 +9,10 @@
     /* ── Compact activity table ── */
     .activity-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
     .activity-table thead { background: var(--secondary); color: white; position: sticky; top: 0; }
-    .activity-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+    .activity-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; user-select: none; transition: background 0.15s; }
+    .activity-table th:hover { background: rgba(255,255,255,0.1); }
+    .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.4; }
+    .sort-arrow.active { opacity: 1; }
     .activity-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
     .activity-table tbody tr:hover { background: #f0fdf4; }
     .activity-table tbody tr:last-child td { border-bottom: none; }
@@ -140,34 +143,72 @@
     }
 
     // ── Load recent activity ──
+    let allTxs = [];
+    let sortCol = 'date';
+    let sortDir = 'desc';
+
     async function loadActivity() {
       try {
         const data = await API.call('/clients/recent-activity?limit=30');
-        const txs = data.transactions;
-        const container = document.getElementById('activity-container');
+        allTxs = data.transactions;
+        renderActivity();
+      } catch (err) {
+        console.error('Activity error:', err);
+        document.getElementById('activity-container').innerHTML = '<div class="alert alert-error" style="margin:1rem">Erreur de chargement</div>';
+      }
+    }
 
-        if (txs.length === 0) {
-          container.innerHTML = '<div class="empty-state" style="padding:2rem"><p class="text-muted">Aucune activité</p></div>';
-          return;
+    function sortActivity(col) {
+      if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
+      else { sortCol = col; sortDir = col === 'date' ? 'desc' : 'asc'; }
+      renderActivity();
+    }
+
+    function renderActivity() {
+      const container = document.getElementById('activity-container');
+      if (allTxs.length === 0) {
+        container.innerHTML = '<div class="empty-state" style="padding:2rem"><p class="text-muted">Aucune activité</p></div>';
+        return;
+      }
+
+      const sorted = [...allTxs].sort((a, b) => {
+        let va, vb;
+        switch (sortCol) {
+          case 'client':  va = (a.client_name || a.client_email || a.client_phone || '').toLowerCase(); vb = (b.client_name || b.client_email || b.client_phone || '').toLowerCase(); break;
+          case 'points':  va = a.points_delta; vb = b.points_delta; break;
+          case 'amount':  va = a.amount || 0; vb = b.amount || 0; break;
+          case 'type':    va = a.transaction_type; vb = b.transaction_type; break;
+          case 'staff':   va = (a.staff_name || '').toLowerCase(); vb = (b.staff_name || '').toLowerCase(); break;
+          case 'date':    va = a.created_at; vb = b.created_at; break;
+          default:        va = 0; vb = 0;
         }
+        if (va < vb) return sortDir === 'asc' ? -1 : 1;
+        if (va > vb) return sortDir === 'asc' ? 1 : -1;
+        return 0;
+      });
 
-        let html = `<table class="activity-table"><thead><tr>
-          <th>Client</th>
-          <th>Points</th>
-          <th class="hide-mobile">Montant</th>
-          <th>Type</th>
-          <th>Par</th>
-          <th>Date</th>
+      function arrow(col) {
+        if (sortCol !== col) return '<span class="sort-arrow">↕</span>';
+        return `<span class="sort-arrow active">${sortDir === 'asc' ? '▲' : '▼'}</span>`;
+      }
+
+      let html = `<table class="activity-table"><thead><tr>
+          <th onclick="sortActivity('client')">Client ${arrow('client')}</th>
+          <th onclick="sortActivity('points')">Points ${arrow('points')}</th>
+          <th class="hide-mobile" onclick="sortActivity('amount')">Montant ${arrow('amount')}</th>
+          <th onclick="sortActivity('type')">Type ${arrow('type')}</th>
+          <th onclick="sortActivity('staff')">Par ${arrow('staff')}</th>
+          <th onclick="sortActivity('date')">Date ${arrow('date')}</th>
         </tr></thead><tbody>`;
 
-        txs.forEach(t => {
-          const client = t.client_name || t.client_email || t.client_phone || '—';
-          const sign = t.points_delta >= 0 ? '+' : '';
-          const ptsClass = t.points_delta >= 0 ? 'pts-positive' : 'pts-negative';
-          const typeLabel = { credit: 'Crédit', reward: 'Récomp.', adjustment: 'Ajust.', merge: 'Fusion' }[t.transaction_type] || t.transaction_type;
-          const typeClass = `tx-${t.transaction_type}`;
+      sorted.forEach(t => {
+        const client = t.client_name || t.client_email || t.client_phone || '—';
+        const sign = t.points_delta >= 0 ? '+' : '';
+        const ptsClass = t.points_delta >= 0 ? 'pts-positive' : 'pts-negative';
+        const typeLabel = { credit: 'Crédit', reward: 'Récomp.', adjustment: 'Ajust.', merge: 'Fusion' }[t.transaction_type] || t.transaction_type;
+        const typeClass = `tx-${t.transaction_type}`;
 
-          html += `<tr>
+        html += `<tr>
             <td><strong>${escHtml(client)}</strong></td>
             <td class="${ptsClass}">${sign}${t.points_delta}</td>
             <td class="hide-mobile">${t.amount ? Format.currency(t.amount) : '—'}</td>
@@ -175,14 +216,10 @@
             <td class="staff-pill"><strong>${escHtml(t.staff_name || 'Système')}</strong></td>
             <td class="staff-pill">${formatShortDate(t.created_at)}</td>
           </tr>`;
-        });
+      });
 
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      } catch (err) {
-        console.error('Activity error:', err);
-        document.getElementById('activity-container').innerHTML = '<div class="alert alert-error" style="margin:1rem">Erreur de chargement</div>';
-      }
+      html += '</tbody></table>';
+      container.innerHTML = html;
     }
 
     // ── Helpers ──
