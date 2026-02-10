@@ -93,6 +93,41 @@
     .credit-success .big-pts { font-size: 2rem; font-weight: 800; color: var(--success); }
     .credit-success .client-info { color: var(--text); margin-top: 0.5rem; font-size: 0.9rem; }
 
+    /* ── QR Code section ── */
+    .qr-section { text-align: center; padding: 1rem; }
+    .qr-toggle {
+      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
+      background: #F0FDFA; border: 2px solid var(--primary); border-radius: 8px;
+      cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--primary);
+      transition: all 0.2s; width: 100%;  justify-content: center;
+    }
+    .qr-toggle:hover { background: #CCFBF1; }
+    .qr-toggle.active { background: var(--primary); color: white; }
+    .qr-body { margin-top: 1rem; }
+    .qr-canvas {
+      background: white; padding: 12px; border-radius: 12px;
+      display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      border: 2px solid var(--border);
+    }
+    .qr-canvas img { display: block; }
+    .qr-status {
+      margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-light);
+      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    }
+    .qr-status .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--warning);
+      animation: qr-pulse 1.5s ease-in-out infinite;
+    }
+    .qr-status.received .dot { background: var(--success); animation: none; }
+    @keyframes qr-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+    .qr-received {
+      background: #ECFDF5; border: 2px solid var(--success); border-radius: 8px;
+      padding: 0.75rem; margin-top: 0.75rem; font-size: 0.88rem;
+    }
+    .qr-received strong { color: var(--success); }
+    .qr-timer { font-size: 0.78rem; color: var(--text-light); margin-top: 0.4rem; }
+    .qr-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; justify-content: center; }
+
     /* ── Responsive compact ── */
     @media (max-width: 768px) {
       .credit-container h1 { font-size: 1.2rem; margin: 0.75rem 0; }
@@ -194,6 +229,26 @@
           <div id="merchant-info" style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-light);"></div>
         </div>
 
+        <!-- QR Code: client scans to fill form -->
+        <div class="card" id="qr-card">
+          <button type="button" class="qr-toggle" id="qr-toggle-btn" onclick="toggleQR()">
+            📱 QR — Le client remplit lui-même
+          </button>
+          <div class="qr-body" id="qr-body" style="display: none;">
+            <div id="qr-canvas" class="qr-canvas"></div>
+            <div class="qr-status" id="qr-status">
+              <span class="dot"></span>
+              <span>En attente du client…</span>
+            </div>
+            <div class="qr-timer" id="qr-timer"></div>
+            <div id="qr-received-info"></div>
+            <div class="qr-actions">
+              <button class="btn btn-outline btn-sm" onclick="refreshQR()">🔄 Nouveau QR</button>
+              <button class="btn btn-sm" style="background:#f3f4f6; color:var(--text-light);" onclick="closeQR()">Fermer</button>
+            </div>
+          </div>
+        </div>
+
         <!-- Client lookup result -->
         <div id="lookup-container" style="display: none;">
           <div class="card" style="padding: 0;">
@@ -208,6 +263,7 @@
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
     if (!requireAuth()) throw 'Not authenticated';
@@ -626,6 +682,11 @@
       document.getElementById('success-container').innerHTML = '';
       document.getElementById('lookup-container').style.display = 'none';
       UI.clearAlert('credit-alert');
+      // Reset QR received info (keep QR open if it was open)
+      document.getElementById('qr-received-info').innerHTML = '';
+      if (document.getElementById('qr-body').style.display !== 'none') {
+        refreshQR(); // Generate fresh QR for next client
+      }
       // Focus the active identifier field
       if (currentMode === 'email') {
         document.getElementById('client-email').focus();
@@ -633,6 +694,179 @@
         document.getElementById('client-phone').focus();
       }
     }
+    // ═══════════════════════════════════════════════════════
+    // QR CODE — CLIENT SELF-IDENTIFICATION
+    // ═══════════════════════════════════════════════════════
+
+    let qrToken = null;
+    let qrPollInterval = null;
+    let qrTimerInterval = null;
+    let qrExpiresAt = null;
+    let qrInstance = null;
+
+    async function toggleQR() {
+      const body = document.getElementById('qr-body');
+      const btn = document.getElementById('qr-toggle-btn');
+
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        btn.classList.add('active');
+        btn.innerHTML = '📱 QR — Le client remplit lui-même';
+        await createQRSession();
+      } else {
+        closeQR();
+      }
+    }
+
+    function closeQR() {
+      document.getElementById('qr-body').style.display = 'none';
+      document.getElementById('qr-toggle-btn').classList.remove('active');
+      stopQRPolling();
+      // Cancel session on server
+      if (qrToken) {
+        fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
+        qrToken = null;
+      }
+    }
+
+    async function createQRSession() {
+      try {
+        // Reset UI
+        document.getElementById('qr-received-info').innerHTML = '';
+        document.getElementById('qr-status').className = 'qr-status';
+        document.getElementById('qr-status').innerHTML = '<span class="dot"></span><span>En attente du client…</span>';
+
+        const resp = await API.call('/qr/session', { method: 'POST' });
+        qrToken = resp.token;
+        qrExpiresAt = Date.now() + (resp.expiresIn * 1000);
+
+        // Generate QR code
+        const canvas = document.getElementById('qr-canvas');
+        canvas.innerHTML = '';
+        qrInstance = new QRCode(canvas, {
+          text: resp.url,
+          width: 200,
+          height: 200,
+          colorDark: '#1F2937',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+
+        // Start polling
+        startQRPolling();
+        startQRTimer();
+
+      } catch (err) {
+        console.error('QR session error:', err);
+        document.getElementById('qr-status').innerHTML = '<span style="color:var(--danger);">⚠️ Erreur de création</span>';
+      }
+    }
+
+    async function refreshQR() {
+      stopQRPolling();
+      if (qrToken) {
+        fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
+      }
+      await createQRSession();
+    }
+
+    function startQRPolling() {
+      stopQRPolling();
+      qrPollInterval = setInterval(async () => {
+        if (!qrToken) return;
+        try {
+          const resp = await fetch(`${API_BASE_URL}/qr/poll/${qrToken}`, { credentials: 'include' });
+          const data = await resp.json();
+
+          if (resp.status === 410 || resp.status === 404) {
+            // Expired
+            stopQRPolling();
+            document.getElementById('qr-status').innerHTML = '<span style="color:var(--warning);">⏰ Session expirée</span>';
+            return;
+          }
+
+          if (!data.pending) {
+            // Got data!
+            stopQRPolling();
+            onQRDataReceived(data);
+          }
+        } catch (err) {
+          console.error('QR poll error:', err);
+        }
+      }, 1500); // Poll every 1.5s
+    }
+
+    function stopQRPolling() {
+      if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
+      if (qrTimerInterval) { clearInterval(qrTimerInterval); qrTimerInterval = null; }
+    }
+
+    function startQRTimer() {
+      if (qrTimerInterval) clearInterval(qrTimerInterval);
+      const timerEl = document.getElementById('qr-timer');
+
+      qrTimerInterval = setInterval(() => {
+        if (!qrExpiresAt) return;
+        const remaining = Math.max(0, Math.ceil((qrExpiresAt - Date.now()) / 1000));
+        const min = Math.floor(remaining / 60);
+        const sec = remaining % 60;
+        timerEl.textContent = `Expire dans ${min}:${sec.toString().padStart(2, '0')}`;
+
+        if (remaining <= 0) {
+          clearInterval(qrTimerInterval);
+          timerEl.textContent = 'Expiré — cliquez Nouveau QR';
+        }
+      }, 1000);
+    }
+
+    function onQRDataReceived(data) {
+      // Update status
+      const statusEl = document.getElementById('qr-status');
+      statusEl.className = 'qr-status received';
+      statusEl.innerHTML = '<span class="dot"></span><span>✅ Informations reçues !</span>';
+
+      // Show received data
+      document.getElementById('qr-received-info').innerHTML = `
+        <div class="qr-received">
+          <strong>✅ Client identifié</strong><br>
+          ${data.email ? '📧 ' + data.email + '<br>' : ''}
+          ${data.phone ? '📱 ' + data.phone + '<br>' : ''}
+          ${data.name ? '👤 ' + data.name : ''}
+        </div>
+      `;
+
+      // Fill the credit form automatically
+      if (data.email) {
+        switchMode('email');
+        const emailInput = document.getElementById('client-email');
+        emailInput.value = data.email;
+        emailInput.classList.add('has-value');
+        emailInput.dispatchEvent(new Event('input'));
+      } else if (data.phone) {
+        switchMode('phone');
+        const phoneInput = document.getElementById('client-phone');
+        phoneInput.value = data.phone;
+        phoneInput.classList.add('has-value');
+        phoneInput.dispatchEvent(new Event('input'));
+      }
+
+      if (data.name) {
+        const nameInput = document.getElementById('client-name');
+        nameInput.value = data.name;
+        nameInput.classList.add('has-value');
+      }
+
+      // Trigger lookup after a short delay
+      setTimeout(() => triggerLookup(), 300);
+
+      // Focus amount field so staff can continue
+      setTimeout(() => document.getElementById('amount').focus(), 600);
+    }
+
+    // Clean up polling on page unload
+    window.addEventListener('beforeunload', () => {
+      stopQRPolling();
+    });
   </script>
 </body>
 </html>
