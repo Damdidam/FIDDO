@@ -467,6 +467,7 @@
         { key: 'name', label: 'Client' },
         { key: 'points_balance', label: 'Points' },
         { key: 'visit_count', label: 'Visites' },
+        { key: 'custom_reward', label: 'Récompense', hide: 'hide-mobile' },
         { key: 'last_credited_by', label: 'Par', hide: 'hide-mobile' },
         { key: 'last_visit', label: 'Dernière visite' },
       ];
@@ -487,10 +488,15 @@
 
         html += `<tr onclick="showDetails(${c.id})">`;
         if (showRank) html += `<td class="rank ${i<3?'rank-'+(i+1):''}">${medal}</td>`;
+
+        const rewardLabel = c.custom_reward || merchant.reward_description;
+        const isCustom = !!c.custom_reward;
+
         html += `
-          <td><strong>${esc(display)}</strong>${c.custom_reward?' ⭐':''}${sub?`<br><span class="staff-sm">${esc(sub)}</span>`:''}${c.is_blocked?' <span class="badge badge-danger">Bloqué</span>':''}</td>
+          <td><strong>${esc(display)}</strong>${sub?`<br><span class="staff-sm">${esc(sub)}</span>`:''}${c.is_blocked?' <span class="badge badge-danger">Bloqué</span>':''}</td>
           <td><div class="pts-bar"><strong style="color:var(--primary)">${c.points_balance}</strong><div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div></div></td>
           <td>${c.visit_count}</td>
+          <td class="hide-mobile"><span class="staff-sm" style="${isCustom?'color:var(--primary);font-weight:600':''}">${isCustom?'⭐ ':''}${esc(rewardLabel)}</span></td>
           <td class="hide-mobile"><span class="staff-sm">${esc(c.last_credited_by||'—')}</span></td>
           <td><span class="staff-sm">${fmtDate(c.last_visit)}</span>${daysSince(c.last_visit)>30?'<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>':''}</td>
         </tr>`;
