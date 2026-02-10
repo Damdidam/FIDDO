@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Équipe — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="container">
+    <div class="flex-between" style="margin: 1.5rem 0;">
+      <h1>Mon équipe</h1>
+      <button class="btn btn-primary" onclick="showAddModal()">+ Ajouter un membre</button>
+    </div>
+
+    <div class="alert alert-info">
+      ℹ️ Les membres de votre équipe peuvent créditer des points aux clients.
+      Les <strong>managers</strong> peuvent aussi voir les clients et l'historique.
+      Les <strong>caissiers</strong> ont un accès limité (crédit uniquement, max 200€).
+    </div>
+
+    <div id="staff-list"></div>
+  </div>
+
+  <!-- Add Staff Modal -->
+  <div id="add-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ajouter un membre</h2>
+        <button class="close-modal" onclick="closeAddModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="add-alert"></div>
+
+        <p class="text-muted text-sm mb-2">
+          ⚠️ La gestion d'équipe sera bientôt disponible. Pour l'instant, contactez le support pour ajouter des membres.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label">Nom *</label>
+          <input type="text" id="add-name" class="form-control" placeholder="Marie Dupont">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email de connexion *</label>
+          <input type="email" id="add-email" class="form-control" placeholder="marie@email.com">
+          <small class="form-help">Un seul compte par email (même entre différents commerces)</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe temporaire *</label>
+          <input type="text" id="add-password" class="form-control" placeholder="Minimum 6 caractères">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rôle *</label>
+          <select id="add-role" class="form-control">
+            <option value="cashier">Caissier — Créditer uniquement</option>
+            <option value="manager">Manager — Créditer + voir clients</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="addStaffMember()" disabled>
+          Bientôt disponible
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireOwner()) throw 'Not authorized';
+
+    const staff = Auth.getStaff();
+
+    async function loadStaff() {
+      // For now, show the current user as the only staff member
+      // Staff management API endpoints will be added in a future version
+      const container = document.getElementById('staff-list');
+      
+      container.innerHTML = `
+        <div class="card">
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>Email</th>
+                <th>Rôle</th>
+                <th>Statut</th>
+                <th>Dernière connexion</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>${staff.display_name}</strong></td>
+                <td>${staff.email}</td>
+                <td><span class="badge badge-info">owner</span></td>
+                <td><span class="badge badge-success">Actif</span></td>
+                <td>Maintenant</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="alert alert-warning">
+          🚧 La gestion d'équipe complète (ajout/suppression de caissiers et managers) sera disponible dans une prochaine mise à jour.
+        </div>
+      `;
+    }
+
+    function showAddModal() { document.getElementById('add-modal').classList.add('active'); }
+    function closeAddModal() { document.getElementById('add-modal').classList.remove('active'); }
+    document.getElementById('add-modal').addEventListener('click', (e) => { if (e.target.id === 'add-modal') closeAddModal(); });
+
+    loadStaff();
+  </script>
+</body>
+</html>

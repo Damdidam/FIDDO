@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Tableau de bord</h1>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-clients">-</div>
+        <div class="stat-label">Clients</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-active">-</div>
+        <div class="stat-label">Actifs (30j)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-revenue">-</div>
+        <div class="stat-label">CA Total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-avg">-</div>
+        <div class="stat-label">Panier moyen</div>
+      </div>
+    </div>
+
+    <div class="grid grid-2">
+      <!-- Recent clients -->
+      <div class="card">
+        <div class="card-header">
+          Derniers clients
+          <a href="/clients" class="btn btn-primary btn-sm">Voir tous</a>
+        </div>
+        <div id="recent-clients"></div>
+      </div>
+
+      <!-- Quick actions + Settings -->
+      <div>
+        <div class="card">
+          <div class="card-header">Actions rapides</div>
+          <a href="/credit" class="btn btn-primary btn-block mb-1">➕ Créditer des points</a>
+          <a href="/clients" class="btn btn-secondary btn-block mb-1">👥 Voir les clients</a>
+          <button onclick="API.clients.exportCSV()" class="btn btn-outline btn-block">📥 Exporter CSV</button>
+        </div>
+
+        <div class="card" id="settings-card" style="display: none;">
+          <div class="card-header">⚙️ Paramètres de fidélité</div>
+          <div id="settings-alert"></div>
+          <form id="settings-form">
+            <div class="form-group">
+              <label class="form-label">Points par euro</label>
+              <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Points pour récompense</label>
+              <input type="number" id="set-pfr" class="form-control" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description récompense</label>
+              <input type="text" id="set-desc" class="form-control" placeholder="Boisson offerte">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireManager()) throw 'Not authorized';
+
+    const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
+
+    // Show settings card for owner
+    if (staff.role === 'owner') {
+      document.getElementById('settings-card').style.display = 'block';
+      document.getElementById('set-ppe').value = merchant.points_per_euro;
+      document.getElementById('set-pfr').value = merchant.points_for_reward;
+      document.getElementById('set-desc').value = merchant.reward_description;
+    }
+
+    async function loadDashboard() {
+      try {
+        const data = await API.clients.getAll();
+        const clients = data.clients;
+
+        const total = clients.length;
+        const active = clients.filter(c => {
+          const days = (Date.now() - new Date(c.last_visit)) / 86400000;
+          return days <= 30;
+        }).length;
+        const revenue = clients.reduce((s, c) => s + c.total_spent, 0);
+        const visits = clients.reduce((s, c) => s + c.visit_count, 0);
+        const avg = visits > 0 ? revenue / visits : 0;
+
+        document.getElementById('stat-clients').textContent = total;
+        document.getElementById('stat-active').textContent = active;
+        document.getElementById('stat-revenue').textContent = Format.currency(revenue);
+        document.getElementById('stat-avg').textContent = Format.currency(avg);
+
+        // Recent clients
+        const container = document.getElementById('recent-clients');
+        if (clients.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p class="text-muted">Aucun client pour le moment</p></div>';
+          return;
+        }
+
+        const recent = clients.slice(0, 5);
+        let html = '<table class="table"><thead><tr><th>Client</th><th>Points</th><th>Dépensé</th><th>Dernière visite</th></tr></thead><tbody>';
+        recent.forEach(c => {
+          html += `<tr>
+            <td><a href="/clients" style="color: var(--primary); text-decoration: none;">${c.email || c.phone || c.name || 'N/A'}</a></td>
+            <td><strong class="text-primary">${c.points_balance} pts</strong></td>
+            <td>${Format.currency(c.total_spent)}</td>
+            <td class="text-muted">${Format.timeSince(c.last_visit)}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+
+      } catch (err) {
+        console.error('Dashboard error:', err);
+      }
+    }
+
+    // Settings form (owner only)
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        const settings = {
+          pointsPerEuro: parseFloat(document.getElementById('set-ppe').value),
+          pointsForReward: parseInt(document.getElementById('set-pfr').value),
+          rewardDescription: document.getElementById('set-desc').value,
+        };
+        await API.auth.updateSettings(settings);
+
+        // Update local session
+        merchant.points_per_euro = settings.pointsPerEuro;
+        merchant.points_for_reward = settings.pointsForReward;
+        merchant.reward_description = settings.rewardDescription;
+        Auth.setSession(staff, merchant);
+
+        UI.showAlert('settings-alert', 'Paramètres mis à jour !', 'success');
+        setTimeout(() => UI.clearAlert('settings-alert'), 3000);
+      } catch (err) {
+        UI.showAlert('settings-alert', err.message, 'error');
+      }
+    });
+
+    loadDashboard();
+  </script>
+</body>
+</html>

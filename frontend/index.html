@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIDDO — Connexion</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    #register-form { display: none; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
+    .section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin: 1.5rem 0 0.75rem; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-box">
+      <div class="auth-logo">FIDDO 🐕</div>
+      <p class="auth-subtitle">Programme de fidélité pour restaurateurs</p>
+
+      <!-- ═══ LOGIN ═══ -->
+      <form id="login-form">
+        <h2 class="text-center mb-2" style="font-size: 1.2rem;">Connexion</h2>
+        <div id="login-alert"></div>
+
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" id="login-email" class="form-control" placeholder="votre@email.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe</label>
+          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
+        <div class="toggle-form">
+          Pas encore de compte ? <a class="toggle-link" onclick="showRegister()">S'inscrire</a>
+        </div>
+      </form>
+
+      <!-- ═══ REGISTER ═══ -->
+      <form id="register-form">
+        <h2 class="text-center mb-2" style="font-size: 1.2rem;">Inscription</h2>
+        <div id="register-alert"></div>
+
+        <div class="section-title">🏪 Votre commerce</div>
+        <div class="form-group">
+          <label class="form-label">Nom du commerce *</label>
+          <input type="text" id="reg-business" class="form-control" placeholder="Mon Restaurant" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Adresse *</label>
+          <input type="text" id="reg-address" class="form-control" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">N° TVA *</label>
+            <input type="text" id="reg-vat" class="form-control" placeholder="BE0123456789" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone commerce *</label>
+            <input type="tel" id="reg-phone" class="form-control" placeholder="+32 2 123 45 67" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email commerce *</label>
+          <input type="email" id="reg-biz-email" class="form-control" placeholder="contact@monresto.be" required>
+        </div>
+
+        <div class="section-title">👤 Responsable (propriétaire)</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Nom complet *</label>
+            <input type="text" id="reg-owner-name" class="form-control" placeholder="Jean Dupont" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone personnel *</label>
+            <input type="tel" id="reg-owner-phone" class="form-control" placeholder="+32 497 12 34 56" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email de connexion *</label>
+          <input type="email" id="reg-owner-email" class="form-control" placeholder="jean@email.com" required>
+          <small class="form-help">Cet email sera utilisé pour vous connecter</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mot de passe *</label>
+          <input type="password" id="reg-password" class="form-control" placeholder="••••••••" minlength="6" required>
+          <small class="form-help">Minimum 6 caractères</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
+        <div class="toggle-form">
+          Déjà un compte ? <a class="toggle-link" onclick="showLogin()">Se connecter</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (Auth.isAuthenticated()) {
+      const staff = Auth.getStaff();
+      window.location.href = (staff.role === 'cashier') ? '/credit' : '/dashboard';
+    }
+
+    function showRegister() {
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+    }
+    function showLogin() {
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
+
+    // ─── Login ───
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      try {
+        UI.showAlert('login-alert', 'Connexion en cours...', 'info');
+        const data = await API.auth.login({ email, password });
+        Auth.setSession(data.staff, data.merchant);
+        UI.showAlert('login-alert', 'Connexion réussie !', 'success');
+        setTimeout(() => {
+          window.location.href = (data.staff.role === 'cashier') ? '/credit' : '/dashboard';
+        }, 300);
+      } catch (err) {
+        UI.showAlert('login-alert', err.message, 'error');
+      }
+    });
+
+    // ─── Register ───
+    document.getElementById('register-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        UI.showAlert('register-alert', 'Création du compte...', 'info');
+        await API.auth.register({
+          businessName: document.getElementById('reg-business').value,
+          address: document.getElementById('reg-address').value,
+          vatNumber: document.getElementById('reg-vat').value,
+          email: document.getElementById('reg-biz-email').value,
+          phone: document.getElementById('reg-phone').value,
+          ownerPhone: document.getElementById('reg-owner-phone').value,
+          ownerEmail: document.getElementById('reg-owner-email').value,
+          ownerPassword: document.getElementById('reg-password').value,
+          ownerName: document.getElementById('reg-owner-name').value,
+        });
+        UI.showAlert('register-alert',
+          'Demande envoyée ! Votre compte sera activé après validation par notre équipe. Vous recevrez un email de confirmation.',
+          'success'
+        );
+      } catch (err) {
+        UI.showAlert('register-alert', err.message, 'error');
+      }
+    });
+  </script>
+</body>
+</html>

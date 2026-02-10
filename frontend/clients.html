@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Clients — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Mes clients</h1>
+
+    <div class="search-box">
+      <span class="search-icon">🔍</span>
+      <input type="text" id="search-input" class="search-input" placeholder="Rechercher par email, téléphone ou nom...">
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="total-clients">0</div>
+        <div class="stat-label">Clients total</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="active-clients">0</div>
+        <div class="stat-label">Actifs (30j)</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-revenue">0 €</div>
+        <div class="stat-label">CA total</div>
+      </div>
+    </div>
+
+    <div id="clients-container"></div>
+  </div>
+
+  <!-- Client Detail Modal -->
+  <div id="detail-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Détails client</h2>
+        <button class="close-modal" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-footer" id="modal-footer"></div>
+    </div>
+  </div>
+
+  <!-- Adjust Points Modal -->
+  <div id="adjust-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Ajuster les points</h2>
+        <button class="close-modal" onclick="closeAdjustModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="adjust-alert"></div>
+        <div class="form-group">
+          <label class="form-label">Ajustement (positif ou négatif)</label>
+          <input type="number" id="adjust-delta" class="form-control" placeholder="-10 ou +20">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Raison *</label>
+          <input type="text" id="adjust-reason" class="form-control" placeholder="Correction erreur de saisie">
+        </div>
+        <button class="btn btn-primary" onclick="submitAdjustment()">Confirmer</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireManager()) throw 'Not authorized';
+
+    const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
+    let allClients = [];
+    let currentClientId = null;
+
+    // ─── Load Clients ───
+    async function loadClients() {
+      try {
+        UI.showLoading('clients-container');
+        const data = await API.clients.getAll();
+        allClients = data.clients;
+        updateStats();
+        renderClients(allClients);
+      } catch (err) {
+        UI.showError('clients-container', err.message);
+      }
+    }
+
+    function updateStats() {
+      const total = allClients.length;
+      const active = allClients.filter(c => (Date.now() - new Date(c.last_visit)) / 86400000 <= 30).length;
+      const revenue = allClients.reduce((s, c) => s + c.total_spent, 0);
+
+      document.getElementById('total-clients').textContent = total;
+      document.getElementById('active-clients').textContent = active;
+      document.getElementById('total-revenue').textContent = Format.currency(revenue);
+    }
+
+    function renderClients(clients) {
+      const container = document.getElementById('clients-container');
+      if (clients.length === 0) {
+        UI.showEmptyState('clients-container', '👥', 'Aucun client trouvé');
+        return;
+      }
+
+      let html = '<div class="grid grid-2">';
+      clients.forEach(c => {
+        const isActive = (Date.now() - new Date(c.last_visit)) / 86400000 <= 30;
+        html += `
+          <div class="client-card" onclick="showDetails(${c.id})">
+            <div class="header">
+              <div>
+                <div class="contact">${c.email || c.phone || c.name || 'N/A'}</div>
+                ${c.name && (c.email || c.phone) ? `<span class="text-sm text-muted">${c.name}</span>` : ''}
+                <div style="margin-top: 0.25rem;">
+                  ${c.email_validated ? '<span class="badge badge-success">Validé</span>' : ''}
+                  ${isActive ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Inactif</span>'}
+                  ${c.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
+                </div>
+              </div>
+              <span class="points">${c.points_balance} pts</span>
+            </div>
+            <div class="meta">
+              <div><span class="meta-value">${Format.currency(c.total_spent)}</span><br>Dépensé</div>
+              <div><span class="meta-value">${c.visit_count}</span><br>Visites</div>
+              <div><span class="meta-value">${Format.timeSince(c.last_visit)}</span><br>Dernière</div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    // ─── Search ───
+    let searchTimeout;
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      clearTimeout(searchTimeout);
+      if (q.length === 0) { renderClients(allClients); return; }
+      if (q.length < 2) return;
+      searchTimeout = setTimeout(async () => {
+        try {
+          const data = await API.clients.search(q);
+          renderClients(data.clients);
+        } catch (err) { console.error(err); }
+      }, 300);
+    });
+
+    // ─── Client Detail Modal ───
+    async function showDetails(mcId) {
+      try {
+        currentClientId = mcId;
+        const data = await API.clients.getById(mcId);
+        const c = data.client;
+        const txs = data.transactions;
+
+        document.getElementById('modal-title').textContent = c.email || c.phone || c.name || `Client #${mcId}`;
+
+        const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+
+        let html = `
+          <div class="stats-grid" style="margin-bottom: 1.5rem;">
+            <div class="stat-card"><div class="stat-value">${c.points_balance}</div><div class="stat-label">Points</div></div>
+            <div class="stat-card"><div class="stat-value">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
+            <div class="stat-card"><div class="stat-value">${c.visit_count}</div><div class="stat-label">Visites</div></div>
+            <div class="stat-card"><div class="stat-value">${Format.date(c.first_visit)}</div><div class="stat-label">Depuis</div></div>
+          </div>
+
+          <div style="margin-bottom: 1.5rem;">
+            <div class="flex-between text-sm">
+              <span>Progression vers récompense</span>
+              <span>${c.points_balance}/${c.reward_threshold}</span>
+            </div>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${progress}%;"></div>
+            </div>
+            ${c.can_redeem ? `<div class="alert alert-success mt-1">🎁 Récompense disponible : ${c.reward_description}</div>` : ''}
+          </div>
+
+          <h3 style="margin-bottom: 0.75rem;">Historique</h3>
+        `;
+
+        if (txs.length === 0) {
+          html += '<p class="text-muted text-center">Aucun historique</p>';
+        } else {
+          html += '<div class="timeline">';
+          txs.forEach(t => {
+            const type = t.transaction_type;
+            const sign = t.points_delta >= 0 ? '+' : '';
+            const color = type === 'reward' ? 'var(--success)' : type === 'adjustment' ? 'var(--warning)' : 'var(--primary)';
+            html += `
+              <div class="timeline-item ${type}">
+                <div class="timeline-date">${Format.datetime(t.created_at)} ${t.staff_name ? `— ${t.staff_name}` : ''}</div>
+                <div class="timeline-content">
+                  <strong style="color: ${color};">${sign}${t.points_delta} pts</strong>
+                  ${t.amount ? ` pour ${Format.currency(t.amount)}` : ''}
+                  <span class="badge badge-neutral" style="margin-left: 0.5rem;">${type}</span>
+                  ${t.notes ? `<br><small class="text-muted">${t.notes}</small>` : ''}
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+
+        document.getElementById('modal-body').innerHTML = html;
+
+        // Footer actions (owner/manager)
+        let footer = '';
+        if (staff.role === 'owner' || staff.role === 'manager') {
+          footer += `<button class="btn btn-outline btn-sm" onclick="showAdjustModal()">📏 Ajuster</button>`;
+          if (c.is_blocked) {
+            footer += `<button class="btn btn-success btn-sm" onclick="toggleBlock(false)">Débloquer</button>`;
+          } else {
+            footer += `<button class="btn btn-danger btn-sm" onclick="toggleBlock(true)">Bloquer</button>`;
+          }
+        }
+        document.getElementById('modal-footer').innerHTML = footer;
+
+        document.getElementById('detail-modal').classList.add('active');
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
+    document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
+
+    // ─── Block / Unblock ───
+    async function toggleBlock(block) {
+      if (!currentClientId) return;
+      const action = block ? 'bloquer' : 'débloquer';
+      if (!confirm(`${block ? '🔒' : '🔓'} Voulez-vous ${action} ce client ?`)) return;
+      try {
+        if (block) {
+          await API.clients.block(currentClientId);
+        } else {
+          await API.clients.unblock(currentClientId);
+        }
+        closeModal();
+        loadClients();
+      } catch (err) {
+        alert('Erreur : ' + err.message);
+      }
+    }
+
+    // ─── Adjust Points ───
+    function showAdjustModal() {
+      document.getElementById('adjust-delta').value = '';
+      document.getElementById('adjust-reason').value = '';
+      UI.clearAlert('adjust-alert');
+      document.getElementById('adjust-modal').classList.add('active');
+    }
+    function closeAdjustModal() { document.getElementById('adjust-modal').classList.remove('active'); }
+    document.getElementById('adjust-modal').addEventListener('click', (e) => { if (e.target.id === 'adjust-modal') closeAdjustModal(); });
+
+    async function submitAdjustment() {
+      const delta = parseInt(document.getElementById('adjust-delta').value);
+      const reason = document.getElementById('adjust-reason').value.trim();
+
+      if (!delta || delta === 0) { UI.showAlert('adjust-alert', 'Ajustement requis', 'error'); return; }
+      if (!reason) { UI.showAlert('adjust-alert', 'Raison requise', 'error'); return; }
+
+      try {
+        await API.clients.adjust({
+          merchantClientId: currentClientId,
+          pointsDelta: delta,
+          reason,
+        });
+        closeAdjustModal();
+        showDetails(currentClientId); // Refresh
+        loadClients();
+      } catch (err) {
+        UI.showAlert('adjust-alert', err.message, 'error');
+      }
+    }
+
+    loadClients();
+  </script>
+</body>
+</html>

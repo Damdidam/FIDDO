@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créditer — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .lookup-result {
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s;
+    }
+    .lookup-result.found { border-color: var(--success); }
+    .lookup-result.new { border-color: var(--primary); }
+    .reward-banner {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .reward-banner:hover { transform: scale(1.02); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Créditer des points</h1>
+
+    <div class="grid grid-2">
+      <!-- Left: Form -->
+      <div>
+        <div class="card">
+          <div class="card-header">Nouveau passage client</div>
+          <div id="credit-alert"></div>
+
+          <form id="credit-form">
+            <div class="form-group">
+              <label class="form-label">Email du client</label>
+              <input type="email" id="client-email" class="form-control" placeholder="client@email.com">
+              <small class="form-help">Recommandé pour recevoir les confirmations</small>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">OU Téléphone</label>
+              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Montant dépensé (€) *</label>
+              <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Notes (optionnel)</label>
+              <input type="text" id="notes" class="form-control" placeholder="Ex: Menu midi">
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
+              ✅ Créditer les points
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Right: Preview + Lookup -->
+      <div>
+        <!-- Points preview -->
+        <div class="card">
+          <div class="credit-preview">
+            <h2 id="preview-points">0</h2>
+            <p>points seront crédités</p>
+          </div>
+          <div id="merchant-info" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);"></div>
+        </div>
+
+        <!-- Client lookup result -->
+        <div id="lookup-container" style="display: none;">
+          <div class="card" style="padding: 0;">
+            <div class="card-header" style="padding: 1rem 1.25rem; margin-bottom: 0;">Client trouvé</div>
+            <div id="lookup-result" style="padding: 0 1.25rem 1.25rem;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'Not authenticated';
+
+    const merchant = Auth.getMerchant();
+    const staff = Auth.getStaff();
+
+    // Show merchant config
+    document.getElementById('merchant-info').innerHTML = `
+      <p><strong>Configuration :</strong></p>
+      <p>• ${merchant.points_per_euro} point(s) par euro</p>
+      <p>• Récompense à ${merchant.points_for_reward} points</p>
+      <p>• ${merchant.reward_description}</p>
+      ${staff.role === 'cashier' ? '<p class="text-muted mt-1">⚠️ Limite caissier : 200€ max</p>' : ''}
+    `;
+
+    // Points preview
+    document.getElementById('amount').addEventListener('input', (e) => {
+      const amount = parseFloat(e.target.value) || 0;
+      document.getElementById('preview-points').textContent = Math.floor(amount * merchant.points_per_euro);
+    });
+
+    // Client lookup on blur
+    let lookupTimeout;
+    function triggerLookup() {
+      clearTimeout(lookupTimeout);
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+
+      if (!email && !phone) {
+        document.getElementById('lookup-container').style.display = 'none';
+        return;
+      }
+
+      lookupTimeout = setTimeout(async () => {
+        try {
+          const params = {};
+          if (email) params.email = email;
+          if (phone) params.phone = phone;
+
+          const data = await API.clients.lookup(params);
+          const container = document.getElementById('lookup-container');
+          const result = document.getElementById('lookup-result');
+
+          if (!data.found) {
+            container.style.display = 'block';
+            result.innerHTML = `
+              <div class="lookup-result new">
+                <strong>🆕 Nouveau client</strong>
+                <p class="text-muted text-sm">Ce client sera créé automatiquement lors du crédit.</p>
+              </div>
+            `;
+            return;
+          }
+
+          container.style.display = 'block';
+          const c = data.client;
+
+          if (data.isNew) {
+            result.innerHTML = `
+              <div class="lookup-result new">
+                <strong>🆕 Première visite ici</strong>
+                <p class="text-sm text-muted">Ce client existe dans le système mais n'est jamais venu chez vous.</p>
+                ${c.name ? `<p class="text-sm">Nom : ${c.name}</p>` : ''}
+              </div>
+            `;
+            return;
+          }
+
+          const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+
+          let html = `
+            <div class="lookup-result found">
+              <div class="flex-between">
+                <div>
+                  <strong>${c.name || c.email || c.phone}</strong>
+                  ${c.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
+                </div>
+                <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
+              </div>
+              <p class="text-sm text-muted mt-1">${c.visit_count} visite(s)</p>
+              <div class="progress-bar mt-1">
+                <div class="progress-fill" style="width: ${progress}%;"></div>
+              </div>
+              <p class="text-sm text-muted">${c.points_balance}/${c.reward_threshold} points</p>
+          `;
+
+          if (c.can_redeem) {
+            html += `
+              <div class="reward-banner mt-1" onclick="redeemReward(${c.id})">
+                🎁 Récompense disponible ! Cliquez pour l'appliquer<br>
+                <small>${c.reward_description || merchant.reward_description}</small>
+              </div>
+            `;
+          }
+
+          html += '</div>';
+          result.innerHTML = html;
+
+        } catch (err) {
+          console.error('Lookup error:', err);
+        }
+      }, 400);
+    }
+
+    document.getElementById('client-email').addEventListener('input', triggerLookup);
+    document.getElementById('client-phone').addEventListener('input', triggerLookup);
+
+    // Redeem reward
+    async function redeemReward(merchantClientId) {
+      if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
+      try {
+        const result = await API.clients.reward({ merchantClientId });
+        UI.showAlert('credit-alert', `Récompense appliquée ! Nouveau solde : ${result.client.points_balance} pts`, 'success');
+        triggerLookup(); // Refresh
+      } catch (err) {
+        UI.showAlert('credit-alert', err.message, 'error');
+      }
+    }
+
+    // Submit credit
+    document.getElementById('credit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!email && !phone) {
+        UI.showAlert('credit-alert', 'Email ou téléphone requis', 'error');
+        return;
+      }
+
+      try {
+        document.getElementById('submit-btn').disabled = true;
+        UI.showAlert('credit-alert', 'Traitement en cours...', 'info');
+
+        const result = await API.clients.credit({
+          email: email || undefined,
+          phone: phone || undefined,
+          amount,
+          notes: notes || undefined,
+        });
+
+        UI.showAlert('credit-alert',
+          `<strong>+${result.transaction.points_delta} points crédités !</strong><br>
+           Nouveau solde : ${result.client.points_balance} points
+           ${result.isNewClient ? '<br><em>Nouveau client créé</em>' : ''}`,
+          'success'
+        );
+
+        // Reset form
+        document.getElementById('credit-form').reset();
+        document.getElementById('preview-points').textContent = '0';
+        document.getElementById('lookup-container').style.display = 'none';
+
+      } catch (err) {
+        UI.showAlert('credit-alert', err.message, 'error');
+      } finally {
+        document.getElementById('submit-btn').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
