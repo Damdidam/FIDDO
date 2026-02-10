@@ -21,7 +21,6 @@
     .date-pill { padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; cursor: pointer; background: white; color: var(--text-light); transition: all 0.15s; white-space: nowrap; }
     .date-pill:hover { border-color: var(--primary); color: var(--primary); }
     .date-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-
     .date-range { display: none; gap: 4px; align-items: center; }
     .date-range.show { display: flex; }
     .date-input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; width: 120px; -webkit-appearance: none; }
@@ -38,12 +37,11 @@
     .clients-table thead { background: var(--secondary); color: white; }
     .clients-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; user-select: none; white-space: nowrap; }
     .clients-table th:hover { background: #374151; }
-    .clients-table th .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.5; display: inline; }
+    .clients-table th .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.5; }
     .clients-table th.sorted .sort-arrow { opacity: 1; }
     .clients-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
     .clients-table tbody tr { cursor: pointer; transition: background 0.1s; }
     .clients-table tbody tr:hover { background: #f0fdf4; }
-
     .table-scroll { overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: white; scrollbar-width: thin; }
     .table-scroll::-webkit-scrollbar { height: 4px; }
     .table-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
@@ -59,28 +57,49 @@
     .staff-sm { font-size: 0.75rem; color: var(--text-light); }
     .tab-count { font-size: 0.7rem; background: var(--light); color: var(--text-light); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
 
-    /* ── Modal sections ── */
-    .modal-section { margin-bottom: 1rem; }
-    .modal-section-title { font-size: 0.85rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; }
-    .actions-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+    /* ── Modal compact ── */
+    .modal-section { margin-bottom: 0.75rem; }
+    .modal-section-title { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+
+    /* Action buttons grid */
+    .actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
+    .action-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; background: white; color: var(--text); transition: all 0.15s; white-space: nowrap; text-decoration: none; }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary); background: #ECFEFF; }
+    .action-btn.danger { color: var(--danger); }
+    .action-btn.danger:hover { border-color: var(--danger); background: #FEF2F2; color: var(--danger); }
+    .action-btn.success { color: var(--success); }
+    .action-btn.success:hover { border-color: var(--success); background: #F0FDF4; }
+    .action-btn.whatsapp { color: #25D366; }
+    .action-btn.whatsapp:hover { border-color: #25D366; background: #F0FDF4; }
 
     /* Edit form compact */
-    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
     .edit-grid .form-group { margin-bottom: 0; }
-    .edit-grid .form-label { font-size: 0.75rem; margin-bottom: 2px; }
-    .edit-grid .form-control { padding: 6px 8px; font-size: 0.85rem; }
+    .edit-grid .form-label { font-size: 0.72rem; margin-bottom: 1px; }
+    .edit-grid .form-control { padding: 5px 8px; font-size: 0.83rem; }
     .edit-grid .full-width { grid-column: 1 / -1; }
+
+    /* Notes field */
+    .notes-area { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.83rem; font-family: inherit; resize: vertical; min-height: 48px; max-height: 120px; }
+    .notes-area:focus { outline: none; border-color: var(--primary); }
+    .notes-meta { font-size: 0.7rem; color: var(--text-light); text-align: right; }
 
     /* Merge search */
     .merge-search-wrap { position: relative; }
     .merge-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: white; border: 2px solid var(--primary); border-top: none; border-radius: 0 0 8px 8px; max-height: 160px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
     .merge-results.open { display: block; }
-    .merge-item { padding: 8px 10px; cursor: pointer; font-size: 0.85rem; border-bottom: 1px solid var(--border); }
+    .merge-item { padding: 8px 10px; cursor: pointer; font-size: 0.83rem; border-bottom: 1px solid var(--border); }
     .merge-item:hover { background: #ECFEFF; }
     .merge-item .m-name { font-weight: 600; }
-    .merge-item .m-detail { font-size: 0.75rem; color: var(--text-light); }
-    .merge-selected { background: #F0FDF4; border: 2px solid var(--success); border-radius: 8px; padding: 8px 10px; font-size: 0.85rem; display: none; }
-    .merge-selected.show { display: flex; justify-content: space-between; align-items: center; }
+    .merge-item .m-detail { font-size: 0.72rem; color: var(--text-light); }
+    .merge-selected { background: #F0FDF4; border: 2px solid var(--success); border-radius: 8px; padding: 8px 10px; font-size: 0.83rem; display: none; justify-content: space-between; align-items: center; }
+    .merge-selected.show { display: flex; }
+
+    /* Contact links */
+    .contact-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+    .contact-link { font-size: 0.75rem; color: var(--primary); text-decoration: none; padding: 2px 8px; border: 1px solid var(--border); border-radius: 12px; transition: all 0.15s; }
+    .contact-link:hover { background: #ECFEFF; border-color: var(--primary); }
+    .contact-link.wa { color: #25D366; } .contact-link.wa:hover { border-color: #25D366; background: #F0FDF4; }
 
     /* Mobile */
     @media (max-width: 768px) {
@@ -91,7 +110,11 @@
       .clients-table th, .clients-table td { padding: 6px 6px; }
       .date-input { width: 100px; }
       .edit-grid { grid-template-columns: 1fr; }
-      .modal-content { width: 95%; }
+      .modal-content { width: 95%; padding: 0; }
+      .modal-body { padding: 1rem; }
+      .modal-header { padding: 0.75rem 1rem; }
+      .actions-grid { grid-template-columns: repeat(3, 1fr); }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
     }
   </style>
 </head>
@@ -141,10 +164,10 @@
         </div>
         <div class="date-range" id="date-range">
           <input type="date" id="date-from" class="date-input">
-          <span style="font-size:0.75rem;color:var(--text-light);">→</span>
+          <span style="font-size:0.75rem;color:var(--text-light)">→</span>
           <input type="date" id="date-to" class="date-input">
         </div>
-        <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="Exporter CSV">📥 CSV</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()" id="csv-btn" style="display:none" title="Exporter CSV">📥 CSV</button>
       </div>
     </div>
 
@@ -153,9 +176,9 @@
 
   <!-- ═══ Client Detail Modal ═══ -->
   <div id="detail-modal" class="modal">
-    <div class="modal-content">
+    <div class="modal-content" style="max-width:620px;">
       <div class="modal-header">
-        <h2 id="modal-title" style="font-size: 1.1rem;">Client</h2>
+        <h2 id="modal-title" style="font-size:1.05rem">Client</h2>
         <button class="close-modal" onclick="closeModal()">×</button>
       </div>
       <div class="modal-body" id="modal-body"></div>
@@ -164,8 +187,8 @@
 
   <!-- ═══ Adjust Modal ═══ -->
   <div id="adjust-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><h2>Ajuster les points</h2><button class="close-modal" onclick="closeAdjustModal()">×</button></div>
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header"><h2 style="font-size:1.05rem">Ajuster les points</h2><button class="close-modal" onclick="closeAdjustModal()">×</button></div>
       <div class="modal-body">
         <div id="adjust-alert"></div>
         <div class="form-group"><label class="form-label">Ajustement (+ ou -)</label><input type="number" id="adjust-delta" class="form-control" placeholder="-10 ou +20"></div>
@@ -177,40 +200,33 @@
 
   <!-- ═══ Merge Modal ═══ -->
   <div id="merge-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header"><h2 style="font-size:1.1rem;">Fusionner les clients</h2><button class="close-modal" onclick="closeMergeModal()">×</button></div>
+    <div class="modal-content" style="max-width:450px;">
+      <div class="modal-header"><h2 style="font-size:1.05rem">🔀 Fusionner</h2><button class="close-modal" onclick="closeMergeModal()">×</button></div>
       <div class="modal-body">
         <div id="merge-alert"></div>
-
-        <div class="alert alert-info" style="font-size:0.8rem;padding:8px 10px;">
-          ⚠️ Le client source sera supprimé. Ses points, visites et historique seront transférés vers le client cible.
+        <div class="alert alert-info" style="font-size:0.78rem;padding:6px 10px;">
+          ⚠️ Le client source sera <strong>supprimé</strong>. Points, visites et historique transférés vers le client cible.
         </div>
-
         <div class="modal-section">
-          <div class="modal-section-title">Client cible (conservé)</div>
-          <div id="merge-target" style="background:var(--light);border-radius:8px;padding:8px 10px;font-size:0.85rem;font-weight:600;"></div>
+          <div class="modal-section-title">🎯 Cible (conservé)</div>
+          <div id="merge-target" style="background:var(--light);border-radius:6px;padding:6px 10px;font-size:0.83rem;font-weight:600;"></div>
         </div>
-
         <div class="modal-section">
-          <div class="modal-section-title">Client source (sera supprimé)</div>
+          <div class="modal-section-title">📦 Source (sera supprimé)</div>
           <div class="merge-search-wrap">
-            <input type="text" id="merge-search" class="form-control" placeholder="Rechercher le client à fusionner..." style="font-size:0.85rem;">
+            <input type="text" id="merge-search" class="form-control" placeholder="Rechercher..." style="font-size:0.83rem;">
             <div class="merge-results" id="merge-results"></div>
           </div>
           <div class="merge-selected" id="merge-selected">
             <span id="merge-selected-name"></span>
-            <button class="btn btn-sm" style="padding:2px 8px;font-size:0.75rem;" onclick="clearMergeSelection()">✕</button>
+            <button class="btn btn-sm" style="padding:2px 8px;font-size:0.72rem;" onclick="clearMergeSelection()">✕</button>
           </div>
         </div>
-
-        <div class="form-group">
-          <label class="form-label" style="font-size:0.8rem;">Raison (optionnel)</label>
-          <input type="text" id="merge-reason" class="form-control" placeholder="Ex: Doublon, couple..." style="font-size:0.85rem;">
+        <div class="form-group" style="margin-bottom:0.75rem;">
+          <label class="form-label" style="font-size:0.78rem;">Raison (optionnel)</label>
+          <input type="text" id="merge-reason" class="form-control" placeholder="Doublon, couple..." style="font-size:0.83rem;">
         </div>
-
-        <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="submitMerge()" disabled>
-          🔀 Confirmer la fusion
-        </button>
+        <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="submitMerge()" disabled>Confirmer la fusion</button>
       </div>
     </div>
   </div>
@@ -221,6 +237,8 @@
 
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
+    const isOwner = staff.role === 'owner';
+    const isManager = ['owner', 'manager'].includes(staff.role);
     let allClients = [];
     let currentTab = 'all';
     let currentSort = { key: 'last_visit', dir: 'desc' };
@@ -228,6 +246,9 @@
     let currentClientId = null;
     let currentClientData = null;
     let mergeSourceId = null;
+
+    // Show CSV button for owner only
+    if (isOwner) document.getElementById('csv-btn').style.display = '';
 
     // ════════════════════════════════════════
     // LOAD
@@ -262,11 +283,10 @@
     function applyFilters() {
       let clients = [...allClients];
       const q = document.getElementById('search-input').value.trim().toLowerCase();
-      if (q.length >= 2) {
-        clients = clients.filter(c => (c.email||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q) || (c.name||'').toLowerCase().includes(q));
-      }
+      if (q.length >= 2) clients = clients.filter(c => (c.email||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q) || (c.name||'').toLowerCase().includes(q));
+
       const { from, to } = getDateRange();
-      if (from) { clients = clients.filter(c => { const lv = new Date(c.last_visit); return lv >= from && (!to || lv <= to); }); }
+      if (from) clients = clients.filter(c => { const lv = new Date(c.last_visit); return lv >= from && (!to || lv <= to); });
 
       switch (currentTab) {
         case 'inactive': clients = clients.filter(c => daysSince(c.last_visit) > 30); break;
@@ -277,14 +297,11 @@
         if (currentTab === 'top-points') return b.points_balance - a.points_balance;
         if (currentTab === 'top-spent') return b.total_spent - a.total_spent;
         if (currentTab === 'top-visits') return b.visit_count - a.visit_count;
-        let va = a[currentSort.key], vb = b[currentSort.key];
-        if (va == null) va = ''; if (vb == null) vb = '';
+        let va = a[currentSort.key] ?? '', vb = b[currentSort.key] ?? '';
         if (currentSort.key.includes('visit') || currentSort.key.includes('_at')) { va = new Date(va || 0).getTime(); vb = new Date(vb || 0).getTime(); }
         if (typeof va === 'string') va = va.toLowerCase();
         if (typeof vb === 'string') vb = vb.toLowerCase();
-        if (va < vb) return currentSort.dir === 'asc' ? -1 : 1;
-        if (va > vb) return currentSort.dir === 'asc' ? 1 : -1;
-        return 0;
+        return currentSort.dir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
       });
 
       renderTable(clients);
@@ -297,13 +314,13 @@
         return { from: f ? new Date(f) : null, to: t ? endOfDay(new Date(t)) : null };
       }
       const now = new Date(), today = startOfDay(now);
-      switch (currentPeriod) {
-        case 'today': return { from: today, to: endOfDay(now) };
-        case 'yesterday': { const y = new Date(today); y.setDate(y.getDate()-1); return { from: y, to: endOfDay(y) }; }
-        case 'week': { const w = new Date(today); w.setDate(w.getDate()-7); return { from: w, to: endOfDay(now) }; }
-        case 'month': { const m = new Date(today); m.setMonth(m.getMonth()-1); return { from: m, to: endOfDay(now) }; }
-      }
-      return {};
+      const ranges = {
+        today:     { from: today, to: endOfDay(now) },
+        yesterday: { from: (() => { const y = new Date(today); y.setDate(y.getDate()-1); return y; })(), to: (() => { const y = new Date(today); y.setDate(y.getDate()-1); return endOfDay(y); })() },
+        week:      { from: (() => { const w = new Date(today); w.setDate(w.getDate()-7); return w; })(), to: endOfDay(now) },
+        month:     { from: (() => { const m = new Date(today); m.setMonth(m.getMonth()-1); return m; })(), to: endOfDay(now) },
+      };
+      return ranges[currentPeriod] || {};
     }
 
     function startOfDay(d) { const r = new Date(d); r.setHours(0,0,0,0); return r; }
@@ -326,18 +343,16 @@
         { key: 'name', label: 'Client' },
         { key: 'points_balance', label: 'Points' },
         { key: 'total_spent', label: 'CA' },
-        { key: 'visit_count', label: 'Visites', hideClass: 'hide-mobile' },
-        { key: 'last_credited_by', label: 'Par', hideClass: 'hide-mobile' },
+        { key: 'visit_count', label: 'Visites', hide: 'hide-mobile' },
+        { key: 'last_credited_by', label: 'Par', hide: 'hide-mobile' },
         { key: 'last_visit', label: 'Dernière visite' },
       ];
 
       let html = '<table class="clients-table"><thead><tr>';
       cols.forEach(col => {
-        const isSorted = currentSort.key === col.key;
-        const arrow = col.noSort ? '' : `<span class="sort-arrow">${isSorted ? (currentSort.dir === 'asc' ? '▲' : '▼') : '⇅'}</span>`;
-        const cls = [col.hideClass || '', isSorted ? 'sorted' : ''].filter(Boolean).join(' ');
-        const onclick = col.noSort ? '' : `onclick="sortBy('${col.key}')"`;
-        html += `<th class="${cls}" ${onclick}>${col.label}${arrow}</th>`;
+        const sorted = currentSort.key === col.key;
+        const arrow = col.noSort ? '' : `<span class="sort-arrow">${sorted ? (currentSort.dir==='asc'?'▲':'▼') : '⇅'}</span>`;
+        html += `<th class="${col.hide||''} ${sorted?'sorted':''}" ${col.noSort?'':`onclick="sortBy('${col.key}')"`}>${col.label}${arrow}</th>`;
       });
       html += '</tr></thead><tbody>';
 
@@ -345,21 +360,19 @@
         const display = c.name || c.email || c.phone || 'N/A';
         const sub = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
         const progress = Math.min(c.points_balance / maxPts * 100, 100);
-        const medal = showRank ? (i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i+1)) : null;
+        const medal = showRank ? (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) : null;
 
         html += `<tr onclick="showDetails(${c.id})">`;
-        if (showRank) html += `<td class="rank ${i < 3 ? 'rank-'+(i+1) : ''}">${medal}</td>`;
-
+        if (showRank) html += `<td class="rank ${i<3?'rank-'+(i+1):''}">${medal}</td>`;
         html += `
-          <td><strong>${esc(display)}</strong>${sub ? `<br><span class="staff-sm">${esc(sub)}</span>` : ''}${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}</td>
+          <td><strong>${esc(display)}</strong>${sub?`<br><span class="staff-sm">${esc(sub)}</span>`:''}${c.is_blocked?' <span class="badge badge-danger">Bloqué</span>':''}</td>
           <td><div class="pts-bar"><strong style="color:var(--primary)">${c.points_balance}</strong><div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div></div></td>
           <td>${Format.currency(c.total_spent)}</td>
           <td class="hide-mobile">${c.visit_count}</td>
-          <td class="hide-mobile"><span class="staff-sm">${esc(c.last_credited_by || '—')}</span></td>
-          <td><span class="staff-sm">${fmtDate(c.last_visit)}</span>${daysSince(c.last_visit) > 30 ? '<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>' : ''}</td>
+          <td class="hide-mobile"><span class="staff-sm">${esc(c.last_credited_by||'—')}</span></td>
+          <td><span class="staff-sm">${fmtDate(c.last_visit)}</span>${daysSince(c.last_visit)>30?'<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>':''}</td>
         </tr>`;
       });
-
       html += '</tbody></table>';
       container.innerHTML = html;
     }
@@ -371,7 +384,7 @@
     }
 
     // ════════════════════════════════════════
-    // TABS
+    // TABS + DATE PILLS + SEARCH
     // ════════════════════════════════════════
 
     document.getElementById('tabs-row').addEventListener('click', (e) => {
@@ -379,34 +392,29 @@
       document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       currentTab = tab.dataset.tab;
-      const defaults = { 'all': 'last_visit', 'top-points': 'points_balance', 'top-spent': 'total_spent', 'top-visits': 'visit_count', 'recent': 'last_visit', 'inactive': 'last_visit' };
-      currentSort = { key: defaults[currentTab] || 'last_visit', dir: currentTab === 'inactive' ? 'asc' : 'desc' };
+      const defaults = { 'all':'last_visit','top-points':'points_balance','top-spent':'total_spent','top-visits':'visit_count','recent':'last_visit','inactive':'last_visit' };
+      currentSort = { key: defaults[currentTab]||'last_visit', dir: currentTab==='inactive'?'asc':'desc' };
       applyFilters();
     });
-
-    // ════════════════════════════════════════
-    // DATE PILLS
-    // ════════════════════════════════════════
 
     document.getElementById('date-pills').addEventListener('click', (e) => {
       const pill = e.target.closest('.date-pill'); if (!pill) return;
       document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
       pill.classList.add('active');
       currentPeriod = pill.dataset.period;
-      document.getElementById('date-range').classList.toggle('show', currentPeriod === 'custom');
+      document.getElementById('date-range').classList.toggle('show', currentPeriod==='custom');
       if (currentPeriod !== 'custom') applyFilters();
     });
     document.getElementById('date-from').addEventListener('change', applyFilters);
     document.getElementById('date-to').addEventListener('change', applyFilters);
 
-    // Search
     let searchTimeout;
     document.getElementById('search-input').addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(applyFilters, 200); });
 
     function exportCSV() { window.location.href = `${API_BASE_URL}/clients/export/csv`; }
 
     // ════════════════════════════════════════
-    // CLIENT DETAIL MODAL (enhanced)
+    // CLIENT DETAIL MODAL
     // ════════════════════════════════════════
 
     async function showDetails(mcId) {
@@ -420,74 +428,116 @@
         document.getElementById('modal-title').textContent = c.name || c.email || c.phone || `Client #${mcId}`;
 
         const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
-        const isOwner = staff.role === 'owner';
-        const isManager = ['owner', 'manager'].includes(staff.role);
+        const hasEmail = !!c.email;
+        const hasPhone = !!c.phone;
+        const phoneClean = hasPhone ? (c.phone.replace(/[\s\-().]/g, '')) : '';
+        const phoneWA = hasPhone ? phoneClean.replace(/^\+/, '') : '';
 
         let html = '';
 
-        // ── Stats row ──
-        html += `<div class="stats-grid" style="margin-bottom:0.75rem;grid-template-columns:repeat(3,1fr);">
-          <div class="stat-card" style="padding:0.75rem"><div class="stat-value" style="font-size:1.5rem">${c.points_balance}</div><div class="stat-label">Points</div></div>
-          <div class="stat-card" style="padding:0.75rem"><div class="stat-value" style="font-size:1.5rem">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
-          <div class="stat-card" style="padding:0.75rem"><div class="stat-value" style="font-size:1.5rem">${c.visit_count}</div><div class="stat-label">Visites</div></div>
+        // ── Stats ──
+        html += `<div class="stats-grid" style="margin-bottom:0.5rem;grid-template-columns:repeat(3,1fr);gap:0.4rem;">
+          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${c.points_balance}</div><div class="stat-label">Points</div></div>
+          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${Format.currency(c.total_spent)}</div><div class="stat-label">Dépensé</div></div>
+          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${c.visit_count}</div><div class="stat-label">Visites</div></div>
         </div>`;
 
         // ── Progress ──
-        html += `<div style="margin-bottom:0.75rem;">
-          <div class="flex-between" style="font-size:0.8rem"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
-          <div class="progress-bar" style="height:8px"><div class="progress-fill" style="width:${progress}%"></div></div>
-          ${c.can_redeem ? '<div class="alert alert-success" style="padding:6px 10px;font-size:0.8rem;margin-top:4px">🎁 Récompense disponible !</div>' : ''}
+        html += `<div style="margin-bottom:0.5rem;">
+          <div class="flex-between" style="font-size:0.78rem"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
+          <div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${progress}%"></div></div>
+          ${c.can_redeem ? '<div class="alert alert-success" style="padding:5px 10px;font-size:0.78rem;margin-top:3px">🎁 Récompense disponible !</div>' : ''}
         </div>`;
 
-        // ── Actions row ──
-        if (isManager) {
-          html += `<div class="modal-section"><div class="actions-row">
-            <button class="btn btn-outline btn-sm" onclick="toggleEditForm()">✏️ Modifier</button>
-            <button class="btn btn-outline btn-sm" onclick="showAdjustModal()">📏 Ajuster pts</button>
-            ${isOwner ? `<button class="btn btn-outline btn-sm" onclick="showMergeModal()">🔀 Fusionner</button>` : ''}
-            ${c.is_blocked
-              ? `<button class="btn btn-success btn-sm" onclick="toggleBlock(false)">🔓 Débloquer</button>`
-              : `<button class="btn btn-danger btn-sm" onclick="toggleBlock(true)">🔒 Bloquer</button>`}
-          </div></div>`;
+        // ── Contact links (WhatsApp / SMS / Appel) ──
+        if (hasPhone || hasEmail) {
+          html += '<div class="contact-links">';
+          if (hasEmail) html += `<a href="mailto:${esc(c.email)}" class="contact-link">📧 ${esc(c.email)}</a>`;
+          if (hasPhone) {
+            html += `<a href="tel:${esc(phoneClean)}" class="contact-link">📞 ${esc(c.phone)}</a>`;
+            html += `<a href="https://wa.me/${esc(phoneWA)}" target="_blank" class="contact-link wa">💬 WhatsApp</a>`;
+            html += `<a href="sms:${esc(phoneClean)}" class="contact-link">💬 SMS</a>`;
+          }
+          html += '</div>';
         }
 
-        // ── Edit form (hidden by default) ──
+        // ── Action buttons grid ──
+        if (isManager) {
+          html += '<div class="modal-section" style="margin-top:0.75rem"><div class="actions-grid">';
+
+          // Quick credit
+          const creditParams = hasEmail ? `email=${encodeURIComponent(c.email)}` : `phone=${encodeURIComponent(c.phone||'')}`;
+          html += `<a href="/credit?${creditParams}${c.name ? '&name='+encodeURIComponent(c.name) : ''}" class="action-btn">➕ Créditer</a>`;
+
+          // Resend email
+          if (hasEmail) html += `<button class="action-btn" onclick="resendEmail()">📧 Envoyer pts</button>`;
+
+          // Edit
+          html += `<button class="action-btn" onclick="toggleEditForm()">✏️ Modifier</button>`;
+
+          // Adjust
+          html += `<button class="action-btn" onclick="showAdjustModal()">📏 Ajuster</button>`;
+
+          // Merge (owner only)
+          if (isOwner) html += `<button class="action-btn" onclick="showMergeModal()">🔀 Fusionner</button>`;
+
+          // Block / Unblock
+          html += c.is_blocked
+            ? `<button class="action-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>`
+            : `<button class="action-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>`;
+
+          // Delete (owner only)
+          if (isOwner) html += `<button class="action-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>`;
+
+          html += '</div></div>';
+        }
+
+        // ── Edit form (hidden) ──
         if (isManager) {
           html += `<div class="modal-section" id="edit-section" style="display:none;">
-            <div class="modal-section-title">✏️ Modifier les infos</div>
+            <div class="modal-section-title">✏️ Modifier</div>
             <div id="edit-alert"></div>
             <div class="edit-grid">
               <div class="form-group full-width"><label class="form-label">Nom / surnom</label>
-                <input type="text" id="edit-name" class="form-control" value="${esc(c.name || '')}"></div>
+                <input type="text" id="edit-name" class="form-control" value="${esc(c.name||'')}"></div>
               <div class="form-group"><label class="form-label">Email</label>
-                <input type="email" id="edit-email" class="form-control" value="${esc(c.email || '')}"></div>
+                <input type="email" id="edit-email" class="form-control" value="${esc(c.email||'')}"></div>
               <div class="form-group"><label class="form-label">Téléphone</label>
-                <input type="tel" id="edit-phone" class="form-control" value="${esc(c.phone || '')}"></div>
-              <div class="form-group full-width" style="text-align:right;">
-                <button class="btn btn-sm" onclick="toggleEditForm()" style="margin-right:0.5rem;">Annuler</button>
+                <input type="tel" id="edit-phone" class="form-control" value="${esc(c.phone||'')}"></div>
+              <div class="form-group full-width" style="text-align:right">
+                <button class="btn btn-sm" onclick="toggleEditForm()" style="margin-right:0.5rem">Annuler</button>
                 <button class="btn btn-primary btn-sm" onclick="saveEdit()">💾 Enregistrer</button>
               </div>
             </div>
           </div>`;
         }
 
-        // ── Transaction history ──
+        // ── Private notes ──
+        if (isManager) {
+          html += `<div class="modal-section">
+            <div class="modal-section-title">📝 Notes privées</div>
+            <textarea class="notes-area" id="notes-area" placeholder="Ex: VIP, allergique noix, couple table 12..." maxlength="500">${esc(c.notes_private||'')}</textarea>
+            <div class="notes-meta"><span id="notes-count">${(c.notes_private||'').length}</span>/500 <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;margin-left:4px" onclick="saveNotes()">💾</button></div>
+          </div>`;
+        }
+
+        // ── Transactions ──
         html += `<div class="modal-section">
           <div class="modal-section-title">📜 Historique</div>`;
 
         if (txs.length === 0) {
-          html += '<p class="text-muted" style="font-size:0.85rem;text-align:center;">Aucun historique</p>';
+          html += '<p class="text-muted" style="font-size:0.83rem;text-align:center">Aucun historique</p>';
         } else {
           html += '<div class="timeline">';
           txs.forEach(t => {
             const sign = t.points_delta >= 0 ? '+' : '';
-            const color = t.transaction_type === 'reward' ? 'var(--success)' : t.transaction_type === 'adjustment' ? 'var(--warning)' : t.transaction_type === 'merge' ? '#8b5cf6' : 'var(--primary)';
+            const colors = { reward: 'var(--success)', adjustment: 'var(--warning)', merge: '#8b5cf6', credit: 'var(--primary)' };
             html += `<div class="timeline-item ${t.transaction_type}">
               <div class="timeline-date">${Format.datetime(t.created_at)}${t.staff_name ? ` — <strong>${esc(t.staff_name)}</strong>` : ''}</div>
               <div class="timeline-content">
-                <strong style="color:${color}">${sign}${t.points_delta} pts</strong>
+                <strong style="color:${colors[t.transaction_type]||'var(--primary)'}">${sign}${t.points_delta} pts</strong>
                 ${t.amount ? ` pour ${Format.currency(t.amount)}` : ''}
-                <span class="badge badge-neutral" style="margin-left:4px;font-size:0.65rem">${t.transaction_type}</span>
+                <span class="badge badge-neutral" style="margin-left:4px;font-size:0.63rem">${t.transaction_type}</span>
                 ${t.notes ? `<br><small class="text-muted">${esc(t.notes)}</small>` : ''}
               </div>
             </div>`;
@@ -497,6 +547,11 @@
         html += '</div>';
 
         document.getElementById('modal-body').innerHTML = html;
+
+        // Notes character counter
+        const notesEl = document.getElementById('notes-area');
+        if (notesEl) notesEl.addEventListener('input', () => { document.getElementById('notes-count').textContent = notesEl.value.length; });
+
         document.getElementById('detail-modal').classList.add('active');
       } catch (err) { console.error(err); }
     }
@@ -504,43 +559,59 @@
     function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
     document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
 
-    // ── Toggle edit form ──
-    function toggleEditForm() {
-      const el = document.getElementById('edit-section');
-      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
+    // ── Edit ──
+    function toggleEditForm() { const el = document.getElementById('edit-section'); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
 
-    // ── Save edit ──
     async function saveEdit() {
       try {
         const name = document.getElementById('edit-name').value.trim();
         const email = document.getElementById('edit-email').value.trim();
         const phone = document.getElementById('edit-phone').value.trim();
-
-        if (!email && !phone) {
-          UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error');
-          return;
-        }
-
-        await API.call(`/clients/${currentClientId}/edit`, {
-          method: 'PUT', body: JSON.stringify({ name: name || null, email: email || null, phone: phone || null }),
-        });
-
-        closeModal();
-        loadClients();
-      } catch (err) {
-        UI.showAlert('edit-alert', err.message, 'error');
-      }
+        if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
+        await API.call(`/clients/${currentClientId}/edit`, { method: 'PUT', body: JSON.stringify({ name: name||null, email: email||null, phone: phone||null }) });
+        closeModal(); loadClients();
+      } catch (err) { UI.showAlert('edit-alert', err.message, 'error'); }
     }
 
-    // ── Block / unblock ──
+    // ── Notes ──
+    async function saveNotes() {
+      try {
+        const notes = document.getElementById('notes-area').value;
+        await API.call(`/clients/${currentClientId}/notes`, { method: 'PUT', body: JSON.stringify({ notes }) });
+        // Update local data
+        const idx = allClients.findIndex(c => c.id === currentClientId);
+        if (idx >= 0) allClients[idx].notes_private = notes;
+      } catch (err) { alert('Erreur : ' + err.message); }
+    }
+
+    // ── Resend email ──
+    async function resendEmail() {
+      try {
+        const result = await API.call(`/clients/${currentClientId}/resend-email`, { method: 'POST' });
+        const msg = result.type === 'validation' ? 'Email de validation renvoyé ✅' : 'Récapitulatif des points envoyé ✅';
+        alert(msg);
+      } catch (err) { alert('Erreur : ' + err.message); }
+    }
+
+    // ── Block / Unblock ──
     async function toggleBlock(block) {
       if (!confirm(`${block ? '🔒 Bloquer' : '🔓 Débloquer'} ce client ?`)) return;
       try {
-        if (block) await API.clients.block(currentClientId);
-        else await API.clients.unblock(currentClientId);
+        if (block) await API.clients.block(currentClientId); else await API.clients.unblock(currentClientId);
         closeModal(); loadClients();
       } catch (err) { alert(err.message); }
+    }
+
+    // ── Delete ──
+    async function deleteClient() {
+      const c = currentClientData;
+      const label = c.name || c.email || c.phone || '#'+currentClientId;
+      if (!confirm(`🗑️ Supprimer "${label}" ?\n\nCette action est irréversible.\nTous les points et l'historique seront perdus.`)) return;
+      if (!confirm(`⚠️ DERNIÈRE CONFIRMATION\n\nSupprimer définitivement "${label}" et toutes ses données ?`)) return;
+      try {
+        await API.call(`/clients/${currentClientId}`, { method: 'DELETE' });
+        closeModal(); loadClients();
+      } catch (err) { alert('Erreur : ' + err.message); }
     }
 
     // ════════════════════════════════════════
@@ -574,109 +645,66 @@
     function showMergeModal() {
       mergeSourceId = null;
       document.getElementById('merge-search').value = '';
+      document.getElementById('merge-search').style.display = '';
       document.getElementById('merge-results').classList.remove('open');
       document.getElementById('merge-selected').classList.remove('show');
       document.getElementById('merge-confirm-btn').disabled = true;
       document.getElementById('merge-reason').value = '';
       UI.clearAlert('merge-alert');
-
       const c = currentClientData;
-      document.getElementById('merge-target').innerHTML =
-        `<strong>${esc(c.name || c.email || c.phone || '#'+currentClientId)}</strong>` +
-        ` — ${c.points_balance} pts, ${c.visit_count} visites`;
-
+      document.getElementById('merge-target').innerHTML = `<strong>${esc(c.name||c.email||c.phone||'#'+currentClientId)}</strong> — ${c.points_balance} pts, ${c.visit_count} visites`;
       document.getElementById('merge-modal').classList.add('active');
     }
     function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
     document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
 
-    // Merge search
     let mergeSearchTimeout;
     document.getElementById('merge-search').addEventListener('input', (e) => {
       clearTimeout(mergeSearchTimeout);
       const q = e.target.value.trim();
       if (q.length < 2) { document.getElementById('merge-results').classList.remove('open'); return; }
-
       mergeSearchTimeout = setTimeout(() => {
-        // Search in local allClients (already loaded)
-        const results = allClients.filter(c =>
-          c.id !== currentClientId &&
-          ((c.email||'').toLowerCase().includes(q.toLowerCase()) ||
-           (c.phone||'').toLowerCase().includes(q.toLowerCase()) ||
-           (c.name||'').toLowerCase().includes(q.toLowerCase()))
-        ).slice(0, 8);
-
-        const dropdown = document.getElementById('merge-results');
-        if (results.length === 0) {
-          dropdown.innerHTML = '<div style="padding:8px 10px;font-size:0.85rem;color:var(--text-light)">Aucun résultat</div>';
-        } else {
-          dropdown.innerHTML = results.map(r => `
-            <div class="merge-item" onclick="selectMergeSource(${r.id})">
-              <div class="m-name">${esc(r.name || r.email || r.phone || '#'+r.id)}</div>
-              <div class="m-detail">${r.points_balance} pts · ${r.visit_count} visites · ${Format.currency(r.total_spent)}</div>
-            </div>
-          `).join('');
-        }
-        dropdown.classList.add('open');
+        const results = allClients.filter(c => c.id !== currentClientId && ((c.email||'').toLowerCase().includes(q.toLowerCase()) || (c.phone||'').toLowerCase().includes(q.toLowerCase()) || (c.name||'').toLowerCase().includes(q.toLowerCase()))).slice(0, 8);
+        const dd = document.getElementById('merge-results');
+        dd.innerHTML = results.length === 0
+          ? '<div style="padding:8px 10px;font-size:0.83rem;color:var(--text-light)">Aucun résultat</div>'
+          : results.map(r => `<div class="merge-item" onclick="selectMergeSource(${r.id})"><div class="m-name">${esc(r.name||r.email||r.phone||'#'+r.id)}</div><div class="m-detail">${r.points_balance} pts · ${r.visit_count} vis. · ${Format.currency(r.total_spent)}</div></div>`).join('');
+        dd.classList.add('open');
       }, 200);
     });
 
     function selectMergeSource(id) {
       mergeSourceId = id;
-      const c = allClients.find(x => x.id === id);
-      if (!c) return;
-
+      const c = allClients.find(x => x.id === id); if (!c) return;
       document.getElementById('merge-results').classList.remove('open');
       document.getElementById('merge-search').style.display = 'none';
-
-      const sel = document.getElementById('merge-selected');
-      document.getElementById('merge-selected-name').innerHTML =
-        `<strong>${esc(c.name || c.email || c.phone)}</strong> — ${c.points_balance} pts, ${c.visit_count} vis.`;
-      sel.classList.add('show');
-
+      document.getElementById('merge-selected-name').innerHTML = `<strong>${esc(c.name||c.email||c.phone)}</strong> — ${c.points_balance} pts, ${c.visit_count} vis.`;
+      document.getElementById('merge-selected').classList.add('show');
       document.getElementById('merge-confirm-btn').disabled = false;
     }
 
     function clearMergeSelection() {
       mergeSourceId = null;
       document.getElementById('merge-selected').classList.remove('show');
-      document.getElementById('merge-search').style.display = 'block';
+      document.getElementById('merge-search').style.display = '';
       document.getElementById('merge-search').value = '';
       document.getElementById('merge-confirm-btn').disabled = true;
     }
 
     async function submitMerge() {
       if (!mergeSourceId) return;
-
-      const sourceClient = allClients.find(x => x.id === mergeSourceId);
-      const sourceName = sourceClient ? (sourceClient.name || sourceClient.email || sourceClient.phone) : '#' + mergeSourceId;
-
-      if (!confirm(`⚠️ ATTENTION\n\nLe client "${sourceName}" sera SUPPRIMÉ.\nSes points et historique seront transférés vers le client actuel.\n\nCette action est irréversible. Continuer ?`)) return;
-
+      const src = allClients.find(x => x.id === mergeSourceId);
+      const label = src ? (src.name||src.email||src.phone) : '#'+mergeSourceId;
+      if (!confirm(`⚠️ ATTENTION\n\n"${label}" sera SUPPRIMÉ.\nSes points et historique transférés vers le client actuel.\n\nIrréversible. Continuer ?`)) return;
       try {
         const reason = document.getElementById('merge-reason').value.trim();
-        await API.call(`/clients/${currentClientId}/merge`, {
-          method: 'POST',
-          body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason || 'Fusion manuelle' }),
-        });
-
-        closeMergeModal();
-        closeModal();
-        loadClients();
-
-        // Brief success feedback
+        await API.call(`/clients/${currentClientId}/merge`, { method: 'POST', body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason||'Fusion manuelle' }) });
+        closeMergeModal(); closeModal(); loadClients();
         setTimeout(() => showDetails(currentClientId), 300);
-      } catch (err) {
-        UI.showAlert('merge-alert', err.message, 'error');
-      }
+      } catch (err) { UI.showAlert('merge-alert', err.message, 'error'); }
     }
 
-    // Close merge dropdown on outside click
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.merge-search-wrap')) {
-        document.getElementById('merge-results').classList.remove('open');
-      }
-    });
+    document.addEventListener('click', (e) => { if (!e.target.closest('.merge-search-wrap')) document.getElementById('merge-results').classList.remove('open'); });
 
     // ════════════════════════════════════════
     // HELPERS
@@ -685,12 +713,12 @@
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
     function fmtDate(d) {
       if (!d) return '—';
-      const dt = new Date(d), days = Math.floor((Date.now() - dt) / 86400000);
-      const time = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+      const dt = new Date(d), days = Math.floor((Date.now()-dt)/86400000);
+      const time = dt.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
       if (days === 0) return `Auj. ${time}`;
       if (days === 1) return `Hier ${time}`;
-      if (days < 7) return `${dt.toLocaleDateString('fr-FR', { weekday: 'short' })} ${time}`;
-      return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + time;
+      if (days < 7) return `${dt.toLocaleDateString('fr-FR',{weekday:'short'})} ${time}`;
+      return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})+' '+time;
     }
 
     loadClients();
