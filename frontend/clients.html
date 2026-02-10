@@ -138,11 +138,15 @@
     .action-toolbar {
       display: flex;
       gap: 4px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      overflow-x: auto;
       padding: 10px 0;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
+      scrollbar-width: none;
+      -ms-overflow-style: none;
     }
+    .action-toolbar::-webkit-scrollbar { display: none; }
     .action-btn {
       display: inline-flex;
       align-items: center;
@@ -176,7 +180,7 @@
     .expand-header:hover { background: #f3f4f6; }
     .expand-arrow { transition: transform 0.2s; font-size: 0.7rem; color: var(--text-light); }
     .expand-section.open .expand-arrow { transform: rotate(90deg); }
-    .expand-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); }
+    .expand-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); max-height: 350px; overflow-y: auto; }
     .expand-section.open .expand-body { display: block; }
 
     /* Notes */
