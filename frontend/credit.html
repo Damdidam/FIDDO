@@ -94,39 +94,102 @@
     .credit-success .client-info { color: var(--text); margin-top: 0.5rem; font-size: 0.9rem; }
 
     /* ── QR Code section ── */
-    .qr-section { text-align: center; padding: 1rem; }
+    .qr-card { padding: 0 !important; overflow: hidden; }
+
     .qr-toggle {
-      display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 1rem;
-      background: #F0FDFA; border: 2px solid var(--primary); border-radius: 8px;
-      cursor: pointer; font-weight: 600; font-size: 0.9rem; color: var(--primary);
-      transition: all 0.2s; width: 100%;  justify-content: center;
+      display: flex; align-items: center; gap: 0.6rem; padding: 0.85rem 1.1rem;
+      background: white; border: none; cursor: pointer; font-size: 0.9rem;
+      color: var(--text); transition: background 0.2s; width: 100%; text-align: left;
     }
-    .qr-toggle:hover { background: #CCFBF1; }
-    .qr-toggle.active { background: var(--primary); color: white; }
-    .qr-body { margin-top: 1rem; }
-    .qr-canvas {
-      background: white; padding: 12px; border-radius: 12px;
-      display: inline-block; box-shadow: 0 2px 12px rgba(0,0,0,0.1);
-      border: 2px solid var(--border);
+    .qr-toggle:hover { background: #F9FAFB; }
+    .qr-toggle .qr-icon {
+      width: 32px; height: 32px; border-radius: 8px; background: #F0FDFA;
+      display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+      flex-shrink: 0; border: 1px solid #E0F2FE;
     }
-    .qr-canvas img { display: block; }
-    .qr-status {
-      margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-light);
-      display: flex; align-items: center; justify-content: center; gap: 0.4rem;
+    .qr-toggle .qr-label { font-weight: 600; }
+    .qr-toggle .qr-hint { font-size: 0.78rem; color: var(--text-light); font-weight: 400; }
+    .qr-toggle .qr-arrow {
+      margin-left: auto; color: var(--text-light); transition: transform 0.3s; font-size: 0.8rem;
     }
-    .qr-status .dot {
-      width: 8px; height: 8px; border-radius: 50%; background: var(--warning);
+    .qr-toggle.open .qr-arrow { transform: rotate(180deg); }
+    .qr-toggle.open .qr-icon { background: var(--primary); border-color: var(--primary); }
+    .qr-toggle.open .qr-icon span { filter: brightness(10); }
+
+    .qr-body {
+      border-top: 1px solid var(--border); padding: 1.5rem; text-align: center;
+      background: #FAFAFA; display: none;
+    }
+
+    /* QR code wrapper with scan animation */
+    .qr-frame {
+      position: relative; display: inline-block; padding: 16px;
+      background: white; border-radius: 14px; box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+      border: 1px solid #E5E7EB;
+    }
+    .qr-frame img { display: block; border-radius: 4px; }
+
+    /* Scanning line animation */
+    .qr-frame::after {
+      content: ''; position: absolute; left: 16px; right: 16px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      animation: qr-scan 2.5s ease-in-out infinite; border-radius: 1px;
+    }
+    @keyframes qr-scan { 0% { top: 16px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 16px); opacity: 0; } }
+
+    .qr-frame.received::after { display: none; }
+
+    /* Status pill */
+    .qr-pill {
+      display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 1rem;
+      padding: 0.35rem 0.9rem; border-radius: 20px; font-size: 0.82rem; font-weight: 500;
+      background: #FEF3C7; color: #92400E;
+    }
+    .qr-pill .dot {
+      width: 6px; height: 6px; border-radius: 50%; background: #F59E0B;
       animation: qr-pulse 1.5s ease-in-out infinite;
     }
-    .qr-status.received .dot { background: var(--success); animation: none; }
     @keyframes qr-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .qr-received {
-      background: #ECFDF5; border: 2px solid var(--success); border-radius: 8px;
-      padding: 0.75rem; margin-top: 0.75rem; font-size: 0.88rem;
+
+    .qr-pill.success { background: #D1FAE5; color: #065F46; }
+    .qr-pill.success .dot { background: #10B981; animation: none; }
+    .qr-pill.expired { background: #FEE2E2; color: #991B1B; }
+    .qr-pill.expired .dot { background: #EF4444; animation: none; }
+
+    /* Timer bar */
+    .qr-timer-bar {
+      width: 200px; height: 3px; background: #E5E7EB; border-radius: 2px;
+      margin: 0.6rem auto 0; overflow: hidden;
     }
-    .qr-received strong { color: var(--success); }
-    .qr-timer { font-size: 0.78rem; color: var(--text-light); margin-top: 0.4rem; }
-    .qr-actions { margin-top: 0.75rem; display: flex; gap: 0.5rem; justify-content: center; }
+    .qr-timer-fill {
+      height: 100%; background: var(--primary); border-radius: 2px;
+      transition: width 1s linear; width: 100%;
+    }
+    .qr-timer-text { font-size: 0.72rem; color: #9CA3AF; margin-top: 0.3rem; }
+
+    /* Received confirmation */
+    .qr-confirmed {
+      animation: qr-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      padding: 1.25rem; margin-top: 1rem;
+      background: white; border-radius: 10px; border: 1px solid #D1FAE5;
+    }
+    .qr-confirmed .confirmed-icon { font-size: 2.2rem; margin-bottom: 0.3rem; }
+    .qr-confirmed .confirmed-title { font-weight: 700; color: #065F46; font-size: 0.95rem; }
+    .qr-confirmed .confirmed-detail {
+      font-size: 0.85rem; color: var(--text-light); margin-top: 0.4rem; line-height: 1.5;
+    }
+    .qr-confirmed .confirmed-detail strong { color: var(--text); }
+    @keyframes qr-pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    .qr-footer {
+      margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center;
+    }
+    .qr-footer button {
+      padding: 0.35rem 0.9rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; border: 1px solid #D1D5DB; background: white; color: var(--text-light);
+      transition: all 0.15s;
+    }
+    .qr-footer button:hover { background: #F3F4F6; color: var(--text); }
 
     /* ── Responsive compact ── */
     @media (max-width: 768px) {
@@ -230,21 +293,31 @@
         </div>
 
         <!-- QR Code: client scans to fill form -->
-        <div class="card" id="qr-card">
+        <div class="card qr-card" id="qr-card">
           <button type="button" class="qr-toggle" id="qr-toggle-btn" onclick="toggleQR()">
-            📱 QR — Le client remplit lui-même
-          </button>
-          <div class="qr-body" id="qr-body" style="display: none;">
-            <div id="qr-canvas" class="qr-canvas"></div>
-            <div class="qr-status" id="qr-status">
-              <span class="dot"></span>
-              <span>En attente du client…</span>
+            <div class="qr-icon"><span>📱</span></div>
+            <div>
+              <div class="qr-label">QR — Le client remplit lui-même</div>
+              <div class="qr-hint">Idéal si barrière de langue</div>
             </div>
-            <div class="qr-timer" id="qr-timer"></div>
-            <div id="qr-received-info"></div>
-            <div class="qr-actions">
-              <button class="btn btn-outline btn-sm" onclick="refreshQR()">🔄 Nouveau QR</button>
-              <button class="btn btn-sm" style="background:#f3f4f6; color:var(--text-light);" onclick="closeQR()">Fermer</button>
+            <span class="qr-arrow">▼</span>
+          </button>
+          <div class="qr-body" id="qr-body">
+            <div class="qr-frame" id="qr-frame">
+              <div id="qr-canvas"></div>
+            </div>
+            <div>
+              <div class="qr-pill" id="qr-pill">
+                <span class="dot"></span>
+                <span id="qr-pill-text">En attente du client…</span>
+              </div>
+            </div>
+            <div class="qr-timer-bar" id="qr-timer-bar"><div class="qr-timer-fill" id="qr-timer-fill"></div></div>
+            <div class="qr-timer-text" id="qr-timer-text"></div>
+            <div id="qr-confirmed-container"></div>
+            <div class="qr-footer">
+              <button onclick="refreshQR()">🔄 Nouveau QR</button>
+              <button onclick="closeQR()">✕ Fermer</button>
             </div>
           </div>
         </div>
@@ -682,9 +755,9 @@
       document.getElementById('success-container').innerHTML = '';
       document.getElementById('lookup-container').style.display = 'none';
       UI.clearAlert('credit-alert');
-      // Reset QR received info (keep QR open if it was open)
-      document.getElementById('qr-received-info').innerHTML = '';
-      if (document.getElementById('qr-body').style.display !== 'none') {
+      // Reset QR confirmed info (keep QR open if it was open)
+      document.getElementById('qr-confirmed-container').innerHTML = '';
+      if (document.getElementById('qr-body').style.display === 'block') {
         refreshQR(); // Generate fresh QR for next client
       }
       // Focus the active identifier field
@@ -703,15 +776,16 @@
     let qrTimerInterval = null;
     let qrExpiresAt = null;
     let qrInstance = null;
+    const QR_TTL_MS = 10 * 60 * 1000;
 
     async function toggleQR() {
       const body = document.getElementById('qr-body');
       const btn = document.getElementById('qr-toggle-btn');
+      const isHidden = getComputedStyle(body).display === 'none';
 
-      if (body.style.display === 'none') {
+      if (isHidden) {
         body.style.display = 'block';
-        btn.classList.add('active');
-        btn.innerHTML = '📱 QR — Le client remplit lui-même';
+        btn.classList.add('open');
         await createQRSession();
       } else {
         closeQR();
@@ -720,9 +794,8 @@
 
     function closeQR() {
       document.getElementById('qr-body').style.display = 'none';
-      document.getElementById('qr-toggle-btn').classList.remove('active');
+      document.getElementById('qr-toggle-btn').classList.remove('open');
       stopQRPolling();
-      // Cancel session on server
       if (qrToken) {
         fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
         qrToken = null;
@@ -732,9 +805,13 @@
     async function createQRSession() {
       try {
         // Reset UI
-        document.getElementById('qr-received-info').innerHTML = '';
-        document.getElementById('qr-status').className = 'qr-status';
-        document.getElementById('qr-status').innerHTML = '<span class="dot"></span><span>En attente du client…</span>';
+        document.getElementById('qr-confirmed-container').innerHTML = '';
+        document.getElementById('qr-frame').classList.remove('received');
+        document.getElementById('qr-frame').style.display = 'inline-block';
+        const pill = document.getElementById('qr-pill');
+        pill.className = 'qr-pill';
+        document.getElementById('qr-pill-text').textContent = 'En attente du client…';
+        document.getElementById('qr-timer-bar').style.display = 'block';
 
         const resp = await API.call('/qr/session', { method: 'POST' });
         qrToken = resp.token;
@@ -745,20 +822,20 @@
         canvas.innerHTML = '';
         qrInstance = new QRCode(canvas, {
           text: resp.url,
-          width: 200,
-          height: 200,
+          width: 180,
+          height: 180,
           colorDark: '#1F2937',
           colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.M,
         });
 
-        // Start polling
         startQRPolling();
         startQRTimer();
 
       } catch (err) {
         console.error('QR session error:', err);
-        document.getElementById('qr-status').innerHTML = '<span style="color:var(--danger);">⚠️ Erreur de création</span>';
+        document.getElementById('qr-pill-text').textContent = '⚠️ Erreur de création';
+        document.getElementById('qr-pill').className = 'qr-pill expired';
       }
     }
 
@@ -779,21 +856,20 @@
           const data = await resp.json();
 
           if (resp.status === 410 || resp.status === 404) {
-            // Expired
             stopQRPolling();
-            document.getElementById('qr-status').innerHTML = '<span style="color:var(--warning);">⏰ Session expirée</span>';
+            document.getElementById('qr-pill').className = 'qr-pill expired';
+            document.getElementById('qr-pill-text').textContent = 'Session expirée';
             return;
           }
 
           if (!data.pending) {
-            // Got data!
             stopQRPolling();
             onQRDataReceived(data);
           }
         } catch (err) {
           console.error('QR poll error:', err);
         }
-      }, 1500); // Poll every 1.5s
+      }, 1500);
     }
 
     function stopQRPolling() {
@@ -803,35 +879,54 @@
 
     function startQRTimer() {
       if (qrTimerInterval) clearInterval(qrTimerInterval);
-      const timerEl = document.getElementById('qr-timer');
+      const fillEl = document.getElementById('qr-timer-fill');
+      const textEl = document.getElementById('qr-timer-text');
 
       qrTimerInterval = setInterval(() => {
         if (!qrExpiresAt) return;
+        const total = QR_TTL_MS;
+        const elapsed = Date.now() - (qrExpiresAt - total);
         const remaining = Math.max(0, Math.ceil((qrExpiresAt - Date.now()) / 1000));
+        const pct = Math.max(0, (1 - elapsed / total) * 100);
+
+        fillEl.style.width = pct + '%';
         const min = Math.floor(remaining / 60);
         const sec = remaining % 60;
-        timerEl.textContent = `Expire dans ${min}:${sec.toString().padStart(2, '0')}`;
+        textEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
 
         if (remaining <= 0) {
           clearInterval(qrTimerInterval);
-          timerEl.textContent = 'Expiré — cliquez Nouveau QR';
+          textEl.textContent = 'Expiré';
+          document.getElementById('qr-pill').className = 'qr-pill expired';
+          document.getElementById('qr-pill-text').textContent = 'Session expirée';
         }
       }, 1000);
     }
 
     function onQRDataReceived(data) {
-      // Update status
-      const statusEl = document.getElementById('qr-status');
-      statusEl.className = 'qr-status received';
-      statusEl.innerHTML = '<span class="dot"></span><span>✅ Informations reçues !</span>';
+      // Update pill to success
+      document.getElementById('qr-pill').className = 'qr-pill success';
+      document.getElementById('qr-pill-text').textContent = 'Informations reçues !';
 
-      // Show received data
-      document.getElementById('qr-received-info').innerHTML = `
-        <div class="qr-received">
-          <strong>✅ Client identifié</strong><br>
-          ${data.email ? '📧 ' + data.email + '<br>' : ''}
-          ${data.phone ? '📱 ' + data.phone + '<br>' : ''}
-          ${data.name ? '👤 ' + data.name : ''}
+      // Hide QR frame + timer bar
+      document.getElementById('qr-frame').style.display = 'none';
+      document.getElementById('qr-timer-bar').style.display = 'none';
+      document.getElementById('qr-timer-text').textContent = '';
+
+      // Build confirmed card
+      let details = [];
+      if (data.email) details.push(`<strong>📧</strong> ${data.email}`);
+      if (data.phone) details.push(`<strong>📱</strong> ${data.phone}`);
+      if (data.name) details.push(`<strong>👤</strong> ${data.name}`);
+
+      document.getElementById('qr-confirmed-container').innerHTML = `
+        <div class="qr-confirmed">
+          <div class="confirmed-icon">✅</div>
+          <div class="confirmed-title">Client identifié</div>
+          <div class="confirmed-detail">
+            ${details.join('<br>')}
+            <br><span style="font-size:0.78rem; color:#9CA3AF; margin-top:0.3rem; display:inline-block;">Formulaire pré-rempli ↓</span>
+          </div>
         </div>
       `;
 
@@ -856,10 +951,8 @@
         nameInput.classList.add('has-value');
       }
 
-      // Trigger lookup after a short delay
+      // Trigger lookup + focus montant
       setTimeout(() => triggerLookup(), 300);
-
-      // Focus amount field so staff can continue
       setTimeout(() => document.getElementById('amount').focus(), 600);
     }
 
