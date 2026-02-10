@@ -57,32 +57,162 @@
     .staff-sm { font-size: 0.75rem; color: var(--text-light); }
     .tab-count { font-size: 0.7rem; background: var(--light); color: var(--text-light); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
 
-    /* ── Modal compact ── */
-    .modal-section { margin-bottom: 0.75rem; }
-    .modal-section-title { font-size: 0.8rem; font-weight: 700; color: var(--text); margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+    /* ── Modal redesign V2 ── */
+    .modal-section { margin-bottom: 1rem; }
+    .modal-section-title { font-size: 0.78rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
 
-    /* Action buttons grid */
-    .actions-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; }
-    .action-btn { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.75rem; font-weight: 500; cursor: pointer; background: white; color: var(--text); transition: all 0.15s; white-space: nowrap; text-decoration: none; }
-    .action-btn:hover { border-color: var(--primary); color: var(--primary); background: #ECFEFF; }
+    /* Hero header */
+    .client-hero {
+      background: linear-gradient(135deg, var(--secondary) 0%, #374151 100%);
+      padding: 1.5rem;
+      color: white;
+      position: relative;
+      border-radius: 12px 12px 0 0;
+    }
+    .client-hero-close { position: absolute; top: 12px; right: 16px; background: rgba(255,255,255,0.15); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .client-hero-close:hover { background: rgba(255,255,255,0.3); }
+    .client-hero-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .client-hero-sub { font-size: 0.82rem; opacity: 0.7; }
+    .client-hero-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+    .hero-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px; }
+    .hero-badge-custom { background: rgba(8,145,178,0.25); color: #67e8f9; }
+    .hero-badge-blocked { background: rgba(239,68,68,0.25); color: #fca5a5; }
+    .hero-badge-validated { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+
+    /* Stats row */
+    .client-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: -20px 1.25rem 0;
+      position: relative;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .client-stat {
+      text-align: center;
+      padding: 14px 8px;
+    }
+    .client-stat:not(:last-child) { border-right: 1px solid var(--border); }
+    .client-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .client-stat-label { font-size: 0.68rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+    /* Reward card */
+    .reward-card {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 16px;
+      position: relative;
+    }
+    .reward-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .reward-card-label { font-size: 0.72rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
+    .reward-card-name { font-size: 0.95rem; font-weight: 600; color: var(--text); }
+    .reward-card-edit { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.72rem; cursor: pointer; color: var(--text-light); transition: all 0.15s; }
+    .reward-card-edit:hover { border-color: var(--primary); color: var(--primary); }
+    .reward-progress { margin-top: 10px; }
+    .reward-progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
+    .reward-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+    .reward-progress-fill.near { background: linear-gradient(90deg, var(--primary), #06b6d4); }
+    .reward-progress-fill.ready { background: linear-gradient(90deg, var(--success), #34d399); }
+    .reward-progress-text { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-light); margin-top: 4px; }
+    .reward-ready-banner {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-align: center;
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); } 50% { box-shadow: 0 0 12px 4px rgba(16,185,129,0.15); } }
+    .reward-edit-area { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+
+    /* Action toolbar */
+    .action-toolbar {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      padding: 10px 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      background: #f3f4f6;
+      color: var(--text);
+      transition: all 0.15s;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .action-btn:hover { background: #e5e7eb; }
     .action-btn.danger { color: var(--danger); }
-    .action-btn.danger:hover { border-color: var(--danger); background: #FEF2F2; color: var(--danger); }
+    .action-btn.danger:hover { background: #fef2f2; }
     .action-btn.success { color: var(--success); }
-    .action-btn.success:hover { border-color: var(--success); background: #F0FDF4; }
-    .action-btn.whatsapp { color: #25D366; }
-    .action-btn.whatsapp:hover { border-color: #25D366; background: #F0FDF4; }
+    .action-btn.success:hover { background: #f0fdf4; }
+
+    /* Expandable sections */
+    .expand-section { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+    .expand-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; cursor: pointer; background: #fafafa;
+      font-size: 0.82rem; font-weight: 600; color: var(--text);
+      user-select: none; transition: background 0.15s;
+    }
+    .expand-header:hover { background: #f3f4f6; }
+    .expand-arrow { transition: transform 0.2s; font-size: 0.7rem; color: var(--text-light); }
+    .expand-section.open .expand-arrow { transform: rotate(90deg); }
+    .expand-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); }
+    .expand-section.open .expand-body { display: block; }
+
+    /* Notes */
+    .notes-area { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; font-family: inherit; resize: vertical; min-height: 56px; max-height: 120px; }
+    .notes-area:focus { outline: none; border-color: var(--primary); }
+    .notes-meta { font-size: 0.7rem; color: var(--text-light); text-align: right; margin-top: 4px; }
+
+    /* Timeline V2 */
+    .tx-list { display: flex; flex-direction: column; gap: 0; }
+    .tx-item {
+      display: flex; gap: 12px; align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid #f3f4f6;
+      font-size: 0.83rem;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+    .tx-dot.credit { background: var(--primary); }
+    .tx-dot.reward { background: var(--success); }
+    .tx-dot.adjustment { background: var(--warning); }
+    .tx-dot.merge { background: #8b5cf6; }
+    .tx-body { flex: 1; }
+    .tx-top { display: flex; justify-content: space-between; align-items: baseline; }
+    .tx-amount { font-weight: 700; }
+    .tx-date { font-size: 0.72rem; color: var(--text-light); }
+    .tx-detail { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+
+    /* Custom reward indicator in list */
+    .cr-star { color: #f59e0b; font-size: 0.7rem; margin-left: 2px; }
 
     /* Edit form compact */
-    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
     .edit-grid .form-group { margin-bottom: 0; }
-    .edit-grid .form-label { font-size: 0.72rem; margin-bottom: 1px; }
-    .edit-grid .form-control { padding: 5px 8px; font-size: 0.83rem; }
+    .edit-grid .form-label { font-size: 0.75rem; margin-bottom: 2px; }
+    .edit-grid .form-control { padding: 6px 10px; font-size: 0.85rem; }
     .edit-grid .full-width { grid-column: 1 / -1; }
-
-    /* Notes field */
-    .notes-area { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.83rem; font-family: inherit; resize: vertical; min-height: 48px; max-height: 120px; }
-    .notes-area:focus { outline: none; border-color: var(--primary); }
-    .notes-meta { font-size: 0.7rem; color: var(--text-light); text-align: right; }
 
     /* Merge search */
     .merge-search-wrap { position: relative; }
@@ -107,11 +237,14 @@
       .clients-table th, .clients-table td { padding: 6px 6px; }
       .date-input { width: 100px; }
       .edit-grid { grid-template-columns: 1fr; }
-      .modal-content { width: 95%; padding: 0; }
-      .modal-body { padding: 1rem; }
-      .modal-header { padding: 0.75rem 1rem; }
-      .actions-grid { grid-template-columns: repeat(3, 1fr); }
+      .modal-content { width: 95%; max-height: 95vh; }
       .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
+      .client-hero { padding: 1.25rem 1rem; border-radius: 0; }
+      .client-hero-name { font-size: 1.1rem; }
+      .client-stats-row { margin: -16px 0.75rem 0; }
+      .client-stat-val { font-size: 1.1rem; }
+      .action-toolbar { gap: 3px; }
+      .action-btn { padding: 5px 8px; font-size: 0.72rem; }
     }
   </style>
 </head>
@@ -172,12 +305,8 @@
 
   <!-- ═══ Client Detail Modal ═══ -->
   <div id="detail-modal" class="modal">
-    <div class="modal-content" style="max-width:620px;">
-      <div class="modal-header">
-        <h2 id="modal-title" style="font-size:1.05rem">Client</h2>
-        <button class="close-modal" onclick="closeModal()">×</button>
-      </div>
-      <div class="modal-body" id="modal-body"></div>
+    <div class="modal-content" style="max-width:580px;padding:0;overflow:hidden;">
+      <div id="modal-body"></div>
     </div>
   </div>
 
@@ -419,94 +548,85 @@
         const txs = data.transactions;
         currentClientData = c;
 
-        document.getElementById('modal-title').textContent = c.name || c.email || c.phone || `Client #${mcId}`;
-
         const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+        const isReady = c.can_redeem;
+        const hasCustom = !!c.custom_reward;
+        const displayName = c.name || c.email || c.phone || `Client #${mcId}`;
+        const subLine = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
         const hasEmail = !!c.email;
         const hasPhone = !!c.phone;
 
         let html = '';
 
-        // ── Stats ──
-        html += `<div class="stats-grid" style="margin-bottom:0.5rem;grid-template-columns:repeat(3,1fr);gap:0.4rem;">
-          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${c.points_balance}</div><div class="stat-label">Points</div></div>
-          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${c.visit_count}</div><div class="stat-label">Visites</div></div>
-          <div class="stat-card" style="padding:0.6rem"><div class="stat-value" style="font-size:1.4rem">${Format.date(c.first_visit)}</div><div class="stat-label">Client depuis</div></div>
+        // ═══ HERO HEADER ═══
+        html += `<div class="client-hero">
+          <button class="client-hero-close" onclick="closeModal()">×</button>
+          <div class="client-hero-name">${esc(displayName)}</div>
+          ${subLine ? `<div class="client-hero-sub">${esc(subLine)}</div>` : ''}
+          <div class="client-hero-badges">
+            ${hasCustom ? '<span class="hero-badge hero-badge-custom">⭐ Récompense perso</span>' : ''}
+            ${c.is_blocked ? '<span class="hero-badge hero-badge-blocked">Bloqué</span>' : ''}
+            ${c.email_validated ? '<span class="hero-badge hero-badge-validated">✓ Email validé</span>' : ''}
+          </div>
         </div>`;
 
-        // ── Progress ──
-        html += `<div style="margin-bottom:0.5rem;">
-          <div class="flex-between" style="font-size:0.78rem"><span>Progression</span><span>${c.points_balance}/${c.reward_threshold}</span></div>
-          <div class="progress-bar" style="height:6px"><div class="progress-fill" style="width:${progress}%"></div></div>
-          ${c.can_redeem ? `<div class="alert alert-success" style="padding:5px 10px;font-size:0.78rem;margin-top:3px">🎁 Récompense disponible : <strong>${esc(c.reward_description)}</strong></div>` : ''}
+        // ═══ FLOATING STATS ═══
+        html += `<div class="client-stats-row">
+          <div class="client-stat"><div class="client-stat-val">${c.points_balance}</div><div class="client-stat-label">Points</div></div>
+          <div class="client-stat"><div class="client-stat-val">${c.visit_count}</div><div class="client-stat-label">Visites</div></div>
+          <div class="client-stat"><div class="client-stat-val">${Format.date(c.first_visit)}</div><div class="client-stat-label">Depuis</div></div>
         </div>`;
 
-        // ── Reward section ──
+        // ═══ BODY CONTENT (padded) ═══
+        html += '<div style="padding:1.25rem 1.5rem 1.5rem;">';
+
+        // ═══ REWARD CARD ═══
+        const rewardDesc = c.reward_description || merchant.reward_description;
+        html += `<div class="reward-card">
+          <div class="reward-card-header">
+            <div>
+              <div class="reward-card-label">🎁 Récompense ${hasCustom ? '<span class="badge badge-info" style="font-size:0.58rem;margin-left:4px">Perso</span>' : ''}</div>
+              <div class="reward-card-name">${esc(rewardDesc)}</div>
+            </div>
+            ${isManager ? '<button class="reward-card-edit" onclick="toggleRewardEdit()">Modifier</button>' : ''}
+          </div>
+          <div class="reward-progress">
+            <div class="reward-progress-bar"><div class="reward-progress-fill ${isReady ? 'ready' : 'near'}" style="width:${progress}%"></div></div>
+            <div class="reward-progress-text"><span>${c.points_balance} / ${c.reward_threshold} pts</span><span>${isReady ? '✅ Prêt !' : `Encore ${c.reward_threshold - c.points_balance}`}</span></div>
+          </div>
+          ${isReady ? '<div class="reward-ready-banner">🎁 Récompense disponible !</div>' : ''}
+          ${isManager ? `<div class="reward-edit-area" id="reward-edit-section" style="display:none">
+            <div id="reward-alert"></div>
+            <div style="display:flex;gap:8px;align-items:flex-end">
+              <div class="form-group" style="flex:1;margin-bottom:0">
+                <label class="form-label" style="font-size:0.75rem">Récompense sur mesure</label>
+                <input type="text" id="custom-reward-input" class="form-control" style="font-size:0.85rem"
+                  value="${esc(c.custom_reward||'')}" placeholder="${esc(c.default_reward || merchant.reward_description)}" maxlength="150">
+                <small class="form-help">Vide = récompense par défaut</small>
+              </div>
+              <button class="btn btn-primary btn-sm" style="margin-bottom:18px" onclick="saveCustomReward()">Enregistrer</button>
+            </div>
+          </div>` : ''}
+        </div>`;
+
+        // ═══ ACTION TOOLBAR ═══
         if (isManager) {
-          const isCustom = !!c.custom_reward;
-          html += `<div class="modal-section" style="margin-bottom:0.5rem">
-            <div class="flex-between" style="align-items:center">
-              <div style="font-size:0.83rem">
-                <strong>🎁 Récompense :</strong>
-                <span id="reward-display">${esc(c.reward_description)}</span>
-                ${isCustom
-                  ? '<span class="badge badge-info" style="margin-left:4px;font-size:0.6rem">Perso</span>'
-                  : '<span class="badge badge-neutral" style="margin-left:4px;font-size:0.6rem">Défaut</span>'}
-              </div>
-              <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem" onclick="toggleRewardEdit()">✏️</button>
-            </div>
-            <div id="reward-edit-section" style="display:none;margin-top:0.5rem">
-              <div id="reward-alert"></div>
-              <div style="display:flex;gap:0.5rem;align-items:flex-end">
-                <div class="form-group" style="flex:1;margin-bottom:0">
-                  <label class="form-label" style="font-size:0.75rem">Récompense sur mesure</label>
-                  <input type="text" id="custom-reward-input" class="form-control" style="font-size:0.85rem"
-                    value="${esc(c.custom_reward||'')}" placeholder="${esc(c.default_reward || merchant.reward_description)}"
-                    maxlength="150">
-                  <small class="form-help">Laisser vide = récompense par défaut (${esc(c.default_reward || merchant.reward_description)})</small>
-                </div>
-                <button class="btn btn-primary btn-sm" style="margin-bottom:3px;white-space:nowrap" onclick="saveCustomReward()">💾</button>
-              </div>
-            </div>
+          const creditParams = hasEmail ? `email=${encodeURIComponent(c.email)}` : `phone=${encodeURIComponent(c.phone||'')}`;
+          html += `<div class="action-toolbar">
+            <a href="/credit?${creditParams}${c.name ? '&name='+encodeURIComponent(c.name) : ''}" class="action-btn">➕ Créditer</a>
+            <button class="action-btn" onclick="toggleEditForm()">✏️ Modifier</button>
+            <button class="action-btn" onclick="showAdjustModal()">📏 Ajuster</button>
+            ${isOwner ? '<button class="action-btn" onclick="showMergeModal()">🔀 Fusionner</button>' : ''}
+            ${c.is_blocked
+              ? '<button class="action-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>'
+              : '<button class="action-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>'}
+            ${isOwner ? '<button class="action-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>' : ''}
           </div>`;
         }
 
-
-        // ── Action buttons grid ──
+        // ═══ EDIT FORM (hidden) ═══
         if (isManager) {
-          html += '<div class="modal-section" style="margin-top:0.75rem"><div class="actions-grid">';
-
-          // Quick credit
-          const creditParams = hasEmail ? `email=${encodeURIComponent(c.email)}` : `phone=${encodeURIComponent(c.phone||'')}`;
-          html += `<a href="/credit?${creditParams}${c.name ? '&name='+encodeURIComponent(c.name) : ''}" class="action-btn">➕ Créditer</a>`;
-
-          // Resend email
-          if (hasEmail) html += `<button class="action-btn" onclick="resendEmail()">📧 Envoyer pts</button>`;
-
-          // Edit
-          html += `<button class="action-btn" onclick="toggleEditForm()">✏️ Modifier</button>`;
-
-          // Adjust
-          html += `<button class="action-btn" onclick="showAdjustModal()">📏 Ajuster</button>`;
-
-          // Merge (owner only)
-          if (isOwner) html += `<button class="action-btn" onclick="showMergeModal()">🔀 Fusionner</button>`;
-
-          // Block / Unblock
-          html += c.is_blocked
-            ? `<button class="action-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>`
-            : `<button class="action-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>`;
-
-          // Delete (owner only)
-          if (isOwner) html += `<button class="action-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>`;
-
-          html += '</div></div>';
-        }
-
-        // ── Edit form (hidden) ──
-        if (isManager) {
-          html += `<div class="modal-section" id="edit-section" style="display:none;">
-            <div class="modal-section-title">✏️ Modifier</div>
+          html += `<div class="modal-section" id="edit-section" style="display:none;margin-top:1rem">
             <div id="edit-alert"></div>
             <div class="edit-grid">
               <div class="form-group full-width"><label class="form-label">Nom / surnom</label>
@@ -517,44 +637,64 @@
                 <input type="tel" id="edit-phone" class="form-control" value="${esc(c.phone||'')}"></div>
               <div class="form-group full-width" style="text-align:right">
                 <button class="btn btn-sm" onclick="toggleEditForm()" style="margin-right:0.5rem">Annuler</button>
-                <button class="btn btn-primary btn-sm" onclick="saveEdit()">💾 Enregistrer</button>
+                <button class="btn btn-primary btn-sm" onclick="saveEdit()">Enregistrer</button>
               </div>
             </div>
           </div>`;
         }
 
-        // ── Private notes ──
+        // ═══ NOTES (expandable) ═══
         if (isManager) {
-          html += `<div class="modal-section">
-            <div class="modal-section-title">📝 Notes privées</div>
-            <textarea class="notes-area" id="notes-area" placeholder="Ex: VIP, allergique noix, couple table 12..." maxlength="500">${esc(c.notes_private||'')}</textarea>
-            <div class="notes-meta"><span id="notes-count">${(c.notes_private||'').length}</span>/500 <button class="btn btn-sm" style="padding:2px 8px;font-size:0.7rem;margin-left:4px" onclick="saveNotes()">💾</button></div>
+          const hasNotes = !!(c.notes_private && c.notes_private.trim());
+          html += `<div class="expand-section ${hasNotes ? 'open' : ''}" style="margin-top:1rem" onclick="this.classList.toggle('open')" id="notes-section">
+            <div class="expand-header">
+              <span>📝 Notes privées ${hasNotes ? '' : '<span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:6px">Aucune</span>'}</span>
+              <span class="expand-arrow">▶</span>
+            </div>
+            <div class="expand-body" onclick="event.stopPropagation()">
+              <textarea class="notes-area" id="notes-area" placeholder="VIP, allergique noix, couple table 12..." maxlength="500">${esc(c.notes_private||'')}</textarea>
+              <div class="notes-meta"><span id="notes-count">${(c.notes_private||'').length}</span>/500
+                <button class="btn btn-sm" style="padding:2px 10px;font-size:0.72rem;margin-left:6px" onclick="saveNotes()">Sauver</button>
+              </div>
+            </div>
           </div>`;
         }
 
-        // ── Transactions ──
-        html += `<div class="modal-section">
-          <div class="modal-section-title">📜 Historique</div>`;
+        // ═══ TRANSACTIONS (expandable, open by default) ═══
+        html += `<div class="expand-section open" style="margin-top:0.75rem" onclick="this.classList.toggle('open')">
+          <div class="expand-header">
+            <span>📜 Historique <span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:6px">${txs.length} transaction${txs.length !== 1 ? 's' : ''}</span></span>
+            <span class="expand-arrow">▶</span>
+          </div>
+          <div class="expand-body" onclick="event.stopPropagation()">`;
 
         if (txs.length === 0) {
-          html += '<p class="text-muted" style="font-size:0.83rem;text-align:center">Aucun historique</p>';
+          html += '<p class="text-muted" style="font-size:0.85rem;text-align:center;padding:1rem 0">Aucune transaction</p>';
         } else {
-          html += '<div class="timeline">';
+          html += '<div class="tx-list">';
           txs.forEach(t => {
             const sign = t.points_delta >= 0 ? '+' : '';
             const colors = { reward: 'var(--success)', adjustment: 'var(--warning)', merge: '#8b5cf6', credit: 'var(--primary)' };
-            html += `<div class="timeline-item ${t.transaction_type}">
-              <div class="timeline-date">${Format.datetime(t.created_at)}${t.staff_name ? ` — <strong>${esc(t.staff_name)}</strong>` : ''}</div>
-              <div class="timeline-content">
-                <strong style="color:${colors[t.transaction_type]||'var(--primary)'}">${sign}${t.points_delta} pts</strong>
-                ${t.amount ? ` pour ${Format.currency(t.amount)}` : ''}
-                <span class="badge badge-neutral" style="margin-left:4px;font-size:0.63rem">${t.transaction_type}</span>
-                ${t.notes ? `<br><small class="text-muted">${esc(t.notes)}</small>` : ''}
+            const color = colors[t.transaction_type] || 'var(--primary)';
+            html += `<div class="tx-item">
+              <div class="tx-dot ${t.transaction_type}"></div>
+              <div class="tx-body">
+                <div class="tx-top">
+                  <span class="tx-amount" style="color:${color}">${sign}${t.points_delta} pts</span>
+                  <span class="tx-date">${Format.datetime(t.created_at)}</span>
+                </div>
+                <div class="tx-detail">
+                  ${t.amount ? Format.currency(t.amount) + ' · ' : ''}${t.transaction_type}${t.staff_name ? ' · ' + esc(t.staff_name) : ''}
+                  ${t.notes ? '<br>' + esc(t.notes) : ''}
+                </div>
               </div>
             </div>`;
           });
           html += '</div>';
         }
+        html += '</div></div>';
+
+        // Close padded body
         html += '</div>';
 
         document.getElementById('modal-body').innerHTML = html;
