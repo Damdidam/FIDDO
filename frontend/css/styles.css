@@ -55,8 +55,15 @@ body {
   color: var(--primary);
   text-decoration: none;
   white-space: nowrap;
+  display: flex;
+  align-items: center;
 }
-.navbar-brand span { color: white; font-weight: 400; font-size: 0.9rem; }
+.navbar-brand span {
+  color: white;
+  font-weight: 400;
+  font-size: 0.9rem;
+  line-height: 1;
+}
 
 .navbar-menu {
   display: flex;
@@ -194,9 +201,10 @@ select.form-control { appearance: auto; }
 
 /* ─── Table ─────────────────────────────────────────── */
 
-.table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-.table thead { background: var(--secondary); color: white; }
-.table th, .table td { padding: 0.75rem 1rem; text-align: left; }
+.table { width: 100%; border-collapse: collapse; border-spacing: 0; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.table thead tr { background: var(--secondary); }
+.table th { padding: 0.75rem 1rem; text-align: left; color: white; background: var(--secondary); border: none; font-weight: 600; }
+.table td { padding: 0.75rem 1rem; text-align: left; }
 .table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
 .table tbody tr:hover { background: var(--light); }
 .table tbody tr:last-child { border-bottom: none; }
