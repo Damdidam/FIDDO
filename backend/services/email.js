@@ -173,9 +173,37 @@ function sendMerchantRejectedEmail(merchantEmail, businessName, reason) {
   });
 }
 
+/**
+ * Email de confirmation d'inscription (envoyé au owner après register).
+ */
+function sendRegistrationConfirmationEmail(ownerEmail, businessName) {
+  sendMail({
+    to: ownerEmail,
+    subject: `FIDDO - Demande d'inscription reçue pour ${businessName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891B2;">Demande d'inscription reçue ! 📋</h2>
+        <p>Bonjour,</p>
+        <p>Nous avons bien reçu votre demande d'inscription pour <strong>${businessName}</strong> sur FIDDO.</p>
+        <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; margin: 20px 0;">
+          <p style="margin: 0;"><strong>Prochaine étape :</strong></p>
+          <p style="margin: 10px 0 0;">Notre équipe va vérifier vos informations. Vous recevrez un email dès que votre compte sera activé.</p>
+        </div>
+        <p>Ce processus prend généralement <strong>24 à 48 heures</strong>.</p>
+        <p>Si vous avez des questions, contactez-nous à <a href="mailto:support@fiddo.be">support@fiddo.be</a>.</p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+        <p style="font-size: 12px; color: #666; text-align: center;">
+          FIDDO — Programme de fidélité pour restaurateurs
+        </p>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   sendValidationEmail,
   sendPointsCreditedEmail,
   sendMerchantValidatedEmail,
   sendMerchantRejectedEmail,
+  sendRegistrationConfirmationEmail,
 };
