@@ -14,16 +14,6 @@ const { normalizeEmail, normalizePhone } = require('./normalizer');
 // 3-step lookup: end_users → aliases → create
 // ═══════════════════════════════════════════════════════
 
-/**
- * Resolve an email/phone to an end_user, searching aliases if needed.
- * If no match exists, creates a new end_user.
- *
- * @param {Object} params
- * @param {string|null} params.email - raw email input
- * @param {string|null} params.phone - raw phone input
- * @param {string|null} params.name  - optional display name
- * @returns {{ endUser: Object, isNew: boolean }}
- */
 function findOrCreateEndUser({ email, phone, name }) {
   const emailLower = normalizeEmail(email);
   const phoneE164 = normalizePhone(phone);
@@ -65,10 +55,10 @@ function findOrCreateEndUser({ email, phone, name }) {
   // ── Step 3: create new end_user ──
   const validationToken = crypto.randomUUID();
   const result = endUserQueries.create.run(
-    email || null,       // raw display
-    phone || null,       // raw display
-    emailLower,          // normalized
-    phoneE164,           // normalized
+    email || null,
+    phone || null,
+    emailLower,
+    phoneE164,
     name || null,
     validationToken
   );
@@ -82,13 +72,6 @@ function findOrCreateEndUser({ email, phone, name }) {
 // FIND OR CREATE MERCHANT CLIENT
 // ═══════════════════════════════════════════════════════
 
-/**
- * Ensure a merchant_client link exists between a merchant and an end_user.
- *
- * @param {number} merchantId
- * @param {number} endUserId
- * @returns {{ merchantClient: Object, isNew: boolean }}
- */
 function findOrCreateMerchantClient(merchantId, endUserId) {
   let mc = merchantClientQueries.find.get(merchantId, endUserId);
 
@@ -104,25 +87,8 @@ function findOrCreateMerchantClient(merchantId, endUserId) {
 
 // ═══════════════════════════════════════════════════════
 // CREDIT POINTS
-// Full flow: resolve user → ensure link → insert tx → update balance
-// All wrapped in a DB transaction for atomicity.
 // ═══════════════════════════════════════════════════════
 
-/**
- * Credit points to a client.
- *
- * @param {Object} params
- * @param {number}      params.merchantId
- * @param {number|null} params.staffId
- * @param {string|null} params.email
- * @param {string|null} params.phone
- * @param {string|null} params.name
- * @param {number}      params.amount       - euros spent
- * @param {string|null} params.notes
- * @param {string|null} params.idempotencyKey
- * @param {string}      params.source       - 'manual' | 'qr' | 'api'
- * @returns {Object} { endUser, merchantClient, transaction, isNewClient, isNewRelation }
- */
 function creditPoints({
   merchantId,
   staffId = null,
@@ -134,22 +100,19 @@ function creditPoints({
   idempotencyKey = null,
   source = 'manual',
 }) {
-  // Validate
   if (!amount || amount <= 0) {
     throw new Error('Montant invalide');
   }
 
-  // Get merchant settings
   const merchant = merchantQueries.findById.get(merchantId);
   if (!merchant) throw new Error('Commerce non trouvé');
 
   const pointsDelta = Math.floor(amount * merchant.points_per_euro);
 
-  // Idempotency check (before the transaction, for early return)
+  // Idempotency check
   if (idempotencyKey) {
     const existing = transactionQueries.findByIdempotencyKey.get(merchantId, idempotencyKey);
     if (existing) {
-      // Return the existing transaction — standard idempotent behavior
       const mc = merchantClientQueries.findById.get(existing.merchant_client_id);
       const eu = endUserQueries.findById.get(mc.end_user_id);
       return {
@@ -163,25 +126,19 @@ function creditPoints({
     }
   }
 
-  // Run everything in a single DB transaction
   const run = db.transaction(() => {
-    // 1. Resolve end_user (3-step lookup or create)
     const { endUser, isNew: isNewClient } = findOrCreateEndUser({ email, phone, name });
 
-    // Check if end_user is blocked globally
     if (endUser.is_blocked) {
       throw new Error('Ce client est bloqué');
     }
 
-    // 2. Ensure merchant_client relationship
     const { merchantClient, isNew: isNewRelation } = findOrCreateMerchantClient(merchantId, endUser.id);
 
-    // Check if merchant_client is blocked locally
     if (merchantClient.is_blocked) {
       throw new Error('Ce client est bloqué dans votre commerce');
     }
 
-    // 3. Insert ledger entry
     const txResult = transactionQueries.create.run(
       merchantId,
       merchantClient.id,
@@ -194,10 +151,8 @@ function creditPoints({
       notes
     );
 
-    // 4. Update merchant_client balance + stats
     merchantClientQueries.updateAfterCredit.run(pointsDelta, amount, merchantClient.id);
 
-    // Fetch updated records
     const updatedMC = merchantClientQueries.findById.get(merchantClient.id);
     const tx = { id: txResult.lastInsertRowid, points_delta: pointsDelta, amount };
 
@@ -217,19 +172,9 @@ function creditPoints({
 
 // ═══════════════════════════════════════════════════════
 // REDEEM REWARD (debit points)
+// Uses custom_reward if set, otherwise default merchant reward
 // ═══════════════════════════════════════════════════════
 
-/**
- * Redeem a reward (debit points from a merchant_client).
- *
- * @param {Object} params
- * @param {number}      params.merchantId
- * @param {number}      params.merchantClientId
- * @param {number|null} params.staffId
- * @param {string|null} params.notes
- * @param {string|null} params.idempotencyKey
- * @returns {Object} { merchantClient, transaction }
- */
 function redeemReward({
   merchantId,
   merchantClientId,
@@ -259,26 +204,28 @@ function redeemReward({
       throw new Error(`Solde insuffisant (${mc.points_balance}/${pointsToDeduct} points)`);
     }
 
-    // Insert negative transaction
+    // Use custom reward if set, otherwise merchant default
+    const rewardLabel = mc.custom_reward || merchant.reward_description;
+
     const txResult = transactionQueries.create.run(
       merchantId,
       mc.id,
       staffId,
-      null,              // no monetary amount for rewards
-      -pointsToDeduct,   // negative delta
+      null,
+      -pointsToDeduct,
       'reward',
       idempotencyKey,
       'manual',
-      notes || `Récompense : ${merchant.reward_description}`
+      notes || `Récompense : ${rewardLabel}`
     );
 
-    // Update balance
     merchantClientQueries.setPoints.run(mc.points_balance - pointsToDeduct, mc.id);
 
     const updatedMC = merchantClientQueries.findById.get(mc.id);
     return {
       merchantClient: updatedMC,
       transaction: { id: txResult.lastInsertRowid, points_delta: -pointsToDeduct },
+      rewardLabel,
       idempotent: false,
     };
   });
@@ -291,15 +238,6 @@ function redeemReward({
 // ADJUST POINTS (manual correction by owner/manager)
 // ═══════════════════════════════════════════════════════
 
-/**
- * @param {Object} params
- * @param {number}      params.merchantId
- * @param {number}      params.merchantClientId
- * @param {number}      params.pointsDelta - can be positive or negative
- * @param {number|null} params.staffId
- * @param {string}      params.reason
- * @returns {Object} { merchantClient, transaction }
- */
 function adjustPoints({ merchantId, merchantClientId, pointsDelta, staffId, reason }) {
   if (!pointsDelta || pointsDelta === 0) {
     throw new Error('Ajustement de 0 points non autorisé');
@@ -324,7 +262,7 @@ function adjustPoints({ merchantId, merchantClientId, pointsDelta, staffId, reas
       null,
       pointsDelta,
       'adjustment',
-      null,        // no idempotency for manual adjustments
+      null,
       'manual',
       reason.trim()
     );
