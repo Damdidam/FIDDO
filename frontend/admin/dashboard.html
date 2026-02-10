@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .admin-nav { background: #111827; }
+    .merchant-row { cursor: pointer; }
+    .merchant-row:hover td { background: #f0fdf4; }
+    .status-pending { color: var(--warning); }
+    .status-active { color: var(--success); }
+    .status-suspended { color: var(--danger); }
+    .status-rejected { color: var(--text-light); }
+    .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <nav class="navbar admin-nav">
+    <a href="/admin/dashboard" class="navbar-brand">FIDDO<span> Admin</span></a>
+    <div class="navbar-menu">
+      <button class="btn btn-outline btn-sm" onclick="adminLogout()">Déconnexion</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Administration FIDDO</h1>
+
+    <!-- Global Stats -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-value" id="s-merchants">-</div><div class="stat-label">Commerces</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-active">-</div><div class="stat-label">Actifs</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-pending">-</div><div class="stat-label">En attente</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-users">-</div><div class="stat-label">Clients</div></div>
+      <div class="stat-card"><div class="stat-value" id="s-revenue">-</div><div class="stat-label">CA total</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('pending')">⏳ En attente</button>
+      <button class="tab" onclick="switchTab('active')">✅ Actifs</button>
+      <button class="tab" onclick="switchTab('all')">📋 Tous</button>
+    </div>
+
+    <div id="merchants-container"></div>
+  </div>
+
+  <!-- Merchant Detail Modal -->
+  <div id="merchant-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="mm-title">Commerce</h2>
+        <button class="close-modal" onclick="closeModal()">×</button>
+      </div>
+      <div class="modal-body" id="mm-body"></div>
+      <div class="modal-footer" id="mm-footer"></div>
+    </div>
+  </div>
+
+  <!-- Reject Modal -->
+  <div id="reject-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Refuser le commerce</h2>
+        <button class="close-modal" onclick="closeRejectModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="reject-alert"></div>
+        <div class="form-group">
+          <label class="form-label">Raison du refus</label>
+          <input type="text" id="reject-reason" class="form-control" placeholder="Documents manquants, TVA invalide...">
+        </div>
+        <button class="btn btn-danger" onclick="submitReject()">Confirmer le refus</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    const ADMIN_API = API_BASE_URL + '/admin';
+    let currentMerchantId = null;
+    let currentTab = 'pending';
+
+    async function adminCall(endpoint, options = {}) {
+      const config = { headers: { 'Content-Type': 'application/json' }, credentials: 'include', ...options };
+      const resp = await fetch(`${ADMIN_API}${endpoint}`, config);
+      if (resp.status === 401 || resp.status === 403) { window.location.href = '/admin'; return; }
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Erreur');
+      return data;
+    }
+
+    function adminLogout() {
+      adminCall('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/admin');
+    }
+
+    // ─── Stats ───
+    async function loadStats() {
+      try {
+        const s = await adminCall('/merchants/stats/global');
+        document.getElementById('s-merchants').textContent = s.merchants.total;
+        document.getElementById('s-active').textContent = s.merchants.active;
+        document.getElementById('s-pending').textContent = s.merchants.pending;
+        document.getElementById('s-users').textContent = s.endUsers;
+        document.getElementById('s-revenue').textContent = Format.currency(s.revenue);
+      } catch (e) { console.error(e); }
+    }
+
+    // ─── Tabs ───
+    function switchTab(tab) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      loadMerchants();
+    }
+
+    // ─── Load Merchants ───
+    async function loadMerchants() {
+      const container = document.getElementById('merchants-container');
+      try {
+        UI.showLoading('merchants-container');
+        const qs = currentTab === 'all' ? '' : `?status=${currentTab}`;
+        const data = await adminCall(`/merchants${qs}`);
+        const merchants = data.merchants;
+
+        if (merchants.length === 0) {
+          UI.showEmptyState('merchants-container', '🏪', 'Aucun commerce');
+          return;
+        }
+
+        let html = `<table class="table"><thead><tr>
+          <th>Commerce</th><th>Propriétaire</th><th>TVA</th><th>Status</th><th>Clients</th><th>Créé le</th>
+        </tr></thead><tbody>`;
+
+        merchants.forEach(m => {
+          html += `<tr class="merchant-row" onclick="showMerchant(${m.id})">
+            <td><strong>${m.business_name}</strong><br><small class="text-muted">${m.email}</small></td>
+            <td>${m.owner_name || '-'}<br><small class="text-muted">${m.owner_email || '-'}</small></td>
+            <td>${m.vat_number}</td>
+            <td><span class="status-${m.status} badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : m.status === 'suspended' ? 'danger' : 'neutral'}">${m.status}</span></td>
+            <td>${m.client_count}</td>
+            <td>${Format.date(m.created_at)}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
+      } catch (e) {
+        UI.showError('merchants-container', e.message);
+      }
+    }
+
+    // ─── Merchant Detail ───
+    async function showMerchant(id) {
+      try {
+        currentMerchantId = id;
+        const data = await adminCall(`/merchants/${id}`);
+        const m = data.merchant;
+        const staffList = data.staff;
+        const stats = data.stats;
+
+        document.getElementById('mm-title').textContent = m.business_name;
+
+        let html = `
+          <div class="stats-grid" style="margin-bottom: 1.5rem;">
+            <div class="stat-card"><div class="stat-value">${stats.clients}</div><div class="stat-label">Clients</div></div>
+            <div class="stat-card"><div class="stat-value">${Format.currency(stats.revenue)}</div><div class="stat-label">CA</div></div>
+            <div class="stat-card"><div class="stat-value">${stats.transactions}</div><div class="stat-label">Transactions</div></div>
+          </div>
+
+          <h3 class="mb-1">Informations</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            <div><strong>Adresse :</strong> ${m.address}</div>
+            <div><strong>TVA :</strong> ${m.vat_number}</div>
+            <div><strong>Email :</strong> ${m.email}</div>
+            <div><strong>Tél :</strong> ${m.phone}</div>
+            <div><strong>Status :</strong> <span class="badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : 'danger'}">${m.status}</span></div>
+            <div><strong>Inscrit :</strong> ${Format.datetime(m.created_at)}</div>
+            <div><strong>Points/€ :</strong> ${m.points_per_euro}</div>
+            <div><strong>Récompense :</strong> ${m.points_for_reward} pts</div>
+          </div>
+          ${m.rejection_reason ? `<div class="alert alert-warning">Raison de refus : ${m.rejection_reason}</div>` : ''}
+
+          <h3 class="mb-1">Équipe (${staffList.length})</h3>
+        `;
+
+        if (staffList.length > 0) {
+          html += '<table class="table" style="margin-bottom: 0;"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actif</th></tr></thead><tbody>';
+          staffList.forEach(s => {
+            html += `<tr>
+              <td>${s.display_name}</td>
+              <td>${s.email}</td>
+              <td><span class="badge badge-info">${s.role}</span></td>
+              <td>${s.is_active ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-danger">Non</span>'}</td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+        } else {
+          html += '<p class="text-muted">Aucun membre</p>';
+        }
+
+        document.getElementById('mm-body').innerHTML = html;
+
+        // Action buttons based on status
+        let footer = '<div class="action-btns">';
+        if (m.status === 'pending') {
+          footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()">✅ Valider</button>`;
+          footer += `<button class="btn btn-danger btn-sm" onclick="showRejectModal()">❌ Refuser</button>`;
+        } else if (m.status === 'active') {
+          footer += `<button class="btn btn-danger btn-sm" onclick="suspendMerchant()">⏸️ Suspendre</button>`;
+        } else if (m.status === 'suspended') {
+          footer += `<button class="btn btn-success btn-sm" onclick="reactivateMerchant()">▶️ Réactiver</button>`;
+        }
+        footer += '</div>';
+        document.getElementById('mm-footer').innerHTML = footer;
+
+        document.getElementById('merchant-modal').classList.add('active');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
+    document.getElementById('merchant-modal').addEventListener('click', (e) => { if (e.target.id === 'merchant-modal') closeModal(); });
+
+    // ─── Actions ───
+    async function validateMerchant() {
+      if (!confirm('✅ Valider et activer ce commerce ?')) return;
+      try {
+        await adminCall(`/merchants/${currentMerchantId}/validate`, { method: 'POST' });
+        closeModal(); loadMerchants(); loadStats();
+      } catch (e) { alert(e.message); }
+    }
+
+    function showRejectModal() { document.getElementById('reject-modal').classList.add('active'); }
+    function closeRejectModal() { document.getElementById('reject-modal').classList.remove('active'); }
+    document.getElementById('reject-modal').addEventListener('click', (e) => { if (e.target.id === 'reject-modal') closeRejectModal(); });
+
+    async function submitReject() {
+      const reason = document.getElementById('reject-reason').value.trim();
+      try {
+        await adminCall(`/merchants/${currentMerchantId}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ reason }),
+        });
+        closeRejectModal(); closeModal(); loadMerchants(); loadStats();
+      } catch (e) { UI.showAlert('reject-alert', e.message, 'error'); }
+    }
+
+    async function suspendMerchant() {
+      if (!confirm('⏸️ Suspendre ce commerce ? Tous les comptes staff seront désactivés.')) return;
+      try {
+        await adminCall(`/merchants/${currentMerchantId}/suspend`, { method: 'POST' });
+        closeModal(); loadMerchants(); loadStats();
+      } catch (e) { alert(e.message); }
+    }
+
+    async function reactivateMerchant() {
+      if (!confirm('▶️ Réactiver ce commerce ?')) return;
+      try {
+        await adminCall(`/merchants/${currentMerchantId}/reactivate`, { method: 'POST' });
+        closeModal(); loadMerchants(); loadStats();
+      } catch (e) { alert(e.message); }
+    }
+
+    // Init
+    loadStats();
+    loadMerchants();
+  </script>
+</body>
+</html>
