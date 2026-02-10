@@ -32,13 +32,16 @@ app.use('/api/auth', require('./routes/auth'));
 // Client management (credit, reward, lookup, list, etc.)
 app.use('/api/clients', require('./routes/clients'));
 
+// QR code sessions (client self-identification)
+app.use('/api/qr', require('./routes/qr'));
+
 // Super admin
 app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '3.1.0', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: '3.2.0', timestamp: new Date().toISOString() });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -51,6 +54,9 @@ app.get('/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../fronte
 app.get('/clients',   (req, res) => res.sendFile(path.join(__dirname, '../frontend/clients.html')));
 app.get('/credit',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
 app.get('/staff',     (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
+
+// Client self-identification (public — scanned via QR)
+app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
 
 // Super admin pages
 app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
@@ -83,7 +89,7 @@ app.get('/validate', (req, res) => {
 // ═══════════════════════════════════════════════════════
 
 app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V3.1 Multi-Tenant — Port ${PORT}`);
+  console.log(`🐕 FIDDO V3.2 Multi-Tenant — Port ${PORT}`);
 });
 
 module.exports = app;
