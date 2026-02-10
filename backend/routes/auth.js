@@ -101,23 +101,34 @@ router.post('/login', async (req, res) => {
   try {
     let { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email et mot de passe requis' });
+      return res.status(400).json({
+        error: 'Veuillez renseigner votre email et votre mot de passe.',
+        errorCode: 'MISSING_FIELDS',
+      });
     }
 
     email = normalizeEmail(email);
     if (!email) {
-      return res.status(400).json({ error: 'Email invalide' });
+      return res.status(400).json({
+        error: 'Le format de l\'email n\'est pas valide.',
+        errorCode: 'INVALID_EMAIL',
+      });
     }
 
     const staff = staffQueries.findByEmail.get(email);
     if (!staff) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(401).json({
+        error: 'Aucun compte trouvé avec cet email, ou le mot de passe est incorrect.',
+        errorCode: 'INVALID_CREDENTIALS',
+      });
     }
 
     const { locked, minutesRemaining } = checkAccountLock(staff);
     if (locked) {
       return res.status(429).json({
-        error: `Compte temporairement verrouillé. Réessayez dans ${minutesRemaining} minute(s).`,
+        error: `Suite à plusieurs tentatives infructueuses, votre compte est temporairement verrouillé. Vous pourrez réessayer dans ${minutesRemaining} minute(s).`,
+        errorCode: 'ACCOUNT_LOCKED',
+        minutesRemaining,
       });
     }
 
@@ -126,6 +137,8 @@ router.post('/login', async (req, res) => {
       staffQueries.incrementFailedLogin.run(staff.id);
 
       const newCount = staff.failed_login_count + 1;
+      const remaining = MAX_FAILED_ATTEMPTS - newCount;
+
       if (newCount >= MAX_FAILED_ATTEMPTS) {
         const lockUntil = computeLockUntil();
         staffQueries.lockAccount.run(lockUntil, staff.id);
@@ -139,31 +152,62 @@ router.post('/login', async (req, res) => {
           targetId: staff.id,
           details: { failedAttempts: newCount },
         });
+
+        return res.status(429).json({
+          error: 'Trop de tentatives échouées. Votre compte a été verrouillé pour 15 minutes.',
+          errorCode: 'ACCOUNT_JUST_LOCKED',
+        });
       }
 
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(401).json({
+        error: 'Email ou mot de passe incorrect.',
+        errorCode: 'INVALID_CREDENTIALS',
+        attemptsRemaining: remaining > 0 ? remaining : undefined,
+      });
     }
 
     if (!staff.is_active) {
       const merchant = merchantQueries.findById.get(staff.merchant_id);
       if (!merchant) {
-        return res.status(403).json({ error: 'Commerce non trouvé' });
+        return res.status(403).json({
+          error: 'Votre commerce n\'a pas été trouvé dans notre système.',
+          errorCode: 'MERCHANT_NOT_FOUND',
+        });
       }
 
-      const statusMessages = {
-        pending: 'Votre commerce est en attente de validation. Vous recevrez un email une fois approuvé.',
-        suspended: 'Votre commerce est suspendu. Contactez le support.',
-        rejected: `Votre demande a été refusée${merchant.rejection_reason ? ' : ' + merchant.rejection_reason : '.'}`,
-        cancelled: 'Ce commerce a été résilié.',
+      const statusResponses = {
+        pending: {
+          error: 'Votre demande d\'inscription est en cours d\'examen par notre équipe. Vous recevrez un email dès que votre compte sera activé.',
+          errorCode: 'MERCHANT_PENDING',
+        },
+        suspended: {
+          error: 'Votre commerce a été suspendu. Veuillez contacter le support à support@fiddo.be pour plus d\'informations.',
+          errorCode: 'MERCHANT_SUSPENDED',
+        },
+        rejected: {
+          error: `Votre demande d'inscription n'a pas été approuvée${merchant.rejection_reason ? '.\n\nMotif : ' + merchant.rejection_reason : '.'}`,
+          errorCode: 'MERCHANT_REJECTED',
+        },
+        cancelled: {
+          error: 'Ce commerce a été résilié. Si vous pensez qu\'il s\'agit d\'une erreur, contactez support@fiddo.be.',
+          errorCode: 'MERCHANT_CANCELLED',
+        },
       };
 
-      const msg = statusMessages[merchant.status] || 'Votre compte est désactivé.';
-      return res.status(403).json({ error: msg });
+      const response = statusResponses[merchant.status] || {
+        error: 'Votre compte est actuellement désactivé.',
+        errorCode: 'ACCOUNT_DISABLED',
+      };
+
+      return res.status(403).json(response);
     }
 
     const merchant = merchantQueries.findById.get(staff.merchant_id);
     if (!merchant || merchant.status !== 'active') {
-      return res.status(403).json({ error: 'Votre commerce n\'est pas actif.' });
+      return res.status(403).json({
+        error: 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.',
+        errorCode: 'MERCHANT_INACTIVE',
+      });
     }
 
     staffQueries.updateLastLogin.run(staff.id);
@@ -189,7 +233,10 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur login:', error);
-    res.status(500).json({ error: 'Erreur lors de la connexion' });
+    res.status(500).json({
+      error: 'Une erreur technique est survenue. Veuillez réessayer dans quelques instants.',
+      errorCode: 'SERVER_ERROR',
+    });
   }
 });
 
