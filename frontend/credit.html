@@ -320,10 +320,9 @@
     // ═══════════════════════════════════════════════════════
     function showMerchantInfo() {
       const el = document.getElementById('merchant-info');
-      if (el) el.innerHTML = `
-        <strong>Config :</strong> ${merchant.points_per_euro} pt/€ · Récompense à ${merchant.points_for_reward} pts · ${merchant.reward_description}
-        ${staff.role === 'cashier' ? '<br><span class="text-muted">⚠️ Limite caissier : 200€ max</span>' : ''}
-      `;
+      if (el) el.innerHTML = staff.role === 'cashier'
+        ? '<span class="text-muted">⚠️ Limite caissier : 200€ max</span>'
+        : '';
     }
     showMerchantInfo();
 
