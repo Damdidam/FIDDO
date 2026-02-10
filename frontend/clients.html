@@ -96,10 +96,7 @@
     .merge-selected.show { display: flex; }
 
     /* Contact links */
-    .contact-links { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
-    .contact-link { font-size: 0.75rem; color: var(--primary); text-decoration: none; padding: 2px 8px; border: 1px solid var(--border); border-radius: 12px; transition: all 0.15s; }
-    .contact-link:hover { background: #ECFEFF; border-color: var(--primary); }
-    .contact-link.wa { color: #25D366; } .contact-link.wa:hover { border-color: #25D366; background: #F0FDF4; }
+
 
     /* Mobile */
     @media (max-width: 768px) {
@@ -430,8 +427,6 @@
         const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
         const hasEmail = !!c.email;
         const hasPhone = !!c.phone;
-        const phoneClean = hasPhone ? (c.phone.replace(/[\s\-().]/g, '')) : '';
-        const phoneWA = hasPhone ? phoneClean.replace(/^\+/, '') : '';
 
         let html = '';
 
@@ -449,17 +444,6 @@
           ${c.can_redeem ? '<div class="alert alert-success" style="padding:5px 10px;font-size:0.78rem;margin-top:3px">🎁 Récompense disponible !</div>' : ''}
         </div>`;
 
-        // ── Contact links (WhatsApp / SMS / Appel) ──
-        if (hasPhone || hasEmail) {
-          html += '<div class="contact-links">';
-          if (hasEmail) html += `<a href="mailto:${esc(c.email)}" class="contact-link">📧 ${esc(c.email)}</a>`;
-          if (hasPhone) {
-            html += `<a href="tel:${esc(phoneClean)}" class="contact-link">📞 ${esc(c.phone)}</a>`;
-            html += `<a href="https://wa.me/${esc(phoneWA)}" target="_blank" class="contact-link wa">💬 WhatsApp</a>`;
-            html += `<a href="sms:${esc(phoneClean)}" class="contact-link">💬 SMS</a>`;
-          }
-          html += '</div>';
-        }
 
         // ── Action buttons grid ──
         if (isManager) {
