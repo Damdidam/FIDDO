@@ -137,24 +137,20 @@
     /* Action toolbar */
     .action-toolbar {
       display: flex;
-      gap: 4px;
+      gap: 3px;
       flex-wrap: nowrap;
-      overflow-x: auto;
       padding: 10px 0;
       border-top: 1px solid var(--border);
       border-bottom: 1px solid var(--border);
-      scrollbar-width: none;
-      -ms-overflow-style: none;
     }
-    .action-toolbar::-webkit-scrollbar { display: none; }
     .action-btn {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 6px 12px;
+      gap: 3px;
+      padding: 5px 8px;
       border: none;
-      border-radius: 6px;
-      font-size: 0.78rem;
+      border-radius: 5px;
+      font-size: 0.7rem;
       font-weight: 500;
       cursor: pointer;
       background: #f3f4f6;
@@ -247,8 +243,8 @@
       .client-hero-name { font-size: 1.1rem; }
       .client-stats-row { margin: -16px 0.75rem 0; }
       .client-stat-val { font-size: 1.1rem; }
-      .action-toolbar { gap: 3px; }
-      .action-btn { padding: 5px 8px; font-size: 0.72rem; }
+      .action-toolbar { gap: 2px; }
+      .action-btn { padding: 4px 6px; font-size: 0.65rem; }
     }
   </style>
 </head>
@@ -582,7 +578,7 @@
         </div>`;
 
         // ═══ BODY CONTENT (padded) ═══
-        html += '<div style="padding:1.25rem 1.5rem 1.5rem;">';
+        html += '<div style="padding:1.25rem 1.5rem 2.5rem;">';
 
         // ═══ REWARD CARD ═══
         const rewardDesc = c.reward_description || merchant.reward_description;
