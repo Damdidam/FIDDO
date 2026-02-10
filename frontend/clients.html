@@ -132,6 +132,21 @@
       animation: pulse-glow 2s ease-in-out infinite;
     }
     @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); } 50% { box-shadow: 0 0 12px 4px rgba(16,185,129,0.15); } }
+
+    /* Reward celebration overlay */
+    .reward-celebration {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.97);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: 12px;
+      animation: fadeIn 0.3s ease;
+    }
+    .reward-celebration-content { text-align: center; padding: 2rem; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .reward-edit-area { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 
     /* Action toolbar */
@@ -304,7 +319,7 @@
 
   <!-- ═══ Client Detail Modal ═══ -->
   <div id="detail-modal" class="modal">
-    <div class="modal-content" style="max-width:580px;padding:0;overflow-y:auto;">
+    <div class="modal-content" style="max-width:580px;padding:0;overflow-y:auto;position:relative;">
       <div id="modal-body"></div>
     </div>
   </div>
@@ -599,7 +614,10 @@
             <div class="reward-progress-bar"><div class="reward-progress-fill ${isReady ? 'ready' : 'near'}" style="width:${progress}%"></div></div>
             <div class="reward-progress-text"><span>${c.points_balance} / ${c.reward_threshold} pts</span><span>${isReady ? '✅ Prêt !' : `Encore ${c.reward_threshold - c.points_balance}`}</span></div>
           </div>
-          ${isReady ? '<div class="reward-ready-banner">🎁 Récompense disponible !</div>' : ''}
+          ${isReady ? `<div class="reward-ready-banner" onclick="redeemRewardFromModal(${c.id})" style="cursor:pointer">
+            🎁 Récompense disponible — Cliquer pour appliquer !
+            <div style="font-size:0.7rem;opacity:0.85;margin-top:4px">${c.points_balance} pts → ${c.points_balance - c.reward_threshold} pts après déduction</div>
+          </div>` : ''}
           ${isManager ? `<div class="reward-edit-area" id="reward-edit-section" style="display:none">
             <div id="reward-alert"></div>
             <div style="display:flex;gap:8px;align-items:flex-end">
@@ -761,6 +779,49 @@
         const msg = result.type === 'validation' ? 'Email de validation renvoyé ✅' : 'Récapitulatif des points envoyé ✅';
         alert(msg);
       } catch (err) { alert('Erreur : ' + err.message); }
+    }
+
+    // ── Redeem Reward from Modal ──
+    async function redeemRewardFromModal(mcId) {
+      const c = currentClientData;
+      const rewardDesc = c.custom_reward || c.reward_description || merchant.reward_description;
+      const newBalance = c.points_balance - c.reward_threshold;
+
+      if (!confirm(`🎁 Appliquer la récompense ?\n\n→ ${rewardDesc}\n\nSolde : ${c.points_balance} pts → ${newBalance} pts`)) return;
+
+      try {
+        const result = await API.clients.reward({ merchantClientId: mcId });
+
+        // Show celebration overlay inside modal
+        const body = document.querySelector('#detail-modal .modal-content');
+        const overlay = document.createElement('div');
+        overlay.className = 'reward-celebration';
+        overlay.innerHTML = `
+          <div class="reward-celebration-content">
+            <div style="font-size:3rem;margin-bottom:0.5rem">🎉</div>
+            <h2 style="margin:0 0 0.5rem;color:var(--success)">Récompense appliquée !</h2>
+            <p style="font-size:1.1rem;font-weight:600;margin:0 0 0.75rem">${esc(rewardDesc)}</p>
+            <div style="display:flex;justify-content:center;gap:2rem;margin-bottom:1rem">
+              <div style="text-align:center">
+                <div style="font-size:0.7rem;color:var(--text-light);text-transform:uppercase">Avant</div>
+                <div style="font-size:1.4rem;font-weight:700;color:var(--text-light);text-decoration:line-through">${c.points_balance} pts</div>
+              </div>
+              <div style="font-size:1.5rem;color:var(--text-light)">→</div>
+              <div style="text-align:center">
+                <div style="font-size:0.7rem;color:var(--text-light);text-transform:uppercase">Après</div>
+                <div style="font-size:1.4rem;font-weight:700;color:var(--primary)">${result.client.points_balance} pts</div>
+              </div>
+            </div>
+            <button class="btn btn-primary" onclick="this.closest('.reward-celebration').remove(); showDetails(${mcId});">OK</button>
+          </div>
+        `;
+        body.appendChild(overlay);
+
+        // Refresh client list behind
+        loadClients();
+      } catch (err) {
+        alert('Erreur : ' + err.message);
+      }
     }
 
     // ── Block / Unblock ──
