@@ -1,5 +1,5 @@
 const express = require('express');
-const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries, mergeQueries } = require('../database');
+const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
@@ -98,7 +98,7 @@ router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
     const clients = db.prepare(`
       SELECT mc.id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.first_visit, mc.last_visit, mc.is_blocked, mc.created_at,
-             mc.end_user_id,
+             mc.end_user_id, mc.notes_private,
              eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
              last_tx.staff_name as last_credited_by,
              last_tx.created_at as last_tx_at,
@@ -197,7 +197,6 @@ router.post('/adjust', requireRole('owner', 'manager'), (req, res) => {
 
 // ═══════════════════════════════════════════════════════
 // PUT /api/clients/:id/edit — Edit client info (owner/manager)
-// Updates end_user name, email, phone
 // ═══════════════════════════════════════════════════════
 
 router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
@@ -212,76 +211,110 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
-    // Normalize new values
     const newEmailLower = email ? normalizeEmail(email) : endUser.email_lower;
     const newPhoneE164 = phone ? normalizePhone(phone) : endUser.phone_e164;
 
-    if (!newEmailLower && !newPhoneE164) {
-      return res.status(400).json({ error: 'Au moins un email ou téléphone est requis' });
-    }
+    if (!newEmailLower && !newPhoneE164) return res.status(400).json({ error: 'Au moins un email ou téléphone requis' });
 
-    // Check uniqueness if email changed
     if (newEmailLower && newEmailLower !== endUser.email_lower) {
       const existing = endUserQueries.findByEmailLower.get(newEmailLower);
-      if (existing && existing.id !== endUser.id) {
-        return res.status(400).json({ error: 'Cet email est déjà utilisé par un autre client' });
-      }
+      if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Cet email est déjà utilisé par un autre client' });
     }
-
-    // Check uniqueness if phone changed
     if (newPhoneE164 && newPhoneE164 !== endUser.phone_e164) {
       const existing = endUserQueries.findByPhoneE164.get(newPhoneE164);
-      if (existing && existing.id !== endUser.id) {
-        return res.status(400).json({ error: 'Ce téléphone est déjà utilisé par un autre client' });
-      }
+      if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Ce téléphone est déjà utilisé par un autre client' });
     }
 
-    // Update
     const newName = name !== undefined ? (name.trim() || null) : endUser.name;
     const newEmail = email !== undefined ? (email.trim() || null) : endUser.email;
     const newPhone = phone !== undefined ? (phone.trim() || null) : endUser.phone;
 
-    endUserQueries.updateIdentifiers.run(
-      newEmail,
-      newPhone,
-      newEmailLower || null,
-      newPhoneE164 || null,
-      endUser.email_validated, // preserve existing validation
-      endUser.id
-    );
+    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, endUser.email_validated, endUser.id);
+    if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
 
-    // Update name separately (updateIdentifiers doesn't handle name)
-    if (name !== undefined) {
-      db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?")
-        .run(newName, endUser.id);
-    }
-
-    logAudit({
-      ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId,
-      action: 'client_edited', targetType: 'end_user', targetId: endUser.id,
-      details: { name: newName, email: newEmail, phone: newPhone },
-    });
+    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id, details: { name: newName, email: newEmail, phone: newPhone } });
 
     const updated = endUserQueries.findById.get(endUser.id);
-    res.json({
-      message: 'Client mis à jour',
-      client: { name: updated.name, email: updated.email, phone: updated.phone },
-    });
+    res.json({ message: 'Client mis à jour', client: { name: updated.name, email: updated.email, phone: updated.phone } });
   } catch (error) {
-    console.error('Erreur edit client:', error);
+    console.error('Erreur edit:', error);
     res.status(500).json({ error: error.message || 'Erreur lors de la mise à jour' });
   }
 });
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/clients/:id/merge — Merge two merchant_clients (owner only)
-//
-// Merges sourceId INTO targetId (:id):
-// - Transfer points, total_spent, visit_count
-// - Reassign all transactions
-// - Record merge trace
-// - Delete source merchant_client
+// PUT /api/clients/:id/notes — Update private notes (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.put('/:id/notes', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const mc = merchantClientQueries.findByIdAndMerchant.get(parseInt(req.params.id), req.staff.merchant_id);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const notes = (req.body.notes || '').trim().substring(0, 500);
+    db.prepare("UPDATE merchant_clients SET notes_private = ?, updated_at = datetime('now') WHERE id = ?")
+      .run(notes || null, mc.id);
+
+    res.json({ message: 'Notes mises à jour' });
+  } catch (error) {
+    console.error('Erreur notes:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/clients/:id/resend-email — Resend points summary email
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/resend-email', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const mcId = parseInt(req.params.id);
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const endUser = endUserQueries.findById.get(mc.end_user_id);
+    if (!endUser || !endUser.email) return res.status(400).json({ error: 'Ce client n\'a pas d\'email' });
+
+    const merchant = merchantQueries.findById.get(merchantId);
+
+    // Find last credit transaction for context
+    const lastCredit = db.prepare(`
+      SELECT points_delta, amount FROM transactions
+      WHERE merchant_client_id = ? AND transaction_type = 'credit'
+      ORDER BY created_at DESC LIMIT 1
+    `).get(mcId);
+
+    const pointsEarned = lastCredit ? lastCredit.points_delta : 0;
+
+    if (!endUser.email_validated) {
+      // Resend validation email
+      sendValidationEmail(endUser.email, endUser.validation_token, merchant.business_name);
+      return res.json({ message: 'Email de validation renvoyé', type: 'validation' });
+    }
+
+    // Resend points summary
+    sendPointsCreditedEmail(
+      endUser.email, pointsEarned, mc.points_balance,
+      merchant.business_name,
+      { points_for_reward: merchant.points_for_reward, reward_description: merchant.reward_description }
+    );
+
+    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'email_resent', targetType: 'merchant_client', targetId: mcId });
+
+    res.json({ message: 'Email envoyé', type: 'points' });
+  } catch (error) {
+    console.error('Erreur resend:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'envoi' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/clients/:id/merge — Merge clients (owner only)
 // ═══════════════════════════════════════════════════════
 
 router.post('/:id/merge', requireRole('owner'), (req, res) => {
@@ -290,89 +323,39 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
     const targetMcId = parseInt(req.params.id);
     const { sourceMerchantClientId, reason } = req.body;
 
-    if (!sourceMerchantClientId) {
-      return res.status(400).json({ error: 'ID du client source requis' });
-    }
-
+    if (!sourceMerchantClientId) return res.status(400).json({ error: 'ID du client source requis' });
     const sourceMcId = parseInt(sourceMerchantClientId);
-    if (sourceMcId === targetMcId) {
-      return res.status(400).json({ error: 'Impossible de fusionner un client avec lui-même' });
-    }
+    if (sourceMcId === targetMcId) return res.status(400).json({ error: 'Impossible de fusionner un client avec lui-même' });
 
     const run = db.transaction(() => {
-      // Validate both belong to this merchant
       const target = merchantClientQueries.findByIdAndMerchant.get(targetMcId, merchantId);
       if (!target) throw new Error('Client cible non trouvé');
-
       const source = merchantClientQueries.findByIdAndMerchant.get(sourceMcId, merchantId);
       if (!source) throw new Error('Client source non trouvé');
 
       const targetEu = endUserQueries.findById.get(target.end_user_id);
       const sourceEu = endUserQueries.findById.get(source.end_user_id);
 
-      // 1. Transfer stats to target
-      merchantClientQueries.mergeStats.run(
-        source.points_balance,
-        source.total_spent,
-        source.visit_count,
-        source.first_visit,
-        source.last_visit,
-        targetMcId
-      );
-
-      // 2. Reassign all source transactions → target
+      merchantClientQueries.mergeStats.run(source.points_balance, source.total_spent, source.visit_count, source.first_visit, source.last_visit, targetMcId);
       transactionQueries.reassignClient.run(targetMcId, sourceMcId);
+      transactionQueries.create.run(merchantId, targetMcId, req.staff.id, null, 0, 'merge', null, 'manual',
+        `Fusion avec ${sourceEu?.name || sourceEu?.email || sourceEu?.phone || '#'+sourceMcId} — ${reason || 'Fusion manuelle'}`);
 
-      // 3. Insert merge-trace transaction (0 points, for audit)
-      transactionQueries.create.run(
-        merchantId, targetMcId, req.staff.id, null, 0, 'merge', null, 'manual',
-        `Fusion avec ${sourceEu?.name || sourceEu?.email || sourceEu?.phone || '#' + sourceMcId} — ${reason || 'Fusion manuelle'}`
-      );
-
-      // 4. Create aliases for source identifiers (so lookups still work)
       if (sourceEu) {
-        if (sourceEu.email_lower) {
-          aliasQueries.create.run(target.end_user_id, 'email', sourceEu.email_lower);
-        }
-        if (sourceEu.phone_e164) {
-          aliasQueries.create.run(target.end_user_id, 'phone', sourceEu.phone_e164);
-        }
+        if (sourceEu.email_lower) aliasQueries.create.run(target.end_user_id, 'email', sourceEu.email_lower);
+        if (sourceEu.phone_e164) aliasQueries.create.run(target.end_user_id, 'phone', sourceEu.phone_e164);
       }
 
-      // 5. Delete source merchant_client
       merchantClientQueries.delete.run(sourceMcId);
 
-      // 6. Record merge in audit table
-      logAudit({
-        ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId,
-        action: 'clients_merged', targetType: 'merchant_client', targetId: targetMcId,
-        details: {
-          sourceMcId, targetMcId, reason,
-          sourceUser: sourceEu ? { name: sourceEu.name, email: sourceEu.email, phone: sourceEu.phone } : null,
-          pointsTransferred: source.points_balance, spentTransferred: source.total_spent,
-        },
-      });
+      logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'clients_merged', targetType: 'merchant_client', targetId: targetMcId,
+        details: { sourceMcId, targetMcId, reason, pointsTransferred: source.points_balance, spentTransferred: source.total_spent } });
 
-      // Return updated target
-      const updated = merchantClientQueries.findById.get(targetMcId);
-      return {
-        merchantClient: updated,
-        merged: {
-          sourceName: sourceEu?.name || sourceEu?.email || sourceEu?.phone,
-          pointsTransferred: source.points_balance,
-          visitsTransferred: source.visit_count,
-          spentTransferred: source.total_spent,
-        },
-      };
+      return merchantClientQueries.findById.get(targetMcId);
     });
 
-    const result = run();
-
-    res.json({
-      message: 'Clients fusionnés avec succès',
-      client: result.merchantClient,
-      merged: result.merged,
-    });
+    const updated = run();
+    res.json({ message: 'Clients fusionnés avec succès', client: updated });
   } catch (error) {
     console.error('Erreur merge:', error);
     res.status(400).json({ error: error.message || 'Erreur lors de la fusion' });
@@ -381,7 +364,69 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/clients/lookup
+// DELETE /api/clients/:id — Delete client (owner only)
+// Removes merchant_client + transactions. If end_user has
+// no other merchant relationships, soft-deletes them too.
+// ═══════════════════════════════════════════════════════
+
+router.delete('/:id', requireRole('owner'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const mcId = parseInt(req.params.id);
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const endUser = endUserQueries.findById.get(mc.end_user_id);
+
+    const run = db.transaction(() => {
+      // Delete transactions for this merchant_client
+      db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(mcId);
+
+      // Delete merchant_client
+      merchantClientQueries.delete.run(mcId);
+
+      // Check if end_user has other merchant relationships
+      const otherRelations = db.prepare(
+        'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ?'
+      ).get(mc.end_user_id);
+
+      let userDeleted = false;
+      if (otherRelations.count === 0) {
+        // No other merchants → soft-delete end_user (GDPR)
+        endUserQueries.softDelete.run(mc.end_user_id);
+        userDeleted = true;
+      }
+
+      logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId,
+        action: 'client_deleted', targetType: 'merchant_client', targetId: mcId,
+        details: {
+          endUserId: mc.end_user_id,
+          email: endUser?.email, name: endUser?.name,
+          userDeleted,
+          pointsLost: mc.points_balance, totalSpent: mc.total_spent,
+        } });
+
+      return { userDeleted };
+    });
+
+    const result = run();
+
+    res.json({
+      message: result.userDeleted
+        ? 'Client et données personnelles supprimés (RGPD)'
+        : 'Client supprimé de votre commerce',
+      userDeleted: result.userDeleted,
+    });
+  } catch (error) {
+    console.error('Erreur delete:', error);
+    res.status(500).json({ error: error.message || 'Erreur lors de la suppression' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// STANDARD ENDPOINTS (lookup, list, search, export, detail, block)
 // ═══════════════════════════════════════════════════════
 
 router.get('/lookup', (req, res) => {
@@ -400,19 +445,19 @@ router.get('/lookup', (req, res) => {
     if (!mc) return res.json({ found: true, isNew: true, client: { name: endUser.name, email: endUser.email, phone: endUser.phone } });
     const merchant = merchantQueries.findById.get(merchantId);
     res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: merchant.reward_description, can_redeem: mc.points_balance >= merchant.points_for_reward } });
-  } catch (error) { console.error('Erreur lookup:', error); res.status(500).json({ error: 'Erreur lors de la recherche' }); }
+  } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
 
 router.get('/', requireRole('owner', 'manager'), (req, res) => {
-  try { const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id); res.json({ count: clients.length, clients }); }
+  try { res.json({ count: 0, clients: merchantClientQueries.getByMerchant.all(req.staff.merchant_id) }); }
   catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 router.get('/search', requireRole('owner', 'manager'), (req, res) => {
   try { const { q } = req.query; if (!q || q.length < 2) return res.status(400).json({ error: 'Min 2 caractères' });
     const term = `%${q.toLowerCase()}%`; const clients = merchantClientQueries.searchByMerchant.all(req.staff.merchant_id, term, term, term);
-    res.json({ count: clients.length, clients });
-  } catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
+    res.json({ count: clients.length, clients }); }
+  catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 router.get('/export/csv', requireRole('owner'), (req, res) => {
@@ -433,18 +478,23 @@ router.get('/:id', requireRole('owner', 'manager'), (req, res) => {
     const eu = endUserQueries.findById.get(mc.end_user_id);
     const txs = transactionQueries.getByMerchantClient.all(mc.id);
     const m = merchantQueries.findById.get(req.staff.merchant_id);
-    res.json({ client: { ...mc, email: eu?.email, phone: eu?.phone, name: eu?.name, email_validated: eu?.email_validated, reward_threshold: m.points_for_reward, reward_description: m.reward_description, can_redeem: mc.points_balance >= m.points_for_reward }, transactions: txs });
+    res.json({
+      client: { ...mc, email: eu?.email, phone: eu?.phone, name: eu?.name, email_validated: eu?.email_validated,
+        reward_threshold: m.points_for_reward, reward_description: m.reward_description,
+        can_redeem: mc.points_balance >= m.points_for_reward },
+      transactions: txs,
+    });
   } catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
 router.post('/:id/block', requireRole('owner', 'manager'), (req, res) => {
-  try { const mcId = parseInt(req.params.id); const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, req.staff.merchant_id); if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+  try { const mcId = parseInt(req.params.id); const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, req.staff.merchant_id); if (!mc) return res.status(404).json({ error: 'Non trouvé' });
     merchantClientQueries.block.run(mcId); logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId: req.staff.merchant_id, action: 'client_blocked', targetType: 'merchant_client', targetId: mcId });
     res.json({ message: 'Client bloqué' }); } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
 
 router.post('/:id/unblock', requireRole('owner', 'manager'), (req, res) => {
-  try { const mcId = parseInt(req.params.id); const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, req.staff.merchant_id); if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+  try { const mcId = parseInt(req.params.id); const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, req.staff.merchant_id); if (!mc) return res.status(404).json({ error: 'Non trouvé' });
     merchantClientQueries.unblock.run(mcId); logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId: req.staff.merchant_id, action: 'client_unblocked', targetType: 'merchant_client', targetId: mcId });
     res.json({ message: 'Client débloqué' }); } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
