@@ -237,7 +237,7 @@ function setupNavbar() {
 
   // Update brand
   const brand = document.querySelector('.navbar-brand span');
-  if (brand) brand.textContent = ' | ' + merchant.business_name;
+  if (brand) brand.textContent = merchant.business_name;
 
   // Build navigation based on role
   const menu = document.querySelector('.navbar-menu');
