@@ -690,7 +690,7 @@
 
     if (Auth.isAuthenticated()) {
       const staff = Auth.getStaff();
-      window.location.href = (staff.role === 'cashier') ? '/credit' : '/dashboard';
+      window.location.href = '/credit';
     }
 
     // ═══════════════════════════════════════════════════════
@@ -920,7 +920,7 @@
         btn.style.background = '#10B981';
 
         setTimeout(() => {
-          window.location.href = (data.staff.role === 'cashier') ? '/credit' : '/dashboard';
+          window.location.href = '/credit';
         }, 400);
 
       } catch (err) {
