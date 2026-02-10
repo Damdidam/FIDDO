@@ -85,6 +85,17 @@
       margin-top: 0.75rem; cursor: pointer; transition: transform 0.2s; font-size: 0.9rem;
     }
     .reward-banner:hover { transform: scale(1.02); }
+    .reward-banner-big {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white; padding: 1rem 1.25rem; border-radius: 10px; text-align: center;
+      margin-top: 1rem; cursor: pointer; transition: transform 0.2s;
+      animation: reward-pulse 2s ease-in-out infinite;
+    }
+    .reward-banner-big:hover { transform: scale(1.03); }
+    @keyframes reward-pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+      50% { box-shadow: 0 0 16px 6px rgba(16,185,129,0.2); }
+    }
 
     /* ── Success result (after credit) ── */
     .credit-success {
@@ -666,11 +677,26 @@
     // REDEEM REWARD
     // ═══════════════════════════════════════════════════════
     async function redeemReward(merchantClientId) {
-      if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
+      const rewardDesc = merchant.reward_description;
+      if (!confirm(`🎁 Appliquer la récompense ?\n\n→ ${rewardDesc}\n\nLes points seront déduits automatiquement.`)) return;
       try {
         const result = await API.clients.reward({ merchantClientId });
-        UI.showAlert('credit-alert', `🎁 Récompense appliquée : <strong>${result.rewardLabel || 'Récompense'}</strong><br>Nouveau solde : ${result.client.points_balance} pts`, 'success');
-        triggerLookup();
+        const newBal = result.client.points_balance;
+
+        // Update the preview card to show celebration
+        const previewCard = document.getElementById('preview-card');
+        previewCard.innerHTML = `
+          <div style="background:#ECFDF5;border:2px solid var(--success);border-radius:10px;padding:1.5rem;text-align:center">
+            <div style="font-size:2.5rem;margin-bottom:0.25rem">🎉🎁</div>
+            <h3 style="color:var(--success);margin:0 0 0.5rem">Récompense appliquée !</h3>
+            <p style="font-size:1rem;font-weight:600;margin:0 0 0.75rem">${rewardDesc}</p>
+            <p style="font-size:0.85rem;color:var(--text-light);margin:0">Nouveau solde : <strong style="color:var(--primary)">${newBal} pts</strong></p>
+            <button class="btn btn-primary btn-block" style="margin-top:1rem" onclick="resetForm()">➕ Nouveau crédit</button>
+          </div>
+        `;
+
+        UI.clearAlert('credit-alert');
+        document.getElementById('lookup-container').style.display = 'none';
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
       }
@@ -715,6 +741,10 @@
         // Hide loading alert
         UI.clearAlert('credit-alert');
 
+        // Check if reward is now available
+        const canRedeem = result.client.points_balance >= merchant.points_for_reward;
+        const afterRedeemBalance = result.client.points_balance - merchant.points_for_reward;
+
         // Show success in place of the blue preview card
         const clientDisplay = result.client.name || result.client.email || result.client.phone || 'Client';
         const previewCard = document.getElementById('preview-card');
@@ -728,6 +758,13 @@
               ${result.client.phone ? '📱 ' + result.client.phone + '<br>' : ''}
               ${result.isNewClient ? '<span class="badge badge-info" style="margin-top:0.4rem;">Nouveau client</span>' : ''}
             </div>
+            ${canRedeem ? `
+            <div class="reward-banner-big" onclick="redeemReward(${result.client.id})" style="cursor:pointer">
+              <div style="font-size:1.5rem;margin-bottom:0.25rem">🎁🎉</div>
+              <strong>Récompense disponible !</strong><br>
+              <span style="font-size:0.85rem">${merchant.reward_description}</span><br>
+              <span style="font-size:0.75rem;opacity:0.85;margin-top:4px;display:inline-block">${result.client.points_balance} pts → ${afterRedeemBalance} pts · Cliquer pour appliquer</span>
+            </div>` : ''}
             <button class="btn btn-primary btn-block" style="margin-top:1rem;" onclick="resetForm()">
               ➕ Nouveau crédit
             </button>
