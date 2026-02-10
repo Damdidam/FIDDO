@@ -5,306 +5,234 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Préférences — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <style>
+    .pref-layout {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 0;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      overflow: hidden;
+      min-height: 480px;
+    }
+    .pref-nav {
+      background: #f8f9fa;
+      border-right: 1px solid var(--border);
+      padding: 0.75rem 0;
+    }
+    .pref-nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 16px; font-size: 0.82rem; color: var(--text-light);
+      cursor: pointer; border: none; background: none; width: 100%; text-align: left;
+      transition: all 0.15s; border-left: 3px solid transparent;
+    }
+    .pref-nav-item:hover { background: #f0f0f0; color: var(--text); }
+    .pref-nav-item.active { color: var(--primary); background: white; border-left-color: var(--primary); font-weight: 600; }
+    .pref-nav-item .ni { font-size: 0.9rem; width: 20px; text-align: center; }
+
+    .pref-panel { padding: 1.25rem 1.5rem; display: none; }
+    .pref-panel.active { display: block; }
+    .pref-panel-title { font-size: 1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+
+    /* Theme dots */
+    .theme-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .theme-dot {
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+      border: 3px solid transparent; transition: all 0.2s; position: relative;
+    }
+    .theme-dot:hover { transform: scale(1.15); }
+    .theme-dot.active { border-color: var(--text); box-shadow: 0 0 0 2px white, 0 0 0 4px var(--text); }
+    .theme-dot .dl { position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%); font-size: 0.6rem; color: var(--text-light); white-space: nowrap; opacity: 0; transition: opacity 0.15s; }
+    .theme-dot:hover .dl, .theme-dot.active .dl { opacity: 1; }
+
+    /* Toggle rows */
+    .opt-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+    .opt-row:last-child { border-bottom: none; }
+    .opt-label { font-size: 0.82rem; }
+    .opt-desc { font-size: 0.7rem; color: var(--text-light); }
+    .toggle-switch { position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #ccc; border-radius: 20px; transition: 0.2s; }
+    .toggle-slider:before { content: ''; position: absolute; height: 16px; width: 16px; left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: 0.2s; }
+    .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
+
+    /* Compact form */
+    .pref-panel .form-group { margin-bottom: 0.75rem; }
+    .pref-panel .form-label { font-size: 0.78rem; margin-bottom: 0.2rem; }
+    .pref-panel .form-control { padding: 7px 10px; font-size: 0.85rem; }
+    .pref-panel .form-help { font-size: 0.7rem; }
+    .fr2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+    .pref-sep { height: 1px; background: var(--border); margin: 1rem 0; }
+    .btn-row { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 1rem; }
+    .btn-c { padding: 7px 16px; font-size: 0.8rem; }
+
+    /* Backup zone */
+    .bk-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 0.82rem; color: var(--text-light); }
+    .bk-zone:hover { border-color: var(--primary); background: #fafafa; }
+    .bk-zone.dragover { border-color: var(--primary); background: #f0fdfa; }
+    .bk-preview { background: #f8f9fa; border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.8rem; }
+    .bk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-top: 0.5rem; }
+    .bk-val { font-size: 1rem; font-weight: 700; color: var(--primary); }
+    .bk-lbl { font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; }
+
+    @media (max-width: 768px) {
+      .pref-layout { grid-template-columns: 1fr; min-height: auto; }
+      .pref-nav { display: flex; overflow-x: auto; border-right: none; border-bottom: 1px solid var(--border); padding: 0; scrollbar-width: none; }
+      .pref-nav::-webkit-scrollbar { display: none; }
+      .pref-nav-item { border-left: none; border-bottom: 2px solid transparent; padding: 8px 12px; white-space: nowrap; font-size: 0.75rem; }
+      .pref-nav-item.active { border-left-color: transparent; border-bottom-color: var(--primary); }
+      .pref-panel { padding: 1rem; }
+      .fr2 { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
   <nav class="navbar">
-    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <a href="/credit" class="navbar-brand">FIDDO<span></span></a>
     <div class="navbar-menu"></div>
   </nav>
 
   <div class="container">
-    <h1 style="margin: 1.5rem 0;">Préférences</h1>
+    <h1 style="margin: 1.5rem 0; font-size: 1.3rem;">⚙️ Préférences</h1>
     <div id="global-alert"></div>
 
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 1. THEME PICKER                                -->
-    <!-- ═══════════════════════════════════════════════ -->
+    <div class="pref-layout">
+      <nav class="pref-nav">
+        <button class="pref-nav-item active" onclick="showTab('appearance',this)"><span class="ni">🎨</span> Apparence</button>
+        <button class="pref-nav-item" onclick="showTab('notifications',this)"><span class="ni">🔔</span> Notifications</button>
+        <button class="pref-nav-item" onclick="showTab('merchant',this)"><span class="ni">🏪</span> Commerce</button>
+        <button class="pref-nav-item" onclick="showTab('security',this)"><span class="ni">🔐</span> Sécurité</button>
+        <button class="pref-nav-item" onclick="showTab('backup',this)"><span class="ni">💾</span> Backup</button>
+      </nav>
 
-    <div class="pref-section">
-      <div class="pref-section-title">🎨 Thème de couleur</div>
-      <p class="text-muted text-sm mb-2">Choisissez le thème qui correspond à votre établissement.</p>
-
-      <div class="theme-grid" id="theme-grid">
-        <div class="theme-card" data-theme="teal" onclick="selectTheme('teal')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #0891B2, #0E7490);"></div>
-          <div class="theme-name">Teal</div>
+      <!-- ═══ Apparence ═══ -->
+      <div class="pref-panel active" id="tab-appearance">
+        <div class="pref-panel-title">Apparence</div>
+        <label class="form-label">Thème</label>
+        <div class="theme-row" id="theme-row">
+          <div class="theme-dot" data-theme="teal" onclick="selectTheme('teal')" style="background:linear-gradient(135deg,#0891B2,#0E7490)"><span class="dl">Teal</span></div>
+          <div class="theme-dot" data-theme="navy" onclick="selectTheme('navy')" style="background:linear-gradient(135deg,#1E40AF,#1E3A8A)"><span class="dl">Navy</span></div>
+          <div class="theme-dot" data-theme="violet" onclick="selectTheme('violet')" style="background:linear-gradient(135deg,#7C3AED,#6D28D9)"><span class="dl">Violet</span></div>
+          <div class="theme-dot" data-theme="forest" onclick="selectTheme('forest')" style="background:linear-gradient(135deg,#059669,#047857)"><span class="dl">Forêt</span></div>
+          <div class="theme-dot" data-theme="brick" onclick="selectTheme('brick')" style="background:linear-gradient(135deg,#DC2626,#B91C1C)"><span class="dl">Brique</span></div>
+          <div class="theme-dot" data-theme="amber" onclick="selectTheme('amber')" style="background:linear-gradient(135deg,#D97706,#B45309)"><span class="dl">Ambre</span></div>
+          <div class="theme-dot" data-theme="slate" onclick="selectTheme('slate')" style="background:linear-gradient(135deg,#475569,#334155)"><span class="dl">Ardoise</span></div>
         </div>
-        <div class="theme-card" data-theme="navy" onclick="selectTheme('navy')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #1E40AF, #1E3A8A);"></div>
-          <div class="theme-name">Navy</div>
-        </div>
-        <div class="theme-card" data-theme="violet" onclick="selectTheme('violet')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #7C3AED, #6D28D9);"></div>
-          <div class="theme-name">Violet</div>
-        </div>
-        <div class="theme-card" data-theme="forest" onclick="selectTheme('forest')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #059669, #047857);"></div>
-          <div class="theme-name">Forêt</div>
-        </div>
-        <div class="theme-card" data-theme="brick" onclick="selectTheme('brick')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #DC2626, #B91C1C);"></div>
-          <div class="theme-name">Brique</div>
-        </div>
-        <div class="theme-card" data-theme="amber" onclick="selectTheme('amber')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #D97706, #B45309);"></div>
-          <div class="theme-name">Ambre</div>
-        </div>
-        <div class="theme-card" data-theme="slate" onclick="selectTheme('slate')">
-          <div class="theme-swatch" style="background: linear-gradient(135deg, #475569, #334155);"></div>
-          <div class="theme-name">Ardoise</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 2. NOTIFICATIONS                               -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div class="pref-section">
-      <div class="pref-section-title">🔔 Notifications</div>
-      <p class="text-muted text-sm mb-2">Choisissez quelles notifications vous souhaitez recevoir par email.</p>
-
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Nouveau client</div>
-          <div class="toggle-desc">Recevoir un email quand un nouveau client est créé</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="notify-new-client">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Récompense disponible</div>
-          <div class="toggle-desc">Recevoir un email quand un client atteint le seuil de récompense</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="notify-reward-ready">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-
-      <div class="toggle-row">
-        <div>
-          <div class="toggle-label">Rapport hebdomadaire</div>
-          <div class="toggle-desc">Recevoir un résumé chaque lundi (clients, CA, transactions)</div>
-        </div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="notify-weekly-report">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 3. REWARD MESSAGE                              -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div class="pref-section">
-      <div class="pref-section-title">🎁 Message de récompense</div>
-      <p class="text-muted text-sm mb-2">Ce message sera affiché au client quand il atteint le seuil de points.</p>
-
-      <div class="form-group" style="margin-bottom: 0;">
-        <textarea id="reward-message" class="form-control" rows="2" placeholder="Félicitations ! Vous avez gagné votre récompense ! 🎁" maxlength="200"></textarea>
-        <small class="form-help"><span id="reward-msg-count">0</span>/200 caractères</small>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 4. LANGUAGE & TIMEZONE                         -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div class="pref-section">
-      <div class="pref-section-title">🌐 Langue et fuseau horaire</div>
-
-      <div class="grid grid-2">
-        <div class="form-group">
-          <label class="form-label">Langue de l'interface</label>
-          <select id="pref-language" class="form-control">
-            <option value="fr">🇫🇷 Français</option>
-            <option value="nl">🇳🇱 Nederlands</option>
-            <option value="en">🇬🇧 English</option>
-          </select>
-          <small class="form-help">Les traductions NL et EN arrivent bientôt</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Fuseau horaire</label>
-          <select id="pref-timezone" class="form-control">
-            <option value="Europe/Brussels">Europe/Brussels (GMT+1/+2)</option>
-            <option value="Europe/Paris">Europe/Paris (GMT+1/+2)</option>
-            <option value="Europe/Amsterdam">Europe/Amsterdam (GMT+1/+2)</option>
-            <option value="Europe/Luxembourg">Europe/Luxembourg (GMT+1/+2)</option>
-            <option value="Europe/London">Europe/London (GMT+0/+1)</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 5. SAVE BUTTON                                 -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div style="text-align: right; margin-bottom: 2rem;">
-      <button class="btn btn-primary" onclick="savePreferences()" id="save-btn">
-        💾 Enregistrer les préférences
-      </button>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 6. INFORMATIONS DU COMMERCE (owner only)       -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div class="pref-section">
-      <div class="pref-section-title">🏪 Informations du commerce</div>
-      <p class="text-muted text-sm mb-2">Modifiez les informations de votre établissement. Les changements seront vérifiés par notre équipe.</p>
-
-      <div id="merchant-info-alert"></div>
-
-      <div class="grid grid-2">
-        <div class="form-group">
-          <label class="form-label">Nom du commerce *</label>
-          <input type="text" id="mi-business-name" class="form-control" placeholder="Mon Restaurant">
-        </div>
-        <div class="form-group">
-          <label class="form-label">N° TVA *</label>
-          <input type="text" id="mi-vat" class="form-control" placeholder="BE0123456789">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Adresse *</label>
-        <input type="text" id="mi-address" class="form-control" placeholder="1 Rue de la Paix, 1000 Bruxelles">
-      </div>
-
-      <div class="grid grid-2">
-        <div class="form-group">
-          <label class="form-label">Email du commerce *</label>
-          <input type="email" id="mi-email" class="form-control" placeholder="contact@monresto.be">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Téléphone commerce *</label>
-          <input type="tel" id="mi-phone" class="form-control" placeholder="+32 2 123 45 67">
-        </div>
-      </div>
-
-      <div class="grid grid-2">
-        <div class="form-group">
-          <label class="form-label">Nom du responsable</label>
-          <input type="text" id="mi-owner-name" class="form-control" placeholder="Jean Dupont">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Téléphone personnel *</label>
-          <input type="tel" id="mi-owner-phone" class="form-control" placeholder="+32 497 12 34 56">
-        </div>
-      </div>
-
-      <div style="text-align: right;">
-        <button class="btn btn-primary" onclick="saveMerchantInfo()" id="mi-save-btn">
-          Mettre à jour les informations
-        </button>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 7. MOT DE PASSE                                -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div class="pref-section">
-      <div class="pref-section-title">🔐 Mot de passe</div>
-      <p class="text-muted text-sm mb-2">Changez votre mot de passe de connexion.</p>
-
-      <div id="password-alert"></div>
-
-      <div class="grid grid-2">
-        <div class="form-group">
-          <label class="form-label">Mot de passe actuel</label>
-          <input type="password" id="pw-current" class="form-control" placeholder="••••••••">
-        </div>
-        <div></div>
-      </div>
-      <div class="grid grid-2">
-        <div class="form-group">
-          <label class="form-label">Nouveau mot de passe</label>
-          <input type="password" id="pw-new" class="form-control" placeholder="Minimum 6 caractères">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirmer le nouveau mot de passe</label>
-          <input type="password" id="pw-confirm" class="form-control" placeholder="Retapez le mot de passe">
-        </div>
-      </div>
-
-      <div style="text-align: right;">
-        <button class="btn btn-primary" onclick="changePassword()" id="pw-save-btn">
-          Changer le mot de passe
-        </button>
-      </div>
-    </div>
-
-    <!-- ═══════════════════════════════════════════════ -->
-    <!-- 8. BACKUP & RESTORE                            -->
-    <!-- ═══════════════════════════════════════════════ -->
-
-    <div class="pref-section">
-      <div class="pref-section-title">💾 Sauvegarde & Restauration</div>
-
-      <div class="grid grid-2">
-        <!-- Export -->
-        <div>
-          <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">📤 Exporter mes données</h3>
-          <p class="text-muted text-sm mb-2">
-            Téléchargez un fichier JSON contenant toutes vos données : clients, transactions, paramètres.
-            Conservez-le en lieu sûr.
-          </p>
-          <div id="last-backup-info" class="text-sm text-muted mb-1"></div>
-          <button class="btn btn-primary btn-block" onclick="exportBackup()" id="export-btn">
-            📥 Télécharger le backup
-          </button>
-        </div>
-
-        <!-- Import -->
-        <div>
-          <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">📥 Restaurer depuis un backup</h3>
-          <p class="text-muted text-sm mb-2">
-            Importez un fichier de backup pour restaurer vos données. 
-            <strong class="text-danger">Cette action remplace toutes vos données actuelles.</strong>
-          </p>
-
-          <div class="backup-zone" id="import-zone"
-               ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-            <div class="backup-zone-icon">📁</div>
-            <p>Glissez un fichier .json ici<br>ou <strong style="color: var(--primary);">cliquez pour parcourir</strong></p>
-            <input type="file" id="import-file" accept=".json" style="display: none;" onchange="handleFileSelect(event)">
+        <div class="pref-sep"></div>
+        <div class="fr2">
+          <div class="form-group">
+            <label class="form-label">Langue</label>
+            <select id="pref-language" class="form-control">
+              <option value="fr">🇫🇷 Français</option>
+              <option value="nl">🇳🇱 Nederlands</option>
+              <option value="en">🇬🇧 English</option>
+            </select>
           </div>
-
-          <!-- Preview (hidden by default) -->
-          <div id="import-preview" style="display: none;"></div>
+          <div class="form-group">
+            <label class="form-label">Fuseau horaire</label>
+            <select id="pref-timezone" class="form-control">
+              <option value="Europe/Brussels">Europe/Brussels</option>
+              <option value="Europe/Paris">Europe/Paris</option>
+              <option value="Europe/Amsterdam">Europe/Amsterdam</option>
+              <option value="Europe/Luxembourg">Europe/Luxembourg</option>
+              <option value="Europe/London">Europe/London</option>
+            </select>
+          </div>
         </div>
+        <div class="pref-sep"></div>
+        <div class="form-group">
+          <label class="form-label">Message de récompense</label>
+          <textarea id="reward-message" class="form-control" rows="2" placeholder="Félicitations ! 🎁" maxlength="200" oninput="document.getElementById('rmcount').textContent=this.value.length"></textarea>
+          <small class="form-help"><span id="rmcount">0</span>/200</small>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary btn-c" onclick="savePreferences()">Enregistrer</button></div>
+      </div>
+
+      <!-- ═══ Notifications ═══ -->
+      <div class="pref-panel" id="tab-notifications">
+        <div class="pref-panel-title">Notifications email</div>
+        <div class="opt-row">
+          <div><div class="opt-label">Nouveau client</div><div class="opt-desc">Email quand un nouveau client est créé</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="notify-new-client"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="opt-row">
+          <div><div class="opt-label">Récompense disponible</div><div class="opt-desc">Email quand un client atteint le seuil</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="notify-reward-ready"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="opt-row">
+          <div><div class="opt-label">Rapport hebdomadaire</div><div class="opt-desc">Résumé chaque lundi</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="notify-weekly-report"><span class="toggle-slider"></span></label>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary btn-c" onclick="savePreferences()">Enregistrer</button></div>
+      </div>
+
+      <!-- ═══ Commerce ═══ -->
+      <div class="pref-panel" id="tab-merchant">
+        <div class="pref-panel-title">Informations du commerce</div>
+        <div id="merchant-info-alert"></div>
+        <div class="fr2">
+          <div class="form-group"><label class="form-label">Nom du commerce</label><input type="text" id="mi-business-name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">N° TVA</label><input type="text" id="mi-vat" class="form-control"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Adresse</label><input type="text" id="mi-address" class="form-control"></div>
+        <div class="fr2">
+          <div class="form-group"><label class="form-label">Email commerce</label><input type="email" id="mi-email" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Téléphone commerce</label><input type="tel" id="mi-phone" class="form-control"></div>
+        </div>
+        <div class="fr2">
+          <div class="form-group"><label class="form-label">Responsable</label><input type="text" id="mi-owner-name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Téléphone perso</label><input type="tel" id="mi-owner-phone" class="form-control"></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary btn-c" onclick="saveMerchantInfo()" id="mi-save-btn">Mettre à jour</button></div>
+      </div>
+
+      <!-- ═══ Sécurité ═══ -->
+      <div class="pref-panel" id="tab-security">
+        <div class="pref-panel-title">Mot de passe</div>
+        <div id="password-alert"></div>
+        <div class="form-group"><label class="form-label">Mot de passe actuel</label><input type="password" id="pw-current" class="form-control" placeholder="••••••••"></div>
+        <div class="fr2">
+          <div class="form-group"><label class="form-label">Nouveau</label><input type="password" id="pw-new" class="form-control" placeholder="Min. 6 car."></div>
+          <div class="form-group"><label class="form-label">Confirmer</label><input type="password" id="pw-confirm" class="form-control" placeholder="Retapez"></div>
+        </div>
+        <div class="btn-row"><button class="btn btn-primary btn-c" onclick="changePassword()" id="pw-save-btn">Changer le mot de passe</button></div>
+      </div>
+
+      <!-- ═══ Backup ═══ -->
+      <div class="pref-panel" id="tab-backup">
+        <div class="pref-panel-title">Sauvegarde & Restauration</div>
+        <div style="margin-bottom:1rem">
+          <label class="form-label">📤 Exporter</label>
+          <p style="font-size:0.78rem;color:var(--text-light);margin:0 0 0.5rem">Fichier JSON de toutes vos données.</p>
+          <div id="last-backup-info" style="font-size:0.75rem;color:var(--text-light);margin-bottom:0.4rem"></div>
+          <button class="btn btn-primary btn-c" onclick="exportBackup()" id="export-btn">📥 Télécharger</button>
+        </div>
+        <div class="pref-sep"></div>
+        <label class="form-label">📥 Restaurer</label>
+        <p style="font-size:0.78rem;color:var(--text-light);margin:0 0 0.5rem">Importez un backup. <span style="color:var(--danger);font-weight:600">Remplace toutes vos données.</span></p>
+        <div class="bk-zone" id="import-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+          📁 Glissez un .json ou <strong style="color:var(--primary)">cliquez</strong>
+          <input type="file" id="import-file" accept=".json" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+        <div id="import-preview" style="display:none"></div>
       </div>
     </div>
-
   </div>
 
-  <!-- Import Confirmation Modal -->
+  <!-- Import Modal -->
   <div id="import-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>⚠️ Confirmer la restauration</h2>
-        <button class="close-modal" onclick="closeImportModal()">×</button>
-      </div>
+    <div class="modal-content" style="max-width:460px">
+      <div class="modal-header"><h2 style="font-size:1.1rem">⚠️ Confirmer la restauration</h2><button class="close-modal" onclick="closeImportModal()">×</button></div>
       <div class="modal-body">
-        <div class="alert alert-warning">
-          <strong>Attention :</strong> cette action va <strong>remplacer toutes vos données</strong> (clients, transactions, points) par celles du fichier de backup. Cette action est irréversible.
-        </div>
+        <div class="alert alert-warning" style="font-size:0.82rem">Cette action <strong>remplace toutes vos données</strong>. Irréversible.</div>
         <div id="import-modal-preview"></div>
         <div id="import-alert"></div>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeImportModal()">Annuler</button>
-        <button class="btn btn-danger" onclick="confirmImport()" id="confirm-import-btn">
-          🔄 Oui, restaurer mes données
-        </button>
+        <button class="btn btn-outline btn-c" onclick="closeImportModal()">Annuler</button>
+        <button class="btn btn-danger btn-c" onclick="confirmImport()" id="confirm-import-btn">🔄 Restaurer</button>
       </div>
     </div>
   </div>
@@ -312,100 +240,57 @@
   <script src="/js/app.js"></script>
   <script>
     if (!requireOwner()) throw 'Not authorized';
-
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
     let currentPrefs = null;
     let pendingBackupData = null;
 
-    // ═══════════════════════════════════════════════════
-    // LOAD PREFERENCES
-    // ═══════════════════════════════════════════════════
+    // ═══ TABS ═══
+    function showTab(id, btn) {
+      document.querySelectorAll('.pref-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.pref-nav-item').forEach(n => n.classList.remove('active'));
+      document.getElementById('tab-' + id).classList.add('active');
+      btn.classList.add('active');
+    }
 
+    // ═══ LOAD PREFS ═══
     async function loadPreferences() {
       try {
         const data = await API.call('/preferences');
         currentPrefs = data.preferences;
         applyToForm(currentPrefs);
-      } catch (err) {
-        console.error('Erreur chargement prefs:', err);
-      }
+      } catch (err) { console.error('Erreur prefs:', err); }
     }
 
-    function applyToForm(prefs) {
-      // Theme
-      document.querySelectorAll('.theme-card').forEach(card => {
-        card.classList.toggle('active', card.dataset.theme === prefs.theme);
-      });
-
-      // Notifications
-      document.getElementById('notify-new-client').checked = !!prefs.notify_new_client;
-      document.getElementById('notify-reward-ready').checked = !!prefs.notify_reward_ready;
-      document.getElementById('notify-weekly-report').checked = !!prefs.notify_weekly_report;
-
-      // Reward message
-      const msgEl = document.getElementById('reward-message');
-      msgEl.value = prefs.reward_message || '';
-      document.getElementById('reward-msg-count').textContent = msgEl.value.length;
-
-      // Language & timezone
-      document.getElementById('pref-language').value = prefs.language || 'fr';
-      document.getElementById('pref-timezone').value = prefs.timezone || 'Europe/Brussels';
-
-      // Last backup info
+    function applyToForm(p) {
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === p.theme));
+      document.getElementById('notify-new-client').checked = !!p.notify_new_client;
+      document.getElementById('notify-reward-ready').checked = !!p.notify_reward_ready;
+      document.getElementById('notify-weekly-report').checked = !!p.notify_weekly_report;
+      const msg = document.getElementById('reward-message');
+      msg.value = p.reward_message || '';
+      document.getElementById('rmcount').textContent = msg.value.length;
+      document.getElementById('pref-language').value = p.language || 'fr';
+      document.getElementById('pref-timezone').value = p.timezone || 'Europe/Brussels';
       const info = document.getElementById('last-backup-info');
-      if (prefs.last_backup_at) {
-        info.innerHTML = `✅ Dernier backup : ${Format.datetime(prefs.last_backup_at)}`;
-      } else {
-        info.innerHTML = `⚠️ Aucun backup effectué`;
-      }
+      info.innerHTML = p.last_backup_at ? `✅ Dernier : ${Format.datetime(p.last_backup_at)}` : '⚠️ Aucun backup';
     }
 
-    // Character count for reward message
-    document.getElementById('reward-message').addEventListener('input', (e) => {
-      document.getElementById('reward-msg-count').textContent = e.target.value.length;
-    });
-
-
-    // ═══════════════════════════════════════════════════
-    // THEME SELECTION (instant preview)
-    // ═══════════════════════════════════════════════════
-
+    // ═══ THEME ═══
     function selectTheme(theme) {
-      // Visual selection
-      document.querySelectorAll('.theme-card').forEach(card => {
-        card.classList.toggle('active', card.dataset.theme === theme);
-      });
-
-      // Instant preview: apply theme to document
+      document.querySelectorAll('.theme-dot').forEach(d => d.classList.toggle('active', d.dataset.theme === theme));
       document.documentElement.setAttribute('data-theme', theme);
-
-      // Save to server in background
-      API.call('/preferences/theme', {
-        method: 'PATCH',
-        body: JSON.stringify({ theme }),
-      }).then(() => {
-        // Update local session
-        sessionStorage.setItem('fiddo_theme', theme);
-      }).catch(err => {
-        console.error('Erreur theme:', err);
-      });
+      API.call('/preferences/theme', { method: 'PATCH', body: JSON.stringify({ theme }) })
+        .then(() => sessionStorage.setItem('fiddo_theme', theme))
+        .catch(err => console.error(err));
     }
 
-
-    // ═══════════════════════════════════════════════════
-    // SAVE ALL PREFERENCES
-    // ═══════════════════════════════════════════════════
-
+    // ═══ SAVE PREFS ═══
     async function savePreferences() {
-      const btn = document.getElementById('save-btn');
-      btn.disabled = true;
-
       try {
-        const activeTheme = document.querySelector('.theme-card.active');
-
+        const active = document.querySelector('.theme-dot.active');
         const prefs = {
-          theme: activeTheme ? activeTheme.dataset.theme : 'teal',
+          theme: active ? active.dataset.theme : 'teal',
           language: document.getElementById('pref-language').value,
           timezone: document.getElementById('pref-timezone').value,
           reward_message: document.getElementById('reward-message').value.trim(),
@@ -413,52 +298,46 @@
           notify_reward_ready: document.getElementById('notify-reward-ready').checked,
           notify_weekly_report: document.getElementById('notify-weekly-report').checked,
         };
-
-        const data = await API.call('/preferences', {
-          method: 'PUT',
-          body: JSON.stringify(prefs),
-        });
-
+        const data = await API.call('/preferences', { method: 'PUT', body: JSON.stringify(prefs) });
         currentPrefs = data.preferences;
         sessionStorage.setItem('fiddo_theme', prefs.theme);
-
         UI.showAlert('global-alert', 'Préférences enregistrées !', 'success');
         setTimeout(() => UI.clearAlert('global-alert'), 3000);
         window.scrollTo({ top: 0, behavior: 'smooth' });
-      } catch (err) {
-        UI.showAlert('global-alert', err.message, 'error');
-      } finally {
-        btn.disabled = false;
-      }
+      } catch (err) { UI.showAlert('global-alert', err.message, 'error'); }
     }
 
-
-    // ═══════════════════════════════════════════════════
-    // MERCHANT INFO (owner only)
-    // ═══════════════════════════════════════════════════
+    // ═══ MERCHANT INFO ═══
+    function prefillFromSession() {
+      if (merchant) {
+        document.getElementById('mi-business-name').value = merchant.business_name || '';
+        document.getElementById('mi-vat').value = merchant.vat_number || '';
+        document.getElementById('mi-address').value = merchant.address || '';
+        document.getElementById('mi-email').value = merchant.email || '';
+        document.getElementById('mi-phone').value = merchant.phone || '';
+        document.getElementById('mi-owner-phone').value = merchant.owner_phone || '';
+      }
+      if (staff) document.getElementById('mi-owner-name').value = staff.display_name || '';
+    }
 
     async function loadMerchantInfo() {
       try {
-        const data = await API.call('/preferences/merchant-info');
-        document.getElementById('mi-business-name').value = data.businessName || '';
-        document.getElementById('mi-vat').value = data.vatNumber || '';
-        document.getElementById('mi-address').value = data.address || '';
-        document.getElementById('mi-email').value = data.email || '';
-        document.getElementById('mi-phone').value = data.phone || '';
-        document.getElementById('mi-owner-name').value = data.ownerName || '';
-        document.getElementById('mi-owner-phone').value = data.ownerPhone || '';
-      } catch (err) {
-        console.error('Erreur chargement merchant-info:', err);
-      }
+        const d = await API.call('/preferences/merchant-info');
+        document.getElementById('mi-business-name').value = d.businessName || '';
+        document.getElementById('mi-vat').value = d.vatNumber || '';
+        document.getElementById('mi-address').value = d.address || '';
+        document.getElementById('mi-email').value = d.email || '';
+        document.getElementById('mi-phone').value = d.phone || '';
+        document.getElementById('mi-owner-name').value = d.ownerName || '';
+        document.getElementById('mi-owner-phone').value = d.ownerPhone || '';
+      } catch (err) { /* session data already shown */ }
     }
 
     async function saveMerchantInfo() {
       const btn = document.getElementById('mi-save-btn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Mise à jour...';
-
+      btn.disabled = true; btn.textContent = '⏳ ...';
       try {
-        const payload = {
+        const p = {
           businessName: document.getElementById('mi-business-name').value.trim(),
           address: document.getElementById('mi-address').value.trim(),
           vatNumber: document.getElementById('mi-vat').value.trim(),
@@ -467,309 +346,120 @@
           ownerPhone: document.getElementById('mi-owner-phone').value.trim(),
           ownerName: document.getElementById('mi-owner-name').value.trim(),
         };
-
-        if (!payload.businessName || !payload.address || !payload.vatNumber || !payload.email || !payload.phone || !payload.ownerPhone) {
-          UI.showAlert('merchant-info-alert', 'Tous les champs marqués * sont requis', 'error');
-          return;
+        if (!p.businessName || !p.address || !p.vatNumber || !p.email || !p.phone || !p.ownerPhone) {
+          UI.showAlert('merchant-info-alert', 'Tous les champs sont requis', 'error'); return;
         }
-
-        const result = await API.call('/preferences/merchant-info', {
-          method: 'PUT',
-          body: JSON.stringify(payload),
-        });
-
-        // Update local session if merchant data changed
-        if (result.merchant) {
-          Auth.setSession(staff, result.merchant);
-        }
-
+        const result = await API.call('/preferences/merchant-info', { method: 'PUT', body: JSON.stringify(p) });
+        if (result.merchant) Auth.setSession(staff, result.merchant);
         if (result.changes && result.changes.length > 0) {
-          const changeList = result.changes.map(c => `<strong>${c.field}</strong> : ${c.old} → ${c.new}`).join('<br>');
-          UI.showAlert('merchant-info-alert', `✅ Informations mises à jour !<br><small>${changeList}</small><br><small class="text-muted">L'équipe FIDDO a été notifiée.</small>`, 'success');
+          UI.showAlert('merchant-info-alert', `✅ Mis à jour !<br><small>${result.changes.map(c=>`<strong>${c.field}</strong>: ${c.old} → ${c.new}`).join('<br>')}</small>`, 'success');
         } else {
-          UI.showAlert('merchant-info-alert', 'Aucune modification détectée', 'info');
+          UI.showAlert('merchant-info-alert', 'Aucune modification', 'info');
         }
-
-        setTimeout(() => UI.clearAlert('merchant-info-alert'), 8000);
-      } catch (err) {
-        UI.showAlert('merchant-info-alert', err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Mettre à jour les informations';
-      }
+        setTimeout(() => UI.clearAlert('merchant-info-alert'), 6000);
+      } catch (err) { UI.showAlert('merchant-info-alert', err.message, 'error');
+      } finally { btn.disabled = false; btn.textContent = 'Mettre à jour'; }
     }
 
-
-    // ═══════════════════════════════════════════════════
-    // PASSWORD CHANGE
-    // ═══════════════════════════════════════════════════
-
+    // ═══ PASSWORD ═══
     async function changePassword() {
       const btn = document.getElementById('pw-save-btn');
-      const current = document.getElementById('pw-current').value;
-      const newPw = document.getElementById('pw-new').value;
-      const confirm = document.getElementById('pw-confirm').value;
-
-      if (!current || !newPw) {
-        UI.showAlert('password-alert', 'Mot de passe actuel et nouveau requis', 'error');
-        return;
-      }
-      if (newPw.length < 6) {
-        UI.showAlert('password-alert', 'Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
-        return;
-      }
-      if (newPw !== confirm) {
-        UI.showAlert('password-alert', 'Les mots de passe ne correspondent pas', 'error');
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = '⏳ Modification...';
-
+      const cur = document.getElementById('pw-current').value, nw = document.getElementById('pw-new').value, cf = document.getElementById('pw-confirm').value;
+      if (!cur || !nw) { UI.showAlert('password-alert', 'Remplissez les champs', 'error'); return; }
+      if (nw.length < 6) { UI.showAlert('password-alert', 'Min. 6 caractères', 'error'); return; }
+      if (nw !== cf) { UI.showAlert('password-alert', 'Ne correspondent pas', 'error'); return; }
+      btn.disabled = true; btn.textContent = '⏳ ...';
       try {
-        await API.call('/preferences/password', {
-          method: 'PUT',
-          body: JSON.stringify({ currentPassword: current, newPassword: newPw }),
-        });
-
-        UI.showAlert('password-alert', '✅ Mot de passe modifié avec succès !', 'success');
+        await API.call('/preferences/password', { method: 'PUT', body: JSON.stringify({ currentPassword: cur, newPassword: nw }) });
+        UI.showAlert('password-alert', '✅ Mot de passe modifié !', 'success');
         document.getElementById('pw-current').value = '';
         document.getElementById('pw-new').value = '';
         document.getElementById('pw-confirm').value = '';
         setTimeout(() => UI.clearAlert('password-alert'), 5000);
-      } catch (err) {
-        UI.showAlert('password-alert', err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = 'Changer le mot de passe';
-      }
+      } catch (err) { UI.showAlert('password-alert', err.message, 'error');
+      } finally { btn.disabled = false; btn.textContent = 'Changer le mot de passe'; }
     }
 
-
-    // ═══════════════════════════════════════════════════
-    // BACKUP EXPORT
-    // ═══════════════════════════════════════════════════
-
+    // ═══ BACKUP EXPORT ═══
     async function exportBackup() {
       const btn = document.getElementById('export-btn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Export en cours...';
-
+      btn.disabled = true; btn.textContent = '⏳ ...';
       try {
-        const response = await fetch(`${API_BASE_URL}/preferences/backup/export`, {
-          credentials: 'include',
-        });
-
-        if (!response.ok) {
-          const err = await response.json();
-          throw new Error(err.error || 'Erreur export');
-        }
-
-        // Download the file
-        const blob = await response.blob();
+        const resp = await fetch(`${API_BASE_URL}/preferences/backup/export`, { credentials: 'include' });
+        if (!resp.ok) throw new Error((await resp.json()).error || 'Erreur');
+        const blob = await resp.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-
-        // Extract filename from Content-Disposition or generate one
-        const cd = response.headers.get('Content-Disposition');
-        const match = cd && cd.match(/filename="(.+)"/);
-        a.download = match ? match[1] : `fiddo-backup-${new Date().toISOString().slice(0, 10)}.json`;
-
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-
-        // Update last backup display
-        document.getElementById('last-backup-info').innerHTML =
-          `✅ Dernier backup : ${Format.datetime(new Date().toISOString())}`;
-
-        UI.showAlert('global-alert', 'Backup téléchargé avec succès !', 'success');
+        const cd = resp.headers.get('Content-Disposition');
+        a.download = (cd && cd.match(/filename="(.+)"/)?.[1]) || `fiddo-backup-${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+        document.getElementById('last-backup-info').innerHTML = `✅ Dernier : ${Format.datetime(new Date().toISOString())}`;
+        UI.showAlert('global-alert', 'Backup téléchargé !', 'success');
         setTimeout(() => UI.clearAlert('global-alert'), 3000);
-      } catch (err) {
-        UI.showAlert('global-alert', err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '📥 Télécharger le backup';
-      }
+      } catch (err) { UI.showAlert('global-alert', err.message, 'error');
+      } finally { btn.disabled = false; btn.textContent = '📥 Télécharger'; }
     }
 
-
-    // ═══════════════════════════════════════════════════
-    // BACKUP IMPORT (drag & drop + click)
-    // ═══════════════════════════════════════════════════
-
-    // Click to browse
-    document.getElementById('import-zone').addEventListener('click', () => {
-      document.getElementById('import-file').click();
-    });
-
-    function handleDragOver(e) {
-      e.preventDefault();
-      e.currentTarget.classList.add('dragover');
-    }
-    function handleDragLeave(e) {
-      e.currentTarget.classList.remove('dragover');
-    }
-
-    function handleDrop(e) {
-      e.preventDefault();
-      e.currentTarget.classList.remove('dragover');
-      const file = e.dataTransfer.files[0];
-      if (file) processImportFile(file);
-    }
-
-    function handleFileSelect(e) {
-      const file = e.target.files[0];
-      if (file) processImportFile(file);
-    }
+    // ═══ BACKUP IMPORT ═══
+    document.getElementById('import-zone').addEventListener('click', () => document.getElementById('import-file').click());
+    function handleDragOver(e) { e.preventDefault(); e.currentTarget.classList.add('dragover'); }
+    function handleDragLeave(e) { e.currentTarget.classList.remove('dragover'); }
+    function handleDrop(e) { e.preventDefault(); e.currentTarget.classList.remove('dragover'); if (e.dataTransfer.files[0]) processImportFile(e.dataTransfer.files[0]); }
+    function handleFileSelect(e) { if (e.target.files[0]) processImportFile(e.target.files[0]); }
 
     async function processImportFile(file) {
-      if (!file.name.endsWith('.json')) {
-        UI.showAlert('global-alert', 'Seuls les fichiers .json sont acceptés', 'error');
-        return;
-      }
-
-      // 10MB limit
-      if (file.size > 10 * 1024 * 1024) {
-        UI.showAlert('global-alert', 'Fichier trop volumineux (max 10 Mo)', 'error');
-        return;
-      }
-
+      if (!file.name.endsWith('.json')) { UI.showAlert('global-alert', 'Fichier .json uniquement', 'error'); return; }
+      if (file.size > 10*1024*1024) { UI.showAlert('global-alert', 'Max 10 Mo', 'error'); return; }
       try {
-        const text = await file.text();
-        const data = JSON.parse(text);
-
-        // Validate with server
-        const validation = await API.call('/preferences/backup/validate', {
-          method: 'POST',
-          body: JSON.stringify(data),
-        });
-
-        if (!validation.valid) {
-          const previewEl = document.getElementById('import-preview');
-          previewEl.style.display = 'block';
-          previewEl.innerHTML = `
-            <div class="alert alert-error mt-1">
-              <strong>Fichier invalide :</strong><br>
-              ${validation.errors.map(e => `• ${e}`).join('<br>')}
-            </div>
-          `;
+        const data = JSON.parse(await file.text());
+        const v = await API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) });
+        if (!v.valid) {
+          const el = document.getElementById('import-preview');
+          el.style.display = 'block';
+          el.innerHTML = `<div class="alert alert-error" style="font-size:0.8rem;margin-top:0.5rem">${v.errors.map(e=>'• '+e).join('<br>')}</div>`;
           return;
         }
-
-        // Show preview
         pendingBackupData = data;
-        showImportPreview(validation.preview);
-
-      } catch (err) {
-        if (err instanceof SyntaxError) {
-          UI.showAlert('global-alert', 'Fichier JSON invalide', 'error');
-        } else {
-          UI.showAlert('global-alert', err.message, 'error');
-        }
-      }
+        showImportPreview(v.preview);
+      } catch (err) { UI.showAlert('global-alert', err instanceof SyntaxError ? 'JSON invalide' : err.message, 'error'); }
     }
 
-    function showImportPreview(preview) {
-      // Inline preview
-      const previewEl = document.getElementById('import-preview');
-      previewEl.style.display = 'block';
-      previewEl.innerHTML = `
-        <div class="backup-preview">
-          <strong>✅ Fichier valide</strong> — ${preview.business_name}
-          <br><small class="text-muted">Exporté le ${Format.datetime(preview.exported_at)} (v${preview.version})</small>
-          <div class="backup-preview-grid">
-            <div class="backup-preview-item">
-              <div class="backup-preview-value">${preview.clients}</div>
-              <div class="backup-preview-label">Clients</div>
-            </div>
-            <div class="backup-preview-item">
-              <div class="backup-preview-value">${preview.transactions}</div>
-              <div class="backup-preview-label">Transactions</div>
-            </div>
-            <div class="backup-preview-item">
-              <div class="backup-preview-value">${preview.total_points}</div>
-              <div class="backup-preview-label">Points totaux</div>
-            </div>
-            <div class="backup-preview-item">
-              <div class="backup-preview-value">${Format.currency(preview.total_spent)}</div>
-              <div class="backup-preview-label">CA total</div>
-            </div>
-          </div>
-          <button class="btn btn-danger btn-block mt-2" onclick="openImportModal()">
-            🔄 Restaurer ces données
-          </button>
+    function showImportPreview(p) {
+      const el = document.getElementById('import-preview');
+      el.style.display = 'block';
+      el.innerHTML = `<div class="bk-preview"><strong>✅ ${p.business_name}</strong> — <small class="text-muted">${Format.datetime(p.exported_at)}</small>
+        <div class="bk-grid">
+          <div><div class="bk-val">${p.clients}</div><div class="bk-lbl">Clients</div></div>
+          <div><div class="bk-val">${p.transactions}</div><div class="bk-lbl">Tx</div></div>
+          <div><div class="bk-val">${p.total_points}</div><div class="bk-lbl">Points</div></div>
+          <div><div class="bk-val">${Format.currency(p.total_spent)}</div><div class="bk-lbl">CA</div></div>
         </div>
-      `;
-
-      // Also prepare modal preview
-      document.getElementById('import-modal-preview').innerHTML = `
-        <div class="backup-preview" style="margin-bottom: 1rem;">
-          <strong>${preview.business_name}</strong> — ${Format.datetime(preview.exported_at)}
-          <div class="backup-preview-grid">
-            <div class="backup-preview-item">
-              <div class="backup-preview-value">${preview.clients}</div>
-              <div class="backup-preview-label">Clients</div>
-            </div>
-            <div class="backup-preview-item">
-              <div class="backup-preview-value">${preview.transactions}</div>
-              <div class="backup-preview-label">Transactions</div>
-            </div>
-          </div>
-        </div>
-      `;
+        <button class="btn btn-danger btn-c" style="width:100%;margin-top:0.75rem" onclick="openImportModal()">🔄 Restaurer</button>
+      </div>`;
+      document.getElementById('import-modal-preview').innerHTML = `<div class="bk-preview" style="margin-bottom:0.75rem"><strong>${p.business_name}</strong> — ${Format.datetime(p.exported_at)}
+        <div class="bk-grid"><div><div class="bk-val">${p.clients}</div><div class="bk-lbl">Clients</div></div><div><div class="bk-val">${p.transactions}</div><div class="bk-lbl">Tx</div></div></div></div>`;
     }
 
-    function openImportModal() {
-      document.getElementById('import-modal').classList.add('active');
-    }
-    function closeImportModal() {
-      document.getElementById('import-modal').classList.remove('active');
-    }
-    document.getElementById('import-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'import-modal') closeImportModal();
-    });
+    function openImportModal() { document.getElementById('import-modal').classList.add('active'); }
+    function closeImportModal() { document.getElementById('import-modal').classList.remove('active'); }
+    document.getElementById('import-modal').addEventListener('click', e => { if (e.target.id === 'import-modal') closeImportModal(); });
 
     async function confirmImport() {
       if (!pendingBackupData) return;
-
       const btn = document.getElementById('confirm-import-btn');
-      btn.disabled = true;
-      btn.textContent = '⏳ Restauration en cours...';
-
+      btn.disabled = true; btn.textContent = '⏳ ...';
       try {
-        const result = await API.call('/preferences/backup/import', {
-          method: 'POST',
-          body: JSON.stringify({
-            data: pendingBackupData,
-            confirmReplace: true,
-          }),
-        });
-
-        closeImportModal();
-        pendingBackupData = null;
+        const r = await API.call('/preferences/backup/import', { method: 'POST', body: JSON.stringify({ data: pendingBackupData, confirmReplace: true }) });
+        closeImportModal(); pendingBackupData = null;
         document.getElementById('import-preview').style.display = 'none';
-
-        UI.showAlert('global-alert',
-          `✅ Données restaurées : ${result.result.clients_restored} clients, ${result.result.transactions_restored} transactions`,
-          'success'
-        );
-
-      } catch (err) {
-        UI.showAlert('import-alert', err.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.textContent = '🔄 Oui, restaurer mes données';
-      }
+        UI.showAlert('global-alert', `✅ Restauré : ${r.result.clients_restored} clients, ${r.result.transactions_restored} transactions`, 'success');
+      } catch (err) { UI.showAlert('import-alert', err.message, 'error');
+      } finally { btn.disabled = false; btn.textContent = '🔄 Restaurer'; }
     }
 
-
-    // ═══════════════════════════════════════════════════
-    // INIT
-    // ═══════════════════════════════════════════════════
-
+    // ═══ INIT ═══
+    prefillFromSession();
     loadPreferences();
     loadMerchantInfo();
   </script>
