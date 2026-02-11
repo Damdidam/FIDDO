@@ -491,18 +491,18 @@
 
         searchTimeout = setTimeout(async () => {
           try {
-            const data = await API.clients.search(val);
+            const data = await API.clients.searchGlobal(val);
             if (!data.clients || data.clients.length === 0) {
               acList.classList.remove('show');
               return;
             }
 
-            // Render suggestions
+            // Render suggestions (global: includes clients from other merchants)
             acList.innerHTML = data.clients.slice(0, 6).map(c => `
               <div class="ac-item" data-email="${c.email || ''}" data-phone="${c.phone || ''}" data-name="${c.name || ''}">
-                <span class="ac-pts">${c.points_balance} pts</span>
+                <span class="ac-pts">${c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>'}</span>
                 <div class="ac-name">${c.name || c.email || c.phone || '?'}</div>
-                <div class="ac-meta">${c.email ? c.email : ''}${c.email && c.phone ? ' · ' : ''}${c.phone ? c.phone : ''} · ${c.visit_count} visite(s)</div>
+                <div class="ac-meta">${c.email ? c.email : ''}${c.email && c.phone ? ' · ' : ''}${c.phone ? c.phone : ''}${c.is_local ? ' · ' + c.visit_count + ' visite(s)' : ''}</div>
               </div>
             `).join('');
 
