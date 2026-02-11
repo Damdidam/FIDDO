@@ -477,10 +477,12 @@
         clearTimeout(searchTimeout);
         const val = input.value.trim();
 
+        // Always trigger global lookup in parallel (cross-merchant)
+        triggerLookup();
+
         // Close dropdown if too short
         if (val.length < 3) {
           acList.classList.remove('show');
-          triggerLookup();
           if (inputId === 'client-email') checkEmailTypo(val);
           return;
         }
@@ -492,7 +494,6 @@
             const data = await API.clients.search(val);
             if (!data.clients || data.clients.length === 0) {
               acList.classList.remove('show');
-              triggerLookup();
               return;
             }
 
@@ -543,8 +544,7 @@
 
           } catch (err) {
             acList.classList.remove('show');
-            // If search fails (e.g. cashier role), fallback to normal lookup
-            triggerLookup();
+            // Lookup already triggered above — no need for fallback
           }
         }, 350);
       });
@@ -658,7 +658,7 @@
         } catch (err) {
           console.error('Lookup error:', err);
         }
-      }, 400);
+      }, 300);
     }
 
     // ═══════════════════════════════════════════════════════
