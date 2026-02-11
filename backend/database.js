@@ -15,7 +15,7 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 // ═══════════════════════════════════════════════════════
-// DDL — Schema V3.1 (post-review)
+// DDL — Schema V3.4
 // ═══════════════════════════════════════════════════════
 
 function initDatabase() {
@@ -69,7 +69,6 @@ function initDatabase() {
 
   // ───────────────────────────────────────────
   // 3. STAFF ACCOUNTS
-  //    email = globalement unique (un humain = un login)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS staff_accounts (
@@ -93,7 +92,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 4. END USERS (identité globale)
+  // 4. END USERS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_users (
@@ -227,27 +226,45 @@ function initDatabase() {
   // INDEXES
   // ───────────────────────────────────────────
   db.exec(`
+    -- merchants
     CREATE INDEX IF NOT EXISTS ix_merchants_status ON merchants(status);
     CREATE INDEX IF NOT EXISTS ix_merchants_vat    ON merchants(vat_number);
+
+    -- staff_accounts
     CREATE INDEX IF NOT EXISTS ix_staff_merchant ON staff_accounts(merchant_id);
+
+    -- end_users
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_email_lower ON end_users(email_lower);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_phone_e164  ON end_users(phone_e164);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_qr_token    ON end_users(qr_token);
+
+    -- end_user_aliases
     CREATE UNIQUE INDEX IF NOT EXISTS ux_alias_type_value ON end_user_aliases(alias_type, alias_value);
     CREATE INDEX IF NOT EXISTS ix_alias_end_user          ON end_user_aliases(end_user_id);
+
+    -- merchant_clients
     CREATE INDEX IF NOT EXISTS ix_mc_merchant ON merchant_clients(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_mc_enduser  ON merchant_clients(end_user_id);
+
+    -- transactions
     CREATE UNIQUE INDEX IF NOT EXISTS ux_tx_idempotency
       ON transactions(merchant_id, idempotency_key)
       WHERE idempotency_key IS NOT NULL;
     CREATE INDEX IF NOT EXISTS ix_tx_merchant_created ON transactions(merchant_id, created_at);
     CREATE INDEX IF NOT EXISTS ix_tx_mc_created       ON transactions(merchant_client_id, created_at);
+
+    -- audit_logs
     CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
   `);
 
-  console.log('✅ Database V3.1 initialized');
+  // ───────────────────────────────────────────
+  // SAFE MIGRATIONS (idempotent ALTERs)
+  // ───────────────────────────────────────────
+  try { db.exec(`ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT`); } catch (e) { /* already exists */ }
+
+  console.log('✅ Database V3.4 initialized');
 }
 
 // Init on require
@@ -271,9 +288,8 @@ const adminQueries = {
 
 const merchantQueries = {
   create: db.prepare(`
-    INSERT INTO merchants
-      (business_name, address, vat_number, email, phone, owner_phone, points_per_euro, points_for_reward, reward_description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone)
+    VALUES (?, ?, ?, ?, ?, ?)
   `),
   findById:    db.prepare('SELECT * FROM merchants WHERE id = ?'),
   findByVat:   db.prepare('SELECT * FROM merchants WHERE vat_number = ?'),
@@ -430,9 +446,10 @@ const merchantClientQueries = {
     WHERE id = ?
   `),
 
-  setPoints: db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
-  block:     db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
-  unblock:   db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
+  setPoints:        db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
+  setCustomReward:  db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
+  block:            db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
+  unblock:          db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
 
   mergeStats: db.prepare(`
     UPDATE merchant_clients
