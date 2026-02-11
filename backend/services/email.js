@@ -178,4 +178,59 @@ module.exports = {
   sendPointsCreditedEmail,
   sendMerchantValidatedEmail,
   sendMerchantRejectedEmail,
+  sendMerchantInfoChangedEmail,
+  sendPasswordChangedEmail,
 };
+
+/**
+ * Email de notification au super admin quand un merchant modifie ses infos.
+ */
+function sendMerchantInfoChangedEmail(adminEmail, oldName, newName, ownerEmail, changes) {
+  const changeRows = changes.map(c =>
+    `<tr><td style="padding:6px 12px;border:1px solid #ddd;font-weight:600;">${c.field}</td>
+     <td style="padding:6px 12px;border:1px solid #ddd;color:#EF4444;text-decoration:line-through;">${c.old}</td>
+     <td style="padding:6px 12px;border:1px solid #ddd;color:#10B981;font-weight:600;">${c.new}</td></tr>`
+  ).join('');
+
+  sendMail({
+    to: adminEmail,
+    subject: `🔔 FIDDO Admin — ${oldName} a modifié ses informations`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #1F2937;">🔔 Modification d'informations commerce</h2>
+        <p>Le propriétaire <strong>${ownerEmail}</strong> a modifié les informations de <strong>${oldName}</strong>.</p>
+        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
+          <thead>
+            <tr style="background:#1F2937;color:white;">
+              <th style="padding:8px 12px;text-align:left;">Champ</th>
+              <th style="padding:8px 12px;text-align:left;">Ancien</th>
+              <th style="padding:8px 12px;text-align:left;">Nouveau</th>
+            </tr>
+          </thead>
+          <tbody>${changeRows}</tbody>
+        </table>
+        <p style="font-size:12px;color:#666;">Aucune action requise — notification automatique.</p>
+      </div>
+    `,
+  });
+}
+
+/**
+ * Email de confirmation de changement de mot de passe.
+ */
+function sendPasswordChangedEmail(staffEmail, displayName) {
+  sendMail({
+    to: staffEmail,
+    subject: 'FIDDO — Votre mot de passe a été modifié',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891B2;">Mot de passe modifié 🔒</h2>
+        <p>Bonjour ${displayName},</p>
+        <p>Votre mot de passe FIDDO a été modifié avec succès.</p>
+        <p>Si vous n'êtes pas à l'origine de cette modification, contactez immédiatement <strong>support@fiddo.be</strong>.</p>
+        <hr style="margin:30px 0;border:none;border-top:1px solid #ddd;">
+        <p style="font-size:12px;color:#666;">Email de sécurité envoyé automatiquement.</p>
+      </div>
+    `,
+  });
+}
