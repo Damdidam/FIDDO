@@ -4,7 +4,7 @@ const { db, merchantQueries, staffQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { exportMerchantData, validateBackup, importMerchantData } = require('../services/backup');
-const { sendMerchantInfoChangedEmail } = require('../services/email');
+const { sendMerchantInfoChangedEmail, sendPasswordChangedEmail } = require('../services/email');
 const { normalizeEmail, normalizeVAT } = require('../services/normalizer');
 
 const router = express.Router();
@@ -440,6 +440,9 @@ router.put('/password', async (req, res) => {
       targetType: 'staff',
       targetId: req.staff.id,
     });
+
+    // Fire-and-forget confirmation email
+    sendPasswordChangedEmail(staff.email, staff.display_name);
 
     res.json({ message: 'Mot de passe modifié avec succès' });
   } catch (error) {
