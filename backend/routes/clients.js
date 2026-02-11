@@ -465,6 +465,40 @@ router.get('/search', requireRole('owner', 'manager'), (req, res) => {
   catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
+
+// ═══════════════════════════════════════════════════════
+// GET /api/clients/search-global?q=... — Cross-merchant user search (all staff)
+// Searches end_users globally, enriches with local merchant_client if exists
+// ═══════════════════════════════════════════════════════
+
+router.get('/search-global', (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.status(400).json({ error: 'Min 2 caractères' });
+
+    const term = `%${q.toLowerCase()}%`;
+    const endUsers = endUserQueries.search.all(term, term, term);
+
+    const results = endUsers.slice(0, 10).map(eu => {
+      const mc = merchantClientQueries.find.get(merchantId, eu.id);
+      return {
+        email: eu.email,
+        phone: eu.phone,
+        name: eu.name,
+        points_balance: mc ? mc.points_balance : 0,
+        visit_count: mc ? mc.visit_count : 0,
+        is_local: !!mc,
+      };
+    });
+
+    res.json({ count: results.length, clients: results });
+  } catch (error) {
+    console.error('Erreur search-global:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 router.get('/export/csv', requireRole('owner'), (req, res) => {
   try {
     const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id);
