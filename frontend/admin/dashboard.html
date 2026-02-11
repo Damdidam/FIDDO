@@ -14,6 +14,70 @@
     .status-suspended { color: var(--danger); }
     .status-rejected { color: var(--text-light); }
     .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+
+    /* Health card */
+    .health-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .health-item {
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .health-item .label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-light);
+      margin-bottom: 0.25rem;
+    }
+    .health-item .value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .health-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 0.4rem;
+      vertical-align: middle;
+    }
+    .health-dot.ok { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
+    .health-dot.down { background: var(--danger); box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+
+    /* Backup section */
+    .backup-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .backup-row:last-child { border-bottom: none; }
+    .backup-row:hover { background: var(--light); }
+    .backup-info { display: flex; flex-direction: column; gap: 0.15rem; }
+    .backup-name { font-weight: 600; font-size: 0.9rem; font-family: monospace; }
+    .backup-meta { font-size: 0.8rem; color: var(--text-light); }
+    .backup-actions { display: flex; gap: 0.5rem; }
+    .backup-config {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--light);
+      border-radius: 6px;
+    }
+    .backup-config strong { color: var(--text); }
   </style>
 </head>
 <body>
@@ -27,7 +91,37 @@
   <div class="container">
     <h1 style="margin: 1.5rem 0;">Administration FIDDO</h1>
 
-    <!-- Global Stats -->
+    <!-- ═══ HEALTH CHECK ═══ -->
+    <div class="card" id="health-card">
+      <div class="card-header">
+        🩺 Santé du système
+        <button class="btn btn-outline btn-sm" onclick="loadHealth()">🔄 Rafraîchir</button>
+      </div>
+      <div class="health-grid" id="health-grid">
+        <div class="health-item">
+          <div class="label">Statut</div>
+          <div class="value" id="h-status"><span class="health-dot down"></span>...</div>
+        </div>
+        <div class="health-item">
+          <div class="label">Version</div>
+          <div class="value" id="h-version">-</div>
+        </div>
+        <div class="health-item">
+          <div class="label">Serveur</div>
+          <div class="value" id="h-time">-</div>
+        </div>
+        <div class="health-item">
+          <div class="label">Backups</div>
+          <div class="value" id="h-backups">-</div>
+        </div>
+        <div class="health-item">
+          <div class="label">Dernier backup</div>
+          <div class="value" id="h-last-backup">-</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GLOBAL STATS ═══ -->
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value" id="s-merchants">-</div><div class="stat-label">Commerces</div></div>
       <div class="stat-card"><div class="stat-value" id="s-active">-</div><div class="stat-label">Actifs</div></div>
@@ -36,17 +130,19 @@
       <div class="stat-card"><div class="stat-value" id="s-revenue">-</div><div class="stat-label">CA total</div></div>
     </div>
 
-    <!-- Tabs -->
+    <!-- ═══ TABS ═══ -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('pending')">⏳ En attente</button>
       <button class="tab" onclick="switchTab('active')">✅ Actifs</button>
       <button class="tab" onclick="switchTab('all')">📋 Tous</button>
+      <button class="tab" onclick="switchTab('backups')">💾 Backups</button>
     </div>
 
     <div id="merchants-container"></div>
+    <div id="backups-container" style="display: none;"></div>
   </div>
 
-  <!-- Merchant Detail Modal -->
+  <!-- ═══ MERCHANT DETAIL MODAL ═══ -->
   <div id="merchant-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -58,7 +154,7 @@
     </div>
   </div>
 
-  <!-- Reject Modal -->
+  <!-- ═══ REJECT MODAL ═══ -->
   <div id="reject-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -95,7 +191,51 @@
       adminCall('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/admin');
     }
 
-    // ─── Stats ───
+    // ═══════════════════════════════════════════════════
+    // HEALTH CHECK
+    // ═══════════════════════════════════════════════════
+
+    async function loadHealth() {
+      try {
+        // Health endpoint (public)
+        const health = await fetch(API_BASE_URL + '/health', { credentials: 'include' }).then(r => r.json());
+
+        document.getElementById('h-status').innerHTML =
+          health.status === 'ok'
+            ? '<span class="health-dot ok"></span>En ligne'
+            : '<span class="health-dot down"></span>Problème';
+
+        document.getElementById('h-version').textContent = health.version || '-';
+        document.getElementById('h-time').textContent = health.timestamp
+          ? new Date(health.timestamp).toLocaleTimeString('fr-FR')
+          : '-';
+
+        // Backup info
+        try {
+          const bk = await adminCall('/backups');
+          document.getElementById('h-backups').textContent = bk.count + ' / ' + bk.config.maxKeep;
+
+          if (bk.backups.length > 0) {
+            const last = bk.backups[0];
+            const ago = Format.timeSince(last.created);
+            document.getElementById('h-last-backup').textContent = ago;
+          } else {
+            document.getElementById('h-last-backup').textContent = 'Aucun';
+          }
+        } catch (e) {
+          document.getElementById('h-backups').textContent = '-';
+          document.getElementById('h-last-backup').textContent = '-';
+        }
+      } catch (e) {
+        document.getElementById('h-status').innerHTML = '<span class="health-dot down"></span>Hors ligne';
+        console.error('Health check error:', e);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════
+    // STATS
+    // ═══════════════════════════════════════════════════
+
     async function loadStats() {
       try {
         const s = await adminCall('/merchants/stats/global');
@@ -107,15 +247,30 @@
       } catch (e) { console.error(e); }
     }
 
-    // ─── Tabs ───
+    // ═══════════════════════════════════════════════════
+    // TABS
+    // ═══════════════════════════════════════════════════
+
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       event.target.classList.add('active');
-      loadMerchants();
+
+      if (tab === 'backups') {
+        document.getElementById('merchants-container').style.display = 'none';
+        document.getElementById('backups-container').style.display = 'block';
+        loadBackups();
+      } else {
+        document.getElementById('merchants-container').style.display = 'block';
+        document.getElementById('backups-container').style.display = 'none';
+        loadMerchants();
+      }
     }
 
-    // ─── Load Merchants ───
+    // ═══════════════════════════════════════════════════
+    // MERCHANTS LIST
+    // ═══════════════════════════════════════════════════
+
     async function loadMerchants() {
       const container = document.getElementById('merchants-container');
       try {
@@ -150,7 +305,92 @@
       }
     }
 
-    // ─── Merchant Detail ───
+    // ═══════════════════════════════════════════════════
+    // BACKUPS
+    // ═══════════════════════════════════════════════════
+
+    async function loadBackups() {
+      const container = document.getElementById('backups-container');
+      try {
+        UI.showLoading('backups-container');
+        const data = await adminCall('/backups');
+
+        let html = `
+          <div class="card" style="padding-bottom: 0;">
+            <div class="card-header">
+              💾 Gestion des backups
+              <button class="btn btn-primary btn-sm" onclick="createManualBackup()">+ Backup manuel</button>
+            </div>
+
+            <div class="backup-config">
+              <span>⏰ Fréquence : <strong>toutes les ${data.config.intervalHours}h</strong></span>
+              <span>📦 Rétention : <strong>${data.config.maxKeep} derniers</strong></span>
+              <span>💾 Total : <strong>${data.count} backup${data.count > 1 ? 's' : ''}</strong></span>
+            </div>
+        `;
+
+        if (data.backups.length === 0) {
+          html += '<div class="empty-state" style="padding: 2rem;"><div class="empty-state-icon">💾</div><p>Aucun backup disponible</p></div>';
+        } else {
+          data.backups.forEach(b => {
+            const trigger = b.filename.includes('_manual') ? '🖐️ Manuel'
+              : b.filename.includes('_scheduled') ? '⏰ Auto'
+              : b.filename.includes('_startup') ? '🚀 Démarrage'
+              : '📦';
+
+            html += `
+              <div class="backup-row">
+                <div class="backup-info">
+                  <span class="backup-name">${b.filename}</span>
+                  <span class="backup-meta">${trigger} · ${b.sizeMB} MB · ${Format.datetime(b.created)}</span>
+                </div>
+                <div class="backup-actions">
+                  <button class="btn btn-outline btn-sm" onclick="downloadBackup('${b.filename}')">⬇️ Télécharger</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteBackup('${b.filename}')">🗑️</button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        html += '</div>';
+        container.innerHTML = html;
+      } catch (e) {
+        UI.showError('backups-container', e.message);
+      }
+    }
+
+    async function createManualBackup() {
+      if (!confirm('Créer un backup manuel maintenant ?')) return;
+      try {
+        const result = await adminCall('/backups', { method: 'POST' });
+        alert(`✅ Backup créé : ${result.backup.filename} (${result.backup.sizeMB} MB)`);
+        loadBackups();
+        loadHealth();
+      } catch (e) {
+        alert('❌ Erreur : ' + e.message);
+      }
+    }
+
+    function downloadBackup(filename) {
+      window.location.href = `${ADMIN_API}/backups/${encodeURIComponent(filename)}/download`;
+    }
+
+    async function deleteBackup(filename) {
+      if (!confirm(`Supprimer le backup "${filename}" ?\nCette action est irréversible.`)) return;
+      try {
+        await adminCall(`/backups/${encodeURIComponent(filename)}`, { method: 'DELETE' });
+        loadBackups();
+        loadHealth();
+      } catch (e) {
+        alert('❌ Erreur : ' + e.message);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════
+    // MERCHANT DETAIL MODAL
+    // ═══════════════════════════════════════════════════
+
     async function showMerchant(id) {
       try {
         currentMerchantId = id;
@@ -223,7 +463,10 @@
     function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
     document.getElementById('merchant-modal').addEventListener('click', (e) => { if (e.target.id === 'merchant-modal') closeModal(); });
 
-    // ─── Actions ───
+    // ═══════════════════════════════════════════════════
+    // MERCHANT ACTIONS
+    // ═══════════════════════════════════════════════════
+
     async function validateMerchant() {
       if (!confirm('✅ Valider et activer ce commerce ?')) return;
       try {
@@ -263,9 +506,16 @@
       } catch (e) { alert(e.message); }
     }
 
-    // Init
+    // ═══════════════════════════════════════════════════
+    // INIT
+    // ═══════════════════════════════════════════════════
+
+    loadHealth();
     loadStats();
     loadMerchants();
+
+    // Auto-refresh health every 60s
+    setInterval(loadHealth, 60000);
   </script>
 </body>
 </html>
