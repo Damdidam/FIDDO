@@ -6,33 +6,64 @@
   <title>Préférences — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
+    /* ─── Tabs ─── */
+    .pref-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
+    .pref-tab {
+      padding: 0.75rem 1.25rem; cursor: pointer; border-bottom: 3px solid transparent;
+      margin-bottom: -2px; font-weight: 500; color: var(--text-light); transition: all 0.2s;
+      background: none; border-top: none; border-left: none; border-right: none;
+      font-size: 0.9rem; white-space: nowrap;
+    }
+    .pref-tab:hover { color: var(--text); }
+    .pref-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .pref-section { display: none; }
+    .pref-section.active { display: block; }
+
+    /* ─── Theme picker ─── */
+    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
+    .theme-option {
+      border: 3px solid var(--border); border-radius: 12px; padding: 1rem;
+      cursor: pointer; transition: all 0.2s; text-align: center; position: relative;
+    }
+    .theme-option:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .theme-option.selected { border-color: var(--success); box-shadow: 0 0 0 2px var(--success); }
+    .theme-option .swatch {
+      width: 100%; height: 50px; border-radius: 8px; margin-bottom: 0.5rem;
+    }
+    .theme-option .name { font-weight: 600; font-size: 0.85rem; }
+    .theme-option .check {
+      display: none; position: absolute; top: 8px; right: 8px;
+      background: var(--success); color: white; width: 22px; height: 22px;
+      border-radius: 50%; font-size: 0.75rem; line-height: 22px; text-align: center;
+    }
+    .theme-option.selected .check { display: block; }
+
+    /* ─── Preview card ─── */
     .preview-card {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border-radius: 10px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-      line-height: 1.7;
+      border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;
+      color: white; line-height: 1.7;
     }
     .preview-card strong { font-size: 1.05rem; }
     .preview-card .preview-example {
-      background: rgba(255,255,255,0.15);
-      border-radius: 8px;
-      padding: 1rem;
-      margin-top: 1rem;
-      font-size: 0.9rem;
+      background: rgba(255,255,255,0.15); border-radius: 8px;
+      padding: 1rem; margin-top: 1rem; font-size: 0.9rem;
     }
-    .current-badge {
-      display: inline-block;
-      background: var(--success);
-      color: white;
-      padding: 2px 10px;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-left: 0.5rem;
-      vertical-align: middle;
+
+    /* ─── Backup ─── */
+    .backup-drop {
+      border: 2px dashed var(--border); border-radius: 10px; padding: 2rem;
+      text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;
     }
+    .backup-drop:hover, .backup-drop.dragover {
+      border-color: var(--primary); background: rgba(8,145,178,0.05);
+    }
+    .backup-drop-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+    .backup-preview { background: var(--light); border-radius: 8px; padding: 1rem; margin: 1rem 0; font-size: 0.9rem; }
+
+    /* ─── Password strength ─── */
+    .pw-strength { height: 4px; border-radius: 2px; background: #e5e7eb; margin-top: 0.5rem; overflow: hidden; }
+    .pw-strength-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
+    .pw-strength-text { font-size: 0.75rem; margin-top: 0.25rem; }
   </style>
 </head>
 <body>
@@ -44,53 +75,216 @@
   <div class="container">
     <h1 style="margin: 1.5rem 0;">⚙️ Préférences</h1>
 
-    <div class="grid grid-2">
-      <!-- Left: Form -->
-      <div>
+    <!-- ═══ TABS ═══ -->
+    <div class="pref-tabs">
+      <button class="pref-tab active" onclick="switchTab('reward')">🎁 Récompenses</button>
+      <button class="pref-tab" onclick="switchTab('theme')">🎨 Thème</button>
+      <button class="pref-tab" onclick="switchTab('info')">🏪 Mon commerce</button>
+      <button class="pref-tab" onclick="switchTab('password')">🔒 Mot de passe</button>
+      <button class="pref-tab" onclick="switchTab('backup')">💾 Sauvegarde</button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 1: REWARD CONFIGURATION
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-reward" class="pref-section active">
+      <div class="grid grid-2">
+        <div>
+          <div class="card">
+            <div class="card-header">Système de récompenses</div>
+            <div id="reward-alert"></div>
+
+            <form id="reward-form">
+              <div class="form-group">
+                <label class="form-label">Points par euro dépensé</label>
+                <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
+                <small class="form-help">Nombre de points gagnés pour chaque euro dépensé</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Points nécessaires pour la récompense</label>
+                <input type="number" id="set-pfr" class="form-control" min="1">
+                <small class="form-help">Seuil à atteindre pour débloquer la récompense</small>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Description de la récompense</label>
+                <input type="text" id="set-desc" class="form-control" maxlength="200" placeholder="Ex : Boisson offerte, 10% de réduction...">
+                <small class="form-help">Texte affiché au client et dans les emails (max 200 car.)</small>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <div class="preview-card" id="reward-preview" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
+          </div>
+          <div class="card">
+            <div class="card-header">ℹ️ Comment ça marche</div>
+            <p style="font-size: 0.9rem; color: var(--text-light); line-height: 1.7;">
+              Chaque passage client → les points sont calculés automatiquement.<br><br>
+              Une fois le seuil atteint, la récompense s'affiche sur l'écran du caissier.<br><br>
+              <strong>Note :</strong> modifier ces paramètres n'affecte que les futurs crédits.
+              Les soldes existants ne sont pas recalculés.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 2: THEME SELECTION
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-theme" class="pref-section">
+      <div class="card">
+        <div class="card-header">Choisissez votre thème couleur</div>
+        <div id="theme-alert"></div>
+        <p class="text-muted text-sm mb-2">Le thème s'applique à toutes les pages de votre espace FIDDO.</p>
+        <div class="theme-grid" id="theme-grid"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 3: MERCHANT INFO
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-info" class="pref-section">
+      <div class="grid grid-2">
         <div class="card">
-          <div class="card-header">Système de récompenses</div>
-          <div id="settings-alert"></div>
+          <div class="card-header">Informations de mon commerce</div>
+          <div id="info-alert"></div>
 
-          <form id="settings-form">
+          <form id="info-form">
             <div class="form-group">
-              <label class="form-label">Points par euro dépensé</label>
-              <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
-              <small class="form-help">Nombre de points gagnés pour chaque euro dépensé par le client</small>
+              <label class="form-label">Nom du commerce *</label>
+              <input type="text" id="info-business" class="form-control" required>
             </div>
-
             <div class="form-group">
-              <label class="form-label">Points nécessaires pour la récompense</label>
-              <input type="number" id="set-pfr" class="form-control" min="1">
-              <small class="form-help">Seuil de points à atteindre pour débloquer la récompense</small>
+              <label class="form-label">Adresse *</label>
+              <input type="text" id="info-address" class="form-control" required>
             </div>
-
             <div class="form-group">
-              <label class="form-label">Description de la récompense</label>
-              <input type="text" id="set-desc" class="form-control" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage">
-              <small class="form-help">Ce texte sera affiché au client et dans les emails (max 200 car.)</small>
+              <label class="form-label">N° TVA *</label>
+              <input type="text" id="info-vat" class="form-control" required>
+              <small class="form-help">Format : BE0123456789</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email du commerce *</label>
+              <input type="email" id="info-email" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Téléphone du commerce *</label>
+              <input type="tel" id="info-phone" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Téléphone propriétaire *</label>
+              <input type="tel" id="info-owner-phone" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nom du propriétaire</label>
+              <input type="text" id="info-owner-name" class="form-control">
             </div>
 
             <button type="submit" class="btn btn-primary btn-block">Enregistrer les modifications</button>
           </form>
         </div>
-      </div>
 
-      <!-- Right: Live preview -->
-      <div>
-        <div class="preview-card" id="reward-preview">
-          <!-- Filled by JS -->
+        <div>
+          <div class="card">
+            <div class="card-header">ℹ️ Informations</div>
+            <p style="font-size: 0.9rem; color: var(--text-light); line-height: 1.7;">
+              Toute modification de vos informations sera <strong>notifiée à l'administrateur FIDDO</strong> par email pour des raisons de sécurité.<br><br>
+              Le numéro de TVA doit être au format belge (BE0 suivi de 9 chiffres).<br><br>
+              Votre email de connexion ne peut pas être modifié ici. Contactez le support si nécessaire.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 4: PASSWORD CHANGE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-password" class="pref-section">
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="card-header">Modifier mon mot de passe</div>
+          <div id="pw-alert"></div>
+
+          <form id="pw-form">
+            <div class="form-group">
+              <label class="form-label">Mot de passe actuel *</label>
+              <input type="password" id="pw-current" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe *</label>
+              <input type="password" id="pw-new" class="form-control" minlength="6" required>
+              <div class="pw-strength"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
+              <div class="pw-strength-text" id="pw-strength-text"></div>
+              <small class="form-help">Minimum 6 caractères</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmer le nouveau mot de passe *</label>
+              <input type="password" id="pw-confirm" class="form-control" minlength="6" required>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block">Modifier le mot de passe</button>
+          </form>
         </div>
 
         <div class="card">
-          <div class="card-header">ℹ️ Comment ça marche</div>
+          <div class="card-header">🔒 Sécurité</div>
           <p style="font-size: 0.9rem; color: var(--text-light); line-height: 1.7;">
-            Chaque fois qu'un client passe chez vous, les points sont calculés automatiquement
-            en fonction du montant dépensé et de vos paramètres.<br><br>
-            Une fois le seuil atteint, la récompense s'affiche sur l'écran du caissier
-            et le client peut en bénéficier immédiatement.<br><br>
-            <strong>Attention :</strong> modifier ces paramètres affecte uniquement les futurs
-            crédits de points. Les soldes existants ne sont pas recalculés.
+            Un <strong>email de confirmation</strong> sera envoyé à votre adresse après le changement de mot de passe.<br><br>
+            Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement le support.<br><br>
+            Après 5 tentatives échouées, votre compte sera temporairement verrouillé pendant 15 minutes.
           </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 5: BACKUP & RESTORE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-backup" class="pref-section">
+      <div class="grid grid-2">
+        <!-- Export -->
+        <div class="card">
+          <div class="card-header">📤 Exporter mes données</div>
+          <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; line-height: 1.6;">
+            Téléchargez un fichier JSON contenant toutes vos données :
+            paramètres, clients, historique de transactions, préférences.
+          </p>
+          <button class="btn btn-primary btn-block" onclick="exportBackup()">
+            📥 Télécharger le backup (JSON)
+          </button>
+          <div id="export-alert" style="margin-top: 1rem;"></div>
+        </div>
+
+        <!-- Import -->
+        <div class="card">
+          <div class="card-header">📥 Restaurer des données</div>
+          <div id="import-alert"></div>
+
+          <div class="backup-drop" id="backup-drop" onclick="document.getElementById('backup-file').click();">
+            <div class="backup-drop-icon">📁</div>
+            <p><strong>Cliquez ici</strong> ou glissez votre fichier JSON</p>
+            <small class="text-muted">Fichier .json généré par FIDDO uniquement</small>
+          </div>
+          <input type="file" id="backup-file" accept=".json" style="display:none;">
+
+          <div id="backup-preview-container" style="display: none;">
+            <div class="backup-preview" id="backup-preview"></div>
+            <div class="alert alert-warning">
+              ⚠️ <strong>Attention :</strong> la restauration remplacera TOUTES vos données actuelles
+              (clients, transactions, paramètres). Cette action est irréversible.
+            </div>
+            <button class="btn btn-danger btn-block" id="import-btn" onclick="importBackup()">
+              ⚠️ Restaurer ces données
+            </button>
+            <button class="btn btn-outline btn-block mt-1" onclick="cancelImport()">Annuler</button>
+          </div>
         </div>
       </div>
     </div>
@@ -103,13 +297,26 @@
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
 
-    // ─── Init form values ───
+    // ═══════════════════════════════════════════════════════
+    // TAB SWITCHING
+    // ═══════════════════════════════════════════════════════
+
+    function switchTab(tab) {
+      document.querySelectorAll('.pref-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.pref-section').forEach(s => s.classList.remove('active'));
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 1: REWARD CONFIGURATION
+    // ═══════════════════════════════════════════════════════
+
     document.getElementById('set-ppe').value = merchant.points_per_euro;
     document.getElementById('set-pfr').value = merchant.points_for_reward;
     document.getElementById('set-desc').value = merchant.reward_description;
 
-    // ─── Live preview ───
-    function updatePreview() {
+    function updateRewardPreview() {
       const ppe = parseFloat(document.getElementById('set-ppe').value) || 1;
       const pfr = parseInt(document.getElementById('set-pfr').value) || 100;
       const desc = document.getElementById('set-desc').value.trim() || 'Récompense offerte';
@@ -119,58 +326,332 @@
         <strong>🎁 Aperçu du programme</strong>
         <div class="preview-example">
           <strong>1 €</strong> dépensé = <strong>${ppe} point${ppe > 1 ? 's' : ''}</strong><br>
-          Seuil de récompense : <strong>${pfr} points</strong><br>
-          Soit environ <strong>${eurosNeeded} €</strong> de dépenses<br><br>
-          ➜ Récompense : <strong>${desc}</strong>
+          Seuil : <strong>${pfr} points</strong> (≈ <strong>${eurosNeeded} €</strong>)<br><br>
+          ➜ <strong>${desc}</strong>
         </div>
       `;
     }
 
-    document.getElementById('set-ppe').addEventListener('input', updatePreview);
-    document.getElementById('set-pfr').addEventListener('input', updatePreview);
-    document.getElementById('set-desc').addEventListener('input', updatePreview);
-    updatePreview();
+    document.getElementById('set-ppe').addEventListener('input', updateRewardPreview);
+    document.getElementById('set-pfr').addEventListener('input', updateRewardPreview);
+    document.getElementById('set-desc').addEventListener('input', updateRewardPreview);
+    updateRewardPreview();
 
-    // ─── Save ───
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+    document.getElementById('reward-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-
       const ppe = parseFloat(document.getElementById('set-ppe').value);
       const pfr = parseInt(document.getElementById('set-pfr').value);
       const desc = document.getElementById('set-desc').value.trim();
 
-      if (!ppe || ppe <= 0) {
-        UI.showAlert('settings-alert', 'Points par euro doit être supérieur à 0', 'error');
-        return;
-      }
-      if (!pfr || pfr <= 0) {
-        UI.showAlert('settings-alert', 'Points pour récompense doit être supérieur à 0', 'error');
-        return;
-      }
-      if (!desc) {
-        UI.showAlert('settings-alert', 'Description de la récompense requise', 'error');
-        return;
-      }
+      if (!ppe || ppe <= 0) return UI.showAlert('reward-alert', 'Points par euro doit être > 0', 'error');
+      if (!pfr || pfr <= 0) return UI.showAlert('reward-alert', 'Points pour récompense doit être > 0', 'error');
+      if (!desc) return UI.showAlert('reward-alert', 'Description requise', 'error');
 
       try {
-        await API.auth.updateSettings({
-          pointsPerEuro: ppe,
-          pointsForReward: pfr,
-          rewardDescription: desc,
-        });
-
-        // Update local session
+        await API.auth.updateSettings({ pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: desc });
         merchant.points_per_euro = ppe;
         merchant.points_for_reward = pfr;
         merchant.reward_description = desc;
         Auth.setSession(staff, merchant);
-
-        UI.showAlert('settings-alert', 'Paramètres mis à jour avec succès !', 'success');
-        setTimeout(() => UI.clearAlert('settings-alert'), 4000);
+        UI.showAlert('reward-alert', 'Paramètres de récompense mis à jour !', 'success');
+        setTimeout(() => UI.clearAlert('reward-alert'), 4000);
       } catch (err) {
-        UI.showAlert('settings-alert', err.message, 'error');
+        UI.showAlert('reward-alert', err.message, 'error');
       }
     });
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 2: THEME SELECTION
+    // ═══════════════════════════════════════════════════════
+
+    const THEMES = [
+      { id: 'teal',   name: 'Teal',    colors: ['#0891B2', '#0E7490'] },
+      { id: 'navy',   name: 'Navy',    colors: ['#2563EB', '#1D4ED8'] },
+      { id: 'violet', name: 'Violet',  colors: ['#7C3AED', '#6D28D9'] },
+      { id: 'forest', name: 'Forest',  colors: ['#059669', '#047857'] },
+      { id: 'brick',  name: 'Brick',   colors: ['#DC2626', '#B91C1C'] },
+      { id: 'amber',  name: 'Amber',   colors: ['#D97706', '#B45309'] },
+      { id: 'slate',  name: 'Slate',   colors: ['#475569', '#334155'] },
+    ];
+
+    let currentTheme = 'teal';
+
+    function renderThemes() {
+      const grid = document.getElementById('theme-grid');
+      grid.innerHTML = THEMES.map(t => `
+        <div class="theme-option ${t.id === currentTheme ? 'selected' : ''}"
+             onclick="selectTheme('${t.id}')" id="theme-${t.id}">
+          <div class="check">✓</div>
+          <div class="swatch" style="background: linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]});"></div>
+          <div class="name">${t.name}</div>
+        </div>
+      `).join('');
+    }
+
+    async function selectTheme(themeId) {
+      try {
+        await API.preferences.setTheme(themeId);
+        currentTheme = themeId;
+        renderThemes();
+
+        // Apply theme live
+        const t = THEMES.find(x => x.id === themeId);
+        if (t) {
+          document.documentElement.style.setProperty('--primary', t.colors[0]);
+          document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
+          document.getElementById('reward-preview').style.background =
+            `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})`;
+        }
+
+        UI.showAlert('theme-alert', `Thème "${t.name}" appliqué !`, 'success');
+        setTimeout(() => UI.clearAlert('theme-alert'), 3000);
+      } catch (err) {
+        UI.showAlert('theme-alert', err.message, 'error');
+      }
+    }
+
+    // Load current theme from preferences
+    (async () => {
+      try {
+        const data = await API.preferences.get();
+        if (data.preferences && data.preferences.theme) {
+          currentTheme = data.preferences.theme;
+          const t = THEMES.find(x => x.id === currentTheme);
+          if (t) {
+            document.documentElement.style.setProperty('--primary', t.colors[0]);
+            document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
+            document.getElementById('reward-preview').style.background =
+              `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})`;
+          }
+        }
+      } catch (e) { /* use default */ }
+      renderThemes();
+    })();
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 3: MERCHANT INFO
+    // ═══════════════════════════════════════════════════════
+
+    async function loadMerchantInfo() {
+      try {
+        const data = await API.preferences.getMerchantInfo();
+        document.getElementById('info-business').value = data.businessName || '';
+        document.getElementById('info-address').value = data.address || '';
+        document.getElementById('info-vat').value = data.vatNumber || '';
+        document.getElementById('info-email').value = data.email || '';
+        document.getElementById('info-phone').value = data.phone || '';
+        document.getElementById('info-owner-phone').value = data.ownerPhone || '';
+        document.getElementById('info-owner-name').value = data.ownerName || '';
+      } catch (err) {
+        UI.showAlert('info-alert', 'Impossible de charger les informations', 'error');
+      }
+    }
+    loadMerchantInfo();
+
+    document.getElementById('info-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        businessName:  document.getElementById('info-business').value.trim(),
+        address:       document.getElementById('info-address').value.trim(),
+        vatNumber:     document.getElementById('info-vat').value.trim(),
+        email:         document.getElementById('info-email').value.trim(),
+        phone:         document.getElementById('info-phone').value.trim(),
+        ownerPhone:    document.getElementById('info-owner-phone').value.trim(),
+        ownerName:     document.getElementById('info-owner-name').value.trim(),
+      };
+
+      if (!payload.businessName || !payload.address || !payload.vatNumber || !payload.email || !payload.phone || !payload.ownerPhone) {
+        return UI.showAlert('info-alert', 'Tous les champs marqués * sont requis', 'error');
+      }
+
+      try {
+        const result = await API.preferences.updateMerchantInfo(payload);
+
+        if (result.changes && result.changes.length > 0) {
+          if (result.merchant) Auth.setSession(staff, result.merchant);
+          const changeList = result.changes.map(c => `<strong>${c.field}</strong> : ${c.old} → ${c.new}`).join('<br>');
+          UI.showAlert('info-alert',
+            `Informations mises à jour !<br><small>${changeList}</small><br><small class="text-muted">L'administrateur a été notifié par email.</small>`,
+            'success'
+          );
+        } else {
+          UI.showAlert('info-alert', 'Aucune modification détectée', 'info');
+        }
+        setTimeout(() => UI.clearAlert('info-alert'), 6000);
+      } catch (err) {
+        UI.showAlert('info-alert', err.message, 'error');
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 4: PASSWORD CHANGE
+    // ═══════════════════════════════════════════════════════
+
+    // Password strength indicator
+    document.getElementById('pw-new').addEventListener('input', (e) => {
+      const pw = e.target.value;
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+      if (/\d/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
+
+      const fill = document.getElementById('pw-strength-fill');
+      const text = document.getElementById('pw-strength-text');
+      const levels = [
+        { w: '0%', c: '#e5e7eb', t: '' },
+        { w: '20%', c: '#EF4444', t: 'Très faible' },
+        { w: '40%', c: '#F59E0B', t: 'Faible' },
+        { w: '60%', c: '#F59E0B', t: 'Moyen' },
+        { w: '80%', c: '#10B981', t: 'Fort' },
+        { w: '100%', c: '#059669', t: 'Très fort' },
+      ];
+      const lvl = levels[Math.min(score, 5)];
+      fill.style.width = lvl.w;
+      fill.style.background = lvl.c;
+      text.textContent = lvl.t;
+      text.style.color = lvl.c;
+    });
+
+    document.getElementById('pw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current = document.getElementById('pw-current').value;
+      const newPw = document.getElementById('pw-new').value;
+      const confirmPw = document.getElementById('pw-confirm').value;
+
+      if (!current || !newPw || !confirmPw) {
+        return UI.showAlert('pw-alert', 'Tous les champs sont requis', 'error');
+      }
+      if (newPw.length < 6) {
+        return UI.showAlert('pw-alert', 'Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
+      }
+      if (newPw !== confirmPw) {
+        return UI.showAlert('pw-alert', 'Les deux mots de passe ne correspondent pas', 'error');
+      }
+      if (current === newPw) {
+        return UI.showAlert('pw-alert', 'Le nouveau mot de passe doit être différent de l\'actuel', 'error');
+      }
+
+      try {
+        await API.preferences.changePassword({ currentPassword: current, newPassword: newPw });
+        UI.showAlert('pw-alert', 'Mot de passe modifié avec succès ! Un email de confirmation a été envoyé.', 'success');
+        document.getElementById('pw-form').reset();
+        document.getElementById('pw-strength-fill').style.width = '0';
+        document.getElementById('pw-strength-text').textContent = '';
+      } catch (err) {
+        UI.showAlert('pw-alert', err.message, 'error');
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 5: BACKUP & RESTORE
+    // ═══════════════════════════════════════════════════════
+
+    let pendingBackupData = null;
+
+    function exportBackup() {
+      UI.showAlert('export-alert', 'Préparation du backup...', 'info');
+      API.preferences.exportBackup(); // triggers download via redirect
+      setTimeout(() => {
+        UI.showAlert('export-alert', 'Backup téléchargé !', 'success');
+        setTimeout(() => UI.clearAlert('export-alert'), 3000);
+      }, 1500);
+    }
+
+    // Drag & drop
+    const dropZone = document.getElementById('backup-drop');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleBackupFile(file);
+    });
+
+    document.getElementById('backup-file').addEventListener('change', (e) => {
+      if (e.target.files[0]) handleBackupFile(e.target.files[0]);
+    });
+
+    async function handleBackupFile(file) {
+      if (!file.name.endsWith('.json')) {
+        return UI.showAlert('import-alert', 'Seuls les fichiers .json sont acceptés', 'error');
+      }
+
+      try {
+        UI.showAlert('import-alert', 'Validation du fichier...', 'info');
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        const result = await API.preferences.validateBackup(data);
+
+        if (!result.valid) {
+          UI.showAlert('import-alert', 'Fichier invalide : ' + result.errors.join(', '), 'error');
+          return;
+        }
+
+        // Show preview
+        pendingBackupData = data;
+        const p = result.preview;
+        document.getElementById('backup-preview').innerHTML = `
+          <strong>📋 Aperçu du backup</strong><br><br>
+          <strong>Commerce :</strong> ${p.business_name}<br>
+          <strong>Date d'export :</strong> ${Format.datetime(p.exported_at)}<br>
+          <strong>Version :</strong> ${p.version}<br><br>
+          <strong>${p.clients}</strong> clients · <strong>${p.transactions}</strong> transactions<br>
+          <strong>${Format.currency(p.total_spent)}</strong> de CA · <strong>${p.total_points}</strong> points
+        `;
+
+        document.getElementById('backup-preview-container').style.display = 'block';
+        dropZone.style.display = 'none';
+        UI.clearAlert('import-alert');
+
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          UI.showAlert('import-alert', 'Le fichier n\'est pas un JSON valide', 'error');
+        } else {
+          UI.showAlert('import-alert', err.message, 'error');
+        }
+      }
+    }
+
+    async function importBackup() {
+      if (!pendingBackupData) return;
+
+      if (!confirm('⚠️ ATTENTION :\n\nToutes vos données actuelles (clients, transactions) seront REMPLACÉES par celles du backup.\n\nCette action est IRRÉVERSIBLE.\n\nConfirmer la restauration ?')) {
+        return;
+      }
+
+      try {
+        document.getElementById('import-btn').disabled = true;
+        UI.showAlert('import-alert', 'Restauration en cours...', 'info');
+
+        const result = await API.preferences.importBackup(pendingBackupData);
+        UI.showAlert('import-alert',
+          `Restauration réussie !<br>
+           ${result.result.clients_restored} clients · ${result.result.transactions_restored} transactions restaurées`,
+          'success'
+        );
+        cancelImport();
+
+        // Refresh session
+        const verifyData = await API.auth.verify();
+        Auth.setSession(verifyData.staff, verifyData.merchant);
+
+      } catch (err) {
+        UI.showAlert('import-alert', err.message, 'error');
+      } finally {
+        document.getElementById('import-btn').disabled = false;
+      }
+    }
+
+    function cancelImport() {
+      pendingBackupData = null;
+      document.getElementById('backup-preview-container').style.display = 'none';
+      document.getElementById('backup-drop').style.display = 'block';
+      document.getElementById('backup-file').value = '';
+    }
   </script>
 </body>
 </html>
