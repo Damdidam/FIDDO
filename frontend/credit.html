@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ═══════════════════════════════════════════════════════
-       CREDIT PAGE — Compact, mobile-first redesign
+       CREDIT PAGE — Rigid, fixed, aligned, zero layout shift
        ═══════════════════════════════════════════════════════ */
 
     .credit-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
@@ -16,417 +16,306 @@
 
     /* ── Layout ── */
     .credit-layout {
-      max-width: 960px;
+      max-width: 920px;
       margin: 0 auto;
       padding: 1rem;
       display: grid;
-      grid-template-columns: 1fr 320px;
+      grid-template-columns: 1fr 260px;
       gap: 1rem;
       align-items: start;
     }
 
-    /* ── Points strip (top on mobile, sidebar header on desktop) ── */
-    .points-strip {
-      background: var(--gradient);
-      border-radius: 12px;
-      padding: 1rem 1.25rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      color: white;
-      box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 25%, transparent);
-    }
-    .points-strip .pts-value {
-      font-size: 2.2rem;
-      font-weight: 700;
-      line-height: 1;
-      letter-spacing: -0.5px;
-    }
-    .points-strip .pts-label {
-      font-size: 0.78rem;
-      opacity: 0.85;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 2px;
-    }
-    .points-strip .pts-config {
-      text-align: right;
-      font-size: 0.75rem;
-      opacity: 0.8;
-      line-height: 1.6;
-    }
-
-    /* ── Form card ── */
-    .form-card {
+    /* ── Shared card style ── */
+    .c-card {
       background: white;
-      border-radius: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       overflow: hidden;
     }
-    .form-card-header {
-      padding: 0.9rem 1.25rem;
+    .c-card-header {
+      padding: 0.7rem 1rem;
       border-bottom: 1px solid #F1F5F9;
-      font-weight: 600;
-      font-size: 0.95rem;
-      color: #1E293B;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      font-weight: 600; font-size: 0.88rem; color: #1E293B;
+      display: flex; align-items: center; gap: 0.45rem;
     }
-    .form-card-body {
-      padding: 1.25rem;
-    }
+    .c-card-body { padding: 0.9rem 1rem; }
 
-    /* ── Alert area ── */
+    /* ── Alert ── */
     .credit-page .alert {
-      border-radius: 8px;
-      font-size: 0.85rem;
-      padding: 0.65rem 0.9rem;
-      margin-bottom: 1rem;
+      border-radius: 7px; font-size: 0.82rem;
+      padding: 0.5rem 0.75rem; margin-bottom: 0.75rem;
     }
 
-    /* ── Segmented control (email / phone / QR) ── */
-    .seg-control {
-      display: flex;
-      background: #F1F5F9;
-      border-radius: 10px;
-      padding: 3px;
-      margin-bottom: 1.15rem;
-      gap: 3px;
+    /* ── Segmented control ── */
+    .seg-ctrl {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      background: #F1F5F9; border-radius: 7px; padding: 3px;
+      margin-bottom: 0.9rem;
     }
-    .seg-control button {
-      flex: 1;
-      padding: 0.5rem 0.25rem;
-      border: none;
-      background: transparent;
-      border-radius: 8px;
-      font-family: inherit;
-      font-weight: 600;
-      font-size: 0.82rem;
-      color: #64748B;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.35rem;
+    .seg-ctrl button {
+      padding: 0.4rem; border: none; background: transparent;
+      border-radius: 5px; font-family: inherit; font-weight: 600;
+      font-size: 0.78rem; color: #64748B; cursor: pointer;
     }
-    .seg-control button.active {
-      background: white;
-      color: var(--primary-dark);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .seg-control button:hover:not(.active) {
-      color: #334155;
-    }
-    .seg-control .seg-icon {
-      font-size: 0.9rem;
-      line-height: 1;
+    .seg-ctrl button.active {
+      background: white; color: var(--primary-dark);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
     }
 
-    /* ── Form fields ── */
-    .credit-page .form-group { margin-bottom: 0.9rem; }
-
+    /* ── Form ── */
+    .credit-page .form-group { margin-bottom: 0.8rem; }
     .credit-page .form-label {
-      display: block;
-      font-size: 0.78rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-      color: #64748B;
-      margin-bottom: 0.35rem;
+      display: block; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      color: #64748B; margin-bottom: 0.25rem;
     }
-
     .credit-page .form-control {
-      width: 100%;
-      padding: 0.6rem 0.75rem;
-      border: 1.5px solid #E2E8F0;
-      border-radius: 8px;
-      font-family: inherit;
-      font-size: 0.92rem;
-      color: #1E293B;
+      width: 100%; padding: 0.5rem 0.65rem;
+      border: 1.5px solid #E2E8F0; border-radius: 6px;
+      font-family: inherit; font-size: 0.88rem; color: #1E293B;
       background: #FAFBFC;
-      transition: all 0.2s;
     }
     .credit-page .form-control:focus {
-      outline: none;
-      border-color: var(--primary);
-      background: white;
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 10%, transparent);
+      outline: none; border-color: var(--primary); background: white;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 10%, transparent);
     }
     .credit-page .form-control::placeholder { color: #94A3B8; }
+    .credit-page .form-hint { font-size: 0.68rem; color: #94A3B8; margin-top: 0.15rem; }
 
-    .credit-page .form-hint {
-      font-size: 0.72rem;
-      color: #94A3B8;
-      margin-top: 0.25rem;
-    }
-
-    /* ── Input wrap (with clear button) ── */
+    /* ── Input wrap + clear ── */
     .input-wrap { position: relative; }
-    .input-wrap .form-control { padding-right: 32px; }
+    .input-wrap .form-control { padding-right: 26px; }
     .btn-clear {
-      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; font-size: 0.9rem; cursor: pointer;
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; font-size: 0.82rem; cursor: pointer;
       color: #94A3B8; padding: 2px 4px; line-height: 1; display: none;
-      border-radius: 50%; transition: all 0.15s;
     }
-    .btn-clear:hover { color: #EF4444; background: #FEF2F2; }
+    .btn-clear:hover { color: #EF4444; }
     .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
     .input-wrap .form-control.has-value ~ .btn-clear { display: block; }
 
     /* ── Typo warning ── */
     .typo-warning {
-      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
-      padding: 0.45rem 0.7rem; margin-top: 0.35rem; font-size: 0.78rem; color: #92400E;
-      display: flex; align-items: center; gap: 0.5rem;
+      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 5px;
+      padding: 0.35rem 0.6rem; margin-top: 0.25rem; font-size: 0.72rem; color: #92400E;
+      display: flex; align-items: center; gap: 0.4rem;
     }
     .typo-warning button {
-      background: #F59E0B; color: white; border: none; border-radius: 4px;
-      padding: 2px 8px; font-size: 0.72rem; cursor: pointer; font-weight: 600; white-space: nowrap;
-      font-family: inherit;
+      background: #F59E0B; color: white; border: none; border-radius: 3px;
+      padding: 1px 6px; font-size: 0.68rem; cursor: pointer; font-weight: 600;
+      white-space: nowrap; font-family: inherit;
     }
 
-    /* ── Autocomplete dropdown ── */
+    /* ── Autocomplete ── */
     .autocomplete-list {
       position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
       background: white; border: 1.5px solid #E2E8F0; border-top: none;
-      border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1); display: none;
+      border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: none;
     }
     .autocomplete-list.show { display: block; }
     .ac-item {
-      padding: 0.55rem 0.75rem; cursor: pointer; border-bottom: 1px solid #F1F5F9;
-      font-size: 0.85rem; transition: background 0.12s;
+      padding: 0.4rem 0.65rem; cursor: pointer;
+      border-bottom: 1px solid #F8FAFC; font-size: 0.78rem;
     }
     .ac-item:last-child { border-bottom: none; }
-    .ac-item:hover, .ac-item.selected { background: color-mix(in srgb, var(--primary-light) 50%, white); }
+    .ac-item:hover, .ac-item.selected { background: color-mix(in srgb, var(--primary-light) 40%, white); }
     .ac-item .ac-name { font-weight: 600; color: #1E293B; }
-    .ac-item .ac-meta { color: #64748B; font-size: 0.75rem; margin-top: 1px; }
-    .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; font-size: 0.82rem; }
+    .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
+    .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; font-size: 0.78rem; }
 
-    /* ── Row layout for amount + notes ── */
-    .form-row-compact {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
+    /* ── Amount + Notes row ── */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
 
-    /* ── Submit button ── */
+    /* ── Submit ── */
     .btn-credit {
-      width: 100%;
-      padding: 0.7rem;
-      border: none;
-      border-radius: 10px;
-      background: var(--gradient);
-      color: white;
-      font-family: inherit;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      margin-top: 0.25rem;
-      box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent);
+      width: 100%; padding: 0.6rem; border: none; border-radius: 7px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
     }
     .btn-credit:hover:not(:disabled) {
-      box-shadow: 0 4px 16px color-mix(in srgb, var(--primary) 35%, transparent);
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 28%, transparent);
     }
-    .btn-credit:active:not(:disabled) { box-shadow: 0 2px 8px color-mix(in srgb, var(--primary) 25%, transparent); }
-    .btn-credit:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+    .btn-credit:disabled { opacity: 0.55; cursor: not-allowed; }
 
-    /* ── Sidebar (right panel) ── */
-    .sidebar-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
+    /* ═══════════════════════════════════════════════════════
+       SIDEBAR — ONE card, 3 fixed zones, NOTHING moves
+       ═══════════════════════════════════════════════════════ */
+
+    .sb {
+      background: white; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     }
 
-    /* ── Lookup result cards ── */
-    .lookup-card {
-      background: white;
-      border-radius: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
-      overflow: hidden;
+    /* Zone 1: Points — always 80px tall */
+    .sb-pts {
+      height: 80px;
+      background: var(--gradient); color: white;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
     }
-    .lookup-card-header {
-      padding: 0.65rem 1rem;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: #1E293B;
+    .sb-pts.is-success { background: linear-gradient(135deg, #059669, #10B981); }
+    .sb-pts-val { font-size: 1.8rem; font-weight: 700; line-height: 1; letter-spacing: -0.5px; }
+    .sb-pts-lbl { font-size: 0.68rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+
+    /* Zone 2: Config — always 1-line, 32px tall */
+    .sb-cfg {
+      height: 32px;
+      padding: 0 0.75rem;
+      font-size: 0.68rem; color: #64748B;
       border-bottom: 1px solid #F1F5F9;
-    }
-    .lookup-card-body { padding: 1rem; }
-
-    .lookup-placeholder {
-      color: #94A3B8;
-      font-size: 0.82rem;
-      text-align: center;
-      padding: 0.5rem 0;
+      display: flex; align-items: center;
+      overflow: hidden; white-space: nowrap;
     }
 
-    .lookup-result {
-      border-radius: 8px;
-      padding: 0.85rem;
+    /* Zone 3: Client — fixed min-height */
+    .sb-cli {
+      min-height: 110px;
+      padding: 0.65rem 0.75rem;
+      font-size: 0.8rem; color: #1E293B;
     }
-    .lookup-result.found {
-      background: color-mix(in srgb, var(--primary-light) 40%, white);
-      border: 1.5px solid color-mix(in srgb, var(--primary-light) 70%, white);
+    .sb-cli-hdr {
+      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.4px; color: #94A3B8; margin-bottom: 0.35rem;
     }
-    .lookup-result.new {
-      background: color-mix(in srgb, var(--primary-light) 50%, white);
-      border: 1.5px solid color-mix(in srgb, var(--primary-light) 80%, white);
+    .sb-cli-empty {
+      color: #CBD5E1; font-size: 0.78rem;
+      text-align: center; padding: 1rem 0 0.5rem;
+    }
+    .sb-cli-box {
+      border-radius: 6px; padding: 0.5rem 0.6rem;
+      line-height: 1.55; font-size: 0.78rem;
+    }
+    .sb-cli-box.found {
+      background: color-mix(in srgb, var(--primary-light) 30%, white);
+      border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
+    }
+    .sb-cli-box.new-client {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+    }
+    .sb-cli-box.result {
+      background: #F0FDF4; border: 1px solid #D1FAE5;
+    }
+    .sb-cli-name { font-weight: 600; }
+    .sb-cli-pts { float: right; font-weight: 700; color: var(--primary); }
+    .sb-cli-meta { font-size: 0.7rem; color: #64748B; }
+
+    /* Progress bar */
+    .sb-prog { background: #E2E8F0; height: 3px; border-radius: 2px; margin: 0.3rem 0; overflow: hidden; }
+    .sb-prog-fill { height: 100%; background: var(--gradient); border-radius: 2px; }
+
+    /* Reward banner */
+    .sb-reward {
+      background: var(--gradient); color: white;
+      padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center;
+      margin-top: 0.35rem; cursor: pointer; font-size: 0.72rem; font-weight: 500;
     }
 
-    .reward-banner {
-      background: var(--gradient);
-      color: white;
-      padding: 0.65rem 0.9rem;
-      border-radius: 8px;
-      text-align: center;
-      margin-top: 0.6rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 0.85rem;
-      font-weight: 500;
+    /* Zone 4: Action (fixed 48px, visible or empty) */
+    .sb-act {
+      height: 48px;
+      padding: 0 0.75rem;
+      border-top: 1px solid #F1F5F9;
+      display: flex; align-items: center;
     }
-    .reward-banner:hover { box-shadow: 0 4px 12px color-mix(in srgb, var(--primary) 25%, transparent); }
+    .sb-act .btn-credit { font-size: 0.78rem; padding: 0.4rem; }
+    .sb-act.hidden { visibility: hidden; }
 
-    /* ── Credit success state ── */
-    .credit-success {
-      background: linear-gradient(135deg, color-mix(in srgb, var(--primary-light) 30%, white), color-mix(in srgb, var(--primary-light) 40%, white));
-      border: 1.5px solid color-mix(in srgb, var(--primary-light) 70%, white);
-      border-radius: 12px;
-      padding: 1.5rem;
-      text-align: center;
-    }
-    .credit-success .big-pts {
-      font-size: 2.2rem;
-      font-weight: 700;
-      color: var(--primary-dark);
-      letter-spacing: -0.5px;
-    }
-    .credit-success .client-info {
-      color: #1E293B;
-      margin-top: 0.5rem;
-      font-size: 0.88rem;
-      line-height: 1.7;
-    }
+    /* ═══════════════════════════════════════════════════════
+       QR — Compact, contained
+       ═══════════════════════════════════════════════════════ */
 
-    /* ── Progress bar (in lookup) ── */
-    .credit-page .progress-bar {
-      background: #E2E8F0;
-      height: 6px;
-      border-radius: 3px;
-      overflow: hidden;
-      margin: 0.4rem 0;
+    .qr-box {
+      text-align: center; padding: 0.75rem;
+      background: #FAFBFC; border: 1.5px solid #E2E8F0;
+      border-radius: 7px; margin-bottom: 0.8rem;
     }
-    .credit-page .progress-fill {
-      height: 100%;
-      background: var(--gradient);
-      border-radius: 3px;
-      transition: width 0.5s ease;
-    }
-
-    /* ═══ QR Section ═══ */
-    .qr-inline {
-      text-align: center; padding: 1.25rem; background: #FAFBFC;
-      border: 1.5px solid #E2E8F0; border-radius: 10px; margin-bottom: 0.9rem;
-    }
-    .qr-inline .qr-subtitle {
-      font-size: 0.78rem; color: #64748B; margin-bottom: 1rem;
-    }
+    .qr-box .qr-sub { font-size: 0.7rem; color: #64748B; margin-bottom: 0.5rem; }
     .qr-frame {
-      position: relative; display: inline-block; padding: 12px;
-      background: white; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,0.05);
-      border: 1px solid #E2E8F0;
+      position: relative; display: inline-block; padding: 6px;
+      background: white; border-radius: 6px; border: 1px solid #E2E8F0;
     }
-    .qr-frame img { display: block; border-radius: 4px; }
+    .qr-frame img { display: block; border-radius: 2px; }
     .qr-frame::after {
-      content: ''; position: absolute; left: 12px; right: 12px; height: 2px;
+      content: ''; position: absolute; left: 6px; right: 6px; height: 2px;
       background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      animation: qr-scan 2.5s ease-in-out infinite; border-radius: 1px;
+      animation: qrscan 2.5s ease-in-out infinite;
     }
-    @keyframes qr-scan { 0% { top: 12px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 12px); opacity: 0; } }
-    .qr-frame.received::after { display: none; }
-    .qr-pill {
-      display: inline-flex; align-items: center; gap: 0.35rem; margin-top: 0.75rem;
-      padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 500;
-      background: #FEF3C7; color: #92400E;
-    }
-    .qr-pill .dot {
-      width: 6px; height: 6px; border-radius: 50%; background: #F59E0B;
-      animation: qr-pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes qr-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .qr-pill.success { background: color-mix(in srgb, var(--primary-light) 60%, white); color: var(--primary-dark); }
-    .qr-pill.success .dot { background: var(--primary); animation: none; }
-    .qr-pill.expired { background: #FEE2E2; color: #991B1B; }
-    .qr-pill.expired .dot { background: #EF4444; animation: none; }
-    .qr-timer-bar {
-      width: 160px; height: 3px; background: #E2E8F0; border-radius: 2px;
-      margin: 0.4rem auto 0; overflow: hidden;
-    }
-    .qr-timer-fill {
-      height: 100%; background: var(--primary); border-radius: 2px;
-      transition: width 1s linear; width: 100%;
-    }
-    .qr-timer-text { font-size: 0.7rem; color: #94A3B8; margin-top: 0.2rem; }
-    .qr-confirmed {
-      padding: 0.85rem; margin-top: 0.6rem;
-      background: white; border-radius: 10px; border: 1px solid color-mix(in srgb, var(--primary-light) 60%, white);
-    }
-    .qr-confirmed .confirmed-icon { font-size: 1.6rem; margin-bottom: 0.15rem; }
-    .qr-confirmed .confirmed-title { font-weight: 700; color: var(--primary-dark); font-size: 0.85rem; }
-    .qr-confirmed .confirmed-detail {
-      font-size: 0.78rem; color: #64748B; margin-top: 0.25rem; line-height: 1.5;
-    }
-    .qr-confirmed .confirmed-detail strong { color: #1E293B; }
-    .qr-actions {
-      margin-top: 0.6rem; display: flex; gap: 0.4rem; justify-content: center;
-    }
-    .qr-actions button {
-      padding: 0.25rem 0.7rem; border-radius: 6px; font-size: 0.75rem; font-weight: 500;
-      cursor: pointer; border: 1px solid #E2E8F0; background: white; color: #64748B;
-      transition: all 0.15s; font-family: inherit;
-    }
-    .qr-actions button:hover { background: #F1F5F9; color: #1E293B; }
+    @keyframes qrscan { 0%{top:6px;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:calc(100% - 6px);opacity:0} }
+    .qr-frame.done::after { display: none; }
 
-    /* ═══ Page title ═══ */
-    .page-title {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #1E293B;
-      margin: 0.75rem 0;
-      letter-spacing: -0.3px;
+    .qr-stat {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.4rem; margin-top: 0.4rem; font-size: 0.7rem; color: #64748B;
+    }
+    .qr-stat .dot {
+      width: 5px; height: 5px; border-radius: 50%; background: #F59E0B;
+      animation: qrp 1.5s ease-in-out infinite;
+    }
+    @keyframes qrp { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .qr-stat.ok .dot { background: var(--primary); animation: none; }
+    .qr-stat.ko .dot { background: #EF4444; animation: none; }
+
+    .qr-tmr { width: 100px; height: 2px; background: #E2E8F0; border-radius: 1px; margin: 0.25rem auto 0; overflow: hidden; }
+    .qr-tmr-fill { height: 100%; background: var(--primary); border-radius: 1px; width: 100%; }
+    .qr-tmr-txt { font-size: 0.62rem; color: #94A3B8; margin-top: 0.1rem; }
+
+    .qr-result {
+      padding: 0.5rem; margin-top: 0.35rem;
+      background: color-mix(in srgb, var(--primary-light) 35%, white);
+      border-radius: 5px; border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
+      font-size: 0.75rem; color: #1E293B; line-height: 1.5;
+    }
+    .qr-result strong { color: var(--primary-dark); }
+
+    .qr-redo {
+      margin-top: 0.35rem; padding: 0.15rem 0.5rem; border-radius: 4px;
+      font-size: 0.68rem; cursor: pointer;
+      border: 1px solid #E2E8F0; background: white; color: #64748B;
+      font-family: inherit;
+    }
+    .qr-redo:hover { background: #F1F5F9; }
+
+    /* ═══════════════════════════════════════════════════════
+       TITLE
+       ═══════════════════════════════════════════════════════ */
+
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.5rem 0; letter-spacing: -0.3px;
     }
 
-    /* ═══ RESPONSIVE ═══ */
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════ */
+
     @media (max-width: 768px) {
       .credit-layout {
         grid-template-columns: 1fr;
-        padding: 0.75rem;
-        gap: 0.75rem;
+        padding: 0.5rem; gap: 0.5rem;
       }
-      .points-strip {
-        padding: 0.75rem 1rem;
+      /* Sidebar goes on top */
+      .sb { order: -1; }
+      /* Points zone: horizontal on mobile */
+      .sb-pts {
+        height: 56px; flex-direction: row;
+        gap: 0.5rem; justify-content: center;
       }
-      .points-strip .pts-value { font-size: 1.8rem; }
-      .form-card-body { padding: 1rem; }
-      .form-row-compact { grid-template-columns: 1fr; gap: 0.6rem; }
-      .page-title { font-size: 1rem; margin: 0.5rem 0; }
-      .sidebar-panel { order: -1; }
+      .sb-pts-val { font-size: 1.4rem; }
+      .sb-pts-lbl { margin-top: 0; }
+      .sb-cfg { height: 28px; padding: 0 0.6rem; font-size: 0.65rem; }
+      .sb-cli { min-height: 70px; padding: 0.5rem 0.6rem; }
+      .sb-act { height: 42px; padding: 0 0.6rem; }
+      .row-2 { grid-template-columns: 1fr; gap: 0.4rem; }
+      .c-card-body { padding: 0.75rem; }
+      .pg-title { font-size: 0.92rem; margin: 0.35rem 0; }
     }
 
     @media (max-width: 380px) {
-      .seg-control button { font-size: 0.75rem; padding: 0.4rem 0.15rem; }
-      .seg-control .seg-icon { display: none; }
+      .seg-ctrl button { font-size: 0.7rem; }
     }
-
-
   </style>
 </head>
 <body class="credit-page">
@@ -436,36 +325,28 @@
   </nav>
 
   <div class="container">
-    <h1 class="page-title">Créditer des points</h1>
+    <h1 class="pg-title">Créditer des points</h1>
 
     <div class="credit-layout">
 
       <!-- ══════ LEFT: Form ══════ -->
-      <div class="form-card">
-        <div class="form-card-header">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="flex-shrink:0; color: var(--primary);">
+      <div class="c-card">
+        <div class="c-card-header">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--primary)">
             <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
             <path d="M8 4.5v4M6 6.5l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           Nouveau passage
         </div>
-
-        <div class="form-card-body">
+        <div class="c-card-body">
           <div id="credit-alert"></div>
 
           <form id="credit-form" autocomplete="off">
-
-            <!-- Segmented toggle: Email / Phone / QR -->
-            <div class="seg-control">
-              <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">
-                <span class="seg-icon">@</span> Email
-              </button>
-              <button type="button" id="toggle-phone" onclick="switchMode('phone')">
-                <span class="seg-icon">#</span> Tél
-              </button>
-              <button type="button" id="toggle-qr" onclick="switchMode('qr')">
-                <span class="seg-icon">⬡</span> QR
-              </button>
+            <!-- Segmented toggle -->
+            <div class="seg-ctrl">
+              <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
+              <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
+              <button type="button" id="toggle-qr" onclick="switchMode('qr')">⬡ QR</button>
             </div>
 
             <!-- Email field -->
@@ -473,7 +354,7 @@
               <label class="form-label">Adresse email</label>
               <div class="input-wrap">
                 <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-email')" title="Effacer">×</button>
+                <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
                 <div class="autocomplete-list" id="ac-email"></div>
               </div>
               <div id="typo-email"></div>
@@ -484,93 +365,77 @@
               <label class="form-label">Numéro de téléphone</label>
               <div class="input-wrap">
                 <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-phone')" title="Effacer">×</button>
+                <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
                 <div class="autocomplete-list" id="ac-phone"></div>
               </div>
-              <div class="form-hint">Formats : +32…, 0032…, 04…</div>
+              <div class="form-hint">+32…, 0032…, 04…</div>
             </div>
 
-            <!-- QR field -->
+            <!-- QR field (compact) -->
             <div id="field-qr" style="display:none;">
-              <div class="qr-inline" id="qr-inline">
-                <div class="qr-subtitle">Le client scanne ce QR et remplit ses coordonnées</div>
-                <div class="qr-frame" id="qr-frame">
-                  <div id="qr-canvas"></div>
-                </div>
-                <div>
-                  <div class="qr-pill" id="qr-pill">
-                    <span class="dot"></span>
-                    <span id="qr-pill-text">En attente du client…</span>
-                  </div>
-                </div>
-                <div class="qr-timer-bar" id="qr-timer-bar"><div class="qr-timer-fill" id="qr-timer-fill"></div></div>
-                <div class="qr-timer-text" id="qr-timer-text"></div>
+              <div class="qr-box" id="qr-inline">
+                <div class="qr-sub">Le client scanne ce QR</div>
+                <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
+                <div class="qr-stat" id="qr-pill"><span class="dot"></span><span id="qr-pill-text">En attente…</span></div>
+                <div class="qr-tmr" id="qr-timer-bar"><div class="qr-tmr-fill" id="qr-timer-fill"></div></div>
+                <div class="qr-tmr-txt" id="qr-timer-text"></div>
                 <div id="qr-confirmed-container"></div>
-                <div class="qr-actions">
-                  <button type="button" onclick="refreshQR()">Nouveau QR</button>
-                </div>
+                <button type="button" class="qr-redo" onclick="refreshQR()">Nouveau QR</button>
               </div>
             </div>
 
-            <!-- Name (optional) -->
+            <!-- Name -->
             <div class="form-group">
-              <label class="form-label">Nom / surnom <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optionnel)</span></label>
+              <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
               <div class="input-wrap">
                 <input type="text" id="client-name" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-name')" title="Effacer">×</button>
+                <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
               </div>
             </div>
 
-            <!-- Amount + Notes side by side -->
-            <div class="form-row-compact">
+            <!-- Amount + Notes -->
+            <div class="row-2">
               <div class="form-group">
                 <label class="form-label">Montant (€) *</label>
                 <div class="input-wrap">
                   <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
-                  <button type="button" class="btn-clear" onclick="clearField('amount')" title="Effacer">×</button>
+                  <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
                 </div>
               </div>
               <div class="form-group">
-                <label class="form-label">Notes <span style="font-weight:400; text-transform:none; letter-spacing:0;">(opt.)</span></label>
+                <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
                 <div class="input-wrap">
                   <input type="text" id="notes" class="form-control" placeholder="Menu midi…" autocomplete="off">
-                  <button type="button" class="btn-clear" onclick="clearField('notes')" title="Effacer">×</button>
+                  <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
                 </div>
               </div>
             </div>
 
-            <button type="submit" class="btn-credit" id="submit-btn">
-              Créditer les points
-            </button>
+            <button type="submit" class="btn-credit" id="submit-btn">Créditer les points</button>
           </form>
         </div>
       </div>
 
-      <!-- ══════ RIGHT: Sidebar ══════ -->
-      <div class="sidebar-panel">
-
-        <!-- Points preview -->
-        <div id="preview-card">
-          <div class="points-strip" id="preview-box">
-            <div>
-              <div class="pts-value" id="preview-points">0</div>
-              <div class="pts-label">Points à créditer</div>
-            </div>
-            <div id="merchant-info" class="pts-config"></div>
-          </div>
+      <!-- ══════ RIGHT: ONE fixed card, 4 zones, same size always ══════ -->
+      <div class="sb" id="sidebar">
+        <!-- Z1: Points (80px fixed) -->
+        <div class="sb-pts" id="sb-pts">
+          <div class="sb-pts-val" id="sb-pts-val">0</div>
+          <div class="sb-pts-lbl" id="sb-pts-lbl">Points à créditer</div>
         </div>
-
-        <!-- Client lookup result (always visible) -->
-        <div id="lookup-container">
-          <div class="lookup-card">
-            <div class="lookup-card-header" id="lookup-header">Client</div>
-            <div class="lookup-card-body" id="lookup-result">
-              <div class="lookup-placeholder">Entrez un email ou téléphone</div>
-            </div>
-          </div>
+        <!-- Z2: Config (32px fixed) -->
+        <div class="sb-cfg" id="sb-cfg"></div>
+        <!-- Z3: Client (min 110px) -->
+        <div class="sb-cli">
+          <div class="sb-cli-hdr" id="sb-cli-hdr">Client</div>
+          <div id="sb-cli-body"><div class="sb-cli-empty">Entrez un email ou téléphone</div></div>
         </div>
-
+        <!-- Z4: Action (48px fixed, hidden by default) -->
+        <div class="sb-act hidden" id="sb-act">
+          <button class="btn-credit" onclick="resetForm()">Nouveau crédit</button>
+        </div>
       </div>
+
     </div>
   </div>
 
@@ -581,376 +446,253 @@
 
     const merchant = Auth.getMerchant();
     const staff = Auth.getStaff();
-    let currentMode = 'email'; // 'email' or 'phone'
+    let currentMode = 'email';
 
     // ═══════════════════════════════════════════════════════
-    // MERCHANT CONFIG DISPLAY
+    // SIDEBAR HELPERS — only text changes, structure never moves
     // ═══════════════════════════════════════════════════════
-    function showMerchantInfo() {
-      const el = document.getElementById('merchant-info');
-      if (el) el.innerHTML = `
-        ${merchant.points_per_euro} pt/€<br>
-        Récompense à ${merchant.points_for_reward} pts
-        ${staff.role === 'cashier' ? '<br><span style="opacity:0.7">Max 200€</span>' : ''}
-      `;
+
+    function sbConfig() {
+      document.getElementById('sb-cfg').textContent =
+        merchant.points_per_euro + ' pt/€ · Récompense à ' + merchant.points_for_reward + ' pts' +
+        (staff.role === 'cashier' ? ' · Max 200€' : '');
     }
-    showMerchantInfo();
+    sbConfig();
 
-    // ═══════════════════════════════════════════════════════
-    // LOOKUP RESET (sidebar always visible, just swap content)
-    // ═══════════════════════════════════════════════════════
-    function resetLookup() {
-      document.getElementById('lookup-header').textContent = 'Client';
-      document.getElementById('lookup-result').innerHTML = '<div class="lookup-placeholder">Entrez un email ou téléphone</div>';
+    function sbReset() {
+      document.getElementById('sb-pts').classList.remove('is-success');
+      document.getElementById('sb-pts-val').textContent = '0';
+      document.getElementById('sb-pts-lbl').textContent = 'Points à créditer';
+      document.getElementById('sb-cli-hdr').textContent = 'Client';
+      document.getElementById('sb-cli-body').innerHTML = '<div class="sb-cli-empty">Entrez un email ou téléphone</div>';
+      document.getElementById('sb-act').classList.add('hidden');
+      sbConfig();
+    }
+
+    // Lookup: just swap text inside sb-cli-body
+    function sbLookup(data) {
+      const hdr = document.getElementById('sb-cli-hdr');
+      const body = document.getElementById('sb-cli-body');
+
+      if (!data.found) {
+        hdr.textContent = 'Nouveau client';
+        body.innerHTML = '<div class="sb-cli-box new-client">Sera créé au crédit.</div>';
+        return;
+      }
+      const c = data.client;
+      if (data.isNew) {
+        hdr.textContent = 'Première visite';
+        body.innerHTML = '<div class="sb-cli-box new-client">Existe mais jamais venu ici.' + (c.name ? '<br>Nom : ' + c.name : '') + '</div>';
+        if (c.name && !document.getElementById('client-name').value) {
+          document.getElementById('client-name').value = c.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+        return;
+      }
+
+      hdr.textContent = 'Client trouvé';
+      const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+      let h = '<div class="sb-cli-box found">' +
+        '<span class="sb-cli-pts">' + c.points_balance + ' pts</span>' +
+        '<span class="sb-cli-name">' + (c.name || c.email || c.phone) + '</span>' +
+        (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
+        '<div class="sb-cli-meta">' + c.visit_count + ' visite(s)</div>' +
+        '<div class="sb-prog"><div class="sb-prog-fill" style="width:' + pct + '%"></div></div>' +
+        '<div class="sb-cli-meta">' + c.points_balance + '/' + c.reward_threshold + '</div>';
+      if (c.can_redeem) {
+        h += '<div class="sb-reward" onclick="redeemReward(' + c.id + ')">' +
+          (c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
+      }
+      h += '</div>';
+      body.innerHTML = h;
+
+      if (c.name && !document.getElementById('client-name').value) {
+        document.getElementById('client-name').value = c.name;
+        document.getElementById('client-name').classList.add('has-value');
+      }
+    }
+
+    function sbLookupReset() {
+      document.getElementById('sb-cli-hdr').textContent = 'Client';
+      document.getElementById('sb-cli-body').innerHTML = '<div class="sb-cli-empty">Entrez un email ou téléphone</div>';
+    }
+
+    // Success: just swap text
+    function sbSuccess(result) {
+      document.getElementById('sb-pts').classList.add('is-success');
+      document.getElementById('sb-pts-val').textContent = '+' + result.transaction.points_delta + ' pts';
+      document.getElementById('sb-pts-lbl').textContent = 'Crédités ✓';
+      document.getElementById('sb-cfg').textContent = '';
+
+      const n = result.client.name || result.client.email || result.client.phone || 'Client';
+      let d = '<strong>' + n + '</strong><br>Solde : <strong>' + result.client.points_balance + ' pts</strong>';
+      if (result.client.email) d += '<br>' + result.client.email;
+      if (result.client.phone) d += '<br>' + result.client.phone;
+      if (result.isNewClient) d += '<br><span class="badge badge-info" style="margin-top:0.2rem">Nouveau client</span>';
+
+      document.getElementById('sb-cli-hdr').textContent = 'Crédit effectué';
+      document.getElementById('sb-cli-body').innerHTML = '<div class="sb-cli-box result">' + d + '</div>';
+      document.getElementById('sb-act').classList.remove('hidden');
     }
 
     // ═══════════════════════════════════════════════════════
-    // PRE-FILL FROM URL PARAMS
+    // PRE-FILL FROM URL
     // ═══════════════════════════════════════════════════════
-    (function prefillFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      const email = params.get('email');
-      const phone = params.get('phone');
-      const name = params.get('name');
-
-      if (phone && !email) {
-        switchMode('phone');
-        document.getElementById('client-phone').value = phone;
-      } else if (email) {
-        document.getElementById('client-email').value = email;
-      }
-
-      if (name) document.getElementById('client-name').value = name;
-
-      if (email || phone) {
-        setTimeout(() => triggerLookup(), 500);
-      }
-
-      if (params.toString()) {
-        window.history.replaceState({}, '', window.location.pathname);
-      }
+    (function() {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); }
+      else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); }
+      if (p.get('name')) document.getElementById('client-name').value = p.get('name');
+      if (p.get('email') || p.get('phone')) setTimeout(triggerLookup, 500);
+      if (p.toString()) window.history.replaceState({}, '', window.location.pathname);
     })();
 
     // ═══════════════════════════════════════════════════════
-    // TOGGLE EMAIL / PHONE
+    // MODE SWITCH
     // ═══════════════════════════════════════════════════════
     function switchMode(mode) {
-      // If leaving QR mode, stop polling
       if (currentMode === 'qr' && mode !== 'qr') {
         stopQRPolling();
-        if (qrToken) {
-          fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-          qrToken = null;
-        }
+        if (qrToken) { fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {}); qrToken = null; }
       }
-
       currentMode = mode;
       document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
       document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
       document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
-      document.getElementById('field-email').style.display = mode === 'email' ? 'block' : 'none';
-      document.getElementById('field-phone').style.display = mode === 'phone' ? 'block' : 'none';
-      document.getElementById('field-qr').style.display = mode === 'qr' ? 'block' : 'none';
-
-      // Clear the hidden fields
-      if (mode !== 'email') {
-        document.getElementById('client-email').value = '';
-        document.getElementById('ac-email').classList.remove('show');
-        document.getElementById('typo-email').innerHTML = '';
-      }
-      if (mode !== 'phone') {
-        document.getElementById('client-phone').value = '';
-        document.getElementById('ac-phone').classList.remove('show');
-      }
-      resetLookup();
-
-      // Auto-create QR session when switching to QR mode
-      if (mode === 'qr') {
-        createQRSession();
-      }
+      document.getElementById('field-email').style.display = mode === 'email' ? '' : 'none';
+      document.getElementById('field-phone').style.display = mode === 'phone' ? '' : 'none';
+      document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
+      if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
+      if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
+      sbLookupReset();
+      if (mode === 'qr') createQRSession();
     }
 
     // ═══════════════════════════════════════════════════════
-    // CLEAR BUTTON
+    // CLEAR
     // ═══════════════════════════════════════════════════════
     function clearField(id) {
       const el = document.getElementById(id);
-      el.value = '';
-      el.focus();
-      el.dispatchEvent(new Event('input'));
-      if (id === 'amount') {
-        const pp = document.getElementById('preview-points');
-        if (pp) pp.textContent = '0';
-      }
+      el.value = ''; el.focus(); el.dispatchEvent(new Event('input'));
+      if (id === 'amount') document.getElementById('sb-pts-val').textContent = '0';
     }
-
-    // Force clear button visibility (CSS :placeholder-shown doesn't work for programmatic)
-    document.querySelectorAll('.input-wrap .form-control').forEach(input => {
-      input.addEventListener('input', () => {
-        input.classList.toggle('has-value', input.value.length > 0);
-      });
+    document.querySelectorAll('.input-wrap .form-control').forEach(el => {
+      el.addEventListener('input', () => el.classList.toggle('has-value', el.value.length > 0));
     });
 
     // ═══════════════════════════════════════════════════════
     // POINTS PREVIEW
     // ═══════════════════════════════════════════════════════
     document.getElementById('amount').addEventListener('input', (e) => {
-      const amount = parseFloat(e.target.value) || 0;
-      const pp = document.getElementById('preview-points');
-      if (pp) pp.textContent = Math.floor(amount * merchant.points_per_euro);
+      document.getElementById('sb-pts-val').textContent = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
     });
 
     // ═══════════════════════════════════════════════════════
     // EMAIL TYPO DETECTION
     // ═══════════════════════════════════════════════════════
-    const DOMAIN_TYPOS = {
-      'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com',
-      'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com', 'gmali.com': 'gmail.com',
-      'gmai.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.be': 'gmail.com',
-      'hotmal.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
-      'hotmial.com': 'hotmail.com', 'hotamil.com': 'hotmail.com',
-      'outloo.com': 'outlook.com', 'outlok.com': 'outlook.com',
-      'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahooo.fr': 'yahoo.fr',
-      'iclould.com': 'icloud.com', 'iclou.com': 'icloud.com',
+    const TYPOS = {
+      'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com',
+      'gamil.com':'gmail.com','gnail.com':'gmail.com','gmali.com':'gmail.com',
+      'gmai.com':'gmail.com','gmail.co':'gmail.com','gmail.be':'gmail.com',
+      'hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmaill.com':'hotmail.com',
+      'hotmial.com':'hotmail.com','hotamil.com':'hotmail.com',
+      'outloo.com':'outlook.com','outlok.com':'outlook.com',
+      'yahooo.com':'yahoo.com','yaho.com':'yahoo.com','yahooo.fr':'yahoo.fr',
+      'iclould.com':'icloud.com','iclou.com':'icloud.com',
     };
-
-    function checkEmailTypo(email) {
-      const container = document.getElementById('typo-email');
-      container.innerHTML = '';
-      if (!email || !email.includes('@')) return;
-
-      const parts = email.split('@');
-      if (parts.length !== 2) return;
-      const domain = parts[1].toLowerCase();
-      const suggestion = DOMAIN_TYPOS[domain];
-
-      if (suggestion) {
-        const corrected = parts[0] + '@' + suggestion;
-        container.innerHTML = `
-          <div class="typo-warning">
-            <span>Vouliez-vous dire <strong>${corrected}</strong> ?</span>
-            <button type="button" onclick="applyTypoFix('${corrected}')">Corriger</button>
-          </div>
-        `;
+    function checkEmailTypo(v) {
+      const c = document.getElementById('typo-email'); c.innerHTML = '';
+      if (!v || !v.includes('@')) return;
+      const parts = v.split('@'); if (parts.length !== 2) return;
+      const fix = TYPOS[parts[1].toLowerCase()];
+      if (fix) {
+        const corrected = parts[0] + '@' + fix;
+        c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + corrected + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + corrected + '\')">Corriger</button></div>';
       }
     }
-
-    function applyTypoFix(corrected) {
-      document.getElementById('client-email').value = corrected;
+    function applyTypo(v) {
+      document.getElementById('client-email').value = v;
       document.getElementById('typo-email').innerHTML = '';
       triggerLookup();
     }
 
     // ═══════════════════════════════════════════════════════
-    // AUTOCOMPLETE SEARCH (3+ chars)
+    // AUTOCOMPLETE
     // ═══════════════════════════════════════════════════════
-    let searchTimeout;
-
-    function setupAutocomplete(inputId, acListId) {
-      const input = document.getElementById(inputId);
-      const acList = document.getElementById(acListId);
-
-      input.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        const val = input.value.trim();
-
-        // Always trigger global lookup in parallel (cross-merchant)
+    let acTimer;
+    function setupAC(inputId, listId) {
+      const inp = document.getElementById(inputId), list = document.getElementById(listId);
+      inp.addEventListener('input', () => {
+        clearTimeout(acTimer);
+        const v = inp.value.trim();
         triggerLookup();
-
-        // Close dropdown if too short
-        if (val.length < 3) {
-          acList.classList.remove('show');
-          if (inputId === 'client-email') checkEmailTypo(val);
-          return;
-        }
-
-        if (inputId === 'client-email') checkEmailTypo(val);
-
-        searchTimeout = setTimeout(async () => {
+        if (v.length < 3) { list.classList.remove('show'); if (inputId === 'client-email') checkEmailTypo(v); return; }
+        if (inputId === 'client-email') checkEmailTypo(v);
+        acTimer = setTimeout(async () => {
           try {
-            const data = await API.clients.searchGlobal(val);
-            if (!data.clients || data.clients.length === 0) {
-              acList.classList.remove('show');
-              return;
-            }
-
-            // Render suggestions (global: includes clients from other merchants)
-            acList.innerHTML = data.clients.slice(0, 6).map(c => `
-              <div class="ac-item" data-email="${c.email || ''}" data-phone="${c.phone || ''}" data-name="${c.name || ''}">
-                <span class="ac-pts">${c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>'}</span>
-                <div class="ac-name">${c.name || c.email || c.phone || '?'}</div>
-                <div class="ac-meta">${c.email ? c.email : ''}${c.email && c.phone ? ' · ' : ''}${c.phone ? c.phone : ''}${c.is_local ? ' · ' + c.visit_count + ' visite(s)' : ''}</div>
-              </div>
-            `).join('');
-
-            acList.classList.add('show');
-
-            // Click handler on items
-            acList.querySelectorAll('.ac-item').forEach(item => {
+            const d = await API.clients.searchGlobal(v);
+            if (!d.clients || !d.clients.length) { list.classList.remove('show'); return; }
+            list.innerHTML = d.clients.slice(0, 6).map(c =>
+              '<div class="ac-item" data-email="' + (c.email || '') + '" data-phone="' + (c.phone || '') + '" data-name="' + (c.name || '') + '">' +
+              '<span class="ac-pts">' + (c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>') + '</span>' +
+              '<div class="ac-name">' + (c.name || c.email || c.phone || '?') + '</div>' +
+              '<div class="ac-meta">' + (c.email || '') + (c.email && c.phone ? ' · ' : '') + (c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
+            ).join('');
+            list.classList.add('show');
+            list.querySelectorAll('.ac-item').forEach(item => {
               item.addEventListener('click', () => {
-                const email = item.dataset.email;
-                const phone = item.dataset.phone;
-                const name = item.dataset.name;
-
-                if (currentMode === 'email' && email) {
-                  document.getElementById('client-email').value = email;
-                  document.getElementById('client-email').classList.add('has-value');
-                } else if (currentMode === 'phone' && phone) {
-                  document.getElementById('client-phone').value = phone;
-                  document.getElementById('client-phone').classList.add('has-value');
-                } else if (email) {
-                  switchMode('email');
-                  document.getElementById('client-email').value = email;
-                  document.getElementById('client-email').classList.add('has-value');
-                } else if (phone) {
-                  switchMode('phone');
-                  document.getElementById('client-phone').value = phone;
-                  document.getElementById('client-phone').classList.add('has-value');
-                }
-
-                if (name) {
-                  document.getElementById('client-name').value = name;
-                  document.getElementById('client-name').classList.add('has-value');
-                }
-
-                acList.classList.remove('show');
+                const e = item.dataset.email, p = item.dataset.phone, n = item.dataset.name;
+                if (currentMode === 'email' && e) { inp.value = e; inp.classList.add('has-value'); }
+                else if (currentMode === 'phone' && p) { inp.value = p; inp.classList.add('has-value'); }
+                else if (e) { switchMode('email'); document.getElementById('client-email').value = e; }
+                else if (p) { switchMode('phone'); document.getElementById('client-phone').value = p; }
+                if (n) { document.getElementById('client-name').value = n; document.getElementById('client-name').classList.add('has-value'); }
+                list.classList.remove('show');
                 document.getElementById('typo-email').innerHTML = '';
                 triggerLookup();
               });
             });
-
-          } catch (err) {
-            acList.classList.remove('show');
-            // Lookup already triggered above — no need for fallback
-          }
+          } catch (e) { list.classList.remove('show'); }
         }, 350);
       });
-
-      // Close dropdown on outside click
-      document.addEventListener('click', (e) => {
-        if (!input.contains(e.target) && !acList.contains(e.target)) {
-          acList.classList.remove('show');
-        }
-      });
+      document.addEventListener('click', (e) => { if (!inp.contains(e.target) && !list.contains(e.target)) list.classList.remove('show'); });
     }
-
-    setupAutocomplete('client-email', 'ac-email');
-    setupAutocomplete('client-phone', 'ac-phone');
+    setupAC('client-email', 'ac-email');
+    setupAC('client-phone', 'ac-phone');
 
     // ═══════════════════════════════════════════════════════
-    // CLIENT LOOKUP (existing client check)
+    // LOOKUP
     // ═══════════════════════════════════════════════════════
-    let lookupTimeout;
-
+    let lookupTimer;
     function triggerLookup() {
-      clearTimeout(lookupTimeout);
+      clearTimeout(lookupTimer);
       const email = document.getElementById('client-email').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
-
-      if (!email && !phone) {
-        resetLookup();
-        return;
-      }
-
-      lookupTimeout = setTimeout(async () => {
+      if (!email && !phone) { sbLookupReset(); return; }
+      lookupTimer = setTimeout(async () => {
         try {
-          const params = {};
-          if (email) params.email = email;
-          if (phone) params.phone = phone;
-
-          const data = await API.clients.lookup(params);
-          const result = document.getElementById('lookup-result');
-          const header = document.getElementById('lookup-header');
-
-          if (!data.found) {
-            header.textContent = 'Nouveau client';
-            result.innerHTML = `
-              <div class="lookup-result new">
-                <strong>Ce client sera créé automatiquement lors du crédit.</strong>
-              </div>
-            `;
-            return;
-          }
-
-          const c = data.client;
-
-          if (data.isNew) {
-            header.textContent = 'Première visite ici';
-            result.innerHTML = `
-              <div class="lookup-result new">
-                <strong>Ce client existe mais n'est jamais venu chez vous.</strong>
-                ${c.name ? `<p class="text-sm mt-1">Nom : ${c.name}</p>` : ''}
-              </div>
-            `;
-
-            // Auto-fill name if we got one
-            if (c.name && !document.getElementById('client-name').value) {
-              document.getElementById('client-name').value = c.name;
-              document.getElementById('client-name').classList.add('has-value');
-            }
-            return;
-          }
-
-          header.textContent = 'Client trouvé';
-          const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
-
-          let html = `
-            <div class="lookup-result found">
-              <div class="flex-between">
-                <div>
-                  <strong>${c.name || c.email || c.phone}</strong>
-                  ${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}
-                </div>
-                <span style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
-              </div>
-              <p class="text-sm text-muted">${c.visit_count} visite(s)</p>
-              <div class="progress-bar" style="margin: 0.4rem 0;">
-                <div class="progress-fill" style="width: ${progress}%;"></div>
-              </div>
-              <p class="text-sm text-muted">${c.points_balance}/${c.reward_threshold} points</p>
-          `;
-
-          if (c.can_redeem) {
-            html += `
-              <div class="reward-banner" onclick="redeemReward(${c.id})">
-                Récompense disponible — Cliquez pour l'appliquer<br>
-                <small>${c.reward_description || merchant.reward_description}</small>
-                ${c.custom_reward ? '<br><span style="background:rgba(255,255,255,0.25);padding:1px 8px;border-radius:10px;font-size:0.65rem;margin-top:4px;display:inline-block">Perso</span>' : ''}
-              </div>
-            `;
-          }
-
-          html += '</div>';
-          result.innerHTML = html;
-
-          // Auto-fill name
-          if (c.name && !document.getElementById('client-name').value) {
-            document.getElementById('client-name').value = c.name;
-            document.getElementById('client-name').classList.add('has-value');
-          }
-
-        } catch (err) {
-          console.error('Lookup error:', err);
-        }
+          const p = {};
+          if (email) p.email = email;
+          if (phone) p.phone = phone;
+          sbLookup(await API.clients.lookup(p));
+        } catch (e) { console.error(e); }
       }, 300);
     }
 
     // ═══════════════════════════════════════════════════════
-    // REDEEM REWARD
+    // REDEEM
     // ═══════════════════════════════════════════════════════
-    async function redeemReward(merchantClientId) {
-      if (!confirm('Appliquer la récompense pour ce client ?')) return;
+    async function redeemReward(mcId) {
+      if (!confirm('Appliquer la récompense ?')) return;
       try {
-        const result = await API.clients.reward({ merchantClientId });
-        UI.showAlert('credit-alert', `Récompense appliquée : <strong>${result.rewardLabel || 'Récompense'}</strong><br>Nouveau solde : ${result.client.points_balance} pts`, 'success');
+        const r = await API.clients.reward({ merchantClientId: mcId });
+        UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
         triggerLookup();
-      } catch (err) {
-        UI.showAlert('credit-alert', err.message, 'error');
-      }
+      } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
     }
 
     // ═══════════════════════════════════════════════════════
-    // SUBMIT CREDIT
+    // SUBMIT
     // ═══════════════════════════════════════════════════════
     document.getElementById('credit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -960,260 +702,123 @@
       const amount = parseFloat(document.getElementById('amount').value);
       const notes = document.getElementById('notes').value.trim();
 
-      if (!email && !phone) {
-        if (currentMode === 'qr') {
-          UI.showAlert('credit-alert', 'Le client n\'a pas encore scanné le QR', 'error');
-        } else {
-          UI.showAlert('credit-alert', 'Email ou téléphone requis', 'error');
-        }
-        return;
-      }
-      if (!amount || amount <= 0) {
-        UI.showAlert('credit-alert', 'Montant invalide', 'error');
-        return;
-      }
+      if (!email && !phone) { UI.showAlert('credit-alert', currentMode === 'qr' ? 'Le client n\'a pas scanné le QR' : 'Email ou téléphone requis', 'error'); return; }
+      if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
 
       try {
         document.getElementById('submit-btn').disabled = true;
-        UI.showAlert('credit-alert', 'Traitement en cours...', 'info');
-
-        const result = await API.clients.credit({
-          email: email || undefined,
-          phone: phone || undefined,
-          name: name || undefined,
-          amount,
-          notes: notes || undefined,
+        UI.showAlert('credit-alert', 'Traitement…', 'info');
+        const r = await API.clients.credit({
+          email: email || undefined, phone: phone || undefined,
+          name: name || undefined, amount, notes: notes || undefined,
         });
-
-        // Hide loading alert
         UI.clearAlert('credit-alert');
-
-        // Show success in place of the blue preview card
-        const clientDisplay = result.client.name || result.client.email || result.client.phone || 'Client';
-        const previewCard = document.getElementById('preview-card');
-        previewCard.innerHTML = `
-          <div class="credit-success">
-            <div class="big-pts">+${result.transaction.points_delta} pts</div>
-            <div class="client-info">
-              <strong>${clientDisplay}</strong><br>
-              Nouveau solde : <strong>${result.client.points_balance} points</strong><br>
-              ${result.client.email ? result.client.email + '<br>' : ''}
-              ${result.client.phone ? result.client.phone + '<br>' : ''}
-              ${result.isNewClient ? '<span class="badge badge-info" style="margin-top:0.4rem;">Nouveau client</span>' : ''}
-            </div>
-            <button class="btn-credit" style="margin-top:1rem;" onclick="resetForm()">
-              Nouveau crédit
-            </button>
-          </div>
-        `;
-
-        // Hide lookup
-        resetLookup();
-
-      } catch (err) {
-        UI.showAlert('credit-alert', err.message, 'error');
-      } finally {
-        document.getElementById('submit-btn').disabled = false;
-      }
+        sbSuccess(r);
+      } catch (e) { UI.showAlert('credit-alert', e.message, 'error');
+      } finally { document.getElementById('submit-btn').disabled = false; }
     });
 
     function resetForm() {
-      // Restore the preview card
-      const previewCard = document.getElementById('preview-card');
-      previewCard.innerHTML = `
-        <div class="points-strip" id="preview-box">
-          <div>
-            <div class="pts-value" id="preview-points">0</div>
-            <div class="pts-label">Points à créditer</div>
-          </div>
-          <div id="merchant-info" class="pts-config"></div>
-        </div>
-      `;
-      // Re-fill merchant info
-      showMerchantInfo();
-      // Re-bind amount preview
-      document.getElementById('amount').value = '';
-
-      resetLookup();
+      sbReset();
       UI.clearAlert('credit-alert');
       document.getElementById('credit-form').reset();
       document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
-      // Reset QR if in QR mode
       document.getElementById('qr-confirmed-container').innerHTML = '';
-      if (currentMode === 'qr') {
-        refreshQR();
-      } else {
-        // Stop any lingering QR session
-        stopQRPolling();
-        if (qrToken) {
-          fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-          qrToken = null;
-        }
-      }
-      // Switch back to email mode by default
+      if (currentMode === 'qr') refreshQR();
+      else { stopQRPolling(); if (qrToken) { fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {}); qrToken = null; } }
       switchMode('email');
       document.getElementById('client-email').focus();
     }
-    // ═══════════════════════════════════════════════════════
-    // QR CODE — CLIENT SELF-IDENTIFICATION
-    // ═══════════════════════════════════════════════════════
 
-    let qrToken = null;
-    let qrPollInterval = null;
-    let qrTimerInterval = null;
-    let qrExpiresAt = null;
-    let qrInstance = null;
-    const QR_TTL_MS = 10 * 60 * 1000;
+    // ═══════════════════════════════════════════════════════
+    // QR CODE
+    // ═══════════════════════════════════════════════════════
+    let qrToken = null, qrPoll = null, qrTmr = null, qrExp = null, qrInst = null;
+    const QR_TTL = 10 * 60 * 1000;
 
     async function createQRSession() {
       try {
-        // Reset UI
         document.getElementById('qr-confirmed-container').innerHTML = '';
-        document.getElementById('qr-frame').classList.remove('received');
+        document.getElementById('qr-frame').classList.remove('done');
         document.getElementById('qr-frame').style.display = 'inline-block';
         const pill = document.getElementById('qr-pill');
-        pill.className = 'qr-pill';
-        pill.style.display = 'inline-flex';
-        document.getElementById('qr-pill-text').textContent = 'En attente du client…';
-        document.getElementById('qr-timer-bar').style.display = 'block';
+        pill.className = 'qr-stat'; pill.style.display = 'flex';
+        document.getElementById('qr-pill-text').textContent = 'En attente…';
+        document.getElementById('qr-timer-bar').style.display = '';
 
         const resp = await API.call('/qr/session', { method: 'POST' });
         qrToken = resp.token;
-        qrExpiresAt = Date.now() + (resp.expiresIn * 1000);
+        qrExp = Date.now() + (resp.expiresIn * 1000);
 
-        // Generate QR code
-        const canvas = document.getElementById('qr-canvas');
-        canvas.innerHTML = '';
-        qrInstance = new QRCode(canvas, {
-          text: resp.url,
-          width: 180,
-          height: 180,
-          colorDark: '#1F2937',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M,
-        });
+        const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
+        qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
 
-        startQRPolling();
-        startQRTimer();
-
-      } catch (err) {
-        console.error('QR session error:', err);
-        document.getElementById('qr-pill-text').textContent = 'Erreur de création';
-        document.getElementById('qr-pill').className = 'qr-pill expired';
+        startPoll(); startTmr();
+      } catch (e) {
+        document.getElementById('qr-pill-text').textContent = 'Erreur';
+        document.getElementById('qr-pill').className = 'qr-stat ko';
       }
     }
 
     async function refreshQR() {
       stopQRPolling();
-      if (qrToken) {
-        fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-      }
+      if (qrToken) fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {});
       await createQRSession();
     }
 
-    function startQRPolling() {
+    function startPoll() {
       stopQRPolling();
-      qrPollInterval = setInterval(async () => {
+      qrPoll = setInterval(async () => {
         if (!qrToken) return;
         try {
-          const resp = await fetch(`${API_BASE_URL}/qr/poll/${qrToken}`, { credentials: 'include' });
-          const data = await resp.json();
-
-          if (resp.status === 410 || resp.status === 404) {
-            stopQRPolling();
-            document.getElementById('qr-pill').className = 'qr-pill expired';
-            document.getElementById('qr-pill-text').textContent = 'Session expirée';
-            return;
-          }
-
-          if (!data.pending) {
-            stopQRPolling();
-            onQRDataReceived(data);
-          }
-        } catch (err) {
-          console.error('QR poll error:', err);
-        }
+          const r = await fetch(API_BASE_URL + '/qr/poll/' + qrToken, { credentials: 'include' });
+          const d = await r.json();
+          if (r.status === 410 || r.status === 404) { stopQRPolling(); document.getElementById('qr-pill').className = 'qr-stat ko'; document.getElementById('qr-pill-text').textContent = 'Expiré'; return; }
+          if (!d.pending) { stopQRPolling(); onQR(d); }
+        } catch (e) {}
       }, 1500);
     }
 
     function stopQRPolling() {
-      if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
-      if (qrTimerInterval) { clearInterval(qrTimerInterval); qrTimerInterval = null; }
+      if (qrPoll) { clearInterval(qrPoll); qrPoll = null; }
+      if (qrTmr) { clearInterval(qrTmr); qrTmr = null; }
     }
 
-    function startQRTimer() {
-      if (qrTimerInterval) clearInterval(qrTimerInterval);
-      const fillEl = document.getElementById('qr-timer-fill');
-      const textEl = document.getElementById('qr-timer-text');
-
-      qrTimerInterval = setInterval(() => {
-        if (!qrExpiresAt) return;
-        const total = QR_TTL_MS;
-        const elapsed = Date.now() - (qrExpiresAt - total);
-        const remaining = Math.max(0, Math.ceil((qrExpiresAt - Date.now()) / 1000));
-        const pct = Math.max(0, (1 - elapsed / total) * 100);
-
-        fillEl.style.width = pct + '%';
-        const min = Math.floor(remaining / 60);
-        const sec = remaining % 60;
-        textEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
-
-        if (remaining <= 0) {
-          clearInterval(qrTimerInterval);
-          textEl.textContent = 'Expiré';
-          document.getElementById('qr-pill').className = 'qr-pill expired';
-          document.getElementById('qr-pill-text').textContent = 'Session expirée';
-        }
+    function startTmr() {
+      if (qrTmr) clearInterval(qrTmr);
+      const fill = document.getElementById('qr-timer-fill'), txt = document.getElementById('qr-timer-text');
+      qrTmr = setInterval(() => {
+        if (!qrExp) return;
+        const el = Date.now() - (qrExp - QR_TTL);
+        const rem = Math.max(0, Math.ceil((qrExp - Date.now()) / 1000));
+        fill.style.width = Math.max(0, (1 - el / QR_TTL) * 100) + '%';
+        txt.textContent = Math.floor(rem / 60) + ':' + (rem % 60).toString().padStart(2, '0');
+        if (rem <= 0) { clearInterval(qrTmr); txt.textContent = 'Expiré'; document.getElementById('qr-pill').className = 'qr-stat ko'; document.getElementById('qr-pill-text').textContent = 'Expiré'; }
       }, 1000);
     }
 
-    function onQRDataReceived(data) {
-      // Update pill to success
-      document.getElementById('qr-pill').className = 'qr-pill success';
-      document.getElementById('qr-pill-text').textContent = 'Informations reçues !';
-
-      // Hide QR frame + timer
+    function onQR(d) {
+      document.getElementById('qr-pill').className = 'qr-stat ok';
+      document.getElementById('qr-pill-text').textContent = 'Reçu !';
       document.getElementById('qr-frame').style.display = 'none';
       document.getElementById('qr-timer-bar').style.display = 'none';
       document.getElementById('qr-timer-text').textContent = '';
 
-      // Build confirmed card
-      let details = [];
-      if (data.email) details.push(`<strong>@</strong> ${data.email}`);
-      if (data.phone) details.push(`<strong>#</strong> ${data.phone}`);
-      if (data.name) details.push(`<strong>&bull;</strong> ${data.name}`);
+      let det = [];
+      if (d.email) det.push('@ ' + d.email);
+      if (d.phone) det.push('# ' + d.phone);
+      if (d.name) det.push(d.name);
+      document.getElementById('qr-confirmed-container').innerHTML = '<div class="qr-result"><strong>✓ Client identifié</strong><br>' + det.join(' · ') + '</div>';
 
-      document.getElementById('qr-confirmed-container').innerHTML = `
-        <div class="qr-confirmed">
-          <div class="confirmed-icon">✓</div>
-          <div class="confirmed-title">Client identifié</div>
-          <div class="confirmed-detail">${details.join('<br>')}</div>
-        </div>
-      `;
+      if (d.email) { document.getElementById('client-email').value = d.email; document.getElementById('client-email').classList.add('has-value'); }
+      if (d.phone) { document.getElementById('client-phone').value = d.phone; document.getElementById('client-phone').classList.add('has-value'); }
+      if (d.name) { document.getElementById('client-name').value = d.name; document.getElementById('client-name').classList.add('has-value'); }
 
-      // Fill the credit form and switch to appropriate mode
-      if (data.email) {
-        document.getElementById('client-email').value = data.email;
-        document.getElementById('client-email').classList.add('has-value');
-      }
-      if (data.phone) {
-        document.getElementById('client-phone').value = data.phone;
-        document.getElementById('client-phone').classList.add('has-value');
-      }
-      if (data.name) {
-        document.getElementById('client-name').value = data.name;
-        document.getElementById('client-name').classList.add('has-value');
-      }
-
-      // Trigger lookup + focus amount
-      setTimeout(() => triggerLookup(), 300);
+      setTimeout(triggerLookup, 300);
       setTimeout(() => document.getElementById('amount').focus(), 600);
     }
 
-    // Clean up polling on page unload
-    window.addEventListener('beforeunload', () => {
-      stopQRPolling();
-    });
+    window.addEventListener('beforeunload', stopQRPolling);
   </script>
 </body>
 </html>
