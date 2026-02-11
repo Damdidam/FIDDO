@@ -82,6 +82,7 @@ const API = {
     getById: (id) => API.call(`/clients/${id}`),
     block: (id) => API.call(`/clients/${id}/block`, { method: 'POST' }),
     unblock: (id) => API.call(`/clients/${id}/unblock`, { method: 'POST' }),
+    setCustomReward: (id, customReward) => API.call(`/clients/${id}/custom-reward`, { method: 'PUT', body: JSON.stringify({ customReward }) }),
     exportCSV: () => { window.location.href = `${API_BASE_URL}/clients/export/csv`; },
   },
 
