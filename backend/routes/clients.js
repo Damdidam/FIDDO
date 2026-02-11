@@ -7,94 +7,171 @@ const { sendValidationEmail, sendPointsCreditedEmail } = require('../services/em
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 
 const router = express.Router();
-
-// All routes require authentication
 router.use(authenticateStaff);
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/clients/credit — Credit points (cashier+)
+// GET /api/clients/quick-search?q=...&mode=email|phone
+// ═══════════════════════════════════════════════════════
+
+router.get('/quick-search', (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const { q, mode } = req.query;
+    if (!q || q.length < 3) return res.json({ results: [] });
+
+    const termLike = `%${q.toLowerCase()}%`;
+    let endUsers;
+
+    if (mode === 'phone') {
+      const digits = q.replace(/[^\d]/g, '');
+      if (digits.length < 3) return res.json({ results: [] });
+      endUsers = db.prepare(`
+        SELECT id, email, phone, phone_e164, name FROM end_users
+        WHERE deleted_at IS NULL
+          AND (REPLACE(REPLACE(REPLACE(REPLACE(phone_e164,'+',''),' ',''),'-',''),'.','') LIKE ? OR name LIKE ?)
+        ORDER BY updated_at DESC LIMIT 10
+      `).all(`%${digits}%`, termLike);
+    } else {
+      endUsers = db.prepare(`
+        SELECT id, email, phone, phone_e164, name FROM end_users
+        WHERE deleted_at IS NULL AND (email_lower LIKE ? OR name LIKE ?)
+        ORDER BY updated_at DESC LIMIT 10
+      `).all(termLike, termLike);
+    }
+
+    const results = endUsers.map(eu => {
+      const mc = merchantClientQueries.find.get(merchantId, eu.id);
+      return {
+        end_user_id: eu.id, email: eu.email, phone: eu.phone, name: eu.name,
+        id: mc ? mc.id : null, points_balance: mc ? mc.points_balance : undefined,
+        visit_count: mc ? mc.visit_count : undefined, total_spent: mc ? mc.total_spent : undefined,
+        is_blocked: mc ? mc.is_blocked : false,
+      };
+    });
+    res.json({ results, count: results.length });
+  } catch (error) {
+    console.error('Erreur quick-search:', error);
+    res.status(500).json({ error: 'Erreur lors de la recherche' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/clients/recent-activity?limit=20
+// ═══════════════════════════════════════════════════════
+
+router.get('/recent-activity', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const limit = Math.min(parseInt(req.query.limit) || 50, 500);
+    const merchant = merchantQueries.findById.get(merchantId);
+
+    const rows = db.prepare(`
+      SELECT t.id, t.amount, t.points_delta, t.transaction_type, t.source, t.notes, t.created_at,
+             eu.email as client_email, eu.phone as client_phone, eu.name as client_name,
+             mc.points_balance as current_balance, mc.id as merchant_client_id,
+             mc.custom_reward,
+             sa.display_name as staff_name, sa.role as staff_role
+      FROM transactions t
+      JOIN merchant_clients mc ON t.merchant_client_id = mc.id
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      LEFT JOIN staff_accounts sa ON t.staff_id = sa.id
+      WHERE t.merchant_id = ?
+      ORDER BY t.created_at DESC LIMIT ?
+    `).all(merchantId, limit);
+
+    const transactions = rows.map(r => ({
+      ...r,
+      can_redeem: r.current_balance >= merchant.points_for_reward,
+      has_custom_reward: !!r.custom_reward,
+    }));
+
+    res.json({ transactions, count: transactions.length });
+  } catch (error) {
+    console.error('Erreur recent-activity:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/clients/enriched — Clients + last tx info
+// ═══════════════════════════════════════════════════════
+
+router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+
+    const clients = db.prepare(`
+      SELECT mc.id, mc.points_balance, mc.total_spent, mc.visit_count,
+             mc.first_visit, mc.last_visit, mc.is_blocked, mc.created_at,
+             mc.end_user_id, mc.notes_private,
+             eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
+             last_tx.staff_name as last_credited_by,
+             last_tx.created_at as last_tx_at,
+             last_tx.points_delta as last_tx_points,
+             last_tx.amount as last_tx_amount
+      FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      LEFT JOIN (
+        SELECT t.merchant_client_id, sa.display_name as staff_name,
+               t.created_at, t.points_delta, t.amount,
+               ROW_NUMBER() OVER (PARTITION BY t.merchant_client_id ORDER BY t.created_at DESC) as rn
+        FROM transactions t
+        LEFT JOIN staff_accounts sa ON t.staff_id = sa.id
+        WHERE t.merchant_id = ? AND t.transaction_type = 'credit'
+      ) last_tx ON last_tx.merchant_client_id = mc.id AND last_tx.rn = 1
+      WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
+      ORDER BY mc.last_visit DESC
+    `).all(merchantId, merchantId);
+
+    res.json({ clients, count: clients.length });
+  } catch (error) {
+    console.error('Erreur enriched:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/clients/credit
 // ═══════════════════════════════════════════════════════
 
 router.post('/credit', (req, res) => {
   try {
-    const merchantId = req.staff.merchant_id; // ALWAYS from JWT
+    const merchantId = req.staff.merchant_id;
     const staffId = req.staff.id;
     const { email, phone, name, amount, notes, idempotencyKey } = req.body;
 
-    // Validate input
-    if (!email && !phone) {
-      return res.status(400).json({ error: 'Email ou téléphone requis' });
-    }
-    if (!amount || parseFloat(amount) <= 0) {
-      return res.status(400).json({ error: 'Montant invalide' });
-    }
-
-    // Cashier transaction limit (200€)
-    if (req.staff.role === 'cashier' && parseFloat(amount) > 200) {
-      return res.status(403).json({ error: 'Montant maximum de 200€ pour un caissier' });
-    }
+    if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
+    if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
+    if (req.staff.role === 'cashier' && parseFloat(amount) > 200) return res.status(403).json({ error: 'Max 200€ pour un caissier' });
 
     const result = creditPoints({
-      merchantId,
-      staffId,
-      email: email || null,
-      phone: phone || null,
-      name: name || null,
-      amount: parseFloat(amount),
-      notes: notes || null,
-      idempotencyKey: idempotencyKey || null,
-      source: 'manual',
+      merchantId, staffId, email: email || null, phone: phone || null, name: name || null,
+      amount: parseFloat(amount), notes: notes || null, idempotencyKey: idempotencyKey || null, source: 'manual',
     });
 
-    // Audit (skip if idempotent return)
     if (!result.idempotent) {
-      logAudit({
-        ...auditCtx(req),
-        actorType: 'staff',
-        actorId: staffId,
-        merchantId,
-        action: 'points_credited',
-        targetType: 'merchant_client',
-        targetId: result.merchantClient.id,
-        details: {
-          amount: parseFloat(amount),
-          pointsDelta: result.transaction.points_delta,
-          isNewClient: result.isNewClient,
-        },
-      });
+      logAudit({ ...auditCtx(req), actorType: 'staff', actorId: staffId, merchantId, action: 'points_credited',
+        targetType: 'merchant_client', targetId: result.merchantClient.id,
+        details: { amount: parseFloat(amount), pointsDelta: result.transaction.points_delta, isNewClient: result.isNewClient } });
 
-      // Fire-and-forget emails
       const merchant = merchantQueries.findById.get(merchantId);
-      if (result.isNewClient && result.endUser.email) {
+      if (result.isNewClient && result.endUser.email)
         sendValidationEmail(result.endUser.email, result.endUser.validation_token, merchant.business_name);
-      }
-      if (result.endUser.email && result.endUser.email_validated) {
-        sendPointsCreditedEmail(
-          result.endUser.email,
-          result.transaction.points_delta,
-          result.merchantClient.points_balance,
-          merchant.business_name,
-          { points_for_reward: merchant.points_for_reward, reward_description: merchant.reward_description }
-        );
-      }
+      if (result.endUser.email && result.endUser.email_validated)
+        sendPointsCreditedEmail(result.endUser.email, result.transaction.points_delta, result.merchantClient.points_balance,
+          merchant.business_name, { points_for_reward: merchant.points_for_reward, reward_description: merchant.reward_description });
     }
 
     res.json({
       message: result.isNewClient ? 'Nouveau client créé et points crédités' : 'Points crédités',
-      client: {
-        id: result.merchantClient.id,
-        email: result.endUser.email,
-        phone: result.endUser.phone,
-        name: result.endUser.name,
-        points_balance: result.merchantClient.points_balance,
-        total_spent: result.merchantClient.total_spent,
-        visit_count: result.merchantClient.visit_count,
-      },
-      transaction: {
-        amount: parseFloat(amount),
-        points_delta: result.transaction.points_delta,
-      },
+      client: { id: result.merchantClient.id, email: result.endUser.email, phone: result.endUser.phone,
+        name: result.endUser.name, points_balance: result.merchantClient.points_balance,
+        total_spent: result.merchantClient.total_spent, visit_count: result.merchantClient.visit_count },
+      transaction: { amount: parseFloat(amount), points_delta: result.transaction.points_delta },
       isNewClient: result.isNewClient,
     });
   } catch (error) {
@@ -103,389 +180,371 @@ router.post('/credit', (req, res) => {
   }
 });
 
-
-// ═══════════════════════════════════════════════════════
-// POST /api/clients/reward — Redeem reward (cashier+)
-// ═══════════════════════════════════════════════════════
-
 router.post('/reward', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const { merchantClientId, notes, idempotencyKey } = req.body;
-
-    if (!merchantClientId) {
-      return res.status(400).json({ error: 'ID client requis' });
-    }
-
-    const result = redeemReward({
-      merchantId,
-      merchantClientId: parseInt(merchantClientId),
-      staffId: req.staff.id,
-      notes: notes || null,
-      idempotencyKey: idempotencyKey || null,
-    });
-
-    if (!result.idempotent) {
-      logAudit({
-        ...auditCtx(req),
-        actorType: 'staff',
-        actorId: req.staff.id,
-        merchantId,
-        action: 'reward_redeemed',
-        targetType: 'merchant_client',
-        targetId: parseInt(merchantClientId),
-        details: { pointsDelta: result.transaction.points_delta },
-      });
-    }
-
-    res.json({
-      message: 'Récompense appliquée',
-      client: result.merchantClient,
-      transaction: result.transaction,
-    });
-  } catch (error) {
-    console.error('Erreur reward:', error);
-    const status = error.message.includes('insuffisant') ? 400 : 500;
-    res.status(status).json({ error: error.message });
-  }
+    if (!merchantClientId) return res.status(400).json({ error: 'ID client requis' });
+    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null });
+    if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta } });
+    res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction, rewardLabel: result.rewardLabel || null });
+  } catch (error) { console.error('Erreur reward:', error); res.status(error.message.includes('insuffisant') ? 400 : 500).json({ error: error.message }); }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/clients/adjust — Manual adjustment (owner/manager)
-// ═══════════════════════════════════════════════════════
 
 router.post('/adjust', requireRole('owner', 'manager'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const { merchantClientId, pointsDelta, reason } = req.body;
+    if (!merchantClientId || pointsDelta === undefined) return res.status(400).json({ error: 'ID client et ajustement requis' });
+    const result = adjustPoints({ merchantId, merchantClientId: parseInt(merchantClientId), pointsDelta: parseInt(pointsDelta), staffId: req.staff.id, reason: reason || '' });
+    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'points_adjusted', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: parseInt(pointsDelta), reason } });
+    res.json({ message: 'Ajustement effectué', client: result.merchantClient, transaction: result.transaction });
+  } catch (error) { console.error('Erreur adjustment:', error); res.status(400).json({ error: error.message }); }
+});
 
-    if (!merchantClientId || pointsDelta === undefined) {
-      return res.status(400).json({ error: 'ID client et ajustement requis' });
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/clients/:id/edit — Edit client info (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const mcId = parseInt(req.params.id);
+    const { name, email, phone } = req.body;
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const endUser = endUserQueries.findById.get(mc.end_user_id);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const newEmailLower = email ? normalizeEmail(email) : endUser.email_lower;
+    const newPhoneE164 = phone ? normalizePhone(phone) : endUser.phone_e164;
+
+    if (!newEmailLower && !newPhoneE164) return res.status(400).json({ error: 'Au moins un email ou téléphone requis' });
+
+    if (newEmailLower && newEmailLower !== endUser.email_lower) {
+      const existing = endUserQueries.findByEmailLower.get(newEmailLower);
+      if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Cet email est déjà utilisé par un autre client' });
+    }
+    if (newPhoneE164 && newPhoneE164 !== endUser.phone_e164) {
+      const existing = endUserQueries.findByPhoneE164.get(newPhoneE164);
+      if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Ce téléphone est déjà utilisé par un autre client' });
     }
 
-    const result = adjustPoints({
-      merchantId,
-      merchantClientId: parseInt(merchantClientId),
-      pointsDelta: parseInt(pointsDelta),
-      staffId: req.staff.id,
-      reason: reason || '',
-    });
+    const newName = name !== undefined ? (name.trim() || null) : endUser.name;
+    const newEmail = email !== undefined ? (email.trim() || null) : endUser.email;
+    const newPhone = phone !== undefined ? (phone.trim() || null) : endUser.phone;
 
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'points_adjusted',
-      targetType: 'merchant_client',
-      targetId: parseInt(merchantClientId),
-      details: { pointsDelta: parseInt(pointsDelta), reason },
-    });
+    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, endUser.email_validated, endUser.id);
+    if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
 
-    res.json({
-      message: 'Ajustement effectué',
-      client: result.merchantClient,
-      transaction: result.transaction,
-    });
+    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id, details: { name: newName, email: newEmail, phone: newPhone } });
+
+    const updated = endUserQueries.findById.get(endUser.id);
+    res.json({ message: 'Client mis à jour', client: { name: updated.name, email: updated.email, phone: updated.phone } });
   } catch (error) {
-    console.error('Erreur adjustment:', error);
-    res.status(400).json({ error: error.message });
+    console.error('Erreur edit:', error);
+    res.status(500).json({ error: error.message || 'Erreur lors de la mise à jour' });
   }
 });
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/clients/lookup?email=...&phone=...
-// Minimal info for cashier credit screen.
-// Returns: name, balance, reward progress. NOT full history.
+// PUT /api/clients/:id/notes — Update private notes (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.put('/:id/notes', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const mc = merchantClientQueries.findByIdAndMerchant.get(parseInt(req.params.id), req.staff.merchant_id);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const notes = (req.body.notes || '').trim().substring(0, 500);
+    db.prepare("UPDATE merchant_clients SET notes_private = ?, updated_at = datetime('now') WHERE id = ?")
+      .run(notes || null, mc.id);
+
+    res.json({ message: 'Notes mises à jour' });
+  } catch (error) {
+    console.error('Erreur notes:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/clients/:id/resend-email — Resend points summary email
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/resend-email', requireRole('owner', 'manager'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const mcId = parseInt(req.params.id);
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const endUser = endUserQueries.findById.get(mc.end_user_id);
+    if (!endUser || !endUser.email) return res.status(400).json({ error: 'Ce client n\'a pas d\'email' });
+
+    const merchant = merchantQueries.findById.get(merchantId);
+
+    // Find last credit transaction for context
+    const lastCredit = db.prepare(`
+      SELECT points_delta, amount FROM transactions
+      WHERE merchant_client_id = ? AND transaction_type = 'credit'
+      ORDER BY created_at DESC LIMIT 1
+    `).get(mcId);
+
+    const pointsEarned = lastCredit ? lastCredit.points_delta : 0;
+
+    if (!endUser.email_validated) {
+      // Resend validation email
+      sendValidationEmail(endUser.email, endUser.validation_token, merchant.business_name);
+      return res.json({ message: 'Email de validation renvoyé', type: 'validation' });
+    }
+
+    // Resend points summary
+    sendPointsCreditedEmail(
+      endUser.email, pointsEarned, mc.points_balance,
+      merchant.business_name,
+      { points_for_reward: merchant.points_for_reward, reward_description: merchant.reward_description }
+    );
+
+    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'email_resent', targetType: 'merchant_client', targetId: mcId });
+
+    res.json({ message: 'Email envoyé', type: 'points' });
+  } catch (error) {
+    console.error('Erreur resend:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'envoi' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/clients/:id/merge — Merge clients (owner only)
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/merge', requireRole('owner'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const targetMcId = parseInt(req.params.id);
+    const { sourceMerchantClientId, reason } = req.body;
+
+    if (!sourceMerchantClientId) return res.status(400).json({ error: 'ID du client source requis' });
+    const sourceMcId = parseInt(sourceMerchantClientId);
+    if (sourceMcId === targetMcId) return res.status(400).json({ error: 'Impossible de fusionner un client avec lui-même' });
+
+    const run = db.transaction(() => {
+      const target = merchantClientQueries.findByIdAndMerchant.get(targetMcId, merchantId);
+      if (!target) throw new Error('Client cible non trouvé');
+      const source = merchantClientQueries.findByIdAndMerchant.get(sourceMcId, merchantId);
+      if (!source) throw new Error('Client source non trouvé');
+
+      const targetEu = endUserQueries.findById.get(target.end_user_id);
+      const sourceEu = endUserQueries.findById.get(source.end_user_id);
+
+      merchantClientQueries.mergeStats.run(source.points_balance, source.total_spent, source.visit_count, source.first_visit, source.last_visit, targetMcId);
+      transactionQueries.reassignClient.run(targetMcId, sourceMcId);
+      transactionQueries.create.run(merchantId, targetMcId, req.staff.id, null, 0, 'merge', null, 'manual',
+        `Fusion avec ${sourceEu?.name || sourceEu?.email || sourceEu?.phone || '#'+sourceMcId} — ${reason || 'Fusion manuelle'}`);
+
+      if (sourceEu) {
+        if (sourceEu.email_lower) aliasQueries.create.run(target.end_user_id, 'email', sourceEu.email_lower);
+        if (sourceEu.phone_e164) aliasQueries.create.run(target.end_user_id, 'phone', sourceEu.phone_e164);
+      }
+
+      merchantClientQueries.delete.run(sourceMcId);
+
+      logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'clients_merged', targetType: 'merchant_client', targetId: targetMcId,
+        details: { sourceMcId, targetMcId, reason, pointsTransferred: source.points_balance, spentTransferred: source.total_spent } });
+
+      return merchantClientQueries.findById.get(targetMcId);
+    });
+
+    const updated = run();
+    res.json({ message: 'Clients fusionnés avec succès', client: updated });
+  } catch (error) {
+    console.error('Erreur merge:', error);
+    res.status(400).json({ error: error.message || 'Erreur lors de la fusion' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// DELETE /api/clients/:id — Delete client (owner only)
+// Removes merchant_client + transactions. If end_user has
+// no other merchant relationships, soft-deletes them too.
+// ═══════════════════════════════════════════════════════
+
+router.delete('/:id', requireRole('owner'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const mcId = parseInt(req.params.id);
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const endUser = endUserQueries.findById.get(mc.end_user_id);
+
+    const run = db.transaction(() => {
+      // Delete transactions for this merchant_client
+      db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(mcId);
+
+      // Delete merchant_client
+      merchantClientQueries.delete.run(mcId);
+
+      // Check if end_user has other merchant relationships
+      const otherRelations = db.prepare(
+        'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ?'
+      ).get(mc.end_user_id);
+
+      let userDeleted = false;
+      if (otherRelations.count === 0) {
+        // No other merchants → soft-delete end_user (GDPR)
+        endUserQueries.softDelete.run(mc.end_user_id);
+        userDeleted = true;
+      }
+
+      logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId,
+        action: 'client_deleted', targetType: 'merchant_client', targetId: mcId,
+        details: {
+          endUserId: mc.end_user_id,
+          email: endUser?.email, name: endUser?.name,
+          userDeleted,
+          pointsLost: mc.points_balance, totalSpent: mc.total_spent,
+        } });
+
+      return { userDeleted };
+    });
+
+    const result = run();
+
+    res.json({
+      message: result.userDeleted
+        ? 'Client et données personnelles supprimés (RGPD)'
+        : 'Client supprimé de votre commerce',
+      userDeleted: result.userDeleted,
+    });
+  } catch (error) {
+    console.error('Erreur delete:', error);
+    res.status(500).json({ error: error.message || 'Erreur lors de la suppression' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// STANDARD ENDPOINTS (lookup, list, search, export, detail, block)
 // ═══════════════════════════════════════════════════════
 
 router.get('/lookup', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const { email, phone } = req.query;
-
-    if (!email && !phone) {
-      return res.status(400).json({ error: 'Email ou téléphone requis' });
-    }
-
-    const emailLower = normalizeEmail(email);
-    const phoneE164 = normalizePhone(phone);
-
-    // Use the same 3-step lookup as the points service but read-only
+    if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
+    const emailLower = normalizeEmail(email); const phoneE164 = normalizePhone(phone);
     let endUser = null;
-    if (emailLower) {
-      endUser = endUserQueries.findByEmailLower.get(emailLower);
-    }
-    if (!endUser && phoneE164) {
-      endUser = endUserQueries.findByPhoneE164.get(phoneE164);
-    }
-    // Check aliases (post-merge identifiers)
-    if (!endUser && emailLower) {
-      const alias = aliasQueries.findByValue.get(emailLower);
-      if (alias) {
-        endUser = endUserQueries.findById.get(alias.end_user_id);
-      }
-    }
-    if (!endUser && phoneE164) {
-      const alias = aliasQueries.findByValue.get(phoneE164);
-      if (alias) {
-        endUser = endUserQueries.findById.get(alias.end_user_id);
-      }
-    }
-
-    if (!endUser) {
-      return res.json({ found: false });
-    }
-
-    // Check merchant_client relationship
+    if (emailLower) endUser = endUserQueries.findByEmailLower.get(emailLower);
+    if (!endUser && phoneE164) endUser = endUserQueries.findByPhoneE164.get(phoneE164);
+    if (!endUser && emailLower) { const a = aliasQueries.findByValue.get(emailLower); if (a) endUser = endUserQueries.findById.get(a.end_user_id); }
+    if (!endUser && phoneE164) { const a = aliasQueries.findByValue.get(phoneE164); if (a) endUser = endUserQueries.findById.get(a.end_user_id); }
+    if (!endUser) return res.json({ found: false });
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
-    if (!mc) {
-      return res.json({
-        found: true,
-        isNew: true,
-        client: { name: endUser.name, email: endUser.email, phone: endUser.phone },
-      });
-    }
-
-    // Get merchant settings for reward progress
+    if (!mc) return res.json({ found: true, isNew: true, client: { name: endUser.name, email: endUser.email, phone: endUser.phone } });
     const merchant = merchantQueries.findById.get(merchantId);
-
-    res.json({
-      found: true,
-      isNew: false,
-      client: {
-        id: mc.id,
-        name: endUser.name,
-        email: endUser.email,
-        phone: endUser.phone,
-        points_balance: mc.points_balance,
-        visit_count: mc.visit_count,
-        is_blocked: mc.is_blocked,
-        reward_threshold: merchant.points_for_reward,
-        reward_description: merchant.reward_description,
-        can_redeem: mc.points_balance >= merchant.points_for_reward,
-      },
-    });
-  } catch (error) {
-    console.error('Erreur lookup:', error);
-    res.status(500).json({ error: 'Erreur lors de la recherche' });
-  }
+    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: mc.custom_reward || merchant.reward_description, custom_reward: mc.custom_reward || null, can_redeem: mc.points_balance >= merchant.points_for_reward } });
+  } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/clients — List all clients (owner/manager)
-// ═══════════════════════════════════════════════════════
 
 router.get('/', requireRole('owner', 'manager'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const clients = merchantClientQueries.getByMerchant.all(merchantId);
-
-    res.json({ count: clients.length, clients });
-  } catch (error) {
-    console.error('Erreur liste clients:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération des clients' });
-  }
+  try { res.json({ count: 0, clients: merchantClientQueries.getByMerchant.all(req.staff.merchant_id) }); }
+  catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/clients/search?q=... — Search clients (owner/manager)
-// ═══════════════════════════════════════════════════════
 
 router.get('/search', requireRole('owner', 'manager'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { q } = req.query;
-
-    if (!q || q.length < 2) {
-      return res.status(400).json({ error: 'Recherche trop courte (min 2 caractères)' });
-    }
-
-    const term = `%${q.toLowerCase()}%`;
-    const clients = merchantClientQueries.searchByMerchant.all(merchantId, term, term, term);
-
-    res.json({ count: clients.length, clients });
-  } catch (error) {
-    console.error('Erreur recherche:', error);
-    res.status(500).json({ error: 'Erreur lors de la recherche' });
-  }
+  try { const { q } = req.query; if (!q || q.length < 2) return res.status(400).json({ error: 'Min 2 caractères' });
+    const term = `%${q.toLowerCase()}%`; const clients = merchantClientQueries.searchByMerchant.all(req.staff.merchant_id, term, term, term);
+    res.json({ count: clients.length, clients }); }
+  catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/clients/export/csv — Export CSV (owner only)
-// MUST be before /:id to avoid route collision
-// ═══════════════════════════════════════════════════════
 
 router.get('/export/csv', requireRole('owner'), (req, res) => {
   try {
-    const merchantId = req.staff.merchant_id;
-    const clients = merchantClientQueries.getByMerchant.all(merchantId);
-
-    let csv = 'Email,Téléphone,Nom,Points,Total dépensé,Visites,Première visite,Dernière visite,Email validé,Bloqué\n';
-    clients.forEach(c => {
-      csv += `"${c.email || ''}","${c.phone || ''}","${c.name || ''}",${c.points_balance},${c.total_spent},${c.visit_count},"${c.first_visit}","${c.last_visit}",${c.email_validated ? 'Oui' : 'Non'},${c.is_blocked ? 'Oui' : 'Non'}\n`;
-    });
-
+    const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id);
+    let csv = 'Email,Téléphone,Nom,Points,Total dépensé,Visites,Première visite,Dernière visite,Email validé,Bloqué,Récompense perso\n';
+    clients.forEach(c => { csv += `"${c.email||''}","${c.phone||''}","${c.name||''}",${c.points_balance},${c.total_spent},${c.visit_count},"${c.first_visit}","${c.last_visit}",${c.email_validated?'Oui':'Non'},${c.is_blocked?'Oui':'Non'},"${c.custom_reward||''}"\n`; });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=clients.csv');
-    res.send('\uFEFF' + csv); // BOM for Excel UTF-8
-  } catch (error) {
-    console.error('Erreur export CSV:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export' });
-  }
+    res.send('\uFEFF' + csv);
+  } catch (error) { res.status(500).json({ error: 'Erreur export' }); }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/clients/activity — Recent activity for dashboard
-// Returns transactions enriched with client info + reward status
-// MUST be before /:id to avoid route collision
-// ═══════════════════════════════════════════════════════
-
-const activityQuery = db.prepare(`
-  SELECT t.id, t.amount, t.points_delta, t.transaction_type, t.source, t.notes, t.created_at,
-         eu.email, eu.phone, eu.name as client_name,
-         sa.display_name as staff_name,
-         mc.points_balance
-  FROM transactions t
-  JOIN merchant_clients mc ON t.merchant_client_id = mc.id
-  JOIN end_users eu ON mc.end_user_id = eu.id
-  LEFT JOIN staff_accounts sa ON t.staff_id = sa.id
-  WHERE t.merchant_id = ?
-  ORDER BY t.created_at DESC
-  LIMIT ?
-`);
-
-router.get('/activity', requireRole('owner', 'manager'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const limit = Math.min(parseInt(req.query.limit) || 200, 1000);
-    const merchant = merchantQueries.findById.get(merchantId);
-
-    const rows = activityQuery.all(merchantId, limit);
-
-    const activity = rows.map(r => ({
-      ...r,
-      can_redeem: r.points_balance >= merchant.points_for_reward,
-    }));
-
-    res.json({ count: activity.length, activity });
-  } catch (error) {
-    console.error('Erreur activity:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération de l\'activité' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/clients/:id — Client details + transaction history (owner/manager)
-// ═══════════════════════════════════════════════════════
 
 router.get('/:id', requireRole('owner', 'manager'), (req, res) => {
   try {
-    const merchantId = req.staff.merchant_id;
+    const mc = merchantClientQueries.findByIdAndMerchant.get(parseInt(req.params.id), req.staff.merchant_id);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+    const eu = endUserQueries.findById.get(mc.end_user_id);
+    const txs = transactionQueries.getByMerchantClient.all(mc.id);
+    const m = merchantQueries.findById.get(req.staff.merchant_id);
+    res.json({
+      client: { ...mc, email: eu?.email, phone: eu?.phone, name: eu?.name, email_validated: eu?.email_validated,
+        reward_threshold: m.points_for_reward, reward_description: mc.custom_reward || m.reward_description,
+        custom_reward: mc.custom_reward || null, default_reward: m.reward_description,
+        can_redeem: mc.points_balance >= m.points_for_reward },
+      transactions: txs,
+    });
+  } catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
+});
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/clients/:id/custom-reward — Set custom reward (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.put('/:id/custom-reward', requireRole('owner', 'manager'), (req, res) => {
+  try {
     const mcId = parseInt(req.params.id);
+    const merchantId = req.staff.merchant_id;
+    const { customReward } = req.body;
 
     const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-    if (!mc) {
-      return res.status(404).json({ error: 'Client non trouvé' });
-    }
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
 
-    const endUser = endUserQueries.findById.get(mc.end_user_id);
-    const transactions = transactionQueries.getByMerchantClient.all(mc.id);
-    const merchant = merchantQueries.findById.get(merchantId);
+    // null or empty string = clear custom reward (back to default)
+    const value = (customReward && customReward.trim()) ? customReward.trim() : null;
+
+    merchantClientQueries.setCustomReward.run(value, mcId);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'staff',
+      actorId: req.staff.id,
+      merchantId,
+      action: value ? 'custom_reward_set' : 'custom_reward_cleared',
+      targetType: 'merchant_client',
+      targetId: mcId,
+      details: { customReward: value },
+    });
 
     res.json({
-      client: {
-        ...mc,
-        email: endUser?.email,
-        phone: endUser?.phone,
-        name: endUser?.name,
-        email_validated: endUser?.email_validated,
-        reward_threshold: merchant.points_for_reward,
-        reward_description: merchant.reward_description,
-        can_redeem: mc.points_balance >= merchant.points_for_reward,
-      },
-      transactions,
+      message: value ? 'Récompense personnalisée définie' : 'Récompense par défaut restaurée',
+      customReward: value,
     });
   } catch (error) {
-    console.error('Erreur détails client:', error);
-    res.status(500).json({ error: 'Erreur lors de la récupération du client' });
+    console.error('Erreur custom-reward:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/clients/:id/block — Block a client (owner/manager)
-// ═══════════════════════════════════════════════════════
 
 router.post('/:id/block', requireRole('owner', 'manager'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const mcId = parseInt(req.params.id);
-
-    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-    if (!mc) {
-      return res.status(404).json({ error: 'Client non trouvé' });
-    }
-
-    merchantClientQueries.block.run(mcId);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'client_blocked',
-      targetType: 'merchant_client',
-      targetId: mcId,
-    });
-
-    res.json({ message: 'Client bloqué' });
-  } catch (error) {
-    console.error('Erreur blocage:', error);
-    res.status(500).json({ error: 'Erreur lors du blocage' });
-  }
+  try { const mcId = parseInt(req.params.id); const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, req.staff.merchant_id); if (!mc) return res.status(404).json({ error: 'Non trouvé' });
+    merchantClientQueries.block.run(mcId); logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId: req.staff.merchant_id, action: 'client_blocked', targetType: 'merchant_client', targetId: mcId });
+    res.json({ message: 'Client bloqué' }); } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/clients/:id/unblock — Unblock a client (owner/manager)
-// ═══════════════════════════════════════════════════════
 
 router.post('/:id/unblock', requireRole('owner', 'manager'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const mcId = parseInt(req.params.id);
-
-    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-    if (!mc) {
-      return res.status(404).json({ error: 'Client non trouvé' });
-    }
-
-    merchantClientQueries.unblock.run(mcId);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'client_unblocked',
-      targetType: 'merchant_client',
-      targetId: mcId,
-    });
-
-    res.json({ message: 'Client débloqué' });
-  } catch (error) {
-    console.error('Erreur déblocage:', error);
-    res.status(500).json({ error: 'Erreur lors du déblocage' });
-  }
+  try { const mcId = parseInt(req.params.id); const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, req.staff.merchant_id); if (!mc) return res.status(404).json({ error: 'Non trouvé' });
+    merchantClientQueries.unblock.run(mcId); logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId: req.staff.merchant_id, action: 'client_unblocked', targetType: 'merchant_client', targetId: mcId });
+    res.json({ message: 'Client débloqué' }); } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
-
 
 module.exports = router;
