@@ -1,6 +1,5 @@
 // ═══════════════════════════════════════════════════════
-// FIDDO V3.3 — Frontend Core
-// Theme system + Preferences + Backup
+// FIDDO V3.1 — Frontend Core
 // ═══════════════════════════════════════════════════════
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -35,45 +34,6 @@ const Auth = {
     try { await API.auth.logout(); } catch (e) { /* ignore */ }
     Auth.clearSession();
     window.location.href = '/';
-  },
-};
-
-
-// ─── Theme System ────────────────────────────────────
-
-const Theme = {
-  /**
-   * Apply the saved theme on page load.
-   * Priority: sessionStorage → fetch from API → default 'teal'
-   */
-  init() {
-    // 1. Try sessionStorage (instant, no flicker)
-    const cached = sessionStorage.getItem('fiddo_theme');
-    if (cached) {
-      document.documentElement.setAttribute('data-theme', cached);
-      return;
-    }
-
-    // 2. If authenticated, fetch from API (async, may have brief flicker)
-    if (Auth.isAuthenticated()) {
-      Theme.fetchAndApply();
-    }
-  },
-
-  async fetchAndApply() {
-    try {
-      const data = await API.call('/preferences');
-      const theme = data.preferences?.theme || 'teal';
-      document.documentElement.setAttribute('data-theme', theme);
-      sessionStorage.setItem('fiddo_theme', theme);
-    } catch (e) {
-      // Silently fallback to default
-    }
-  },
-
-  set(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    sessionStorage.setItem('fiddo_theme', theme);
   },
 };
 
@@ -122,16 +82,7 @@ const API = {
     getById: (id) => API.call(`/clients/${id}`),
     block: (id) => API.call(`/clients/${id}/block`, { method: 'POST' }),
     unblock: (id) => API.call(`/clients/${id}/unblock`, { method: 'POST' }),
-    setCustomReward: (id, customReward) => API.call(`/clients/${id}/custom-reward`, { method: 'PUT', body: JSON.stringify({ customReward }) }),
     exportCSV: () => { window.location.href = `${API_BASE_URL}/clients/export/csv`; },
-  },
-
-  preferences: {
-    get: () => API.call('/preferences'),
-    update: (prefs) => API.call('/preferences', { method: 'PUT', body: JSON.stringify(prefs) }),
-    setTheme: (theme) => API.call('/preferences/theme', { method: 'PATCH', body: JSON.stringify({ theme }) }),
-    validateBackup: (data) => API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) }),
-    importBackup: (data) => API.call('/preferences/backup/import', { method: 'POST', body: JSON.stringify({ data, confirmReplace: true }) }),
   },
 };
 
@@ -213,7 +164,7 @@ function requireAuth() {
 function requireOwner() {
   if (!requireAuth()) return false;
   if (!Auth.hasRole('owner')) {
-    window.location.href = '/credit';
+    window.location.href = '/dashboard';
     return false;
   }
   return true;
@@ -238,7 +189,7 @@ function setupNavbar() {
 
   // Update brand
   const brand = document.querySelector('.navbar-brand span');
-  if (brand) brand.textContent = merchant.business_name;
+  if (brand) brand.textContent = ' | ' + merchant.business_name;
 
   // Build navigation based on role
   const menu = document.querySelector('.navbar-menu');
@@ -278,8 +229,5 @@ function setupNavbar() {
 
 
 // ─── Init ────────────────────────────────────────────
-
-// Apply theme immediately (before DOMContentLoaded) to avoid flash
-Theme.init();
 
 document.addEventListener('DOMContentLoaded', setupNavbar);
