@@ -1,8 +1,11 @@
 const express = require('express');
-const { db } = require('../database');
+const bcrypt = require('bcryptjs');
+const { db, merchantQueries, staffQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { exportMerchantData, validateBackup, importMerchantData } = require('../services/backup');
+const { sendMerchantInfoChangedEmail } = require('../services/email');
+const { normalizeEmail, normalizeVAT } = require('../services/normalizer');
 
 const router = express.Router();
 
@@ -263,6 +266,185 @@ router.post('/backup/import', requireRole('owner'), (req, res) => {
   } catch (error) {
     console.error('Erreur import backup:', error);
     res.status(500).json({ error: error.message || 'Erreur lors de l\'import' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/preferences/merchant-info — Get merchant business info
+// ═══════════════════════════════════════════════════════
+
+router.get('/merchant-info', requireRole('owner'), (req, res) => {
+  try {
+    const merchant = merchantQueries.findById.get(req.staff.merchant_id);
+    if (!merchant) return res.status(404).json({ error: 'Commerce non trouvé' });
+
+    const staff = staffQueries.findById.get(req.staff.id);
+
+    res.json({
+      businessName: merchant.business_name,
+      address: merchant.address,
+      vatNumber: merchant.vat_number,
+      email: merchant.email,
+      phone: merchant.phone,
+      ownerPhone: merchant.owner_phone,
+      ownerName: staff?.display_name || '',
+      ownerEmail: staff?.email || '',
+    });
+  } catch (error) {
+    console.error('Erreur get merchant-info:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/preferences/merchant-info — Update merchant business info (owner only)
+// Sends notification email to super admin
+// ═══════════════════════════════════════════════════════
+
+router.put('/merchant-info', requireRole('owner'), (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const { businessName, address, vatNumber, email, phone, ownerPhone, ownerName } = req.body;
+
+    // Validate required fields
+    if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
+      return res.status(400).json({ error: 'Tous les champs sont requis' });
+    }
+
+    // Normalize & validate VAT
+    const normalizedVat = normalizeVAT(vatNumber);
+    if (!normalizedVat) {
+      return res.status(400).json({ error: 'Numéro de TVA invalide (format: BE0123456789)' });
+    }
+
+    // Check VAT uniqueness (if changed)
+    const current = merchantQueries.findById.get(merchantId);
+    if (!current) return res.status(404).json({ error: 'Commerce non trouvé' });
+
+    if (normalizedVat !== current.vat_number) {
+      const existing = db.prepare('SELECT id FROM merchants WHERE vat_number = ? AND id != ?').get(normalizedVat, merchantId);
+      if (existing) {
+        return res.status(400).json({ error: 'Ce numéro de TVA est déjà utilisé par un autre commerce' });
+      }
+    }
+
+    // Build change log for admin notification
+    const changes = [];
+    if (businessName.trim() !== current.business_name) changes.push({ field: 'Nom du commerce', old: current.business_name, new: businessName.trim() });
+    if (address.trim() !== current.address) changes.push({ field: 'Adresse', old: current.address, new: address.trim() });
+    if (normalizedVat !== current.vat_number) changes.push({ field: 'N° TVA', old: current.vat_number, new: normalizedVat });
+    if (email.trim().toLowerCase() !== current.email) changes.push({ field: 'Email commerce', old: current.email, new: email.trim().toLowerCase() });
+    if (phone.trim() !== current.phone) changes.push({ field: 'Téléphone', old: current.phone, new: phone.trim() });
+    if (ownerPhone.trim() !== current.owner_phone) changes.push({ field: 'Tél. propriétaire', old: current.owner_phone, new: ownerPhone.trim() });
+
+    if (changes.length === 0 && (!ownerName || ownerName.trim() === (staffQueries.findById.get(req.staff.id)?.display_name || ''))) {
+      return res.json({ message: 'Aucune modification détectée', changes: [] });
+    }
+
+    // Update merchant
+    db.prepare(`
+      UPDATE merchants
+      SET business_name = ?, address = ?, vat_number = ?,
+          email = ?, phone = ?, owner_phone = ?
+      WHERE id = ?
+    `).run(
+      businessName.trim(), address.trim(), normalizedVat,
+      email.trim().toLowerCase(), phone.trim(), ownerPhone.trim(),
+      merchantId
+    );
+
+    // Update owner display name if provided
+    if (ownerName && ownerName.trim()) {
+      const currentStaff = staffQueries.findById.get(req.staff.id);
+      if (currentStaff && ownerName.trim() !== currentStaff.display_name) {
+        changes.push({ field: 'Nom propriétaire', old: currentStaff.display_name, new: ownerName.trim() });
+        db.prepare('UPDATE staff_accounts SET display_name = ? WHERE id = ?').run(ownerName.trim(), req.staff.id);
+      }
+    }
+
+    // Audit
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'staff',
+      actorId: req.staff.id,
+      merchantId,
+      action: 'merchant_info_updated',
+      targetType: 'merchant',
+      targetId: merchantId,
+      details: { changes },
+    });
+
+    // 🔥 Notify Super Sayan God (all super admins)
+    if (changes.length > 0) {
+      const admins = db.prepare('SELECT email FROM super_admins').all();
+      admins.forEach(admin => {
+        sendMerchantInfoChangedEmail(
+          admin.email,
+          current.business_name,
+          businessName.trim(),
+          req.staff.email,
+          changes
+        );
+      });
+    }
+
+    // Update session data
+    const updated = merchantQueries.findById.get(merchantId);
+
+    res.json({
+      message: 'Informations mises à jour',
+      merchant: updated,
+      changes,
+    });
+  } catch (error) {
+    console.error('Erreur update merchant-info:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/preferences/password — Change own password
+// ═══════════════════════════════════════════════════════
+
+router.put('/password', async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Mot de passe actuel et nouveau requis' });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+    }
+
+    const staff = staffQueries.findById.get(req.staff.id);
+    if (!staff) return res.status(404).json({ error: 'Compte non trouvé' });
+
+    const valid = await bcrypt.compare(currentPassword, staff.password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    staffQueries.updatePassword.run(hashed, req.staff.id);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'staff',
+      actorId: req.staff.id,
+      merchantId: req.staff.merchant_id,
+      action: 'password_changed',
+      targetType: 'staff',
+      targetId: req.staff.id,
+    });
+
+    res.json({ message: 'Mot de passe modifié avec succès' });
+  } catch (error) {
+    console.error('Erreur changement mot de passe:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
