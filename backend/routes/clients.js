@@ -106,7 +106,7 @@ router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
     const clients = db.prepare(`
       SELECT mc.id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.first_visit, mc.last_visit, mc.is_blocked, mc.created_at,
-             mc.end_user_id, mc.notes_private,
+             mc.end_user_id, mc.notes_private, mc.custom_reward,
              eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
              last_tx.staff_name as last_credited_by,
              last_tx.created_at as last_tx_at,
@@ -373,8 +373,6 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
 
 // ═══════════════════════════════════════════════════════
 // DELETE /api/clients/:id — Delete client (owner only)
-// Removes merchant_client + transactions. If end_user has
-// no other merchant relationships, soft-deletes them too.
 // ═══════════════════════════════════════════════════════
 
 router.delete('/:id', requireRole('owner'), (req, res) => {
@@ -388,20 +386,15 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
 
     const run = db.transaction(() => {
-      // Delete transactions for this merchant_client
       db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(mcId);
-
-      // Delete merchant_client
       merchantClientQueries.delete.run(mcId);
 
-      // Check if end_user has other merchant relationships
       const otherRelations = db.prepare(
         'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ?'
       ).get(mc.end_user_id);
 
       let userDeleted = false;
       if (otherRelations.count === 0) {
-        // No other merchants → soft-delete end_user (GDPR)
         endUserQueries.softDelete.run(mc.end_user_id);
         userDeleted = true;
       }
@@ -509,7 +502,6 @@ router.put('/:id/custom-reward', requireRole('owner', 'manager'), (req, res) => 
     const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
     if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
 
-    // null or empty string = clear custom reward (back to default)
     const value = (customReward && customReward.trim()) ? customReward.trim() : null;
 
     merchantClientQueries.setCustomReward.run(value, mcId);
