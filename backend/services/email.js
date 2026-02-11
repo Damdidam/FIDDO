@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 // ═══════════════════════════════════════════════════════
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  host: process.env.SMTP_HOST || 'smtp-relay.brevo.com',
   port: parseInt(process.env.SMTP_PORT) || 587,
   secure: false,
   auth: {
@@ -200,10 +200,61 @@ function sendRegistrationConfirmationEmail(ownerEmail, businessName) {
   });
 }
 
+/**
+ * 🔥 SUPER SAYAN GOD ALERT — Merchant changed their business info.
+ * Sent to all super admins when a merchant modifies their registration details.
+ */
+function sendMerchantInfoChangedEmail(adminEmail, oldBusinessName, newBusinessName, ownerEmail, changes) {
+  const changesHtml = changes.map(c => `
+    <tr>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #eee; font-weight: 600; color: #374151;">${c.field}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #EF4444; text-decoration: line-through;">${c.old}</td>
+      <td style="padding: 8px 12px; border-bottom: 1px solid #eee; color: #10B981; font-weight: 600;">${c.new}</td>
+    </tr>
+  `).join('');
+
+  const nameChanged = oldBusinessName !== newBusinessName;
+
+  sendMail({
+    to: adminEmail,
+    subject: `🔔 FIDDO Admin — ${nameChanged ? newBusinessName + ' (ex: ' + oldBusinessName + ')' : oldBusinessName} a modifié ses infos`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #F59E0B, #D97706); color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+          <h2 style="margin: 0;">⚡ Alerte Super Admin</h2>
+          <p style="margin: 5px 0 0; opacity: 0.9;">Modification d'informations commerce</p>
+        </div>
+        <div style="background: white; padding: 25px; border: 1px solid #E5E7EB; border-top: none; border-radius: 0 0 10px 10px;">
+          <p>Le commerce <strong>${nameChanged ? newBusinessName : oldBusinessName}</strong> (propriétaire : ${ownerEmail}) a modifié ses informations.</p>
+
+          <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+            <thead>
+              <tr style="background: #F9FAFB;">
+                <th style="padding: 8px 12px; text-align: left; color: #6B7280; font-size: 12px; text-transform: uppercase;">Champ</th>
+                <th style="padding: 8px 12px; text-align: left; color: #6B7280; font-size: 12px; text-transform: uppercase;">Avant</th>
+                <th style="padding: 8px 12px; text-align: left; color: #6B7280; font-size: 12px; text-transform: uppercase;">Après</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${changesHtml}
+            </tbody>
+          </table>
+
+          <p style="font-size: 13px; color: #6B7280;">
+            Date : ${new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Brussels' })}<br>
+            Action requise : Vérifiez si les changements sont légitimes, en particulier si le N° TVA a changé.
+          </p>
+        </div>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   sendValidationEmail,
   sendPointsCreditedEmail,
   sendMerchantValidatedEmail,
   sendMerchantRejectedEmail,
   sendRegistrationConfirmationEmail,
+  sendMerchantInfoChangedEmail,
 };
