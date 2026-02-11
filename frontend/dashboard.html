@@ -5,61 +5,258 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tableau de bord — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <style>
-    /* Announcements */
-    .announcements-section { margin-bottom: 1.5rem; }
-    .ann-banner {
-      padding: 1rem 1.25rem;
-      border-radius: 10px;
-      margin-bottom: 0.75rem;
-      border-left: 4px solid var(--primary);
-      background: white;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+    /* ── Dashboard overrides ──────────────────────── */
+    .dash-wrap {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 1.25rem 1.5rem 3rem;
     }
-    .ann-banner:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,0,0,0.12); }
-    .ann-banner.priority-warning { border-left-color: var(--warning); background: #fffbeb; }
-    .ann-banner.priority-urgent { border-left-color: var(--danger); background: #fef2f2; }
-    .ann-banner.is-read { opacity: 0.7; }
-    .ann-banner .ann-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
-    .ann-banner .ann-date { font-size: 0.75rem; color: var(--text-light); }
-    .ann-banner .ann-preview { font-size: 0.85rem; color: var(--text); margin-top: 0.25rem; }
-    .ann-unread-dot {
-      display: inline-block;
-      width: 8px; height: 8px;
-      border-radius: 50%;
+
+    /* ── Header row ───────────────────────────────── */
+    .dash-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+    .dash-header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--secondary);
+      margin: 0;
+    }
+    .dash-header-right {
+      display: flex;
+      gap: 0.625rem;
+      align-items: center;
+    }
+
+    /* ── Toolbar (filters + search) ───────────────── */
+    .dash-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .filter-chip {
+      padding: 0.4rem 0.85rem;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-light);
+      transition: all 0.15s;
+      font-family: inherit;
+    }
+    .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-chip.active {
       background: var(--primary);
-      margin-right: 0.5rem;
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .dash-search {
+      margin-left: auto;
+      position: relative;
+    }
+    .dash-search input {
+      width: 260px;
+      padding: 0.45rem 0.75rem 0.45rem 2.1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: border-color 0.15s;
+      background: #fff;
+    }
+    .dash-search input:focus { outline: none; border-color: var(--primary); }
+    .dash-search .ico {
+      position: absolute;
+      left: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.85rem;
+      color: var(--text-light);
+      pointer-events: none;
+    }
+
+    /* ── Table card ────────────────────────────────── */
+    .table-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06), 0 4px 16px rgba(0,0,0,0.04);
+      overflow: hidden;
+    }
+    .table-card table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .table-card thead {
+      background: #f8f9fb;
+      border-bottom: 1.5px solid #ebedf0;
+    }
+    .table-card th {
+      padding: 0.7rem 1rem;
+      text-align: left;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-light);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+    .table-card th:hover { color: var(--primary); }
+    .table-card th .arrow {
+      display: inline-block;
+      margin-left: 0.3rem;
+      font-size: 0.6rem;
+      opacity: 0.35;
+      transition: opacity 0.15s;
+    }
+    .table-card th.sorted .arrow { opacity: 1; color: var(--primary); }
+    .table-card th.sorted { color: var(--primary); }
+
+    .table-card td {
+      padding: 0.65rem 1rem;
+      font-size: 0.88rem;
+      color: var(--text);
+      border-bottom: 1px solid #f0f1f3;
       vertical-align: middle;
     }
-    .ann-toggle { text-align: center; margin-top: 0.5rem; }
-    .ann-toggle a { color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 500; }
-
-    /* Feedback */
-    .feedback-card {
-      background: linear-gradient(135deg, var(--secondary), #111827);
-      color: white;
-      border-radius: 10px;
-      padding: 1.25rem;
-      margin-bottom: 1.5rem;
-      cursor: pointer;
-      transition: transform 0.2s;
+    .table-card tbody tr {
+      transition: background 0.12s;
     }
-    .feedback-card:hover { transform: translateY(-2px); }
-    .feedback-card h3 { margin: 0 0 0.25rem; font-size: 1rem; }
-    .feedback-card p { margin: 0; font-size: 0.85rem; opacity: 0.8; }
+    .table-card tbody tr:hover { background: #f7fafa; }
+    .table-card tbody tr:last-child td { border-bottom: none; }
 
-    /* Notification badge */
-    .notif-badge {
-      background: var(--danger);
-      color: white;
-      font-size: 0.65rem;
-      font-weight: 700;
-      padding: 2px 6px;
-      border-radius: 10px;
-      margin-left: 4px;
-      vertical-align: top;
+    /* ── Type badges ───────────────────────────────── */
+    .type-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .type-credit { background: #e0f7f3; color: #0d9488; }
+    .type-reward { background: #fef3c7; color: #b45309; }
+    .type-adjustment { background: #ede9fe; color: #7c3aed; }
+    .type-merge { background: #f3e8ff; color: #9333ea; }
+
+    /* ── Points cell ──────────────────────────────── */
+    .pts-positive { color: var(--success); font-weight: 600; }
+    .pts-negative { color: var(--danger); font-weight: 600; }
+
+    /* ── Client cell ──────────────────────────────── */
+    .client-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .client-cell .star {
+      color: #f59e0b;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .client-name {
+      font-weight: 500;
+      color: var(--text);
+    }
+    .client-sub {
+      font-size: 0.78rem;
+      color: var(--text-light);
+    }
+
+    /* ── Amount ────────────────────────────────────── */
+    .amount-cell { font-variant-numeric: tabular-nums; }
+
+    /* ── Staff ─────────────────────────────────────── */
+    .staff-cell {
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+
+    /* ── Notes ─────────────────────────────────────── */
+    .notes-cell {
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+
+    /* ── Date cell ─────────────────────────────────── */
+    .date-cell .day {
+      font-weight: 500;
+      font-size: 0.85rem;
+    }
+    .date-cell .time {
+      font-size: 0.75rem;
+      color: var(--text-light);
+    }
+
+    /* ── Empty / loading ──────────────────────────── */
+    .dash-empty {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-light);
+    }
+    .dash-empty .ico { font-size: 2.5rem; margin-bottom: 0.75rem; }
+    .dash-empty p { font-size: 0.95rem; }
+
+    /* ── Pagination ────────────────────────────────── */
+    .dash-pagination {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid #f0f1f3;
+      font-size: 0.82rem;
+      color: var(--text-light);
+    }
+    .dash-pagination button {
+      padding: 0.35rem 0.75rem;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background: #fff;
+      font-size: 0.8rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dash-pagination button:hover:not(:disabled) {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .dash-pagination button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .page-btns { display: flex; gap: 0.4rem; }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 900px) {
+      .dash-toolbar { flex-direction: column; align-items: flex-start; }
+      .dash-search { margin-left: 0; width: 100%; }
+      .dash-search input { width: 100%; }
+      .table-card { overflow-x: auto; }
+      .notes-cell { max-width: 120px; }
+    }
+    @media (max-width: 600px) {
+      .dash-wrap { padding: 1rem; }
+      .dash-header h1 { font-size: 1.25rem; }
+      .table-card td, .table-card th { padding: 0.5rem 0.65rem; font-size: 0.8rem; }
     }
   </style>
 </head>
@@ -69,353 +266,259 @@
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container">
-    <h1 style="margin: 1.5rem 0;">Tableau de bord</h1>
+  <div class="dash-wrap">
 
-    <!-- Announcements Section -->
-    <div class="announcements-section" id="announcements-section" style="display: none;">
-      <div class="flex-between mb-1">
-        <h3 style="margin: 0;">📢 Annonces <span id="unread-badge"></span></h3>
-      </div>
-      <div id="announcements-list"></div>
-    </div>
-
-    <!-- Stats -->
-    <div class="stats-grid" id="stats-grid">
-      <div class="stat-card">
-        <div class="stat-value" id="stat-clients">-</div>
-        <div class="stat-label">Clients</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-active">-</div>
-        <div class="stat-label">Actifs (30j)</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-revenue">-</div>
-        <div class="stat-label">CA Total</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="stat-avg">-</div>
-        <div class="stat-label">Panier moyen</div>
+    <!-- Header -->
+    <div class="dash-header">
+      <h1>Tableau de bord</h1>
+      <div class="dash-header-right">
+        <a href="/credit" class="btn btn-primary btn-sm">➕ Créditer</a>
+        <button onclick="loadActivity()" class="btn btn-outline btn-sm">↻ Rafraîchir</button>
       </div>
     </div>
 
-    <div class="grid grid-2">
-      <!-- Recent clients -->
-      <div class="card">
-        <div class="card-header">
-          Derniers clients
-          <a href="/clients" class="btn btn-primary btn-sm">Voir tous</a>
-        </div>
-        <div id="recent-clients"></div>
+    <!-- Filters -->
+    <div class="dash-toolbar">
+      <button class="filter-chip active" data-filter="all">Tout</button>
+      <button class="filter-chip" data-filter="credit">Crédits</button>
+      <button class="filter-chip" data-filter="reward">Récompenses</button>
+      <button class="filter-chip" data-filter="adjustment">Ajustements</button>
+      <div class="dash-search">
+        <span class="ico">🔍</span>
+        <input type="text" id="dash-search" placeholder="Rechercher un client…">
       </div>
+    </div>
 
-      <!-- Quick actions + Settings + Feedback -->
-      <div>
-        <div class="card">
-          <div class="card-header">Actions rapides</div>
-          <a href="/credit" class="btn btn-primary btn-block mb-1">➕ Créditer des points</a>
-          <a href="/clients" class="btn btn-secondary btn-block mb-1">👥 Voir les clients</a>
-          <button onclick="API.clients.exportCSV()" class="btn btn-outline btn-block">📥 Exporter CSV</button>
-        </div>
-
-        <!-- Feedback card -->
-        <div class="feedback-card" onclick="showFeedbackModal()">
-          <h3>💬 Contacter FIDDO</h3>
-          <p>Une question, suggestion ou problème ? Envoyez-nous un message.</p>
-        </div>
-
-        <div class="card" id="settings-card" style="display: none;">
-          <div class="card-header">⚙️ Paramètres de fidélité</div>
-          <div id="settings-alert"></div>
-          <form id="settings-form">
-            <div class="form-group">
-              <label class="form-label">Points par euro</label>
-              <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Points pour récompense</label>
-              <input type="number" id="set-pfr" class="form-control" min="1">
-            </div>
-            <div class="form-group">
-              <label class="form-label">Description récompense</label>
-              <input type="text" id="set-desc" class="form-control" placeholder="Boisson offerte">
-            </div>
-            <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
-          </form>
+    <!-- Table -->
+    <div class="table-card">
+      <table id="activity-table">
+        <thead>
+          <tr>
+            <th data-col="date" class="sorted">Date <span class="arrow">▼</span></th>
+            <th data-col="type">Type <span class="arrow">▼</span></th>
+            <th data-col="client">Client <span class="arrow">▼</span></th>
+            <th data-col="amount">Montant <span class="arrow">▼</span></th>
+            <th data-col="points">Points <span class="arrow">▼</span></th>
+            <th data-col="staff">Staff <span class="arrow">▼</span></th>
+            <th data-col="notes">Notes <span class="arrow">▼</span></th>
+          </tr>
+        </thead>
+        <tbody id="activity-body">
+          <tr><td colspan="7"><div class="dash-empty"><div class="ico">⏳</div><p>Chargement…</p></div></td></tr>
+        </tbody>
+      </table>
+      <div class="dash-pagination" id="pagination" style="display:none;">
+        <span id="page-info"></span>
+        <div class="page-btns">
+          <button id="btn-prev" onclick="changePage(-1)">← Précédent</button>
+          <button id="btn-next" onclick="changePage(1)">Suivant →</button>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Announcement Detail Modal -->
-  <div id="ann-detail-modal" class="modal">
-    <div class="modal-content" style="max-width: 550px;">
-      <div class="modal-header">
-        <h2 id="ann-detail-title">Annonce</h2>
-        <button class="close-modal" onclick="closeAnnDetail()">×</button>
-      </div>
-      <div class="modal-body" id="ann-detail-body"></div>
-    </div>
-  </div>
-
-  <!-- Feedback Modal -->
-  <div id="feedback-modal" class="modal">
-    <div class="modal-content" style="max-width: 500px;">
-      <div class="modal-header">
-        <h2>💬 Contacter FIDDO</h2>
-        <button class="close-modal" onclick="closeFeedbackModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="feedback-alert"></div>
-        <div class="form-group">
-          <label class="form-label">Sujet (optionnel)</label>
-          <input type="text" id="fb-subject" class="form-control" placeholder="Ex: Question sur les récompenses">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Votre message *</label>
-          <textarea id="fb-message" class="form-control" rows="5" placeholder="Décrivez votre question ou suggestion..."></textarea>
-        </div>
-        <button class="btn btn-primary btn-block" id="fb-submit" onclick="submitFeedback()">Envoyer</button>
-      </div>
-    </div>
   </div>
 
   <script src="/js/app.js"></script>
   <script>
     if (!requireManager()) throw 'Not authorized';
 
-    const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
 
-    // Show settings card for owner
-    if (staff.role === 'owner') {
-      document.getElementById('settings-card').style.display = 'block';
-      document.getElementById('set-ppe').value = merchant.points_per_euro;
-      document.getElementById('set-pfr').value = merchant.points_for_reward;
-      document.getElementById('set-desc').value = merchant.reward_description;
-    }
+    // ── State ─────────────────────────────────────
+    let allRows = [];
+    let filteredRows = [];
+    let sortCol = 'date';
+    let sortAsc = false;
+    let currentFilter = 'all';
+    let searchTerm = '';
+    const PAGE_SIZE = 25;
+    let currentPage = 0;
 
-    // ═══════════════════════════════════════════════════════
-    // ANNOUNCEMENTS
-    // ═══════════════════════════════════════════════════════
+    // ── Type labels ───────────────────────────────
+    const TYPE_LABELS = {
+      credit: 'Crédit',
+      reward: 'Récompense',
+      adjustment: 'Ajustement',
+      merge: 'Fusion',
+    };
 
-    let allAnnouncements = [];
-
-    async function loadAnnouncements() {
+    // ── Load activity from API ────────────────────
+    async function loadActivity() {
       try {
-        const data = await API.call('/announcements');
-        allAnnouncements = data.announcements;
-
-        if (allAnnouncements.length === 0) return;
-
-        const section = document.getElementById('announcements-section');
-        section.style.display = 'block';
-
-        const unreadCount = data.unread_count;
-        const badge = document.getElementById('unread-badge');
-        badge.innerHTML = unreadCount > 0
-          ? `<span class="notif-badge">${unreadCount}</span>`
-          : '';
-
-        renderAnnouncements(false);
+        const data = await API.call('/clients/activity?limit=500');
+        allRows = data.activity.map(t => ({
+          id: t.id,
+          date: t.created_at,
+          dateObj: new Date(t.created_at),
+          type: t.transaction_type,
+          clientName: t.client_name || '',
+          clientEmail: t.email || '',
+          clientPhone: t.phone || '',
+          clientDisplay: t.client_name || t.email || t.phone || '—',
+          canRedeem: t.can_redeem || false,
+          amount: t.amount,
+          points: t.points_delta,
+          staff: t.staff_name || '—',
+          notes: t.notes || '',
+        }));
+        applyFilters();
       } catch (err) {
-        console.error('Announcements error:', err);
+        console.error('Activity load error:', err);
+        document.getElementById('activity-body').innerHTML =
+          `<tr><td colspan="7"><div class="dash-empty"><div class="ico">⚠️</div><p>${err.message}</p></div></td></tr>`;
       }
     }
 
-    function renderAnnouncements(showAll) {
-      const list = document.getElementById('announcements-list');
-      const toShow = showAll ? allAnnouncements : allAnnouncements.slice(0, 3);
-      const prioIcons = { info: 'ℹ️', warning: '⚠️', urgent: '🚨' };
-
-      let html = '';
-      toShow.forEach(a => {
-        const preview = a.content.length > 120 ? a.content.substring(0, 120) + '...' : a.content;
-        html += `
-          <div class="ann-banner priority-${a.priority} ${a.is_read ? 'is-read' : ''}" onclick="showAnnDetail(${a.id})">
-            <div class="flex-between">
-              <div class="ann-title">
-                ${!a.is_read ? '<span class="ann-unread-dot"></span>' : ''}
-                ${prioIcons[a.priority]} ${a.title}
-              </div>
-              <span class="ann-date">${Format.timeSince(a.created_at)}</span>
-            </div>
-            <div class="ann-preview">${preview}</div>
-          </div>
-        `;
+    // ── Filtering + sorting ───────────────────────
+    function applyFilters() {
+      filteredRows = allRows.filter(r => {
+        if (currentFilter !== 'all' && r.type !== currentFilter) return false;
+        if (searchTerm) {
+          const s = searchTerm.toLowerCase();
+          const haystack = (r.clientDisplay + ' ' + r.clientEmail + ' ' + r.clientPhone + ' ' + r.staff + ' ' + r.notes).toLowerCase();
+          if (!haystack.includes(s)) return false;
+        }
+        return true;
       });
-
-      if (!showAll && allAnnouncements.length > 3) {
-        html += `<div class="ann-toggle"><a onclick="renderAnnouncements(true)">Voir toutes les annonces (${allAnnouncements.length})</a></div>`;
-      } else if (showAll && allAnnouncements.length > 3) {
-        html += `<div class="ann-toggle"><a onclick="renderAnnouncements(false)">Réduire</a></div>`;
-      }
-
-      list.innerHTML = html;
+      applySort();
     }
 
-    async function showAnnDetail(id) {
-      const a = allAnnouncements.find(x => x.id === id);
-      if (!a) return;
-
-      const prioLabels = { info: 'Information', warning: 'Important', urgent: 'Urgent' };
-      const prioColors = { info: 'var(--primary)', warning: 'var(--warning)', urgent: 'var(--danger)' };
-
-      document.getElementById('ann-detail-title').textContent = a.title;
-      document.getElementById('ann-detail-body').innerHTML = `
-        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem;">
-          <span class="badge" style="background: ${prioColors[a.priority]}20; color: ${prioColors[a.priority]};">${prioLabels[a.priority]}</span>
-          <span class="text-muted text-sm">${Format.datetime(a.created_at)}</span>
-        </div>
-        <div style="white-space: pre-wrap; line-height: 1.7; font-size: 0.95rem;">${a.content}</div>
-      `;
-
-      document.getElementById('ann-detail-modal').classList.add('active');
-
-      if (!a.is_read) {
-        try {
-          await API.call(`/announcements/${id}/read`, { method: 'POST' });
-          a.is_read = 1;
-          const unread = allAnnouncements.filter(x => !x.is_read).length;
-          document.getElementById('unread-badge').innerHTML = unread > 0
-            ? `<span class="notif-badge">${unread}</span>` : '';
-        } catch (e) { /* silent */ }
-      }
+    function applySort() {
+      filteredRows.sort((a, b) => {
+        let va, vb;
+        switch (sortCol) {
+          case 'date':    va = a.dateObj; vb = b.dateObj; break;
+          case 'type':    va = a.type; vb = b.type; break;
+          case 'client':  va = a.clientDisplay.toLowerCase(); vb = b.clientDisplay.toLowerCase(); break;
+          case 'amount':  va = a.amount || 0; vb = b.amount || 0; break;
+          case 'points':  va = a.points; vb = b.points; break;
+          case 'staff':   va = a.staff.toLowerCase(); vb = b.staff.toLowerCase(); break;
+          case 'notes':   va = a.notes.toLowerCase(); vb = b.notes.toLowerCase(); break;
+          default:        va = a.dateObj; vb = b.dateObj;
+        }
+        if (va < vb) return sortAsc ? -1 : 1;
+        if (va > vb) return sortAsc ? 1 : -1;
+        return 0;
+      });
+      currentPage = 0;
+      render();
     }
 
-    function closeAnnDetail() {
-      document.getElementById('ann-detail-modal').classList.remove('active');
-      renderAnnouncements(false);
-    }
-    document.getElementById('ann-detail-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'ann-detail-modal') closeAnnDetail();
-    });
+    // ── Render table ──────────────────────────────
+    function render() {
+      const tbody = document.getElementById('activity-body');
+      const start = currentPage * PAGE_SIZE;
+      const page = filteredRows.slice(start, start + PAGE_SIZE);
 
-
-    // ═══════════════════════════════════════════════════════
-    // FEEDBACK
-    // ═══════════════════════════════════════════════════════
-
-    function showFeedbackModal() {
-      document.getElementById('fb-subject').value = '';
-      document.getElementById('fb-message').value = '';
-      UI.clearAlert('feedback-alert');
-      document.getElementById('fb-submit').disabled = false;
-      document.getElementById('feedback-modal').classList.add('active');
-    }
-
-    function closeFeedbackModal() {
-      document.getElementById('feedback-modal').classList.remove('active');
-    }
-    document.getElementById('feedback-modal').addEventListener('click', (e) => {
-      if (e.target.id === 'feedback-modal') closeFeedbackModal();
-    });
-
-    async function submitFeedback() {
-      const subject = document.getElementById('fb-subject').value.trim();
-      const message = document.getElementById('fb-message').value.trim();
-
-      if (!message) {
-        UI.showAlert('feedback-alert', 'Veuillez écrire un message', 'error');
+      if (filteredRows.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7"><div class="dash-empty"><div class="ico">📋</div><p>Aucune activité trouvée</p></div></td></tr>`;
+        document.getElementById('pagination').style.display = 'none';
         return;
       }
 
-      try {
-        document.getElementById('fb-submit').disabled = true;
-        UI.showAlert('feedback-alert', 'Envoi en cours...', 'info');
+      let html = '';
+      page.forEach(r => {
+        const dateStr = r.dateObj.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = r.dateObj.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const sign = r.points >= 0 ? '+' : '';
+        const ptsCls = r.points >= 0 ? 'pts-positive' : 'pts-negative';
 
-        await API.call('/announcements/feedback', {
-          method: 'POST',
-          body: JSON.stringify({ subject, message }),
-        });
+        html += `<tr>
+          <td class="date-cell"><span class="day">${dateStr}</span><br><span class="time">${timeStr}</span></td>
+          <td><span class="type-badge type-${r.type}">${TYPE_LABELS[r.type] || r.type}</span></td>
+          <td>
+            <div class="client-cell">
+              ${r.canRedeem ? '<span class="star" title="Récompense disponible">⭐</span>' : ''}
+              <div>
+                <div class="client-name">${escHtml(r.clientDisplay)}</div>
+                ${r.clientEmail && r.clientDisplay !== r.clientEmail ? `<div class="client-sub">${escHtml(r.clientEmail)}</div>` : ''}
+              </div>
+            </div>
+          </td>
+          <td class="amount-cell">${r.amount != null ? Format.currency(r.amount) : '—'}</td>
+          <td><span class="${ptsCls}">${sign}${r.points}</span></td>
+          <td class="staff-cell">${escHtml(r.staff)}</td>
+          <td class="notes-cell" title="${escAttr(r.notes)}">${escHtml(r.notes) || '—'}</td>
+        </tr>`;
+      });
+      tbody.innerHTML = html;
 
-        UI.showAlert('feedback-alert', '✅ Message envoyé ! L\'équipe FIDDO vous répondra rapidement.', 'success');
-        document.getElementById('fb-subject').value = '';
-        document.getElementById('fb-message').value = '';
-
-        setTimeout(() => closeFeedbackModal(), 2000);
-      } catch (err) {
-        UI.showAlert('feedback-alert', err.message, 'error');
-        document.getElementById('fb-submit').disabled = false;
+      // Pagination
+      const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
+      const pag = document.getElementById('pagination');
+      if (totalPages > 1) {
+        pag.style.display = 'flex';
+        document.getElementById('page-info').textContent =
+          `${start + 1}–${Math.min(start + PAGE_SIZE, filteredRows.length)} sur ${filteredRows.length}`;
+        document.getElementById('btn-prev').disabled = currentPage === 0;
+        document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+      } else {
+        pag.style.display = filteredRows.length > 0 ? 'flex' : 'none';
+        document.getElementById('page-info').textContent = `${filteredRows.length} résultat${filteredRows.length > 1 ? 's' : ''}`;
+        document.getElementById('btn-prev').disabled = true;
+        document.getElementById('btn-next').disabled = true;
       }
     }
 
+    function changePage(dir) {
+      currentPage += dir;
+      render();
+      document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 
-    // ═══════════════════════════════════════════════════════
-    // DASHBOARD DATA
-    // ═══════════════════════════════════════════════════════
-
-    async function loadDashboard() {
-      try {
-        const data = await API.clients.getAll();
-        const clients = data.clients;
-
-        const total = clients.length;
-        const active = clients.filter(c => {
-          const days = (Date.now() - new Date(c.last_visit)) / 86400000;
-          return days <= 30;
-        }).length;
-        const revenue = clients.reduce((s, c) => s + c.total_spent, 0);
-        const visits = clients.reduce((s, c) => s + c.visit_count, 0);
-        const avg = visits > 0 ? revenue / visits : 0;
-
-        document.getElementById('stat-clients').textContent = total;
-        document.getElementById('stat-active').textContent = active;
-        document.getElementById('stat-revenue').textContent = Format.currency(revenue);
-        document.getElementById('stat-avg').textContent = Format.currency(avg);
-
-        // Recent clients
-        const container = document.getElementById('recent-clients');
-        if (clients.length === 0) {
-          container.innerHTML = '<div class="empty-state"><p class="text-muted">Aucun client pour le moment</p></div>';
-          return;
+    // ── Column sort ───────────────────────────────
+    document.querySelectorAll('#activity-table th[data-col]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.col;
+        if (sortCol === col) {
+          sortAsc = !sortAsc;
+        } else {
+          sortCol = col;
+          sortAsc = col === 'client' || col === 'staff'; // alpha default asc
         }
-
-        const recent = clients.slice(0, 5);
-        let html = '<table class="table"><thead><tr><th>Client</th><th>Points</th><th>Dépensé</th><th>Dernière visite</th></tr></thead><tbody>';
-        recent.forEach(c => {
-          html += `<tr>
-            <td><a href="/clients" style="color: var(--primary); text-decoration: none;">${c.email || c.phone || c.name || 'N/A'}</a></td>
-            <td><strong class="text-primary">${c.points_balance} pts</strong></td>
-            <td>${Format.currency(c.total_spent)}</td>
-            <td class="text-muted">${Format.timeSince(c.last_visit)}</td>
-          </tr>`;
+        // Update UI
+        document.querySelectorAll('#activity-table th').forEach(h => {
+          h.classList.remove('sorted');
+          h.querySelector('.arrow').textContent = '▼';
         });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-
-      } catch (err) {
-        console.error('Dashboard error:', err);
-      }
-    }
-
-    // Settings form (owner only)
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      try {
-        const settings = {
-          pointsPerEuro: parseFloat(document.getElementById('set-ppe').value),
-          pointsForReward: parseInt(document.getElementById('set-pfr').value),
-          rewardDescription: document.getElementById('set-desc').value,
-        };
-        await API.auth.updateSettings(settings);
-
-        merchant.points_per_euro = settings.pointsPerEuro;
-        merchant.points_for_reward = settings.pointsForReward;
-        merchant.reward_description = settings.rewardDescription;
-        Auth.setSession(staff, merchant);
-
-        UI.showAlert('settings-alert', 'Paramètres mis à jour !', 'success');
-        setTimeout(() => UI.clearAlert('settings-alert'), 3000);
-      } catch (err) {
-        UI.showAlert('settings-alert', err.message, 'error');
-      }
+        th.classList.add('sorted');
+        th.querySelector('.arrow').textContent = sortAsc ? '▲' : '▼';
+        applySort();
+      });
     });
 
-    // Init
-    loadAnnouncements();
-    loadDashboard();
+    // ── Filter chips ──────────────────────────────
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        applyFilters();
+      });
+    });
+
+    // ── Search ────────────────────────────────────
+    let searchTimeout;
+    document.getElementById('dash-search').addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => {
+        searchTerm = e.target.value.trim();
+        applyFilters();
+      }, 200);
+    });
+
+    // ── Escape helpers ────────────────────────────
+    function escHtml(s) {
+      if (!s) return '';
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+    function escAttr(s) {
+      if (!s) return '';
+      return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+
+    // ── Init ──────────────────────────────────────
+    loadActivity();
   </script>
 </body>
 </html>
