@@ -28,13 +28,20 @@ setInterval(() => {
 // Requires staff auth (called from credit.html)
 
 const { authenticateStaff } = require('../middleware/auth');
+const { merchantQueries, db } = require('../database');
 
 router.post('/session', authenticateStaff, (req, res) => {
   try {
     const token = crypto.randomBytes(16).toString('hex'); // 32-char hex
 
+    // Fetch merchant name + theme for client-facing page
+    const merchant = merchantQueries.findById.get(req.staff.merchant_id);
+    const prefs = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?').get(req.staff.merchant_id);
+
     sessions.set(token, {
       merchantId: req.staff.merchant_id,
+      merchantName: merchant ? merchant.business_name : 'FIDDO',
+      theme: prefs ? prefs.theme : 'teal',
       staffId: req.staff.id,
       createdAt: Date.now(),
       data: null,      // filled when client submits
@@ -51,6 +58,36 @@ router.post('/session', authenticateStaff, (req, res) => {
     });
   } catch (error) {
     console.error('QR session create error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/qr/info/:token — Public: get merchant name + theme for client page
+// No auth required — called from client-form.html on load.
+// ═══════════════════════════════════════════════════════
+
+router.get('/info/:token', (req, res) => {
+  try {
+    const { token } = req.params;
+    const session = sessions.get(token);
+
+    if (!session) {
+      return res.status(404).json({ error: 'Session non trouvée' });
+    }
+
+    if (Date.now() - session.createdAt > SESSION_TTL_MS) {
+      sessions.delete(token);
+      return res.status(410).json({ error: 'Session expirée' });
+    }
+
+    res.json({
+      merchantName: session.merchantName,
+      theme: session.theme,
+    });
+  } catch (error) {
+    console.error('QR info error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
