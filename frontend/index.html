@@ -21,8 +21,9 @@
       --text-hint: #8899A6;
       --border: #E1E8ED;
       --border-focus: #0891B2;
-      --error: #D32F2F;
+      --error: #C62828;
       --error-bg: #FFF5F5;
+      --error-border: #EF9A9A;
       --success: #0A8754;
       --success-bg: #F0FFF7;
       --info-bg: #F0FAFF;
@@ -30,9 +31,6 @@
       --panel-text: #C7D5DD;
       --panel-accent: #0ED3FF;
       --radius: 8px;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
-      --shadow-md: 0 4px 24px rgba(0,0,0,0.08);
-      --shadow-lg: 0 12px 48px rgba(0,0,0,0.12);
       --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
@@ -81,7 +79,6 @@
       pointer-events: none;
     }
 
-    /* Subtle grid pattern */
     .brand-grid {
       position: absolute;
       inset: 0;
@@ -92,10 +89,7 @@
       pointer-events: none;
     }
 
-    .brand-logo {
-      position: relative;
-      z-index: 1;
-    }
+    .brand-logo { position: relative; z-index: 1; }
 
     .brand-logo .wordmark {
       font-family: 'Playfair Display', Georgia, serif;
@@ -216,9 +210,7 @@
       padding: 2rem 0;
     }
 
-    .form-header {
-      margin-bottom: 2rem;
-    }
+    .form-header { margin-bottom: 2rem; }
 
     .form-header h1 {
       font-family: 'Playfair Display', Georgia, serif;
@@ -233,10 +225,8 @@
       font-size: 0.95rem;
     }
 
-    /* ─── Form elements ─── */
-    .field {
-      margin-bottom: 1.25rem;
-    }
+    /* ─── Fields ─── */
+    .field { margin-bottom: 1.25rem; }
 
     .field-label {
       display: block;
@@ -261,14 +251,20 @@
       outline: none;
     }
 
-    .field-input::placeholder {
-      color: var(--text-hint);
-    }
+    .field-input::placeholder { color: var(--text-hint); }
+    .field-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(8,145,178,0.1); }
 
-    .field-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(8,145,178,0.1);
+    .field-input.has-error { border-color: var(--error-border); background: var(--error-bg); }
+    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(198,40,40,0.08); }
+
+    .field-error {
+      font-size: 0.78rem;
+      color: var(--error);
+      margin-top: 0.35rem;
+      line-height: 1.4;
+      display: none;
     }
+    .field-error.visible { display: block; }
 
     .field-hint {
       font-size: 0.78rem;
@@ -283,15 +279,7 @@
       gap: 1rem;
     }
 
-    select.field-input {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23536471' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 1rem center;
-      padding-right: 2.5rem;
-    }
-
-    /* ─── Section dividers ─── */
+    /* ─── Sections ─── */
     .section-divider {
       display: flex;
       align-items: center;
@@ -327,7 +315,6 @@
       font-size: 0.85rem;
       line-height: 1.6;
     }
-
     .reward-preview strong { font-weight: 600; }
 
     /* ─── Buttons ─── */
@@ -342,11 +329,11 @@
       cursor: pointer;
       transition: var(--transition);
       letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
     }
 
-    .btn-submit:active {
-      transform: scale(0.985);
-    }
+    .btn-submit:active:not(:disabled) { transform: scale(0.985); }
 
     .btn-primary-action {
       background: var(--brand);
@@ -354,12 +341,42 @@
       box-shadow: 0 2px 8px rgba(8,145,178,0.25);
     }
 
-    .btn-primary-action:hover {
+    .btn-primary-action:hover:not(:disabled) {
       background: var(--brand-dark);
       box-shadow: 0 4px 16px rgba(8,145,178,0.35);
     }
 
-    /* ─── Form toggle ─── */
+    .btn-submit:disabled { opacity: 0.7; cursor: wait; }
+
+    .btn-submit .btn-text { transition: opacity 0.15s; }
+    .btn-submit .btn-loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .btn-submit.loading .btn-text { opacity: 0; }
+    .btn-submit.loading .btn-loader { opacity: 1; }
+
+    .spinner-dots { display: flex; gap: 4px; }
+    .spinner-dots span {
+      width: 6px; height: 6px;
+      background: white;
+      border-radius: 50%;
+      animation: dotPulse 0.9s ease-in-out infinite;
+    }
+    .spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* ─── Toggle ─── */
     .form-toggle {
       text-align: center;
       margin-top: 2rem;
@@ -376,104 +393,58 @@
       cursor: pointer;
       transition: var(--transition);
     }
+    .form-toggle a:hover { color: var(--brand-dark); text-decoration: underline; }
 
-    .form-toggle a:hover {
-      color: var(--brand-dark);
-      text-decoration: underline;
-    }
-
-    /* ─── Alerts ─── */
-    .alert {
-      padding: 0.75rem 1rem;
+    /* ─── Page-level alerts ─── */
+    .page-alert {
+      padding: 0.85rem 1rem;
       border-radius: var(--radius);
       margin-bottom: 1.25rem;
       font-size: 0.88rem;
-      line-height: 1.5;
+      line-height: 1.55;
+      display: none;
+      animation: alertIn 0.25s ease-out;
+    }
+    .page-alert.visible { display: block; }
+
+    .page-alert.error  { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
+    .page-alert.success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
+    .page-alert.info   { background: var(--info-bg); color: var(--brand-dark); border-left: 3px solid var(--brand); }
+
+    @keyframes alertIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .alert-error { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
-    .alert-success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
-    .alert-info { background: var(--info-bg); color: var(--brand-dark); border-left: 3px solid var(--brand); }
-
-    /* ─── Register form hidden by default ─── */
     #register-form { display: none; }
 
-    /* ─── Animations ─── */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .form-wrapper {
-      animation: fadeUp 0.5s ease-out;
-    }
-
+    .form-wrapper { animation: fadeUp 0.5s ease-out; }
     .brand-content { animation: fadeUp 0.6s ease-out 0.1s both; }
     .brand-features { animation: fadeUp 0.6s ease-out 0.25s both; }
 
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 960px) {
-      .auth-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .brand-panel {
-        display: none;
-      }
-
-      .form-panel {
-        min-height: 100vh;
-        padding: 1.5rem;
-      }
-
-      .form-wrapper {
-        max-width: 480px;
-      }
-
-      /* Show a compact brand header on mobile */
-      .mobile-brand {
-        display: block;
-        text-align: center;
-        margin-bottom: 2rem;
-      }
-
-      .mobile-brand .wordmark {
-        font-family: 'Playfair Display', Georgia, serif;
-        font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: 2px;
-      }
-
-      .mobile-brand .dot {
-        display: inline-block;
-        width: 6px; height: 6px;
-        background: var(--brand);
-        border-radius: 50%;
-        margin-left: 1px;
-        vertical-align: middle;
-      }
-
-      .mobile-brand p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-top: 0.35rem;
-      }
+      .auth-layout { grid-template-columns: 1fr; }
+      .brand-panel { display: none; }
+      .form-panel { min-height: 100vh; padding: 1.5rem; }
+      .form-wrapper { max-width: 480px; }
+      .mobile-brand { display: block; text-align: center; margin-bottom: 2rem; }
+      .mobile-brand .wordmark { font-family: 'Playfair Display', Georgia, serif; font-size: 1.75rem; font-weight: 700; color: var(--text-primary); letter-spacing: 2px; }
+      .mobile-brand .dot { display: inline-block; width: 6px; height: 6px; background: var(--brand); border-radius: 50%; margin-left: 1px; vertical-align: middle; }
+      .mobile-brand p { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.35rem; }
     }
 
-    @media (min-width: 961px) {
-      .mobile-brand { display: none; }
-    }
+    @media (min-width: 961px) { .mobile-brand { display: none; } }
+    @media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
 
-    @media (max-width: 600px) {
-      .field-row { grid-template-columns: 1fr; }
-    }
-
-    /* ─── Scrollbar (for register form) ─── */
     .form-panel::-webkit-scrollbar { width: 6px; }
     .form-panel::-webkit-scrollbar-track { background: transparent; }
     .form-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-    .form-panel::-webkit-scrollbar-thumb:hover { background: var(--text-hint); }
   </style>
 </head>
 <body>
@@ -536,32 +507,36 @@
     <div class="form-panel">
       <div class="form-wrapper">
 
-        <!-- Mobile brand (hidden on desktop) -->
         <div class="mobile-brand">
           <div class="wordmark">FIDDO<span class="dot"></span></div>
           <p>Programme de fidélité pour restaurateurs</p>
         </div>
 
         <!-- ═══ LOGIN ═══ -->
-        <form id="login-form">
+        <form id="login-form" novalidate>
           <div class="form-header">
             <h1>Connexion</h1>
             <p>Accédez à votre espace de gestion</p>
           </div>
 
-          <div id="login-alert"></div>
+          <div id="login-alert" class="page-alert"></div>
 
           <div class="field">
             <label class="field-label" for="login-email">Email</label>
             <input type="email" id="login-email" class="field-input" placeholder="votre@email.com" required autocomplete="email">
+            <div class="field-error" id="login-email-error"></div>
           </div>
 
           <div class="field">
             <label class="field-label" for="login-password">Mot de passe</label>
             <input type="password" id="login-password" class="field-input" placeholder="Votre mot de passe" required autocomplete="current-password">
+            <div class="field-error" id="login-password-error"></div>
           </div>
 
-          <button type="submit" class="btn-submit btn-primary-action">Se connecter</button>
+          <button type="submit" class="btn-submit btn-primary-action" id="login-btn">
+            <span class="btn-text">Se connecter</span>
+            <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
+          </button>
 
           <div class="form-toggle">
             Pas encore inscrit ? <a onclick="showRegister()">Créer un compte</a>
@@ -569,44 +544,47 @@
         </form>
 
         <!-- ═══ REGISTER ═══ -->
-        <form id="register-form">
+        <form id="register-form" novalidate>
           <div class="form-header">
             <h1>Inscription</h1>
             <p>Créez votre espace fidélité en quelques minutes</p>
           </div>
 
-          <div id="register-alert"></div>
+          <div id="register-alert" class="page-alert"></div>
 
-          <!-- Section: Commerce -->
           <div class="section-divider"><span>Votre commerce</span></div>
 
           <div class="field">
             <label class="field-label" for="reg-business">Nom du commerce *</label>
             <input type="text" id="reg-business" class="field-input" placeholder="Mon Restaurant" required>
+            <div class="field-error" id="reg-business-error"></div>
           </div>
 
           <div class="field">
             <label class="field-label" for="reg-address">Adresse *</label>
             <input type="text" id="reg-address" class="field-input" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
+            <div class="field-error" id="reg-address-error"></div>
           </div>
 
           <div class="field-row">
             <div class="field">
               <label class="field-label" for="reg-vat">N° TVA *</label>
               <input type="text" id="reg-vat" class="field-input" placeholder="BE0123456789" required>
+              <div class="field-error" id="reg-vat-error"></div>
             </div>
             <div class="field">
               <label class="field-label" for="reg-phone">Téléphone commerce *</label>
               <input type="tel" id="reg-phone" class="field-input" placeholder="+32 2 123 45 67" required>
+              <div class="field-error" id="reg-phone-error"></div>
             </div>
           </div>
 
           <div class="field">
             <label class="field-label" for="reg-biz-email">Email commerce *</label>
             <input type="email" id="reg-biz-email" class="field-input" placeholder="contact@monresto.be" required>
+            <div class="field-error" id="reg-biz-email-error"></div>
           </div>
 
-          <!-- Section: Programme fidélité -->
           <div class="section-divider"><span>Programme de fidélité</span></div>
 
           <div class="field-row">
@@ -626,20 +604,22 @@
             <label class="field-label" for="reg-reward-desc">Description de la récompense *</label>
             <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage" value="">
             <div class="field-hint">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</div>
+            <div class="field-error" id="reg-reward-desc-error"></div>
           </div>
           <div id="reward-preview" class="reward-preview"></div>
 
-          <!-- Section: Responsable -->
           <div class="section-divider"><span>Responsable</span></div>
 
           <div class="field-row">
             <div class="field">
               <label class="field-label" for="reg-owner-name">Nom complet *</label>
               <input type="text" id="reg-owner-name" class="field-input" placeholder="Jean Dupont" required>
+              <div class="field-error" id="reg-owner-name-error"></div>
             </div>
             <div class="field">
               <label class="field-label" for="reg-owner-phone">Téléphone personnel *</label>
               <input type="tel" id="reg-owner-phone" class="field-input" placeholder="+32 497 12 34 56" required>
+              <div class="field-error" id="reg-owner-phone-error"></div>
             </div>
           </div>
 
@@ -647,14 +627,19 @@
             <label class="field-label" for="reg-owner-email">Email de connexion *</label>
             <input type="email" id="reg-owner-email" class="field-input" placeholder="jean@email.com" required>
             <div class="field-hint">Cet email sera utilisé pour vous connecter</div>
+            <div class="field-error" id="reg-owner-email-error"></div>
           </div>
 
           <div class="field">
             <label class="field-label" for="reg-password">Mot de passe *</label>
             <input type="password" id="reg-password" class="field-input" placeholder="Minimum 6 caractères" minlength="6" required>
+            <div class="field-error" id="reg-password-error"></div>
           </div>
 
-          <button type="submit" class="btn-submit btn-primary-action">Créer mon compte</button>
+          <button type="submit" class="btn-submit btn-primary-action" id="register-btn">
+            <span class="btn-text">Créer mon compte</span>
+            <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
+          </button>
 
           <div class="form-toggle">
             Déjà inscrit ? <a onclick="showLogin()">Se connecter</a>
@@ -668,97 +653,311 @@
 
   <script src="/js/app.js"></script>
   <script>
+    // ═══════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════
+
+    function showPageAlert(id, message, type) {
+      const el = document.getElementById(id);
+      el.className = 'page-alert visible ' + type;
+      el.innerHTML = message;
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    function clearPageAlert(id) {
+      const el = document.getElementById(id);
+      el.className = 'page-alert';
+      el.innerHTML = '';
+    }
+
+    function setFieldError(inputId, message) {
+      const input = document.getElementById(inputId);
+      const error = document.getElementById(inputId + '-error');
+      if (input) input.classList.add('has-error');
+      if (error) { error.textContent = message; error.classList.add('visible'); }
+    }
+
+    function clearFieldError(inputId) {
+      const input = document.getElementById(inputId);
+      const error = document.getElementById(inputId + '-error');
+      if (input) input.classList.remove('has-error');
+      if (error) { error.textContent = ''; error.classList.remove('visible'); }
+    }
+
+    function clearAllFieldErrors(formId) {
+      document.querySelectorAll('#' + formId + ' .field-input').forEach(el => el.classList.remove('has-error'));
+      document.querySelectorAll('#' + formId + ' .field-error').forEach(el => { el.textContent = ''; el.classList.remove('visible'); });
+    }
+
+    function setLoading(btnId, loading) {
+      const btn = document.getElementById(btnId);
+      if (loading) { btn.classList.add('loading'); btn.disabled = true; }
+      else { btn.classList.remove('loading'); btn.disabled = false; }
+    }
+
+    // Clear individual field error on typing
+    document.querySelectorAll('.field-input').forEach(input => {
+      input.addEventListener('input', function() { clearFieldError(this.id); });
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // VALIDATORS
+    // ═══════════════════════════════════════════════════════
+
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+    }
+
+    function isValidPhone(phone) {
+      var digits = phone.replace(/[\s\-.()+]/g, '');
+      return digits.length >= 9 && digits.length <= 15;
+    }
+
+    function isValidVAT(vat) {
+      return /^BE0\d{9}$/i.test(vat.replace(/[\s.]/g, ''));
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════
+
     if (Auth.isAuthenticated()) {
-      const staff = Auth.getStaff();
-      window.location.href = (staff.role === 'cashier') ? '/credit' : '/dashboard';
+      var s = Auth.getStaff();
+      window.location.href = (s.role === 'cashier') ? '/credit' : '/dashboard';
     }
 
     function showRegister() {
+      clearPageAlert('login-alert');
+      clearAllFieldErrors('login-form');
       document.getElementById('login-form').style.display = 'none';
       document.getElementById('register-form').style.display = 'block';
+      window.scrollTo(0, 0);
     }
+
     function showLogin() {
+      clearPageAlert('register-alert');
+      clearAllFieldErrors('register-form');
       document.getElementById('register-form').style.display = 'none';
       document.getElementById('login-form').style.display = 'block';
     }
 
-    // ─── Reward Preview (live) ───
+    // ═══════════════════════════════════════════════════════
+    // REWARD PREVIEW
+    // ═══════════════════════════════════════════════════════
+
     function updateRewardPreview() {
-      const ppe = parseFloat(document.getElementById('reg-ppe').value) || 1;
-      const pfr = parseInt(document.getElementById('reg-pfr').value) || 100;
-      const desc = document.getElementById('reg-reward-desc').value.trim();
-      const preview = document.getElementById('reward-preview');
+      var ppe = parseFloat(document.getElementById('reg-ppe').value) || 1;
+      var pfr = parseInt(document.getElementById('reg-pfr').value) || 100;
+      var desc = document.getElementById('reg-reward-desc').value.trim();
+      var preview = document.getElementById('reward-preview');
 
-      if (!desc) {
-        preview.style.display = 'none';
-        return;
-      }
+      if (!desc) { preview.style.display = 'none'; return; }
 
-      const eurosNeeded = pfr / ppe;
+      var eurosNeeded = pfr / ppe;
       preview.style.display = 'block';
-      preview.innerHTML = `
-        <strong>Aperçu pour vos clients :</strong><br>
-        Dépensez <strong>${Math.ceil(eurosNeeded)} €</strong> au total
-        — accumulez <strong>${pfr} points</strong>
-        — <strong>${desc}</strong>
-      `;
+      preview.innerHTML =
+        '<strong>Aperçu pour vos clients :</strong><br>' +
+        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total ' +
+        '— accumulez <strong>' + pfr + ' points</strong> ' +
+        '— <strong>' + desc + '</strong>';
     }
 
     document.getElementById('reg-ppe').addEventListener('input', updateRewardPreview);
     document.getElementById('reg-pfr').addEventListener('input', updateRewardPreview);
     document.getElementById('reg-reward-desc').addEventListener('input', updateRewardPreview);
 
-    // ─── Login ───
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+
+    // ═══════════════════════════════════════════════════════
+    // LOGIN
+    // ═══════════════════════════════════════════════════════
+
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
+      clearPageAlert('login-alert');
+      clearAllFieldErrors('login-form');
+
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+
+      // Client-side checks
+      var hasError = false;
+
+      if (!email) {
+        setFieldError('login-email', 'Veuillez saisir votre adresse email.');
+        hasError = true;
+      } else if (!isValidEmail(email)) {
+        setFieldError('login-email', 'Cette adresse email ne semble pas valide.');
+        hasError = true;
+      }
+
+      if (!password) {
+        setFieldError('login-password', 'Veuillez saisir votre mot de passe.');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      // Call API
+      setLoading('login-btn', true);
+
       try {
-        UI.showAlert('login-alert', 'Connexion en cours...', 'info');
-        const data = await API.auth.login({ email, password });
+        var data = await API.auth.login({ email: email, password: password });
         Auth.setSession(data.staff, data.merchant);
-        UI.showAlert('login-alert', 'Connexion réussie !', 'success');
-        setTimeout(() => {
+        showPageAlert('login-alert', 'Connexion réussie, redirection en cours...', 'success');
+        setTimeout(function() {
           window.location.href = (data.staff.role === 'cashier') ? '/credit' : '/dashboard';
-        }, 300);
+        }, 400);
       } catch (err) {
-        UI.showAlert('login-alert', err.message, 'error');
+        setLoading('login-btn', false);
+
+        var msg = err.message || '';
+        var displayMsg;
+
+        if (msg.indexOf('incorrect') !== -1) {
+          displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
+        } else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) {
+          displayMsg = msg;
+        } else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) {
+          displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
+        } else if (msg.indexOf('suspendu') !== -1) {
+          displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
+        } else if (msg.indexOf('refusée') !== -1) {
+          displayMsg = msg;
+        } else if (msg.indexOf('résilié') !== -1) {
+          displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
+        } else if (msg.indexOf('pas actif') !== -1) {
+          displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
+        } else if (msg.indexOf('désactivé') !== -1) {
+          displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
+        } else {
+          displayMsg = 'Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants.';
+        }
+
+        showPageAlert('login-alert', displayMsg, 'error');
       }
     });
 
-    // ─── Register ───
-    document.getElementById('register-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
 
-      const rewardDesc = document.getElementById('reg-reward-desc').value.trim();
-      if (!rewardDesc) {
-        UI.showAlert('register-alert', 'Veuillez décrire la récompense offerte à vos clients', 'error');
-        document.getElementById('reg-reward-desc').focus();
+    // ═══════════════════════════════════════════════════════
+    // REGISTER — full validation
+    // ═══════════════════════════════════════════════════════
+
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearPageAlert('register-alert');
+      clearAllFieldErrors('register-form');
+
+      var f = {
+        business:   document.getElementById('reg-business').value.trim(),
+        address:    document.getElementById('reg-address').value.trim(),
+        vat:        document.getElementById('reg-vat').value.trim(),
+        phone:      document.getElementById('reg-phone').value.trim(),
+        bizEmail:   document.getElementById('reg-biz-email').value.trim(),
+        rewardDesc: document.getElementById('reg-reward-desc').value.trim(),
+        ppe:        document.getElementById('reg-ppe').value,
+        pfr:        document.getElementById('reg-pfr').value,
+        ownerName:  document.getElementById('reg-owner-name').value.trim(),
+        ownerPhone: document.getElementById('reg-owner-phone').value.trim(),
+        ownerEmail: document.getElementById('reg-owner-email').value.trim(),
+        password:   document.getElementById('reg-password').value,
+      };
+
+      var errorCount = 0;
+
+      // Commerce
+      if (!f.business) { setFieldError('reg-business', 'Le nom de votre commerce est requis.'); errorCount++; }
+
+      if (!f.address) { setFieldError('reg-address', 'L\'adresse est requise.'); errorCount++; }
+      else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète. Indiquez la rue, le numéro et la ville.'); errorCount++; }
+
+      if (!f.vat) { setFieldError('reg-vat', 'Le numéro de TVA est requis.'); errorCount++; }
+      else if (!isValidVAT(f.vat)) { setFieldError('reg-vat', 'Format attendu : BE0 suivi de 9 chiffres (ex : BE0123456789).'); errorCount++; }
+
+      if (!f.phone) { setFieldError('reg-phone', 'Le téléphone du commerce est requis.'); errorCount++; }
+      else if (!isValidPhone(f.phone)) { setFieldError('reg-phone', 'Numéro invalide. Exemple : +32 2 123 45 67'); errorCount++; }
+
+      if (!f.bizEmail) { setFieldError('reg-biz-email', 'L\'email du commerce est requis.'); errorCount++; }
+      else if (!isValidEmail(f.bizEmail)) { setFieldError('reg-biz-email', 'Cette adresse email ne semble pas valide.'); errorCount++; }
+
+      // Récompense
+      if (!f.rewardDesc) { setFieldError('reg-reward-desc', 'Décrivez la récompense que recevront vos clients fidèles.'); errorCount++; }
+
+      // Responsable
+      if (!f.ownerName) { setFieldError('reg-owner-name', 'Votre nom complet est requis.'); errorCount++; }
+
+      if (!f.ownerPhone) { setFieldError('reg-owner-phone', 'Votre numéro personnel est requis.'); errorCount++; }
+      else if (!isValidPhone(f.ownerPhone)) { setFieldError('reg-owner-phone', 'Numéro invalide. Exemple : +32 497 12 34 56'); errorCount++; }
+
+      if (!f.ownerEmail) { setFieldError('reg-owner-email', 'Votre email de connexion est requis.'); errorCount++; }
+      else if (!isValidEmail(f.ownerEmail)) { setFieldError('reg-owner-email', 'Cette adresse email ne semble pas valide.'); errorCount++; }
+
+      if (!f.password) { setFieldError('reg-password', 'Choisissez un mot de passe.'); errorCount++; }
+      else if (f.password.length < 6) { setFieldError('reg-password', 'Minimum 6 caractères.'); errorCount++; }
+
+      if (errorCount > 0) {
+        showPageAlert('register-alert',
+          errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger. Vérifiez les indications en rouge ci-dessous.',
+          'error'
+        );
+        var firstErr = document.querySelector('#register-form .field-input.has-error');
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
+      // Call API
+      setLoading('register-btn', true);
+
       try {
-        UI.showAlert('register-alert', 'Création du compte...', 'info');
         await API.auth.register({
-          businessName: document.getElementById('reg-business').value,
-          address: document.getElementById('reg-address').value,
-          vatNumber: document.getElementById('reg-vat').value,
-          email: document.getElementById('reg-biz-email').value,
-          phone: document.getElementById('reg-phone').value,
-          ownerPhone: document.getElementById('reg-owner-phone').value,
-          ownerEmail: document.getElementById('reg-owner-email').value,
-          ownerPassword: document.getElementById('reg-password').value,
-          ownerName: document.getElementById('reg-owner-name').value,
-          pointsPerEuro: parseFloat(document.getElementById('reg-ppe').value) || 1,
-          pointsForReward: parseInt(document.getElementById('reg-pfr').value) || 100,
-          rewardDescription: rewardDesc,
+          businessName: f.business,
+          address: f.address,
+          vatNumber: f.vat,
+          email: f.bizEmail,
+          phone: f.phone,
+          ownerPhone: f.ownerPhone,
+          ownerEmail: f.ownerEmail,
+          ownerPassword: f.password,
+          ownerName: f.ownerName,
+          pointsPerEuro: parseFloat(f.ppe) || 1,
+          pointsForReward: parseInt(f.pfr) || 100,
+          rewardDescription: f.rewardDesc,
         });
-        UI.showAlert('register-alert',
-          'Demande envoyée ! Votre compte sera activé après validation par notre équipe. Vous recevrez un email de confirmation.',
+
+        showPageAlert('register-alert',
+          '<strong>Demande envoyée avec succès.</strong><br>' +
+          'Votre inscription est en cours d\'examen par notre équipe. ' +
+          'Vous recevrez un email de confirmation à l\'adresse <strong>' + f.ownerEmail + '</strong> dès que votre commerce sera validé.',
           'success'
         );
+
+        // Disable form after success
+        document.querySelectorAll('#register-form .field-input').forEach(function(el) { el.disabled = true; });
+        document.getElementById('register-btn').style.display = 'none';
+
       } catch (err) {
-        UI.showAlert('register-alert', err.message, 'error');
+        setLoading('register-btn', false);
+
+        var msg = err.message || '';
+        var displayMsg;
+
+        if (msg.indexOf('TVA') !== -1 && msg.indexOf('déjà') !== -1) {
+          displayMsg = 'Ce numéro de TVA est déjà enregistré. Si c\'est votre commerce, connectez-vous avec votre compte existant.';
+        } else if (msg.indexOf('email') !== -1 && msg.indexOf('déjà') !== -1) {
+          displayMsg = 'Cet email est déjà associé à un compte existant. Essayez de vous connecter, ou utilisez un autre email.';
+        } else if (msg.indexOf('TVA invalide') !== -1) {
+          displayMsg = 'Le format du numéro de TVA est incorrect. Il doit commencer par BE0 suivi de 9 chiffres.';
+          setFieldError('reg-vat', 'Format incorrect.');
+        } else if (msg.indexOf('Email') !== -1 && msg.indexOf('invalide') !== -1) {
+          displayMsg = 'L\'adresse email du responsable n\'est pas valide. Vérifiez-la et réessayez.';
+          setFieldError('reg-owner-email', 'Email invalide.');
+        } else if (msg.indexOf('mot de passe') !== -1) {
+          displayMsg = 'Le mot de passe est trop court. Il doit contenir au minimum 6 caractères.';
+          setFieldError('reg-password', 'Trop court.');
+        } else {
+          displayMsg = 'Une erreur est survenue lors de l\'inscription. Vérifiez vos informations et réessayez.';
+        }
+
+        showPageAlert('register-alert', displayMsg, 'error');
       }
     });
   </script>
