@@ -79,6 +79,7 @@ const API = {
     },
     getAll: () => API.call('/clients'),
     search: (q) => API.call(`/clients/search?q=${encodeURIComponent(q)}`),
+    searchGlobal: (q) => API.call(`/clients/search-global?q=${encodeURIComponent(q)}`),
     getById: (id) => API.call(`/clients/${id}`),
     block: (id) => API.call(`/clients/${id}/block`, { method: 'POST' }),
     unblock: (id) => API.call(`/clients/${id}/unblock`, { method: 'POST' }),
