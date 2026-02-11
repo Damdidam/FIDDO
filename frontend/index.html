@@ -4,126 +4,666 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FIDDO — Connexion</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    #register-form { display: none; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
-    .section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--primary); margin: 1.5rem 0 0.75rem; font-weight: 600; }
-    .reward-preview {
-      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-      color: white;
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brand: #0891B2;
+      --brand-dark: #065A73;
+      --brand-light: #B2F0FF;
+      --surface: #FAFBFC;
+      --card: #FFFFFF;
+      --text-primary: #0F1419;
+      --text-secondary: #536471;
+      --text-hint: #8899A6;
+      --border: #E1E8ED;
+      --border-focus: #0891B2;
+      --error: #D32F2F;
+      --error-bg: #FFF5F5;
+      --success: #0A8754;
+      --success-bg: #F0FFF7;
+      --info-bg: #F0FAFF;
+      --panel-bg: #0B1B26;
+      --panel-text: #C7D5DD;
+      --panel-accent: #0ED3FF;
+      --radius: 8px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 24px rgba(0,0,0,0.08);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,0.12);
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══ SPLIT LAYOUT ═══ */
+    .auth-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ═══ LEFT PANEL — BRAND ═══ */
+    .brand-panel {
+      background: var(--panel-bg);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 3rem;
+      overflow: hidden;
+    }
+
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -40%; right: -30%;
+      width: 80%; height: 120%;
+      background: radial-gradient(ellipse, rgba(8,145,178,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -20%; left: -20%;
+      width: 60%; height: 60%;
+      background: radial-gradient(ellipse, rgba(14,211,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* Subtle grid pattern */
+    .brand-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+    }
+
+    .brand-logo {
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-logo .wordmark {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: 3px;
+    }
+
+    .brand-logo .dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: var(--panel-accent);
+      border-radius: 50%;
+      margin-left: 2px;
+      vertical-align: middle;
+    }
+
+    .brand-content {
+      position: relative;
+      z-index: 1;
+      max-width: 420px;
+    }
+
+    .brand-headline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2.75rem;
+      font-weight: 600;
+      line-height: 1.2;
+      color: #FFFFFF;
+      margin-bottom: 1.5rem;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-headline em {
+      font-style: italic;
+      color: var(--panel-accent);
+    }
+
+    .brand-description {
+      font-size: 1.05rem;
+      line-height: 1.75;
+      color: var(--panel-text);
+      margin-bottom: 2.5rem;
+    }
+
+    .brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .brand-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .feature-icon {
+      flex-shrink: 0;
+      width: 40px; height: 40px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .feature-icon svg {
+      width: 18px; height: 18px;
+      stroke: var(--panel-accent);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .feature-text {
+      font-size: 0.9rem;
+      color: var(--panel-text);
       line-height: 1.5;
     }
-    .reward-preview strong { font-size: 1rem; }
+
+    .feature-text strong {
+      display: block;
+      color: #FFFFFF;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+
+    .brand-footer {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .brand-footer span {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.5px;
+    }
+
+    /* ═══ RIGHT PANEL — FORMS ═══ */
+    .form-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .form-wrapper {
+      width: 100%;
+      max-width: 440px;
+      padding: 2rem 0;
+    }
+
+    .form-header {
+      margin-bottom: 2rem;
+    }
+
+    .form-header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* ─── Form elements ─── */
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      background: var(--card);
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .field-input::placeholder {
+      color: var(--text-hint);
+    }
+
+    .field-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(8,145,178,0.1);
+    }
+
+    .field-hint {
+      font-size: 0.78rem;
+      color: var(--text-hint);
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    select.field-input {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23536471' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      padding-right: 2.5rem;
+    }
+
+    /* ─── Section dividers ─── */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 2rem 0 1.25rem;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .section-divider span {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-hint);
+      white-space: nowrap;
+    }
+
+    /* ─── Reward preview ─── */
+    .reward-preview {
+      display: none;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: white;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .reward-preview strong { font-weight: 600; }
+
+    /* ─── Buttons ─── */
+    .btn-submit {
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.3px;
+    }
+
+    .btn-submit:active {
+      transform: scale(0.985);
+    }
+
+    .btn-primary-action {
+      background: var(--brand);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(8,145,178,0.25);
+    }
+
+    .btn-primary-action:hover {
+      background: var(--brand-dark);
+      box-shadow: 0 4px 16px rgba(8,145,178,0.35);
+    }
+
+    /* ─── Form toggle ─── */
+    .form-toggle {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .form-toggle a {
+      color: var(--brand);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .form-toggle a:hover {
+      color: var(--brand-dark);
+      text-decoration: underline;
+    }
+
+    /* ─── Alerts ─── */
+    .alert {
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .alert-error { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
+    .alert-success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
+    .alert-info { background: var(--info-bg); color: var(--brand-dark); border-left: 3px solid var(--brand); }
+
+    /* ─── Register form hidden by default ─── */
+    #register-form { display: none; }
+
+    /* ─── Animations ─── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-wrapper {
+      animation: fadeUp 0.5s ease-out;
+    }
+
+    .brand-content { animation: fadeUp 0.6s ease-out 0.1s both; }
+    .brand-features { animation: fadeUp 0.6s ease-out 0.25s both; }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 960px) {
+      .auth-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .brand-panel {
+        display: none;
+      }
+
+      .form-panel {
+        min-height: 100vh;
+        padding: 1.5rem;
+      }
+
+      .form-wrapper {
+        max-width: 480px;
+      }
+
+      /* Show a compact brand header on mobile */
+      .mobile-brand {
+        display: block;
+        text-align: center;
+        margin-bottom: 2rem;
+      }
+
+      .mobile-brand .wordmark {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 2px;
+      }
+
+      .mobile-brand .dot {
+        display: inline-block;
+        width: 6px; height: 6px;
+        background: var(--brand);
+        border-radius: 50%;
+        margin-left: 1px;
+        vertical-align: middle;
+      }
+
+      .mobile-brand p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin-top: 0.35rem;
+      }
+    }
+
+    @media (min-width: 961px) {
+      .mobile-brand { display: none; }
+    }
+
+    @media (max-width: 600px) {
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    /* ─── Scrollbar (for register form) ─── */
+    .form-panel::-webkit-scrollbar { width: 6px; }
+    .form-panel::-webkit-scrollbar-track { background: transparent; }
+    .form-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .form-panel::-webkit-scrollbar-thumb:hover { background: var(--text-hint); }
   </style>
 </head>
 <body>
-  <div class="auth-container">
-    <div class="auth-box">
-      <div class="auth-logo">FIDDO 🐕</div>
-      <p class="auth-subtitle">Programme de fidélité pour restaurateurs</p>
 
-      <!-- ═══ LOGIN ═══ -->
-      <form id="login-form">
-        <h2 class="text-center mb-2" style="font-size: 1.2rem;">Connexion</h2>
-        <div id="login-alert"></div>
+  <div class="auth-layout">
 
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" id="login-email" class="form-control" placeholder="votre@email.com" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mot de passe</label>
-          <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">Se connecter</button>
-        <div class="toggle-form">
-          Pas encore de compte ? <a class="toggle-link" onclick="showRegister()">S'inscrire</a>
-        </div>
-      </form>
+    <!-- ═══ LEFT — BRANDING ═══ -->
+    <div class="brand-panel">
+      <div class="brand-grid"></div>
 
-      <!-- ═══ REGISTER ═══ -->
-      <form id="register-form">
-        <h2 class="text-center mb-2" style="font-size: 1.2rem;">Inscription</h2>
-        <div id="register-alert"></div>
+      <div class="brand-logo">
+        <span class="wordmark">FIDDO<span class="dot"></span></span>
+      </div>
 
-        <div class="section-title">🏪 Votre commerce</div>
-        <div class="form-group">
-          <label class="form-label">Nom du commerce *</label>
-          <input type="text" id="reg-business" class="form-control" placeholder="Mon Restaurant" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Adresse *</label>
-          <input type="text" id="reg-address" class="form-control" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">N° TVA *</label>
-            <input type="text" id="reg-vat" class="form-control" placeholder="BE0123456789" required>
+      <div class="brand-content">
+        <h2 class="brand-headline">Fidélisez vos clients.<br><em>Simplement.</em></h2>
+        <p class="brand-description">
+          La plateforme de fidélité conçue pour les restaurateurs belges.
+          Gestion complète, multi-équipe, sans engagement.
+        </p>
+
+        <div class="brand-features">
+          <div class="brand-feature">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <div class="feature-text">
+              <strong>Multi-tenant</strong>
+              Chaque commerce a son propre espace isolé, ses équipes et ses clients.
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">Téléphone commerce *</label>
-            <input type="tel" id="reg-phone" class="form-control" placeholder="+32 2 123 45 67" required>
+          <div class="brand-feature">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            </div>
+            <div class="feature-text">
+              <strong>QR Code intégré</strong>
+              Vos clients s'identifient en un scan. 6 langues supportées.
+            </div>
           </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email commerce *</label>
-          <input type="email" id="reg-biz-email" class="form-control" placeholder="contact@monresto.be" required>
-        </div>
-
-        <div class="section-title">🎁 Programme de fidélité</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Points par euro dépensé</label>
-            <input type="number" id="reg-ppe" class="form-control" step="0.1" min="0.1" value="1" placeholder="1">
-            <small class="form-help">Ex : 1 = 1 point par euro</small>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Points pour la récompense</label>
-            <input type="number" id="reg-pfr" class="form-control" min="1" value="100" placeholder="100">
-            <small class="form-help">Seuil à atteindre par le client</small>
+          <div class="brand-feature">
+            <div class="feature-icon">
+              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="feature-text">
+              <strong>Sécurisé et conforme</strong>
+              Hébergement européen, RGPD, chiffrement des données sensibles.
+            </div>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Description de la récompense *</label>
-          <input type="text" id="reg-reward-desc" class="form-control" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage" value="">
-          <small class="form-help">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</small>
-        </div>
-        <div id="reward-preview" class="reward-preview" style="display: none;"></div>
+      </div>
 
-        <div class="section-title">👤 Responsable (propriétaire)</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Nom complet *</label>
-            <input type="text" id="reg-owner-name" class="form-control" placeholder="Jean Dupont" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Téléphone personnel *</label>
-            <input type="tel" id="reg-owner-phone" class="form-control" placeholder="+32 497 12 34 56" required>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Email de connexion *</label>
-          <input type="email" id="reg-owner-email" class="form-control" placeholder="jean@email.com" required>
-          <small class="form-help">Cet email sera utilisé pour vous connecter</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Mot de passe *</label>
-          <input type="password" id="reg-password" class="form-control" placeholder="••••••••" minlength="6" required>
-          <small class="form-help">Minimum 6 caractères</small>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-block">Créer mon compte</button>
-        <div class="toggle-form">
-          Déjà un compte ? <a class="toggle-link" onclick="showLogin()">Se connecter</a>
-        </div>
-      </form>
+      <div class="brand-footer">
+        <span>FIDDO V3.4</span>
+        <span>Bruxelles, Belgique</span>
+      </div>
     </div>
+
+    <!-- ═══ RIGHT — FORMS ═══ -->
+    <div class="form-panel">
+      <div class="form-wrapper">
+
+        <!-- Mobile brand (hidden on desktop) -->
+        <div class="mobile-brand">
+          <div class="wordmark">FIDDO<span class="dot"></span></div>
+          <p>Programme de fidélité pour restaurateurs</p>
+        </div>
+
+        <!-- ═══ LOGIN ═══ -->
+        <form id="login-form">
+          <div class="form-header">
+            <h1>Connexion</h1>
+            <p>Accédez à votre espace de gestion</p>
+          </div>
+
+          <div id="login-alert"></div>
+
+          <div class="field">
+            <label class="field-label" for="login-email">Email</label>
+            <input type="email" id="login-email" class="field-input" placeholder="votre@email.com" required autocomplete="email">
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="login-password">Mot de passe</label>
+            <input type="password" id="login-password" class="field-input" placeholder="Votre mot de passe" required autocomplete="current-password">
+          </div>
+
+          <button type="submit" class="btn-submit btn-primary-action">Se connecter</button>
+
+          <div class="form-toggle">
+            Pas encore inscrit ? <a onclick="showRegister()">Créer un compte</a>
+          </div>
+        </form>
+
+        <!-- ═══ REGISTER ═══ -->
+        <form id="register-form">
+          <div class="form-header">
+            <h1>Inscription</h1>
+            <p>Créez votre espace fidélité en quelques minutes</p>
+          </div>
+
+          <div id="register-alert"></div>
+
+          <!-- Section: Commerce -->
+          <div class="section-divider"><span>Votre commerce</span></div>
+
+          <div class="field">
+            <label class="field-label" for="reg-business">Nom du commerce *</label>
+            <input type="text" id="reg-business" class="field-input" placeholder="Mon Restaurant" required>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-address">Adresse *</label>
+            <input type="text" id="reg-address" class="field-input" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="reg-vat">N° TVA *</label>
+              <input type="text" id="reg-vat" class="field-input" placeholder="BE0123456789" required>
+            </div>
+            <div class="field">
+              <label class="field-label" for="reg-phone">Téléphone commerce *</label>
+              <input type="tel" id="reg-phone" class="field-input" placeholder="+32 2 123 45 67" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-biz-email">Email commerce *</label>
+            <input type="email" id="reg-biz-email" class="field-input" placeholder="contact@monresto.be" required>
+          </div>
+
+          <!-- Section: Programme fidélité -->
+          <div class="section-divider"><span>Programme de fidélité</span></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="reg-ppe">Points par euro</label>
+              <input type="number" id="reg-ppe" class="field-input" step="0.1" min="0.1" value="1" placeholder="1">
+              <div class="field-hint">Ex : 1 = 1 point par euro</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="reg-pfr">Points pour récompense</label>
+              <input type="number" id="reg-pfr" class="field-input" min="1" value="100" placeholder="100">
+              <div class="field-hint">Seuil à atteindre par le client</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-reward-desc">Description de la récompense *</label>
+            <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage" value="">
+            <div class="field-hint">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</div>
+          </div>
+          <div id="reward-preview" class="reward-preview"></div>
+
+          <!-- Section: Responsable -->
+          <div class="section-divider"><span>Responsable</span></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="reg-owner-name">Nom complet *</label>
+              <input type="text" id="reg-owner-name" class="field-input" placeholder="Jean Dupont" required>
+            </div>
+            <div class="field">
+              <label class="field-label" for="reg-owner-phone">Téléphone personnel *</label>
+              <input type="tel" id="reg-owner-phone" class="field-input" placeholder="+32 497 12 34 56" required>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-owner-email">Email de connexion *</label>
+            <input type="email" id="reg-owner-email" class="field-input" placeholder="jean@email.com" required>
+            <div class="field-hint">Cet email sera utilisé pour vous connecter</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-password">Mot de passe *</label>
+            <input type="password" id="reg-password" class="field-input" placeholder="Minimum 6 caractères" minlength="6" required>
+          </div>
+
+          <button type="submit" class="btn-submit btn-primary-action">Créer mon compte</button>
+
+          <div class="form-toggle">
+            Déjà inscrit ? <a onclick="showLogin()">Se connecter</a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
   </div>
 
   <script src="/js/app.js"></script>
@@ -159,8 +699,8 @@
       preview.innerHTML = `
         <strong>Aperçu pour vos clients :</strong><br>
         Dépensez <strong>${Math.ceil(eurosNeeded)} €</strong> au total
-        → accumulez <strong>${pfr} points</strong>
-        → <strong>${desc}</strong>
+        — accumulez <strong>${pfr} points</strong>
+        — <strong>${desc}</strong>
       `;
     }
 
