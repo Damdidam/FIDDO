@@ -237,7 +237,11 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const newEmail = email !== undefined ? (email.trim() || null) : endUser.email;
     const newPhone = phone !== undefined ? (phone.trim() || null) : endUser.phone;
 
-    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, endUser.email_validated, endUser.id);
+    // Reset email_validated if email actually changed
+    const emailChanged = newEmailLower && newEmailLower !== endUser.email_lower;
+    const keepValidated = emailChanged ? 0 : endUser.email_validated;
+
+    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, endUser.id);
     if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
 
     logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id, details: { name: newName, email: newEmail, phone: newPhone } });
@@ -450,7 +454,7 @@ router.get('/lookup', (req, res) => {
 });
 
 router.get('/', requireRole('owner', 'manager'), (req, res) => {
-  try { res.json({ count: 0, clients: merchantClientQueries.getByMerchant.all(req.staff.merchant_id) }); }
+  try { const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id); res.json({ count: clients.length, clients }); }
   catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });
 
