@@ -15,7 +15,7 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 // ═══════════════════════════════════════════════════════
-// DDL — Schema V3.3 (preferences + backup)
+// DDL — Schema V3.5 (announcements + feedback)
 // ═══════════════════════════════════════════════════════
 
 function initDatabase() {
@@ -155,7 +155,6 @@ function initDatabase() {
 
       is_blocked     INTEGER NOT NULL DEFAULT 0,
       notes_private  TEXT,
-      custom_reward  TEXT,
 
       first_visit    TEXT NOT NULL DEFAULT (datetime('now')),
       last_visit     TEXT NOT NULL DEFAULT (datetime('now')),
@@ -167,7 +166,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 7. TRANSACTIONS (ledger)
+  // 7. TRANSACTIONS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -224,32 +223,45 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 10. MERCHANT PREFERENCES (V3.3)
+  // 10. ANNOUNCEMENTS (admin → merchants)
   // ───────────────────────────────────────────
   db.exec(`
-    CREATE TABLE IF NOT EXISTS merchant_preferences (
-      merchant_id         INTEGER PRIMARY KEY REFERENCES merchants(id),
+    CREATE TABLE IF NOT EXISTS announcements (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      title       TEXT NOT NULL,
+      content     TEXT NOT NULL,
+      target_type TEXT NOT NULL DEFAULT 'all'
+                  CHECK(target_type IN ('all','selected')),
+      priority    TEXT NOT NULL DEFAULT 'info'
+                  CHECK(priority IN ('info','warning','urgent')),
+      created_by  INTEGER NOT NULL REFERENCES super_admins(id),
+      expires_at  TEXT,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
 
-      theme               TEXT NOT NULL DEFAULT 'teal'
-                          CHECK(theme IN ('teal','navy','violet','forest','brick','amber','slate')),
+  // ───────────────────────────────────────────
+  // 11. ANNOUNCEMENT TARGETS (selected merchants)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS announcement_targets (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      announcement_id INTEGER NOT NULL REFERENCES announcements(id),
+      merchant_id     INTEGER NOT NULL REFERENCES merchants(id),
+      UNIQUE(announcement_id, merchant_id)
+    )
+  `);
 
-      language            TEXT NOT NULL DEFAULT 'fr'
-                          CHECK(language IN ('fr','nl','en')),
-      timezone            TEXT NOT NULL DEFAULT 'Europe/Brussels',
-
-      reward_message      TEXT DEFAULT 'Félicitations ! Vous avez gagné votre récompense ! 🎁',
-
-      notify_new_client     INTEGER NOT NULL DEFAULT 1,
-      notify_reward_ready   INTEGER NOT NULL DEFAULT 1,
-      notify_weekly_report  INTEGER NOT NULL DEFAULT 0,
-
-      logo_url            TEXT,
-
-      backup_frequency    TEXT NOT NULL DEFAULT 'manual'
-                          CHECK(backup_frequency IN ('manual','daily','twice','thrice')),
-      last_backup_at      TEXT,
-
-      updated_at          TEXT NOT NULL DEFAULT (datetime('now'))
+  // ───────────────────────────────────────────
+  // 12. ANNOUNCEMENT READS (tracking)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS announcement_reads (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      announcement_id INTEGER NOT NULL REFERENCES announcements(id),
+      staff_id        INTEGER NOT NULL REFERENCES staff_accounts(id),
+      read_at         TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(announcement_id, staff_id)
     )
   `);
 
@@ -288,14 +300,15 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
+
+    -- announcements
+    CREATE INDEX IF NOT EXISTS ix_ann_created   ON announcements(created_at);
+    CREATE INDEX IF NOT EXISTS ix_ann_targets   ON announcement_targets(announcement_id);
+    CREATE INDEX IF NOT EXISTS ix_ann_merchant  ON announcement_targets(merchant_id);
+    CREATE INDEX IF NOT EXISTS ix_ann_reads     ON announcement_reads(announcement_id, staff_id);
   `);
 
-  // ───────────────────────────────────────────
-  // MIGRATIONS (safe for existing DBs)
-  // ───────────────────────────────────────────
-  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
-
-  console.log('✅ Database V3.4 initialized');
+  console.log('✅ Database V3.5 initialized');
 }
 
 // Init on require
@@ -478,7 +491,6 @@ const merchantClientQueries = {
   `),
 
   setPoints: db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
-  setCustomReward: db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
   block:     db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
   unblock:   db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
 
@@ -559,43 +571,6 @@ const mergeQueries = {
   getAll: db.prepare('SELECT * FROM end_user_merges ORDER BY created_at DESC'),
 };
 
-// ─── Merchant Preferences (V3.3) ─────────────────────
-
-const preferencesQueries = {
-  get: db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?'),
-
-  upsert: db.prepare(`
-    INSERT INTO merchant_preferences
-      (merchant_id, theme, language, timezone, reward_message,
-       notify_new_client, notify_reward_ready, notify_weekly_report,
-       logo_url, backup_frequency, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    ON CONFLICT(merchant_id) DO UPDATE SET
-      theme = excluded.theme,
-      language = excluded.language,
-      timezone = excluded.timezone,
-      reward_message = excluded.reward_message,
-      notify_new_client = excluded.notify_new_client,
-      notify_reward_ready = excluded.notify_reward_ready,
-      notify_weekly_report = excluded.notify_weekly_report,
-      logo_url = excluded.logo_url,
-      backup_frequency = excluded.backup_frequency,
-      updated_at = datetime('now')
-  `),
-
-  updateTheme: db.prepare(`
-    INSERT INTO merchant_preferences (merchant_id, theme, updated_at)
-    VALUES (?, ?, datetime('now'))
-    ON CONFLICT(merchant_id) DO UPDATE SET theme = excluded.theme, updated_at = datetime('now')
-  `),
-
-  markBackup: db.prepare(`
-    INSERT INTO merchant_preferences (merchant_id, last_backup_at, updated_at)
-    VALUES (?, datetime('now'), datetime('now'))
-    ON CONFLICT(merchant_id) DO UPDATE SET last_backup_at = datetime('now'), updated_at = datetime('now')
-  `),
-};
-
 
 // ═══════════════════════════════════════════════════════
 // EXPORTS
@@ -613,5 +588,4 @@ module.exports = {
   transactionQueries,
   auditQueries,
   mergeQueries,
-  preferencesQueries,
 };
