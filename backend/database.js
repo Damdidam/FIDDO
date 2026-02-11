@@ -224,7 +224,12 @@ function initDatabase() {
 
   // ───────────────────────────────────────────
   // 10. MERCHANT PREFERENCES (theme, notifications, etc.)
+  //     DROP+CREATE to handle schema changes on existing DBs
   // ───────────────────────────────────────────
+  db.exec(`DROP TABLE IF EXISTS announcement_reads`);
+  db.exec(`DROP TABLE IF EXISTS announcements`);
+  db.exec(`DROP TABLE IF EXISTS merchant_preferences`);
+
   db.exec(`
     CREATE TABLE IF NOT EXISTS merchant_preferences (
       id                   INTEGER PRIMARY KEY AUTOINCREMENT,
