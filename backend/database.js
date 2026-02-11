@@ -15,7 +15,7 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 // ═══════════════════════════════════════════════════════
-// DDL — Schema V3.5 (announcements + feedback)
+// DDL — Schema V3.4
 // ═══════════════════════════════════════════════════════
 
 function initDatabase() {
@@ -223,49 +223,6 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 10. ANNOUNCEMENTS (admin → merchants)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS announcements (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      title       TEXT NOT NULL,
-      content     TEXT NOT NULL,
-      target_type TEXT NOT NULL DEFAULT 'all'
-                  CHECK(target_type IN ('all','selected')),
-      priority    TEXT NOT NULL DEFAULT 'info'
-                  CHECK(priority IN ('info','warning','urgent')),
-      created_by  INTEGER NOT NULL REFERENCES super_admins(id),
-      expires_at  TEXT,
-      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 11. ANNOUNCEMENT TARGETS (selected merchants)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS announcement_targets (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      announcement_id INTEGER NOT NULL REFERENCES announcements(id),
-      merchant_id     INTEGER NOT NULL REFERENCES merchants(id),
-      UNIQUE(announcement_id, merchant_id)
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 12. ANNOUNCEMENT READS (tracking)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS announcement_reads (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      announcement_id INTEGER NOT NULL REFERENCES announcements(id),
-      staff_id        INTEGER NOT NULL REFERENCES staff_accounts(id),
-      read_at         TEXT NOT NULL DEFAULT (datetime('now')),
-      UNIQUE(announcement_id, staff_id)
-    )
-  `);
-
-  // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
   db.exec(`
@@ -300,15 +257,14 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
-
-    -- announcements
-    CREATE INDEX IF NOT EXISTS ix_ann_created   ON announcements(created_at);
-    CREATE INDEX IF NOT EXISTS ix_ann_targets   ON announcement_targets(announcement_id);
-    CREATE INDEX IF NOT EXISTS ix_ann_merchant  ON announcement_targets(merchant_id);
-    CREATE INDEX IF NOT EXISTS ix_ann_reads     ON announcement_reads(announcement_id, staff_id);
   `);
 
-  console.log('✅ Database V3.5 initialized');
+  // ───────────────────────────────────────────
+  // SAFE MIGRATIONS (idempotent ALTERs)
+  // ───────────────────────────────────────────
+  try { db.exec(`ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT`); } catch (e) { /* already exists */ }
+
+  console.log('✅ Database V3.4 initialized');
 }
 
 // Init on require
@@ -490,9 +446,10 @@ const merchantClientQueries = {
     WHERE id = ?
   `),
 
-  setPoints: db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
-  block:     db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
-  unblock:   db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
+  setPoints:        db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
+  setCustomReward:  db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
+  block:            db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
+  unblock:          db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
 
   mergeStats: db.prepare(`
     UPDATE merchant_clients
