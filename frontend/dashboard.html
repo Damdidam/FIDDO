@@ -160,12 +160,11 @@
     .staff-cell strong { color: var(--text); }
     .amount-cell { font-variant-numeric: tabular-nums; }
     .notes-cell {
-      max-width: 160px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
       font-size: 0.8rem;
       color: var(--text-light);
+      min-width: 180px;
+      white-space: normal;
+      word-break: break-word;
     }
     .date-cell .day { font-weight: 500; font-size: 0.82rem; }
     .date-cell .time { font-size: 0.72rem; color: var(--text-light); }
@@ -411,7 +410,7 @@
           <td><span class="${ptsCls}">${sign}${r.points}</span></td>
           <td class="balance-cell hide-mobile">${r.balance != null ? r.balance + ' pts' : '—'}</td>
           <td class="staff-cell"><strong>${escHtml(r.staff)}</strong></td>
-          <td class="notes-cell hide-mobile" title="${escAttr(r.notes)}">${escHtml(r.notes) || '—'}</td>
+          <td class="notes-cell hide-mobile">${escHtml(r.notes) || '—'}</td>
         </tr>`;
       });
       tbody.innerHTML = html;
