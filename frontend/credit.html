@@ -6,180 +6,27 @@
   <title>Créditer — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
-    /* ── Compact layout ── */
-    .credit-container { max-width: 900px; margin: 0 auto; }
-    .credit-container h1 { margin: 1rem 0; font-size: 1.4rem; }
-    .credit-container .card { margin-bottom: 1rem; }
-    .credit-container .form-group { margin-bottom: 0.9rem; }
-
-    /* ── Toggle email/phone/qr ── */
-    .id-toggle { display: flex; border: 2px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 1rem; }
-    .id-toggle button {
-      flex: 1; padding: 0.6rem; border: none; background: white; font-weight: 600;
-      font-size: 0.9rem; cursor: pointer; transition: all 0.2s; color: var(--text-light);
-      border-right: 2px solid var(--border);
-    }
-    .id-toggle button:last-child { border-right: none; }
-    .id-toggle button.active { background: var(--primary); color: white; }
-
-    /* ── Input with clear button ── */
-    .input-wrap { position: relative; }
-    .input-wrap .form-control { padding-right: 36px; }
-    .btn-clear {
-      position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-      background: none; border: none; font-size: 1.1rem; cursor: pointer;
-      color: var(--text-light); padding: 4px; line-height: 1; display: none;
-    }
-    .btn-clear:hover { color: var(--danger); }
-    .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
-    .input-wrap .form-control.has-value ~ .btn-clear { display: block; }
-
-    /* ── Typo warning ── */
-    .typo-warning {
-      background: #FFF7ED; border: 1px solid var(--warning); border-radius: 6px;
-      padding: 0.5rem 0.75rem; margin-top: 0.4rem; font-size: 0.82rem; color: #92400e;
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .typo-warning button {
-      background: var(--warning); color: white; border: none; border-radius: 4px;
-      padding: 2px 8px; font-size: 0.78rem; cursor: pointer; font-weight: 600; white-space: nowrap;
-    }
-
-    /* ── Autocomplete dropdown ── */
-    .autocomplete-list {
-      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
-      background: white; border: 2px solid var(--primary); border-top: none;
-      border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.12); display: none;
-    }
-    .autocomplete-list.show { display: block; }
-    .ac-item {
-      padding: 0.6rem 0.75rem; cursor: pointer; border-bottom: 1px solid var(--border);
-      font-size: 0.88rem; transition: background 0.15s;
-    }
-    .ac-item:last-child { border-bottom: none; }
-    .ac-item:hover, .ac-item.selected { background: #ECFEFF; }
-    .ac-item .ac-name { font-weight: 600; }
-    .ac-item .ac-meta { color: var(--text-light); font-size: 0.8rem; }
-    .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; }
-
-    /* ── Preview card (compact) — aligned with navbar ── */
-    .credit-preview {
-      background: var(--secondary);
-      color: white; padding: 1.25rem; border-radius: 10px; text-align: center;
-    }
-    .credit-preview h2 { font-size: 2.5rem; margin: 0; line-height: 1.1; color: var(--primary-light, #CFFAFE); }
-    .credit-preview p { margin: 0.25rem 0 0; opacity: 0.85; font-size: 0.9rem; }
-
-    /* ── Lookup result ── */
     .lookup-result {
-      background: white; border: 2px solid var(--border); border-radius: 10px;
-      padding: 1rem; transition: border-color 0.3s;
+      background: white;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      transition: border-color 0.3s;
     }
     .lookup-result.found { border-color: var(--success); }
     .lookup-result.new { border-color: var(--primary); }
-
     .reward-banner {
       background: linear-gradient(135deg, var(--success), #059669);
-      color: white; padding: 0.75rem 1rem; border-radius: 8px; text-align: center;
-      margin-top: 0.75rem; cursor: pointer; transition: transform 0.2s; font-size: 0.9rem;
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 10px;
+      text-align: center;
+      margin-top: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s;
     }
     .reward-banner:hover { transform: scale(1.02); }
-
-    /* ── Success result (after credit) ── */
-    .credit-success {
-      background: #ECFDF5; border: 2px solid var(--success); border-radius: 10px;
-      padding: 1.25rem; text-align: center;
-    }
-    .credit-success .big-pts { font-size: 2rem; font-weight: 800; color: var(--success); }
-    .credit-success .client-info { color: var(--text); margin-top: 0.5rem; font-size: 0.9rem; }
-
-    /* ── QR inline section (inside form) ── */
-    .qr-inline {
-      text-align: center; padding: 1.25rem; background: #FAFAFA;
-      border: 2px solid var(--border); border-radius: 10px; margin-bottom: 0.9rem;
-    }
-    .qr-inline .qr-subtitle {
-      font-size: 0.82rem; color: var(--text-light); margin-bottom: 1rem;
-    }
-
-    /* QR code wrapper with scan animation */
-    .qr-frame {
-      position: relative; display: inline-block; padding: 14px;
-      background: white; border-radius: 12px; box-shadow: 0 1px 8px rgba(0,0,0,0.06);
-      border: 1px solid #E5E7EB;
-    }
-    .qr-frame img { display: block; border-radius: 4px; }
-
-    /* Scanning line animation */
-    .qr-frame::after {
-      content: ''; position: absolute; left: 14px; right: 14px; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      animation: qr-scan 2.5s ease-in-out infinite; border-radius: 1px;
-    }
-    @keyframes qr-scan { 0% { top: 14px; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: calc(100% - 14px); opacity: 0; } }
-    .qr-frame.received::after { display: none; }
-
-    /* Status pill */
-    .qr-pill {
-      display: inline-flex; align-items: center; gap: 0.4rem; margin-top: 0.9rem;
-      padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.8rem; font-weight: 500;
-      background: #FEF3C7; color: #92400E;
-    }
-    .qr-pill .dot {
-      width: 6px; height: 6px; border-radius: 50%; background: #F59E0B;
-      animation: qr-pulse 1.5s ease-in-out infinite;
-    }
-    @keyframes qr-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
-    .qr-pill.success { background: #D1FAE5; color: #065F46; }
-    .qr-pill.success .dot { background: #10B981; animation: none; }
-    .qr-pill.expired { background: #FEE2E2; color: #991B1B; }
-    .qr-pill.expired .dot { background: #EF4444; animation: none; }
-
-    /* Timer */
-    .qr-timer-bar {
-      width: 180px; height: 3px; background: #E5E7EB; border-radius: 2px;
-      margin: 0.5rem auto 0; overflow: hidden;
-    }
-    .qr-timer-fill {
-      height: 100%; background: var(--primary); border-radius: 2px;
-      transition: width 1s linear; width: 100%;
-    }
-    .qr-timer-text { font-size: 0.72rem; color: #9CA3AF; margin-top: 0.25rem; }
-
-    /* Confirmed card */
-    .qr-confirmed {
-      animation: qr-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      padding: 1rem; margin-top: 0.75rem;
-      background: white; border-radius: 10px; border: 1px solid #D1FAE5;
-    }
-    .qr-confirmed .confirmed-icon { font-size: 1.8rem; margin-bottom: 0.2rem; }
-    .qr-confirmed .confirmed-title { font-weight: 700; color: #065F46; font-size: 0.9rem; }
-    .qr-confirmed .confirmed-detail {
-      font-size: 0.82rem; color: var(--text-light); margin-top: 0.3rem; line-height: 1.5;
-    }
-    .qr-confirmed .confirmed-detail strong { color: var(--text); }
-    @keyframes qr-pop { 0% { transform: scale(0.9); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
-
-    .qr-actions {
-      margin-top: 0.75rem; display: flex; gap: 0.5rem; justify-content: center;
-    }
-    .qr-actions button {
-      padding: 0.3rem 0.8rem; border-radius: 6px; font-size: 0.78rem; font-weight: 500;
-      cursor: pointer; border: 1px solid #D1D5DB; background: white; color: var(--text-light);
-      transition: all 0.15s;
-    }
-    .qr-actions button:hover { background: #F3F4F6; color: var(--text); }
-
-    /* ── Responsive compact ── */
-    @media (max-width: 768px) {
-      .credit-container h1 { font-size: 1.2rem; margin: 0.75rem 0; }
-      .credit-preview h2 { font-size: 2rem; }
-      .credit-preview { padding: 1rem; }
-      .grid-credit { grid-template-columns: 1fr !important; }
-      .card { padding: 1rem; }
-      .card-header { font-size: 1.05rem; }
-    }
   </style>
 </head>
 <body>
@@ -188,93 +35,36 @@
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container credit-container">
-    <h1>Créditer des points</h1>
+  <div class="container">
+    <h1 style="margin: 1.5rem 0;">Créditer des points</h1>
 
-    <div class="grid grid-credit" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
-
-      <!-- ══════ LEFT: Form ══════ -->
+    <div class="grid grid-2">
+      <!-- Left: Form -->
       <div>
         <div class="card">
           <div class="card-header">Nouveau passage client</div>
           <div id="credit-alert"></div>
 
-          <form id="credit-form" autocomplete="off">
-
-            <!-- Toggle Email / Téléphone / QR -->
-            <div class="id-toggle">
-              <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">📧 Email</button>
-              <button type="button" id="toggle-phone" onclick="switchMode('phone')">📱 Téléphone</button>
-              <button type="button" id="toggle-qr" onclick="switchMode('qr')">🔲 QR</button>
-            </div>
-
-            <!-- Email field -->
-            <div class="form-group" id="field-email">
-              <div class="input-wrap">
-                <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-email')" title="Effacer">×</button>
-                <div class="autocomplete-list" id="ac-email"></div>
-              </div>
-              <div id="typo-email"></div>
-            </div>
-
-            <!-- Phone field -->
-            <div class="form-group" id="field-phone" style="display:none;">
-              <div class="input-wrap">
-                <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-phone')" title="Effacer">×</button>
-                <div class="autocomplete-list" id="ac-phone"></div>
-              </div>
-              <small class="form-help">Formats acceptés : +32…, 0032…, 04…</small>
-            </div>
-
-            <!-- QR field (inline) -->
-            <div id="field-qr" style="display:none;">
-              <div class="qr-inline" id="qr-inline">
-                <div class="qr-subtitle">Le client scanne ce QR et remplit ses coordonnées</div>
-                <div class="qr-frame" id="qr-frame">
-                  <div id="qr-canvas"></div>
-                </div>
-                <div>
-                  <div class="qr-pill" id="qr-pill">
-                    <span class="dot"></span>
-                    <span id="qr-pill-text">En attente du client…</span>
-                  </div>
-                </div>
-                <div class="qr-timer-bar" id="qr-timer-bar"><div class="qr-timer-fill" id="qr-timer-fill"></div></div>
-                <div class="qr-timer-text" id="qr-timer-text"></div>
-                <div id="qr-confirmed-container"></div>
-                <div class="qr-actions">
-                  <button type="button" onclick="refreshQR()">🔄 Nouveau QR</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- Name (optional) -->
+          <form id="credit-form">
             <div class="form-group">
-              <label class="form-label">Nom / surnom <span class="text-muted" style="font-weight:400;">(optionnel)</span></label>
-              <div class="input-wrap">
-                <input type="text" id="client-name" class="form-control" placeholder="Ex: Pierre, Table 5…" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-name')" title="Effacer">×</button>
-              </div>
+              <label class="form-label">Email du client</label>
+              <input type="email" id="client-email" class="form-control" placeholder="client@email.com">
+              <small class="form-help">Recommandé pour recevoir les confirmations</small>
             </div>
 
-            <!-- Amount -->
+            <div class="form-group">
+              <label class="form-label">OU Téléphone</label>
+              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56">
+            </div>
+
             <div class="form-group">
               <label class="form-label">Montant dépensé (€) *</label>
-              <div class="input-wrap">
-                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
-                <button type="button" class="btn-clear" onclick="clearField('amount')" title="Effacer">×</button>
-              </div>
+              <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required>
             </div>
 
-            <!-- Notes -->
             <div class="form-group">
-              <label class="form-label">Notes <span class="text-muted" style="font-weight:400;">(optionnel)</span></label>
-              <div class="input-wrap">
-                <input type="text" id="notes" class="form-control" placeholder="Ex: Menu midi, terrasse…" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('notes')" title="Effacer">×</button>
-              </div>
+              <label class="form-label">Notes (optionnel)</label>
+              <input type="text" id="notes" class="form-control" placeholder="Ex: Menu midi">
             </div>
 
             <button type="submit" class="btn btn-primary btn-block" id="submit-btn">
@@ -284,288 +74,52 @@
         </div>
       </div>
 
-      <!-- ══════ RIGHT: Preview + Lookup ══════ -->
+      <!-- Right: Preview + Lookup -->
       <div>
-        <!-- Points preview (replaced by success after credit) -->
-        <div id="preview-card" class="card" style="padding: 0;">
-          <div class="credit-preview" id="preview-box">
+        <!-- Points preview -->
+        <div class="card">
+          <div class="credit-preview">
             <h2 id="preview-points">0</h2>
             <p>points seront crédités</p>
           </div>
-          <div id="merchant-info" style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-light);"></div>
+          <div id="merchant-info" style="margin-top: 1rem; font-size: 0.9rem; color: var(--text-light);"></div>
         </div>
 
         <!-- Client lookup result -->
         <div id="lookup-container" style="display: none;">
           <div class="card" style="padding: 0;">
-            <div class="card-header" style="padding: 0.75rem 1rem; margin-bottom: 0; font-size: 1rem;" id="lookup-header">Client trouvé</div>
-            <div id="lookup-result" style="padding: 0 1rem 1rem;"></div>
+            <div class="card-header" style="padding: 1rem 1.25rem; margin-bottom: 0;">Client trouvé</div>
+            <div id="lookup-result" style="padding: 0 1.25rem 1.25rem;"></div>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script>if(typeof QRCode==='undefined'){document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"><\/script>')}</script>
   <script src="/js/app.js"></script>
   <script>
     if (!requireAuth()) throw 'Not authenticated';
 
     const merchant = Auth.getMerchant();
     const staff = Auth.getStaff();
-    let currentMode = 'email'; // 'email' or 'phone'
 
-    // ═══════════════════════════════════════════════════════
-    // MERCHANT CONFIG DISPLAY
-    // ═══════════════════════════════════════════════════════
-    function showMerchantInfo() {
-      const el = document.getElementById('merchant-info');
-      if (el) el.innerHTML = `
-        <strong>Config :</strong> ${merchant.points_per_euro} pt/€ · Récompense à ${merchant.points_for_reward} pts · ${merchant.reward_description}
-        ${staff.role === 'cashier' ? '<br><span class="text-muted">⚠️ Limite caissier : 200€ max</span>' : ''}
-      `;
-    }
-    showMerchantInfo();
+    // Show merchant config
+    document.getElementById('merchant-info').innerHTML = `
+      <p><strong>Configuration :</strong></p>
+      <p>• ${merchant.points_per_euro} point(s) par euro</p>
+      <p>• Récompense à ${merchant.points_for_reward} points</p>
+      <p>• ${merchant.reward_description}</p>
+      ${staff.role === 'cashier' ? '<p class="text-muted mt-1">⚠️ Limite caissier : 200€ max</p>' : ''}
+    `;
 
-    // ═══════════════════════════════════════════════════════
-    // PRE-FILL FROM URL PARAMS
-    // ═══════════════════════════════════════════════════════
-    (function prefillFromURL() {
-      const params = new URLSearchParams(window.location.search);
-      const email = params.get('email');
-      const phone = params.get('phone');
-      const name = params.get('name');
-
-      if (phone && !email) {
-        switchMode('phone');
-        document.getElementById('client-phone').value = phone;
-      } else if (email) {
-        document.getElementById('client-email').value = email;
-      }
-
-      if (name) document.getElementById('client-name').value = name;
-
-      if (email || phone) {
-        setTimeout(() => triggerLookup(), 500);
-      }
-
-      if (params.toString()) {
-        window.history.replaceState({}, '', window.location.pathname);
-      }
-    })();
-
-    // ═══════════════════════════════════════════════════════
-    // TOGGLE EMAIL / PHONE
-    // ═══════════════════════════════════════════════════════
-    function switchMode(mode) {
-      // If leaving QR mode, stop polling
-      if (currentMode === 'qr' && mode !== 'qr') {
-        stopQRPolling();
-        if (qrToken) {
-          fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-          qrToken = null;
-        }
-      }
-
-      currentMode = mode;
-      document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
-      document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
-      document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
-      document.getElementById('field-email').style.display = mode === 'email' ? 'block' : 'none';
-      document.getElementById('field-phone').style.display = mode === 'phone' ? 'block' : 'none';
-      document.getElementById('field-qr').style.display = mode === 'qr' ? 'block' : 'none';
-
-      // Clear the hidden fields
-      if (mode !== 'email') {
-        document.getElementById('client-email').value = '';
-        document.getElementById('ac-email').classList.remove('show');
-        document.getElementById('typo-email').innerHTML = '';
-      }
-      if (mode !== 'phone') {
-        document.getElementById('client-phone').value = '';
-        document.getElementById('ac-phone').classList.remove('show');
-      }
-      document.getElementById('lookup-container').style.display = 'none';
-
-      // Auto-create QR session when switching to QR mode
-      if (mode === 'qr') {
-        createQRSession();
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // CLEAR BUTTON
-    // ═══════════════════════════════════════════════════════
-    function clearField(id) {
-      const el = document.getElementById(id);
-      el.value = '';
-      el.focus();
-      el.dispatchEvent(new Event('input'));
-      if (id === 'amount') {
-        const pp = document.getElementById('preview-points');
-        if (pp) pp.textContent = '0';
-      }
-    }
-
-    // Force clear button visibility (CSS :placeholder-shown doesn't work for programmatic)
-    document.querySelectorAll('.input-wrap .form-control').forEach(input => {
-      input.addEventListener('input', () => {
-        input.classList.toggle('has-value', input.value.length > 0);
-      });
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // POINTS PREVIEW
-    // ═══════════════════════════════════════════════════════
+    // Points preview
     document.getElementById('amount').addEventListener('input', (e) => {
       const amount = parseFloat(e.target.value) || 0;
-      const pp = document.getElementById('preview-points');
-      if (pp) pp.textContent = Math.floor(amount * merchant.points_per_euro);
+      document.getElementById('preview-points').textContent = Math.floor(amount * merchant.points_per_euro);
     });
 
-    // ═══════════════════════════════════════════════════════
-    // EMAIL TYPO DETECTION
-    // ═══════════════════════════════════════════════════════
-    const DOMAIN_TYPOS = {
-      'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gmaill.com': 'gmail.com',
-      'gamil.com': 'gmail.com', 'gnail.com': 'gmail.com', 'gmali.com': 'gmail.com',
-      'gmai.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmail.be': 'gmail.com',
-      'hotmal.com': 'hotmail.com', 'hotmai.com': 'hotmail.com', 'hotmaill.com': 'hotmail.com',
-      'hotmial.com': 'hotmail.com', 'hotamil.com': 'hotmail.com',
-      'outloo.com': 'outlook.com', 'outlok.com': 'outlook.com',
-      'yahooo.com': 'yahoo.com', 'yaho.com': 'yahoo.com', 'yahooo.fr': 'yahoo.fr',
-      'iclould.com': 'icloud.com', 'iclou.com': 'icloud.com',
-    };
-
-    function checkEmailTypo(email) {
-      const container = document.getElementById('typo-email');
-      container.innerHTML = '';
-      if (!email || !email.includes('@')) return;
-
-      const parts = email.split('@');
-      if (parts.length !== 2) return;
-      const domain = parts[1].toLowerCase();
-      const suggestion = DOMAIN_TYPOS[domain];
-
-      if (suggestion) {
-        const corrected = parts[0] + '@' + suggestion;
-        container.innerHTML = `
-          <div class="typo-warning">
-            <span>Vouliez-vous dire <strong>${corrected}</strong> ?</span>
-            <button type="button" onclick="applyTypoFix('${corrected}')">Corriger</button>
-          </div>
-        `;
-      }
-    }
-
-    function applyTypoFix(corrected) {
-      document.getElementById('client-email').value = corrected;
-      document.getElementById('typo-email').innerHTML = '';
-      triggerLookup();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // AUTOCOMPLETE SEARCH (3+ chars)
-    // ═══════════════════════════════════════════════════════
-    let searchTimeout;
-
-    function setupAutocomplete(inputId, acListId) {
-      const input = document.getElementById(inputId);
-      const acList = document.getElementById(acListId);
-
-      input.addEventListener('input', () => {
-        clearTimeout(searchTimeout);
-        const val = input.value.trim();
-
-        // Close dropdown if too short
-        if (val.length < 3) {
-          acList.classList.remove('show');
-          triggerLookup();
-          if (inputId === 'client-email') checkEmailTypo(val);
-          return;
-        }
-
-        if (inputId === 'client-email') checkEmailTypo(val);
-
-        searchTimeout = setTimeout(async () => {
-          try {
-            const data = await API.clients.search(val);
-            if (!data.clients || data.clients.length === 0) {
-              acList.classList.remove('show');
-              triggerLookup();
-              return;
-            }
-
-            // Render suggestions
-            acList.innerHTML = data.clients.slice(0, 6).map(c => `
-              <div class="ac-item" data-email="${c.email || ''}" data-phone="${c.phone || ''}" data-name="${c.name || ''}">
-                <span class="ac-pts">${c.points_balance} pts</span>
-                <div class="ac-name">${c.name || c.email || c.phone || '?'}</div>
-                <div class="ac-meta">${c.email ? c.email : ''}${c.email && c.phone ? ' · ' : ''}${c.phone ? c.phone : ''} · ${c.visit_count} visite(s)</div>
-              </div>
-            `).join('');
-
-            acList.classList.add('show');
-
-            // Click handler on items
-            acList.querySelectorAll('.ac-item').forEach(item => {
-              item.addEventListener('click', () => {
-                const email = item.dataset.email;
-                const phone = item.dataset.phone;
-                const name = item.dataset.name;
-
-                if (currentMode === 'email' && email) {
-                  document.getElementById('client-email').value = email;
-                  document.getElementById('client-email').classList.add('has-value');
-                } else if (currentMode === 'phone' && phone) {
-                  document.getElementById('client-phone').value = phone;
-                  document.getElementById('client-phone').classList.add('has-value');
-                } else if (email) {
-                  switchMode('email');
-                  document.getElementById('client-email').value = email;
-                  document.getElementById('client-email').classList.add('has-value');
-                } else if (phone) {
-                  switchMode('phone');
-                  document.getElementById('client-phone').value = phone;
-                  document.getElementById('client-phone').classList.add('has-value');
-                }
-
-                if (name) {
-                  document.getElementById('client-name').value = name;
-                  document.getElementById('client-name').classList.add('has-value');
-                }
-
-                acList.classList.remove('show');
-                document.getElementById('typo-email').innerHTML = '';
-                triggerLookup();
-              });
-            });
-
-          } catch (err) {
-            acList.classList.remove('show');
-            // If search fails (e.g. cashier role), fallback to normal lookup
-            triggerLookup();
-          }
-        }, 350);
-      });
-
-      // Close dropdown on outside click
-      document.addEventListener('click', (e) => {
-        if (!input.contains(e.target) && !acList.contains(e.target)) {
-          acList.classList.remove('show');
-        }
-      });
-    }
-
-    setupAutocomplete('client-email', 'ac-email');
-    setupAutocomplete('client-phone', 'ac-phone');
-
-    // ═══════════════════════════════════════════════════════
-    // CLIENT LOOKUP (existing client check)
-    // ═══════════════════════════════════════════════════════
+    // Client lookup on blur
     let lookupTimeout;
-
     function triggerLookup() {
       clearTimeout(lookupTimeout);
       const email = document.getElementById('client-email').value.trim();
@@ -585,14 +139,13 @@
           const data = await API.clients.lookup(params);
           const container = document.getElementById('lookup-container');
           const result = document.getElementById('lookup-result');
-          const header = document.getElementById('lookup-header');
 
           if (!data.found) {
             container.style.display = 'block';
-            header.textContent = '🆕 Nouveau client';
             result.innerHTML = `
               <div class="lookup-result new">
-                <strong>Ce client sera créé automatiquement lors du crédit.</strong>
+                <strong>🆕 Nouveau client</strong>
+                <p class="text-muted text-sm">Ce client sera créé automatiquement lors du crédit.</p>
               </div>
             `;
             return;
@@ -602,23 +155,16 @@
           const c = data.client;
 
           if (data.isNew) {
-            header.textContent = '🆕 Première visite ici';
             result.innerHTML = `
               <div class="lookup-result new">
-                <strong>Ce client existe mais n'est jamais venu chez vous.</strong>
-                ${c.name ? `<p class="text-sm mt-1">Nom : ${c.name}</p>` : ''}
+                <strong>🆕 Première visite ici</strong>
+                <p class="text-sm text-muted">Ce client existe dans le système mais n'est jamais venu chez vous.</p>
+                ${c.name ? `<p class="text-sm">Nom : ${c.name}</p>` : ''}
               </div>
             `;
-
-            // Auto-fill name if we got one
-            if (c.name && !document.getElementById('client-name').value) {
-              document.getElementById('client-name').value = c.name;
-              document.getElementById('client-name').classList.add('has-value');
-            }
             return;
           }
 
-          header.textContent = 'Client trouvé ✅';
           const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
 
           let html = `
@@ -626,12 +172,12 @@
               <div class="flex-between">
                 <div>
                   <strong>${c.name || c.email || c.phone}</strong>
-                  ${c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : ''}
+                  ${c.is_blocked ? '<span class="badge badge-danger">Bloqué</span>' : ''}
                 </div>
-                <span style="font-size: 1.4rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
+                <span style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">${c.points_balance} pts</span>
               </div>
-              <p class="text-sm text-muted">${c.visit_count} visite(s)</p>
-              <div class="progress-bar" style="margin: 0.4rem 0;">
+              <p class="text-sm text-muted mt-1">${c.visit_count} visite(s)</p>
+              <div class="progress-bar mt-1">
                 <div class="progress-fill" style="width: ${progress}%;"></div>
               </div>
               <p class="text-sm text-muted">${c.points_balance}/${c.reward_threshold} points</p>
@@ -639,10 +185,9 @@
 
           if (c.can_redeem) {
             html += `
-              <div class="reward-banner" onclick="redeemReward(${c.id})">
+              <div class="reward-banner mt-1" onclick="redeemReward(${c.id})">
                 🎁 Récompense disponible ! Cliquez pour l'appliquer<br>
                 <small>${c.reward_description || merchant.reward_description}</small>
-                ${c.custom_reward ? '<br><span style="background:rgba(255,255,255,0.25);padding:1px 8px;border-radius:10px;font-size:0.65rem;margin-top:4px;display:inline-block">⭐ Perso</span>' : ''}
               </div>
             `;
           }
@@ -650,53 +195,37 @@
           html += '</div>';
           result.innerHTML = html;
 
-          // Auto-fill name
-          if (c.name && !document.getElementById('client-name').value) {
-            document.getElementById('client-name').value = c.name;
-            document.getElementById('client-name').classList.add('has-value');
-          }
-
         } catch (err) {
           console.error('Lookup error:', err);
         }
       }, 400);
     }
 
-    // ═══════════════════════════════════════════════════════
-    // REDEEM REWARD
-    // ═══════════════════════════════════════════════════════
+    document.getElementById('client-email').addEventListener('input', triggerLookup);
+    document.getElementById('client-phone').addEventListener('input', triggerLookup);
+
+    // Redeem reward
     async function redeemReward(merchantClientId) {
       if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
       try {
         const result = await API.clients.reward({ merchantClientId });
-        UI.showAlert('credit-alert', `🎁 Récompense appliquée : <strong>${result.rewardLabel || 'Récompense'}</strong><br>Nouveau solde : ${result.client.points_balance} pts`, 'success');
-        triggerLookup();
+        UI.showAlert('credit-alert', `Récompense appliquée ! Nouveau solde : ${result.client.points_balance} pts`, 'success');
+        triggerLookup(); // Refresh
       } catch (err) {
         UI.showAlert('credit-alert', err.message, 'error');
       }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // SUBMIT CREDIT
-    // ═══════════════════════════════════════════════════════
+    // Submit credit
     document.getElementById('credit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('client-email').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
-      const name = document.getElementById('client-name').value.trim();
       const amount = parseFloat(document.getElementById('amount').value);
       const notes = document.getElementById('notes').value.trim();
 
       if (!email && !phone) {
-        if (currentMode === 'qr') {
-          UI.showAlert('credit-alert', 'Le client n\'a pas encore scanné le QR', 'error');
-        } else {
-          UI.showAlert('credit-alert', 'Email ou téléphone requis', 'error');
-        }
-        return;
-      }
-      if (!amount || amount <= 0) {
-        UI.showAlert('credit-alert', 'Montant invalide', 'error');
+        UI.showAlert('credit-alert', 'Email ou téléphone requis', 'error');
         return;
       }
 
@@ -707,34 +236,20 @@
         const result = await API.clients.credit({
           email: email || undefined,
           phone: phone || undefined,
-          name: name || undefined,
           amount,
           notes: notes || undefined,
         });
 
-        // Hide loading alert
-        UI.clearAlert('credit-alert');
+        UI.showAlert('credit-alert',
+          `<strong>+${result.transaction.points_delta} points crédités !</strong><br>
+           Nouveau solde : ${result.client.points_balance} points
+           ${result.isNewClient ? '<br><em>Nouveau client créé</em>' : ''}`,
+          'success'
+        );
 
-        // Show success in place of the blue preview card
-        const clientDisplay = result.client.name || result.client.email || result.client.phone || 'Client';
-        const previewCard = document.getElementById('preview-card');
-        previewCard.innerHTML = `
-          <div class="credit-success">
-            <div class="big-pts">+${result.transaction.points_delta} pts</div>
-            <div class="client-info">
-              <strong>${clientDisplay}</strong><br>
-              Nouveau solde : <strong>${result.client.points_balance} points</strong><br>
-              ${result.client.email ? '📧 ' + result.client.email + '<br>' : ''}
-              ${result.client.phone ? '📱 ' + result.client.phone + '<br>' : ''}
-              ${result.isNewClient ? '<span class="badge badge-info" style="margin-top:0.4rem;">Nouveau client</span>' : ''}
-            </div>
-            <button class="btn btn-primary btn-block" style="margin-top:1rem;" onclick="resetForm()">
-              ➕ Nouveau crédit
-            </button>
-          </div>
-        `;
-
-        // Hide lookup
+        // Reset form
+        document.getElementById('credit-form').reset();
+        document.getElementById('preview-points').textContent = '0';
         document.getElementById('lookup-container').style.display = 'none';
 
       } catch (err) {
@@ -742,209 +257,6 @@
       } finally {
         document.getElementById('submit-btn').disabled = false;
       }
-    });
-
-    function resetForm() {
-      // Restore the preview card
-      const previewCard = document.getElementById('preview-card');
-      previewCard.innerHTML = `
-        <div class="credit-preview" id="preview-box">
-          <h2 id="preview-points">0</h2>
-          <p>points seront crédités</p>
-        </div>
-        <div id="merchant-info" style="padding: 0.75rem 1rem; font-size: 0.85rem; color: var(--text-light);"></div>
-      `;
-      // Re-fill merchant info
-      showMerchantInfo();
-      // Re-bind amount preview
-      document.getElementById('amount').value = '';
-
-      document.getElementById('lookup-container').style.display = 'none';
-      UI.clearAlert('credit-alert');
-      document.getElementById('credit-form').reset();
-      document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
-      // Reset QR if in QR mode
-      document.getElementById('qr-confirmed-container').innerHTML = '';
-      if (currentMode === 'qr') {
-        refreshQR();
-      } else {
-        // Stop any lingering QR session
-        stopQRPolling();
-        if (qrToken) {
-          fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-          qrToken = null;
-        }
-      }
-      // Switch back to email mode by default
-      switchMode('email');
-      document.getElementById('client-email').focus();
-    }
-    // ═══════════════════════════════════════════════════════
-    // QR CODE — CLIENT SELF-IDENTIFICATION
-    // ═══════════════════════════════════════════════════════
-
-    let qrToken = null;
-    let qrPollInterval = null;
-    let qrTimerInterval = null;
-    let qrExpiresAt = null;
-    let qrInstance = null;
-    const QR_TTL_MS = 10 * 60 * 1000;
-
-    async function createQRSession() {
-      try {
-        // Check QRCode library loaded
-        if (typeof QRCode === 'undefined') {
-          document.getElementById('qr-pill-text').textContent = '⚠️ Lib QR non chargée — rechargez la page';
-          document.getElementById('qr-pill').className = 'qr-pill expired';
-          return;
-        }
-
-        // Reset UI
-        document.getElementById('qr-confirmed-container').innerHTML = '';
-        document.getElementById('qr-frame').classList.remove('received');
-        document.getElementById('qr-frame').style.display = 'inline-block';
-        const pill = document.getElementById('qr-pill');
-        pill.className = 'qr-pill';
-        pill.style.display = 'inline-flex';
-        document.getElementById('qr-pill-text').textContent = 'En attente du client…';
-        document.getElementById('qr-timer-bar').style.display = 'block';
-
-        const resp = await API.call('/qr/session', { method: 'POST' });
-        qrToken = resp.token;
-        qrExpiresAt = Date.now() + (resp.expiresIn * 1000);
-
-        // Generate QR code
-        const canvas = document.getElementById('qr-canvas');
-        canvas.innerHTML = '';
-        qrInstance = new QRCode(canvas, {
-          text: resp.url,
-          width: 180,
-          height: 180,
-          colorDark: '#1F2937',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.M,
-        });
-
-        startQRPolling();
-        startQRTimer();
-
-      } catch (err) {
-        console.error('QR session error:', err);
-        document.getElementById('qr-pill-text').textContent = '⚠️ Erreur de création';
-        document.getElementById('qr-pill').className = 'qr-pill expired';
-      }
-    }
-
-    async function refreshQR() {
-      stopQRPolling();
-      if (qrToken) {
-        fetch(`${API_BASE_URL}/qr/session/${qrToken}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-      }
-      await createQRSession();
-    }
-
-    function startQRPolling() {
-      stopQRPolling();
-      qrPollInterval = setInterval(async () => {
-        if (!qrToken) return;
-        try {
-          const resp = await fetch(`${API_BASE_URL}/qr/poll/${qrToken}`, { credentials: 'include' });
-          const data = await resp.json();
-
-          if (resp.status === 410 || resp.status === 404) {
-            stopQRPolling();
-            document.getElementById('qr-pill').className = 'qr-pill expired';
-            document.getElementById('qr-pill-text').textContent = 'Session expirée';
-            return;
-          }
-
-          if (!data.pending) {
-            stopQRPolling();
-            onQRDataReceived(data);
-          }
-        } catch (err) {
-          console.error('QR poll error:', err);
-        }
-      }, 1500);
-    }
-
-    function stopQRPolling() {
-      if (qrPollInterval) { clearInterval(qrPollInterval); qrPollInterval = null; }
-      if (qrTimerInterval) { clearInterval(qrTimerInterval); qrTimerInterval = null; }
-    }
-
-    function startQRTimer() {
-      if (qrTimerInterval) clearInterval(qrTimerInterval);
-      const fillEl = document.getElementById('qr-timer-fill');
-      const textEl = document.getElementById('qr-timer-text');
-
-      qrTimerInterval = setInterval(() => {
-        if (!qrExpiresAt) return;
-        const total = QR_TTL_MS;
-        const elapsed = Date.now() - (qrExpiresAt - total);
-        const remaining = Math.max(0, Math.ceil((qrExpiresAt - Date.now()) / 1000));
-        const pct = Math.max(0, (1 - elapsed / total) * 100);
-
-        fillEl.style.width = pct + '%';
-        const min = Math.floor(remaining / 60);
-        const sec = remaining % 60;
-        textEl.textContent = `${min}:${sec.toString().padStart(2, '0')}`;
-
-        if (remaining <= 0) {
-          clearInterval(qrTimerInterval);
-          textEl.textContent = 'Expiré';
-          document.getElementById('qr-pill').className = 'qr-pill expired';
-          document.getElementById('qr-pill-text').textContent = 'Session expirée';
-        }
-      }, 1000);
-    }
-
-    function onQRDataReceived(data) {
-      // Update pill to success
-      document.getElementById('qr-pill').className = 'qr-pill success';
-      document.getElementById('qr-pill-text').textContent = 'Informations reçues !';
-
-      // Hide QR frame + timer
-      document.getElementById('qr-frame').style.display = 'none';
-      document.getElementById('qr-timer-bar').style.display = 'none';
-      document.getElementById('qr-timer-text').textContent = '';
-
-      // Build confirmed card
-      let details = [];
-      if (data.email) details.push(`<strong>📧</strong> ${data.email}`);
-      if (data.phone) details.push(`<strong>📱</strong> ${data.phone}`);
-      if (data.name) details.push(`<strong>👤</strong> ${data.name}`);
-
-      document.getElementById('qr-confirmed-container').innerHTML = `
-        <div class="qr-confirmed">
-          <div class="confirmed-icon">✅</div>
-          <div class="confirmed-title">Client identifié</div>
-          <div class="confirmed-detail">${details.join('<br>')}</div>
-        </div>
-      `;
-
-      // Fill the credit form and switch to appropriate mode
-      if (data.email) {
-        document.getElementById('client-email').value = data.email;
-        document.getElementById('client-email').classList.add('has-value');
-      }
-      if (data.phone) {
-        document.getElementById('client-phone').value = data.phone;
-        document.getElementById('client-phone').classList.add('has-value');
-      }
-      if (data.name) {
-        document.getElementById('client-name').value = data.name;
-        document.getElementById('client-name').classList.add('has-value');
-      }
-
-      // Trigger lookup + focus amount
-      setTimeout(() => triggerLookup(), 300);
-      setTimeout(() => document.getElementById('amount').focus(), 600);
-    }
-
-    // Clean up polling on page unload
-    window.addEventListener('beforeunload', () => {
-      stopQRPolling();
     });
   </script>
 </body>
