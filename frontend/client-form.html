@@ -4,86 +4,349 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>FIDDO — Vos informations</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ═══════════════════════════════════════════════════════
+       CLIENT FORM — QR identification page
+       Mobile-first, themed per merchant
+       ═══════════════════════════════════════════════════════ */
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --accent: #0891B2;
       --accent-dark: #0E7490;
       --accent-light: #ECFEFF;
+      --accent-glow: rgba(8,145,178,0.12);
       --dark: #1F2937;
+      --gradient: linear-gradient(135deg, var(--accent), var(--accent-dark));
     }
-    /* Theme overrides */
-    [data-theme="navy"]   { --accent: #1E40AF; --accent-dark: #1E3A8A; --accent-light: #DBEAFE; --dark: #1E293B; }
-    [data-theme="violet"] { --accent: #7C3AED; --accent-dark: #6D28D9; --accent-light: #EDE9FE; --dark: #1E1B4B; }
-    [data-theme="forest"] { --accent: #059669; --accent-dark: #047857; --accent-light: #D1FAE5; --dark: #1A2E1A; }
-    [data-theme="brick"]  { --accent: #DC2626; --accent-dark: #B91C1C; --accent-light: #FEE2E2; --dark: #2D1B1B; }
-    [data-theme="amber"]  { --accent: #D97706; --accent-dark: #B45309; --accent-light: #FEF3C7; --dark: #2D2415; }
-    [data-theme="slate"]  { --accent: #475569; --accent-dark: #334155; --accent-light: #F1F5F9; --dark: #0F172A; }
 
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
+    /* ── Theme overrides ── */
+    [data-theme="navy"]   { --accent: #1E40AF; --accent-dark: #1E3A8A; --accent-light: #DBEAFE; --accent-glow: rgba(30,64,175,0.12); --dark: #1E293B; }
+    [data-theme="violet"] { --accent: #7C3AED; --accent-dark: #6D28D9; --accent-light: #EDE9FE; --accent-glow: rgba(124,58,237,0.12); --dark: #1E1B4B; }
+    [data-theme="forest"] { --accent: #059669; --accent-dark: #047857; --accent-light: #D1FAE5; --accent-glow: rgba(5,150,105,0.12); --dark: #1A2E1A; }
+    [data-theme="brick"]  { --accent: #DC2626; --accent-dark: #B91C1C; --accent-light: #FEE2E2; --accent-glow: rgba(220,38,38,0.12); --dark: #2D1B1B; }
+    [data-theme="amber"]  { --accent: #D97706; --accent-dark: #B45309; --accent-light: #FEF3C7; --accent-glow: rgba(217,119,6,0.12); --dark: #2D2415; }
+    [data-theme="slate"]  { --accent: #475569; --accent-dark: #334155; --accent-light: #F1F5F9; --accent-glow: rgba(71,85,105,0.12); --dark: #0F172A; }
 
-    .header { background: var(--dark); color: white; padding: 1rem; text-align: center; }
-    .header h1 { font-size: 1.3rem; color: var(--accent); }
-    .header .merchant-name { font-size: 1rem; font-weight: 600; margin-top: 0.2rem; opacity: 0.95; }
-    .header p { font-size: 0.85rem; opacity: 0.7; margin-top: 0.25rem; }
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #F1F5F9;
+      color: #1E293B;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+    }
 
-    .lang-bar { display: flex; justify-content: center; gap: 0.5rem; padding: 0.75rem; background: white; border-bottom: 1px solid #ddd; flex-wrap: wrap; }
-    .lang-btn { padding: 4px 10px; border: 2px solid #ddd; border-radius: 20px; background: white; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-    .lang-btn.active { border-color: var(--accent); background: var(--accent-light); color: var(--accent); font-weight: 600; }
+    /* ═══════════════════════════════════════════════════════
+       HEADER — gradient band
+       ═══════════════════════════════════════════════════════ */
 
-    .main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 1.5rem; }
-    .form-card { background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 2rem; width: 100%; max-width: 420px; }
+    .hdr {
+      background: var(--gradient);
+      color: white;
+      padding: 1.1rem 1rem 0.9rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hdr::after {
+      content: '';
+      position: absolute;
+      bottom: -1px; left: 0; right: 0;
+      height: 20px;
+      background: #F1F5F9;
+      border-radius: 20px 20px 0 0;
+    }
+    .hdr-brand {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      opacity: 0.75;
+    }
+    .hdr-merchant {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-top: 0.2rem;
+      letter-spacing: -0.4px;
+    }
 
-    .form-title { font-size: 1.2rem; font-weight: 700; text-align: center; margin-bottom: 0.25rem; }
-    .form-subtitle { font-size: 0.85rem; color: #666; text-align: center; margin-bottom: 1.5rem; }
+    /* ═══════════════════════════════════════════════════════
+       LANG SELECTOR — compact pills
+       ═══════════════════════════════════════════════════════ */
 
-    .field { margin-bottom: 1.25rem; }
-    .field label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 0.3rem; }
-    .field .optional { font-weight: 400; color: #999; font-size: 0.8rem; }
+    .lang-bar {
+      display: flex;
+      justify-content: center;
+      gap: 0.35rem;
+      padding: 0.5rem 0.75rem;
+      flex-wrap: wrap;
+    }
+    .lang-btn {
+      padding: 3px 9px;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 14px;
+      background: white;
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #64748B;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .lang-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent-dark);
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       MAIN CARD
+       ═══════════════════════════════════════════════════════ */
+
+    .main {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 0.5rem 1rem 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-align: center;
+      color: #1E293B;
+      letter-spacing: -0.3px;
+    }
+    .card-sub {
+      font-size: 0.8rem;
+      color: #64748B;
+      text-align: center;
+      margin-top: 0.2rem;
+      margin-bottom: 1.25rem;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FORM FIELDS
+       ═══════════════════════════════════════════════════════ */
+
+    .field { margin-bottom: 1rem; }
+    .field label {
+      display: block;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #475569;
+      margin-bottom: 0.3rem;
+    }
+    .field .opt {
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+      color: #94A3B8;
+      font-size: 0.72rem;
+    }
     .field input {
-      width: 100%; padding: 12px 14px; border: 2px solid #ddd; border-radius: 8px;
-      font-size: 1rem; transition: border-color 0.2s; -webkit-appearance: none;
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      border: 1.5px solid #E2E8F0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: #1E293B;
+      background: #FAFBFC;
+      -webkit-appearance: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
     }
-    .field input:focus { outline: none; border-color: var(--accent); }
-    .field .hint { font-size: 0.78rem; color: #999; margin-top: 0.25rem; }
-
-    .or-divider { text-align: center; color: #999; font-size: 0.8rem; margin: -0.5rem 0 1rem; position: relative; }
-    .or-divider::before, .or-divider::after { content: ''; position: absolute; top: 50%; width: 35%; height: 1px; background: #ddd; }
-    .or-divider::before { left: 0; }
-    .or-divider::after { right: 0; }
-
-    .submit-btn {
-      width: 100%; padding: 14px; background: var(--accent); color: white; border: none;
-      border-radius: 8px; font-size: 1.05rem; font-weight: 700; cursor: pointer;
-      transition: background 0.2s; -webkit-appearance: none;
+    .field input:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 3px var(--accent-glow);
     }
-    .submit-btn:hover { background: var(--accent-dark); }
-    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .field input::placeholder { color: #94A3B8; }
+    .field .hint {
+      font-size: 0.68rem;
+      color: #94A3B8;
+      margin-top: 0.2rem;
+    }
 
-    .error-msg { background: #FFEBEE; color: #C62828; padding: 0.6rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 1rem; text-align: center; display: none; }
+    /* ── OR divider ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: -0.15rem 0 0.85rem;
+      font-size: 0.72rem;
+      color: #94A3B8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #E2E8F0;
+    }
 
-    /* Success screen */
-    .success-screen { display: none; text-align: center; }
-    .success-screen .check { font-size: 4rem; margin-bottom: 0.5rem; }
-    .success-screen h2 { color: #10B981; font-size: 1.3rem; margin-bottom: 0.5rem; }
-    .success-screen p { color: #666; font-size: 0.9rem; }
+    /* ── Submit ── */
+    .btn-submit {
+      width: 100%;
+      padding: 0.7rem;
+      border: none;
+      border-radius: 8px;
+      background: var(--gradient);
+      color: white;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-appearance: none;
+      transition: box-shadow 0.15s;
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    .btn-submit:active {
+      box-shadow: 0 1px 3px var(--accent-glow);
+    }
+    .btn-submit:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
 
-    /* Expired / invalid */
-    .expired-screen { display: none; text-align: center; padding: 2rem; }
-    .expired-screen .icon { font-size: 3rem; margin-bottom: 0.5rem; }
-    .expired-screen h2 { color: #EF4444; margin-bottom: 0.5rem; }
-    .expired-screen p { color: #666; font-size: 0.9rem; }
+    /* ── Error ── */
+    .err-msg {
+      background: #FEF2F2;
+      color: #B91C1C;
+      border: 1px solid #FECACA;
+      padding: 0.5rem 0.75rem;
+      border-radius: 7px;
+      font-size: 0.82rem;
+      margin-bottom: 0.85rem;
+      text-align: center;
+      display: none;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       SUCCESS SCREEN
+       ═══════════════════════════════════════════════════════ */
+
+    .screen-success {
+      display: none;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .screen-success .check-ring {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #D1FAE5;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+    }
+    .screen-success .check-ring svg {
+      width: 28px; height: 28px;
+      stroke: #059669;
+      stroke-width: 2.5;
+      fill: none;
+    }
+    .screen-success h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #059669;
+      margin-bottom: 0.3rem;
+    }
+    .screen-success p {
+      font-size: 0.82rem;
+      color: #64748B;
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       EXPIRED SCREEN
+       ═══════════════════════════════════════════════════════ */
+
+    .screen-expired {
+      display: none;
+      text-align: center;
+      padding: 1rem 0;
+    }
+    .screen-expired .exp-ring {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: #FEF3C7;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.75rem;
+      font-size: 1.6rem;
+    }
+    .screen-expired h2 {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #B45309;
+      margin-bottom: 0.3rem;
+    }
+    .screen-expired p {
+      font-size: 0.82rem;
+      color: #64748B;
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════════════ */
+
+    .foot {
+      text-align: center;
+      padding: 0.75rem;
+      font-size: 0.65rem;
+      color: #94A3B8;
+      letter-spacing: 0.3px;
+    }
+    .foot a { color: var(--accent); text-decoration: none; font-weight: 600; }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════ */
+
+    @media (min-height: 700px) {
+      .main { align-items: center; }
+    }
+
+    @media (max-width: 380px) {
+      .card { padding: 1.15rem; }
+      .lang-btn { font-size: 0.68rem; padding: 2px 7px; }
+    }
+
+    /* ── RTL ── */
+    [dir="rtl"] .field input { text-align: right; }
+    [dir="rtl"] .hint { text-align: right; }
   </style>
 </head>
 <body>
 
-  <div class="header">
-    <h1>FIDDO 🐕</h1>
-    <div class="merchant-name" id="merchant-name"></div>
-    <p id="header-sub">Programme de fidélité</p>
+  <!-- ════════ HEADER ════════ -->
+  <div class="hdr">
+    <div class="hdr-brand">FIDDO</div>
+    <div class="hdr-merchant" id="merchant-name"></div>
   </div>
 
+  <!-- ════════ LANGUAGE ════════ -->
   <div class="lang-bar">
     <button class="lang-btn active" onclick="setLang('fr')">🇫🇷 FR</button>
     <button class="lang-btn" onclick="setLang('en')">🇬🇧 EN</button>
@@ -93,15 +356,16 @@
     <button class="lang-btn" onclick="setLang('ar')">🇸🇦 عربي</button>
   </div>
 
+  <!-- ════════ MAIN ════════ -->
   <div class="main">
-    <div class="form-card">
+    <div class="card">
 
-      <!-- Form -->
+      <!-- ── Form screen ── -->
       <div id="form-screen">
-        <div class="form-title" data-i18n="title">Vos informations</div>
-        <div class="form-subtitle" data-i18n="subtitle">Remplissez pour recevoir vos points de fidélité</div>
+        <div class="card-title" data-i18n="title">Vos informations</div>
+        <div class="card-sub" data-i18n="subtitle">Remplissez pour recevoir vos points de fidélité</div>
 
-        <div class="error-msg" id="error-msg"></div>
+        <div class="err-msg" id="error-msg"></div>
 
         <form id="client-form" autocomplete="off">
           <div class="field">
@@ -109,7 +373,7 @@
             <input type="email" id="cf-email" placeholder="votre@email.com" inputmode="email" autocomplete="email">
           </div>
 
-          <div class="or-divider" data-i18n="or">ou</div>
+          <div class="divider"><span data-i18n="or">ou</span></div>
 
           <div class="field">
             <label data-i18n="label_phone">Téléphone</label>
@@ -118,24 +382,29 @@
           </div>
 
           <div class="field">
-            <label data-i18n="label_name">Prénom / Nom <span class="optional" data-i18n="optional">(optionnel)</span></label>
+            <label>
+              <span data-i18n="label_name">Prénom / Nom</span>
+              <span class="opt" data-i18n="optional">(optionnel)</span>
+            </label>
             <input type="text" id="cf-name" placeholder="Pierre" autocomplete="given-name">
           </div>
 
-          <button type="submit" class="submit-btn" id="submit-btn" data-i18n="submit">Envoyer ✓</button>
+          <button type="submit" class="btn-submit" id="submit-btn" data-i18n="submit">Envoyer ✓</button>
         </form>
       </div>
 
-      <!-- Success -->
-      <div id="success-screen" class="success-screen">
-        <div class="check">✅</div>
+      <!-- ── Success screen ── -->
+      <div id="success-screen" class="screen-success">
+        <div class="check-ring">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
         <h2 data-i18n="success_title">Merci !</h2>
         <p data-i18n="success_msg">Vos informations ont été transmises. Vous pouvez fermer cette page.</p>
       </div>
 
-      <!-- Expired -->
-      <div id="expired-screen" class="expired-screen">
-        <div class="icon">⏰</div>
+      <!-- ── Expired screen ── -->
+      <div id="expired-screen" class="screen-expired">
+        <div class="exp-ring">⏱</div>
         <h2 data-i18n="expired_title">Session expirée</h2>
         <p data-i18n="expired_msg">Ce QR code n'est plus valide. Demandez un nouveau code au restaurant.</p>
       </div>
@@ -143,11 +412,17 @@
     </div>
   </div>
 
+  <!-- ════════ FOOTER ════════ -->
+  <div class="foot">
+    Propulsé par <a href="https://fiddo.be">FIDDO</a> · Programme de fidélité
+  </div>
+
   <script>
     // ═══════════════════════════════════════════════════════
-    // i18n
+    // i18n — 6 languages
     // ═══════════════════════════════════════════════════════
-    const translations = {
+
+    const T = {
       fr: {
         title: 'Vos informations',
         subtitle: 'Remplissez pour recevoir vos points de fidélité',
@@ -164,6 +439,9 @@
         expired_msg: 'Ce QR code n\'est plus valide. Demandez un nouveau code au restaurant.',
         error_required: 'Email ou téléphone requis',
         header_sub: 'Programme de fidélité',
+        ph_email: 'votre@email.com',
+        ph_phone: '+32 497 12 34 56',
+        ph_name: 'Pierre',
       },
       en: {
         title: 'Your information',
@@ -181,6 +459,9 @@
         expired_msg: 'This QR code is no longer valid. Ask for a new one at the restaurant.',
         error_required: 'Email or phone required',
         header_sub: 'Loyalty program',
+        ph_email: 'your@email.com',
+        ph_phone: '+32 497 12 34 56',
+        ph_name: 'John',
       },
       nl: {
         title: 'Uw gegevens',
@@ -198,6 +479,9 @@
         expired_msg: 'Deze QR-code is niet meer geldig. Vraag een nieuwe aan het restaurant.',
         error_required: 'E-mail of telefoon vereist',
         header_sub: 'Getrouwheidsprogramma',
+        ph_email: 'uw@email.com',
+        ph_phone: '+32 497 12 34 56',
+        ph_name: 'Jan',
       },
       tr: {
         title: 'Bilgileriniz',
@@ -215,6 +499,9 @@
         expired_msg: 'Bu QR kod artık geçerli değil. Restorandan yeni bir kod isteyin.',
         error_required: 'E-posta veya telefon gerekli',
         header_sub: 'Sadakat programı',
+        ph_email: 'email@ornek.com',
+        ph_phone: '+90 532 000 0000',
+        ph_name: 'Ahmet',
       },
       zh: {
         title: '您的信息',
@@ -232,6 +519,9 @@
         expired_msg: '此二维码已失效，请向餐厅索要新的二维码。',
         error_required: '需要电子邮箱或电话',
         header_sub: '积分计划',
+        ph_email: 'your@email.com',
+        ph_phone: '+86 138 0000 0000',
+        ph_name: '张三',
       },
       ar: {
         title: 'معلوماتك',
@@ -249,6 +539,9 @@
         expired_msg: '.رمز QR لم يعد صالحاً. اطلب رمزاً جديداً من المطعم',
         error_required: 'البريد الإلكتروني أو الهاتف مطلوب',
         header_sub: 'برنامج الولاء',
+        ph_email: 'your@email.com',
+        ph_phone: '+966 50 000 0000',
+        ph_name: 'محمد',
       },
     };
 
@@ -256,48 +549,33 @@
 
     function setLang(lang) {
       currentLang = lang;
-      const t = translations[lang] || translations.fr;
+      const t = T[lang] || T.fr;
 
-      // Update buttons
+      // Active pill
       document.querySelectorAll('.lang-btn').forEach(btn => {
         btn.classList.toggle('active', btn.textContent.toLowerCase().includes(lang));
       });
 
-      // Update all data-i18n elements
+      // i18n text
       document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (t[key]) el.textContent = t[key];
       });
 
-      // Update header
-      document.getElementById('header-sub').textContent = t.header_sub;
+      // Placeholders
+      document.getElementById('cf-email').placeholder = t.ph_email || 'votre@email.com';
+      document.getElementById('cf-phone').placeholder = t.ph_phone || '+32 497 12 34 56';
+      document.getElementById('cf-name').placeholder = t.ph_name || 'Pierre';
 
-      // Update placeholders
-      if (lang === 'zh') {
-        document.getElementById('cf-email').placeholder = 'your@email.com';
-        document.getElementById('cf-phone').placeholder = '+86 138 0000 0000';
-        document.getElementById('cf-name').placeholder = '张三';
-      } else if (lang === 'ar') {
-        document.getElementById('cf-email').placeholder = 'your@email.com';
-        document.getElementById('cf-phone').placeholder = '+966 50 000 0000';
-        document.getElementById('cf-name').placeholder = 'محمد';
-      } else if (lang === 'tr') {
-        document.getElementById('cf-email').placeholder = 'email@ornek.com';
-        document.getElementById('cf-phone').placeholder = '+90 532 000 0000';
-        document.getElementById('cf-name').placeholder = 'Ahmet';
-      } else {
-        document.getElementById('cf-email').placeholder = 'votre@email.com';
-        document.getElementById('cf-phone').placeholder = '+32 497 12 34 56';
-        document.getElementById('cf-name').placeholder = 'Pierre';
-      }
-
-      // RTL for Arabic
+      // RTL
       document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
     }
+
 
     // ═══════════════════════════════════════════════════════
     // SESSION TOKEN
     // ═══════════════════════════════════════════════════════
+
     const params = new URLSearchParams(window.location.search);
     const sessionToken = params.get('s');
 
@@ -306,17 +584,18 @@
       document.getElementById('expired-screen').style.display = 'block';
     }
 
+
     // ═══════════════════════════════════════════════════════
     // LOAD MERCHANT INFO (name + theme)
     // ═══════════════════════════════════════════════════════
+
     if (sessionToken) {
-      (async function loadMerchantInfo() {
+      (async function loadInfo() {
         try {
           const API_BASE = window.location.origin + '/api';
-          const resp = await fetch(`${API_BASE}/qr/info/${sessionToken}`);
+          const resp = await fetch(API_BASE + '/qr/info/' + sessionToken);
 
           if (resp.status === 404 || resp.status === 410) {
-            // Session expired/invalid
             document.getElementById('form-screen').style.display = 'none';
             document.getElementById('expired-screen').style.display = 'block';
             return;
@@ -325,13 +604,11 @@
           if (resp.ok) {
             const info = await resp.json();
 
-            // Apply merchant name
             if (info.merchantName) {
               document.getElementById('merchant-name').textContent = info.merchantName;
-              document.title = `${info.merchantName} — FIDDO`;
+              document.title = info.merchantName + ' — FIDDO';
             }
 
-            // Apply theme
             if (info.theme && info.theme !== 'teal') {
               document.documentElement.setAttribute('data-theme', info.theme);
             }
@@ -342,22 +619,23 @@
       })();
     }
 
+
     // ═══════════════════════════════════════════════════════
     // FORM SUBMIT
     // ═══════════════════════════════════════════════════════
+
     document.getElementById('client-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
       const email = document.getElementById('cf-email').value.trim();
       const phone = document.getElementById('cf-phone').value.trim();
       const name = document.getElementById('cf-name').value.trim();
-      const t = translations[currentLang] || translations.fr;
+      const t = T[currentLang] || T.fr;
 
-      // Validation
       if (!email && !phone) {
-        const errEl = document.getElementById('error-msg');
-        errEl.textContent = t.error_required;
-        errEl.style.display = 'block';
+        const el = document.getElementById('error-msg');
+        el.textContent = t.error_required;
+        el.style.display = 'block';
         return;
       }
 
@@ -366,47 +644,52 @@
 
       try {
         const API_BASE = window.location.origin + '/api';
-        const resp = await fetch(`${API_BASE}/qr/submit/${sessionToken}`, {
+        const resp = await fetch(API_BASE + '/qr/submit/' + sessionToken, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: email || null, phone: phone || null, name: name || null }),
+          body: JSON.stringify({
+            email: email || null,
+            phone: phone || null,
+            name: name || null,
+          }),
         });
 
         const data = await resp.json();
 
         if (!resp.ok) {
           if (resp.status === 404 || resp.status === 410) {
-            // Expired or invalid session
             document.getElementById('form-screen').style.display = 'none';
             document.getElementById('expired-screen').style.display = 'block';
           } else {
-            const errEl = document.getElementById('error-msg');
-            errEl.textContent = data.error || 'Error';
-            errEl.style.display = 'block';
+            const el = document.getElementById('error-msg');
+            el.textContent = data.error || 'Error';
+            el.style.display = 'block';
             document.getElementById('submit-btn').disabled = false;
           }
           return;
         }
 
-        // Success!
+        // Success
         document.getElementById('form-screen').style.display = 'none';
         document.getElementById('success-screen').style.display = 'block';
 
       } catch (err) {
         console.error(err);
         document.getElementById('submit-btn').disabled = false;
-        const errEl = document.getElementById('error-msg');
-        errEl.textContent = 'Erreur réseau / Network error';
-        errEl.style.display = 'block';
+        const el = document.getElementById('error-msg');
+        el.textContent = 'Erreur réseau / Network error';
+        el.style.display = 'block';
       }
     });
 
-    // Auto-detect browser language
+
+    // ═══════════════════════════════════════════════════════
+    // AUTO-DETECT LANGUAGE
+    // ═══════════════════════════════════════════════════════
+
     (function autoLang() {
-      const browserLang = (navigator.language || '').substring(0, 2).toLowerCase();
-      if (translations[browserLang]) {
-        setLang(browserLang);
-      }
+      const bl = (navigator.language || '').substring(0, 2).toLowerCase();
+      if (T[bl]) setLang(bl);
     })();
   </script>
 </body>
