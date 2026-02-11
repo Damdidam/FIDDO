@@ -11,7 +11,6 @@ const {
 } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { normalizeEmail, normalizeVAT, isValidEmail } = require('../services/normalizer');
-const { sendRegistrationConfirmationEmail } = require('../services/email');
 
 const router = express.Router();
 
@@ -25,8 +24,10 @@ router.post('/register', async (req, res) => {
       businessName, address, vatNumber,
       email, phone, ownerPhone,
       ownerEmail, ownerPassword, ownerName,
+      pointsPerEuro, pointsForReward, rewardDescription,
     } = req.body;
 
+    // ── Validate required fields ──
     if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
       return res.status(400).json({ error: 'Tous les champs du commerce sont requis' });
     }
@@ -37,6 +38,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
     }
 
+    // ── Normalize ──
     const normalizedOwnerEmail = normalizeEmail(ownerEmail);
     if (!normalizedOwnerEmail) {
       return res.status(400).json({ error: 'Email du responsable invalide' });
@@ -49,6 +51,22 @@ router.post('/register', async (req, res) => {
 
     email = email.toLowerCase().trim();
 
+    // ── Validate loyalty config ──
+    const ppe = pointsPerEuro !== undefined && pointsPerEuro !== '' ? parseFloat(pointsPerEuro) : 1.0;
+    const pfr = pointsForReward !== undefined && pointsForReward !== '' ? parseInt(pointsForReward) : 100;
+    const rdesc = (rewardDescription && rewardDescription.trim()) ? rewardDescription.trim() : 'Récompense offerte';
+
+    if (isNaN(ppe) || ppe <= 0) {
+      return res.status(400).json({ error: 'Points par euro invalide (doit être > 0)' });
+    }
+    if (isNaN(pfr) || pfr <= 0) {
+      return res.status(400).json({ error: 'Points pour récompense invalide (doit être > 0)' });
+    }
+    if (rdesc.length > 200) {
+      return res.status(400).json({ error: 'Description de la récompense trop longue (max 200 caractères)' });
+    }
+
+    // ── Uniqueness checks ──
     const existingMerchant = merchantQueries.findByVat.get(normalizedVat);
     if (existingMerchant) {
       return res.status(400).json({ error: 'Ce numéro de TVA est déjà enregistré' });
@@ -59,18 +77,22 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ error: 'Cet email est déjà utilisé pour un compte' });
     }
 
+    // ── Create merchant (status: pending) with loyalty config ──
     const merchantResult = merchantQueries.create.run(
       businessName.trim(), address.trim(), normalizedVat,
-      email, phone.trim(), ownerPhone.trim()
+      email, phone.trim(), ownerPhone.trim(),
+      ppe, pfr, rdesc
     );
     const merchantId = merchantResult.lastInsertRowid;
 
+    // ── Create owner staff account (is_active: 0 — awaiting validation) ──
     const hashedPassword = await bcrypt.hash(ownerPassword, 10);
     staffQueries.create.run(
       merchantId, normalizedOwnerEmail, hashedPassword,
       ownerName.trim(), 'owner', 0
     );
 
+    // ── Audit ──
     logAudit({
       ...auditCtx(req),
       actorType: 'system',
@@ -78,10 +100,15 @@ router.post('/register', async (req, res) => {
       action: 'merchant_registered',
       targetType: 'merchant',
       targetId: merchantId,
-      details: { businessName, vatNumber: normalizedVat, ownerEmail: normalizedOwnerEmail },
+      details: {
+        businessName,
+        vatNumber: normalizedVat,
+        ownerEmail: normalizedOwnerEmail,
+        pointsPerEuro: ppe,
+        pointsForReward: pfr,
+        rewardDescription: rdesc,
+      },
     });
-
-    sendRegistrationConfirmationEmail(normalizedOwnerEmail, businessName.trim());
 
     res.status(201).json({
       message: 'Demande d\'inscription envoyée ! Vous recevrez un email une fois votre compte validé.',
@@ -93,52 +120,44 @@ router.post('/register', async (req, res) => {
   }
 });
 
+
 // ═══════════════════════════════════════════════════════
-// POST /api/auth/login
+// POST /api/auth/login — Login staff (with brute force protection)
 // ═══════════════════════════════════════════════════════
 
 router.post('/login', async (req, res) => {
   try {
     let { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({
-        error: 'Veuillez renseigner votre email et votre mot de passe.',
-        errorCode: 'MISSING_FIELDS',
-      });
+      return res.status(400).json({ error: 'Email et mot de passe requis' });
     }
 
     email = normalizeEmail(email);
     if (!email) {
-      return res.status(400).json({
-        error: 'Le format de l\'email n\'est pas valide.',
-        errorCode: 'INVALID_EMAIL',
-      });
+      return res.status(400).json({ error: 'Email invalide' });
     }
 
+    // Find staff account
     const staff = staffQueries.findByEmail.get(email);
     if (!staff) {
-      return res.status(401).json({
-        error: 'Aucun compte trouvé avec cet email, ou le mot de passe est incorrect.',
-        errorCode: 'INVALID_CREDENTIALS',
-      });
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
+    // ── Brute force: check lock ──
     const { locked, minutesRemaining } = checkAccountLock(staff);
     if (locked) {
       return res.status(429).json({
-        error: `Suite à plusieurs tentatives infructueuses, votre compte est temporairement verrouillé. Vous pourrez réessayer dans ${minutesRemaining} minute(s).`,
-        errorCode: 'ACCOUNT_LOCKED',
-        minutesRemaining,
+        error: `Compte temporairement verrouillé. Réessayez dans ${minutesRemaining} minute(s).`,
       });
     }
 
+    // ── Verify password ──
     const validPassword = await bcrypt.compare(password, staff.password);
     if (!validPassword) {
+      // Increment failed count
       staffQueries.incrementFailedLogin.run(staff.id);
 
       const newCount = staff.failed_login_count + 1;
-      const remaining = MAX_FAILED_ATTEMPTS - newCount;
-
       if (newCount >= MAX_FAILED_ATTEMPTS) {
         const lockUntil = computeLockUntil();
         staffQueries.lockAccount.run(lockUntil, staff.id);
@@ -152,64 +171,36 @@ router.post('/login', async (req, res) => {
           targetId: staff.id,
           details: { failedAttempts: newCount },
         });
-
-        return res.status(429).json({
-          error: 'Trop de tentatives échouées. Votre compte a été verrouillé pour 15 minutes.',
-          errorCode: 'ACCOUNT_JUST_LOCKED',
-        });
       }
 
-      return res.status(401).json({
-        error: 'Email ou mot de passe incorrect.',
-        errorCode: 'INVALID_CREDENTIALS',
-        attemptsRemaining: remaining > 0 ? remaining : undefined,
-      });
+      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
     }
 
+    // ── Check account status ──
     if (!staff.is_active) {
       const merchant = merchantQueries.findById.get(staff.merchant_id);
       if (!merchant) {
-        return res.status(403).json({
-          error: 'Votre commerce n\'a pas été trouvé dans notre système.',
-          errorCode: 'MERCHANT_NOT_FOUND',
-        });
+        return res.status(403).json({ error: 'Commerce non trouvé' });
       }
 
-      const statusResponses = {
-        pending: {
-          error: 'Votre demande d\'inscription est en cours d\'examen par notre équipe. Vous recevrez un email dès que votre compte sera activé.',
-          errorCode: 'MERCHANT_PENDING',
-        },
-        suspended: {
-          error: 'Votre commerce a été suspendu. Veuillez contacter le support à support@fiddo.be pour plus d\'informations.',
-          errorCode: 'MERCHANT_SUSPENDED',
-        },
-        rejected: {
-          error: `Votre demande d'inscription n'a pas été approuvée${merchant.rejection_reason ? '.\n\nMotif : ' + merchant.rejection_reason : '.'}`,
-          errorCode: 'MERCHANT_REJECTED',
-        },
-        cancelled: {
-          error: 'Ce commerce a été résilié. Si vous pensez qu\'il s\'agit d\'une erreur, contactez support@fiddo.be.',
-          errorCode: 'MERCHANT_CANCELLED',
-        },
+      const statusMessages = {
+        pending: 'Votre commerce est en attente de validation. Vous recevrez un email une fois approuvé.',
+        suspended: 'Votre commerce est suspendu. Contactez le support.',
+        rejected: `Votre demande a été refusée${merchant.rejection_reason ? ' : ' + merchant.rejection_reason : '.'}`,
+        cancelled: 'Ce commerce a été résilié.',
       };
 
-      const response = statusResponses[merchant.status] || {
-        error: 'Votre compte est actuellement désactivé.',
-        errorCode: 'ACCOUNT_DISABLED',
-      };
-
-      return res.status(403).json(response);
+      const msg = statusMessages[merchant.status] || 'Votre compte est désactivé.';
+      return res.status(403).json({ error: msg });
     }
 
+    // Verify merchant is active
     const merchant = merchantQueries.findById.get(staff.merchant_id);
     if (!merchant || merchant.status !== 'active') {
-      return res.status(403).json({
-        error: 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.',
-        errorCode: 'MERCHANT_INACTIVE',
-      });
+      return res.status(403).json({ error: 'Votre commerce n\'est pas actif.' });
     }
 
+    // ── Success: reset failed count, generate token ──
     staffQueries.updateLastLogin.run(staff.id);
 
     const token = generateStaffToken(staff);
@@ -233,15 +224,13 @@ router.post('/login', async (req, res) => {
     });
   } catch (error) {
     console.error('Erreur login:', error);
-    res.status(500).json({
-      error: 'Une erreur technique est survenue. Veuillez réessayer dans quelques instants.',
-      errorCode: 'SERVER_ERROR',
-    });
+    res.status(500).json({ error: 'Erreur lors de la connexion' });
   }
 });
 
+
 // ═══════════════════════════════════════════════════════
-// GET /api/auth/verify
+// GET /api/auth/verify — Vérifier le token courant
 // ═══════════════════════════════════════════════════════
 
 router.get('/verify', authenticateStaff, (req, res) => {
@@ -259,6 +248,7 @@ router.get('/verify', authenticateStaff, (req, res) => {
   res.json({ staff: staffData, merchant });
 });
 
+
 // ═══════════════════════════════════════════════════════
 // POST /api/auth/logout
 // ═══════════════════════════════════════════════════════
@@ -271,6 +261,7 @@ router.post('/logout', (req, res) => {
   });
   res.json({ message: 'Déconnecté' });
 });
+
 
 // ═══════════════════════════════════════════════════════
 // PUT /api/auth/settings — Update merchant settings (owner only)
@@ -294,9 +285,13 @@ router.put('/settings', authenticateStaff, (req, res) => {
       return res.status(400).json({ error: 'Points pour récompense invalide' });
     }
 
+    const rdesc = (rewardDescription && rewardDescription.trim()) ? rewardDescription.trim() : 'Récompense offerte';
+    if (rdesc.length > 200) {
+      return res.status(400).json({ error: 'Description de la récompense trop longue (max 200 caractères)' });
+    }
+
     merchantQueries.updateSettings.run(
-      ppe, pfr,
-      rewardDescription || 'Récompense offerte',
+      ppe, pfr, rdesc,
       req.staff.merchant_id
     );
 
@@ -308,7 +303,7 @@ router.put('/settings', authenticateStaff, (req, res) => {
       action: 'settings_updated',
       targetType: 'merchant',
       targetId: req.staff.merchant_id,
-      details: { pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription },
+      details: { pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: rdesc },
     });
 
     res.json({ message: 'Paramètres mis à jour' });
@@ -317,5 +312,6 @@ router.put('/settings', authenticateStaff, (req, res) => {
     res.status(500).json({ error: 'Erreur lors de la mise à jour' });
   }
 });
+
 
 module.exports = router;
