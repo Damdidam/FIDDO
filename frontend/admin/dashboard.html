@@ -15,69 +15,50 @@
     .status-rejected { color: var(--text-light); }
     .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-    /* Health card */
-    .health-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-    }
-    .health-item {
+    /* Announcements */
+    .ann-card {
       background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      text-align: center;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-    .health-item .label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-light);
-      margin-bottom: 0.25rem;
-    }
-    .health-item .value {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .health-dot {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 0.4rem;
-      vertical-align: middle;
-    }
-    .health-dot.ok { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.4); }
-    .health-dot.down { background: var(--danger); box-shadow: 0 0 6px rgba(239,68,68,0.4); }
-
-    /* Backup section */
-    .backup-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.75rem 1rem;
-      border-bottom: 1px solid var(--border);
-      transition: background 0.15s;
-    }
-    .backup-row:last-child { border-bottom: none; }
-    .backup-row:hover { background: var(--light); }
-    .backup-info { display: flex; flex-direction: column; gap: 0.15rem; }
-    .backup-name { font-weight: 600; font-size: 0.9rem; font-family: monospace; }
-    .backup-meta { font-size: 0.8rem; color: var(--text-light); }
-    .backup-actions { display: flex; gap: 0.5rem; }
-    .backup-config {
-      display: flex;
-      gap: 1.5rem;
-      font-size: 0.85rem;
-      color: var(--text-light);
+      border-radius: 10px;
+      padding: 1.25rem;
       margin-bottom: 1rem;
-      padding: 0.75rem 1rem;
-      background: var(--light);
-      border-radius: 6px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      border-left: 4px solid var(--primary);
+      position: relative;
     }
-    .backup-config strong { color: var(--text); }
+    .ann-card.priority-warning { border-left-color: var(--warning); }
+    .ann-card.priority-urgent { border-left-color: var(--danger); }
+    .ann-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+    .ann-title { font-weight: 700; font-size: 1rem; }
+    .ann-meta { font-size: 0.8rem; color: var(--text-light); margin-bottom: 0.5rem; }
+    .ann-content { font-size: 0.9rem; line-height: 1.5; color: var(--text); white-space: pre-wrap; }
+    .ann-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+    .ann-targets { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    .ann-target-chip {
+      background: #e0f2fe;
+      color: var(--primary-dark);
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    /* Merchant checkbox list */
+    .merchant-checklist {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      padding: 0.75rem;
+    }
+    .merchant-check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0;
+    }
+    .merchant-check-item label { cursor: pointer; font-size: 0.9rem; }
+
+    .tab-panels { min-height: 400px; }
   </style>
 </head>
 <body>
@@ -91,37 +72,7 @@
   <div class="container">
     <h1 style="margin: 1.5rem 0;">Administration FIDDO</h1>
 
-    <!-- ═══ HEALTH CHECK ═══ -->
-    <div class="card" id="health-card">
-      <div class="card-header">
-        🩺 Santé du système
-        <button class="btn btn-outline btn-sm" onclick="loadHealth()">🔄 Rafraîchir</button>
-      </div>
-      <div class="health-grid" id="health-grid">
-        <div class="health-item">
-          <div class="label">Statut</div>
-          <div class="value" id="h-status"><span class="health-dot down"></span>...</div>
-        </div>
-        <div class="health-item">
-          <div class="label">Version</div>
-          <div class="value" id="h-version">-</div>
-        </div>
-        <div class="health-item">
-          <div class="label">Serveur</div>
-          <div class="value" id="h-time">-</div>
-        </div>
-        <div class="health-item">
-          <div class="label">Backups</div>
-          <div class="value" id="h-backups">-</div>
-        </div>
-        <div class="health-item">
-          <div class="label">Dernier backup</div>
-          <div class="value" id="h-last-backup">-</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ═══ GLOBAL STATS ═══ -->
+    <!-- Global Stats -->
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-value" id="s-merchants">-</div><div class="stat-label">Commerces</div></div>
       <div class="stat-card"><div class="stat-value" id="s-active">-</div><div class="stat-label">Actifs</div></div>
@@ -130,19 +81,21 @@
       <div class="stat-card"><div class="stat-value" id="s-revenue">-</div><div class="stat-label">CA total</div></div>
     </div>
 
-    <!-- ═══ TABS ═══ -->
+    <!-- Tabs -->
     <div class="tabs">
       <button class="tab active" onclick="switchTab('pending')">⏳ En attente</button>
       <button class="tab" onclick="switchTab('active')">✅ Actifs</button>
       <button class="tab" onclick="switchTab('all')">📋 Tous</button>
-      <button class="tab" onclick="switchTab('backups')">💾 Backups</button>
+      <button class="tab" onclick="switchTab('announcements')">📢 Annonces</button>
     </div>
 
-    <div id="merchants-container"></div>
-    <div id="backups-container" style="display: none;"></div>
+    <div class="tab-panels">
+      <div id="merchants-container"></div>
+      <div id="announcements-container" style="display: none;"></div>
+    </div>
   </div>
 
-  <!-- ═══ MERCHANT DETAIL MODAL ═══ -->
+  <!-- Merchant Detail Modal -->
   <div id="merchant-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -154,7 +107,7 @@
     </div>
   </div>
 
-  <!-- ═══ REJECT MODAL ═══ -->
+  <!-- Reject Modal -->
   <div id="reject-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -172,11 +125,66 @@
     </div>
   </div>
 
+  <!-- Create/Edit Announcement Modal -->
+  <div id="ann-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="ann-modal-title">Nouvelle annonce</h2>
+        <button class="close-modal" onclick="closeAnnModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="ann-alert"></div>
+
+        <div class="form-group">
+          <label class="form-label">Titre *</label>
+          <input type="text" id="ann-title" class="form-control" placeholder="Ex: Maintenance prévue ce weekend">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Contenu *</label>
+          <textarea id="ann-content" class="form-control" rows="4" placeholder="Détails de l'annonce..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Priorité</label>
+          <select id="ann-priority" class="form-control">
+            <option value="info">ℹ️ Info</option>
+            <option value="warning">⚠️ Important</option>
+            <option value="urgent">🚨 Urgent</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Destinataires</label>
+          <select id="ann-target" class="form-control" onchange="toggleMerchantList()">
+            <option value="all">📢 Tous les commerces</option>
+            <option value="selected">🎯 Commerces sélectionnés</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="merchant-list-group" style="display: none;">
+          <label class="form-label">Sélectionner les commerces</label>
+          <div class="merchant-checklist" id="merchant-checklist"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Date d'expiration (optionnel)</label>
+          <input type="datetime-local" id="ann-expires" class="form-control">
+          <small class="form-help">L'annonce disparaîtra automatiquement après cette date</small>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="ann-submit-btn" onclick="submitAnnouncement()">Publier l'annonce</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/js/app.js"></script>
   <script>
     const ADMIN_API = API_BASE_URL + '/admin';
     let currentMerchantId = null;
     let currentTab = 'pending';
+    let editingAnnouncementId = null;
+    let activeMerchants = [];
 
     async function adminCall(endpoint, options = {}) {
       const config = { headers: { 'Content-Type': 'application/json' }, credentials: 'include', ...options };
@@ -191,51 +199,7 @@
       adminCall('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/admin');
     }
 
-    // ═══════════════════════════════════════════════════
-    // HEALTH CHECK
-    // ═══════════════════════════════════════════════════
-
-    async function loadHealth() {
-      try {
-        // Health endpoint (public)
-        const health = await fetch(API_BASE_URL + '/health', { credentials: 'include' }).then(r => r.json());
-
-        document.getElementById('h-status').innerHTML =
-          health.status === 'ok'
-            ? '<span class="health-dot ok"></span>En ligne'
-            : '<span class="health-dot down"></span>Problème';
-
-        document.getElementById('h-version').textContent = health.version || '-';
-        document.getElementById('h-time').textContent = health.timestamp
-          ? new Date(health.timestamp).toLocaleTimeString('fr-FR')
-          : '-';
-
-        // Backup info
-        try {
-          const bk = await adminCall('/backups');
-          document.getElementById('h-backups').textContent = bk.count + ' / ' + bk.config.maxKeep;
-
-          if (bk.backups.length > 0) {
-            const last = bk.backups[0];
-            const ago = Format.timeSince(last.created);
-            document.getElementById('h-last-backup').textContent = ago;
-          } else {
-            document.getElementById('h-last-backup').textContent = 'Aucun';
-          }
-        } catch (e) {
-          document.getElementById('h-backups').textContent = '-';
-          document.getElementById('h-last-backup').textContent = '-';
-        }
-      } catch (e) {
-        document.getElementById('h-status').innerHTML = '<span class="health-dot down"></span>Hors ligne';
-        console.error('Health check error:', e);
-      }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // STATS
-    // ═══════════════════════════════════════════════════
-
+    // ─── Stats ───
     async function loadStats() {
       try {
         const s = await adminCall('/merchants/stats/global');
@@ -247,30 +211,27 @@
       } catch (e) { console.error(e); }
     }
 
-    // ═══════════════════════════════════════════════════
-    // TABS
-    // ═══════════════════════════════════════════════════
-
+    // ─── Tabs ───
     function switchTab(tab) {
       currentTab = tab;
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       event.target.classList.add('active');
 
-      if (tab === 'backups') {
-        document.getElementById('merchants-container').style.display = 'none';
-        document.getElementById('backups-container').style.display = 'block';
-        loadBackups();
+      const merchantsEl = document.getElementById('merchants-container');
+      const annEl = document.getElementById('announcements-container');
+
+      if (tab === 'announcements') {
+        merchantsEl.style.display = 'none';
+        annEl.style.display = 'block';
+        loadAnnouncements();
       } else {
-        document.getElementById('merchants-container').style.display = 'block';
-        document.getElementById('backups-container').style.display = 'none';
+        merchantsEl.style.display = 'block';
+        annEl.style.display = 'none';
         loadMerchants();
       }
     }
 
-    // ═══════════════════════════════════════════════════
-    // MERCHANTS LIST
-    // ═══════════════════════════════════════════════════
-
+    // ─── Load Merchants ───
     async function loadMerchants() {
       const container = document.getElementById('merchants-container');
       try {
@@ -305,92 +266,7 @@
       }
     }
 
-    // ═══════════════════════════════════════════════════
-    // BACKUPS
-    // ═══════════════════════════════════════════════════
-
-    async function loadBackups() {
-      const container = document.getElementById('backups-container');
-      try {
-        UI.showLoading('backups-container');
-        const data = await adminCall('/backups');
-
-        let html = `
-          <div class="card" style="padding-bottom: 0;">
-            <div class="card-header">
-              💾 Gestion des backups
-              <button class="btn btn-primary btn-sm" onclick="createManualBackup()">+ Backup manuel</button>
-            </div>
-
-            <div class="backup-config">
-              <span>⏰ Fréquence : <strong>toutes les ${data.config.intervalHours}h</strong></span>
-              <span>📦 Rétention : <strong>${data.config.maxKeep} derniers</strong></span>
-              <span>💾 Total : <strong>${data.count} backup${data.count > 1 ? 's' : ''}</strong></span>
-            </div>
-        `;
-
-        if (data.backups.length === 0) {
-          html += '<div class="empty-state" style="padding: 2rem;"><div class="empty-state-icon">💾</div><p>Aucun backup disponible</p></div>';
-        } else {
-          data.backups.forEach(b => {
-            const trigger = b.filename.includes('_manual') ? '🖐️ Manuel'
-              : b.filename.includes('_scheduled') ? '⏰ Auto'
-              : b.filename.includes('_startup') ? '🚀 Démarrage'
-              : '📦';
-
-            html += `
-              <div class="backup-row">
-                <div class="backup-info">
-                  <span class="backup-name">${b.filename}</span>
-                  <span class="backup-meta">${trigger} · ${b.sizeMB} MB · ${Format.datetime(b.created)}</span>
-                </div>
-                <div class="backup-actions">
-                  <button class="btn btn-outline btn-sm" onclick="downloadBackup('${b.filename}')">⬇️ Télécharger</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteBackup('${b.filename}')">🗑️</button>
-                </div>
-              </div>
-            `;
-          });
-        }
-
-        html += '</div>';
-        container.innerHTML = html;
-      } catch (e) {
-        UI.showError('backups-container', e.message);
-      }
-    }
-
-    async function createManualBackup() {
-      if (!confirm('Créer un backup manuel maintenant ?')) return;
-      try {
-        const result = await adminCall('/backups', { method: 'POST' });
-        alert(`✅ Backup créé : ${result.backup.filename} (${result.backup.sizeMB} MB)`);
-        loadBackups();
-        loadHealth();
-      } catch (e) {
-        alert('❌ Erreur : ' + e.message);
-      }
-    }
-
-    function downloadBackup(filename) {
-      window.location.href = `${ADMIN_API}/backups/${encodeURIComponent(filename)}/download`;
-    }
-
-    async function deleteBackup(filename) {
-      if (!confirm(`Supprimer le backup "${filename}" ?\nCette action est irréversible.`)) return;
-      try {
-        await adminCall(`/backups/${encodeURIComponent(filename)}`, { method: 'DELETE' });
-        loadBackups();
-        loadHealth();
-      } catch (e) {
-        alert('❌ Erreur : ' + e.message);
-      }
-    }
-
-    // ═══════════════════════════════════════════════════
-    // MERCHANT DETAIL MODAL
-    // ═══════════════════════════════════════════════════
-
+    // ─── Merchant Detail ───
     async function showMerchant(id) {
       try {
         currentMerchantId = id;
@@ -441,7 +317,6 @@
 
         document.getElementById('mm-body').innerHTML = html;
 
-        // Action buttons based on status
         let footer = '<div class="action-btns">';
         if (m.status === 'pending') {
           footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()">✅ Valider</button>`;
@@ -463,10 +338,7 @@
     function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
     document.getElementById('merchant-modal').addEventListener('click', (e) => { if (e.target.id === 'merchant-modal') closeModal(); });
 
-    // ═══════════════════════════════════════════════════
-    // MERCHANT ACTIONS
-    // ═══════════════════════════════════════════════════
-
+    // ─── Merchant Actions ───
     async function validateMerchant() {
       if (!confirm('✅ Valider et activer ce commerce ?')) return;
       try {
@@ -491,7 +363,7 @@
     }
 
     async function suspendMerchant() {
-      if (!confirm('⏸️ Suspendre ce commerce ? Tous les comptes staff seront désactivés.')) return;
+      if (!confirm('⏸️ Suspendre ce commerce ?')) return;
       try {
         await adminCall(`/merchants/${currentMerchantId}/suspend`, { method: 'POST' });
         closeModal(); loadMerchants(); loadStats();
@@ -506,16 +378,225 @@
       } catch (e) { alert(e.message); }
     }
 
-    // ═══════════════════════════════════════════════════
-    // INIT
-    // ═══════════════════════════════════════════════════
 
-    loadHealth();
+    // ═══════════════════════════════════════════════════════
+    // ANNOUNCEMENTS
+    // ═══════════════════════════════════════════════════════
+
+    async function loadAnnouncements() {
+      const container = document.getElementById('announcements-container');
+      try {
+        UI.showLoading('announcements-container');
+
+        const data = await adminCall('/announcements');
+        const anns = data.announcements;
+
+        let html = `
+          <div class="flex-between mb-2">
+            <h2 style="margin: 0;">📢 Annonces (${anns.length})</h2>
+            <button class="btn btn-primary btn-sm" onclick="showCreateAnn()">+ Nouvelle annonce</button>
+          </div>
+        `;
+
+        if (anns.length === 0) {
+          html += '<div class="empty-state"><div class="empty-state-icon">📢</div><p>Aucune annonce pour le moment</p></div>';
+          container.innerHTML = html;
+          return;
+        }
+
+        anns.forEach(a => {
+          const prioIcons = { info: 'ℹ️', warning: '⚠️', urgent: '🚨' };
+          const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
+
+          html += `
+            <div class="ann-card priority-${a.priority}" ${isExpired ? 'style="opacity: 0.5;"' : ''}>
+              <div class="ann-header">
+                <div>
+                  <span class="ann-title">${prioIcons[a.priority]} ${a.title}</span>
+                  ${isExpired ? '<span class="badge badge-neutral" style="margin-left: 0.5rem;">Expirée</span>' : ''}
+                </div>
+                <div class="ann-actions">
+                  <button class="btn btn-outline btn-sm" onclick="editAnnouncement(${a.id})">✏️</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">🗑️</button>
+                </div>
+              </div>
+              <div class="ann-meta">
+                ${Format.datetime(a.created_at)} — par ${a.author_name}
+                · <strong>${a.read_count}</strong> lecture(s)
+                · ${a.target_type === 'all' ? '📢 Tous' : `🎯 ${a.targets.length} commerce(s)`}
+                ${a.expires_at ? ` · Expire le ${Format.datetime(a.expires_at)}` : ''}
+              </div>
+              <div class="ann-content">${a.content}</div>
+              ${a.target_type === 'selected' && a.targets.length > 0 ? `
+                <div class="ann-targets">
+                  ${a.targets.map(t => `<span class="ann-target-chip">${t.business_name}</span>`).join('')}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (e) {
+        UI.showError('announcements-container', e.message);
+      }
+    }
+
+    // ─── Announcement Modal ───
+
+    function toggleMerchantList() {
+      const val = document.getElementById('ann-target').value;
+      document.getElementById('merchant-list-group').style.display = val === 'selected' ? 'block' : 'none';
+      if (val === 'selected' && activeMerchants.length === 0) {
+        loadMerchantChecklist();
+      }
+    }
+
+    async function loadMerchantChecklist() {
+      try {
+        const data = await adminCall('/announcements/merchants');
+        activeMerchants = data.merchants;
+        const container = document.getElementById('merchant-checklist');
+        if (activeMerchants.length === 0) {
+          container.innerHTML = '<p class="text-muted text-sm">Aucun commerce actif</p>';
+          return;
+        }
+        container.innerHTML = activeMerchants.map(m => `
+          <div class="merchant-check-item">
+            <input type="checkbox" id="mc-${m.id}" value="${m.id}" class="merchant-cb">
+            <label for="mc-${m.id}">${m.business_name}</label>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function showCreateAnn() {
+      editingAnnouncementId = null;
+      document.getElementById('ann-modal-title').textContent = 'Nouvelle annonce';
+      document.getElementById('ann-title').value = '';
+      document.getElementById('ann-content').value = '';
+      document.getElementById('ann-priority').value = 'info';
+      document.getElementById('ann-target').value = 'all';
+      document.getElementById('ann-expires').value = '';
+      document.getElementById('merchant-list-group').style.display = 'none';
+      document.getElementById('ann-submit-btn').textContent = 'Publier l\'annonce';
+      UI.clearAlert('ann-alert');
+      document.getElementById('ann-modal').classList.add('active');
+    }
+
+    async function editAnnouncement(id) {
+      try {
+        const data = await adminCall('/announcements');
+        const ann = data.announcements.find(a => a.id === id);
+        if (!ann) return;
+
+        editingAnnouncementId = id;
+        document.getElementById('ann-modal-title').textContent = 'Modifier l\'annonce';
+        document.getElementById('ann-title').value = ann.title;
+        document.getElementById('ann-content').value = ann.content;
+        document.getElementById('ann-priority').value = ann.priority;
+        document.getElementById('ann-target').value = ann.target_type;
+        document.getElementById('ann-submit-btn').textContent = 'Mettre à jour';
+
+        if (ann.expires_at) {
+          const d = new Date(ann.expires_at + 'Z');
+          document.getElementById('ann-expires').value = d.toISOString().slice(0, 16);
+        } else {
+          document.getElementById('ann-expires').value = '';
+        }
+
+        if (ann.target_type === 'selected') {
+          document.getElementById('merchant-list-group').style.display = 'block';
+          await loadMerchantChecklist();
+          // Pre-check targeted merchants
+          const targetIds = ann.targets.map(t => t.merchant_id);
+          document.querySelectorAll('.merchant-cb').forEach(cb => {
+            cb.checked = targetIds.includes(parseInt(cb.value));
+          });
+        } else {
+          document.getElementById('merchant-list-group').style.display = 'none';
+        }
+
+        UI.clearAlert('ann-alert');
+        document.getElementById('ann-modal').classList.add('active');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function closeAnnModal() { document.getElementById('ann-modal').classList.remove('active'); }
+    document.getElementById('ann-modal').addEventListener('click', (e) => { if (e.target.id === 'ann-modal') closeAnnModal(); });
+
+    async function submitAnnouncement() {
+      const title = document.getElementById('ann-title').value.trim();
+      const content = document.getElementById('ann-content').value.trim();
+      const priority = document.getElementById('ann-priority').value;
+      const targetType = document.getElementById('ann-target').value;
+      const expiresRaw = document.getElementById('ann-expires').value;
+
+      if (!title || !content) {
+        UI.showAlert('ann-alert', 'Titre et contenu requis', 'error');
+        return;
+      }
+
+      const merchantIds = [];
+      if (targetType === 'selected') {
+        document.querySelectorAll('.merchant-cb:checked').forEach(cb => {
+          merchantIds.push(parseInt(cb.value));
+        });
+        if (merchantIds.length === 0) {
+          UI.showAlert('ann-alert', 'Sélectionnez au moins un commerce', 'error');
+          return;
+        }
+      }
+
+      const payload = {
+        title, content, priority,
+        targetType,
+        merchantIds,
+        expiresAt: expiresRaw ? new Date(expiresRaw).toISOString() : null,
+      };
+
+      try {
+        if (editingAnnouncementId) {
+          await adminCall(`/announcements/${editingAnnouncementId}`, {
+            method: 'PUT',
+            body: JSON.stringify(payload),
+          });
+          UI.showAlert('ann-alert', 'Annonce mise à jour !', 'success');
+        } else {
+          await adminCall('/announcements', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+          });
+          UI.showAlert('ann-alert', 'Annonce publiée !', 'success');
+        }
+
+        setTimeout(() => {
+          closeAnnModal();
+          loadAnnouncements();
+        }, 800);
+      } catch (e) {
+        UI.showAlert('ann-alert', e.message, 'error');
+      }
+    }
+
+    async function deleteAnnouncement(id) {
+      if (!confirm('🗑️ Supprimer cette annonce ?')) return;
+      try {
+        await adminCall(`/announcements/${id}`, { method: 'DELETE' });
+        loadAnnouncements();
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+
+    // ─── Init ───
     loadStats();
     loadMerchants();
-
-    // Auto-refresh health every 60s
-    setInterval(loadHealth, 60000);
   </script>
 </body>
 </html>
