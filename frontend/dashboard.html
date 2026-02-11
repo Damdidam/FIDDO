@@ -91,12 +91,12 @@
         <div class="stat-label">Actifs (30j)</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" id="stat-points">-</div>
-        <div class="stat-label">Points distribués</div>
+        <div class="stat-value" id="stat-revenue">-</div>
+        <div class="stat-label">CA Total</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value" id="stat-rewards">-</div>
-        <div class="stat-label">Récompenses</div>
+        <div class="stat-value" id="stat-avg">-</div>
+        <div class="stat-label">Panier moyen</div>
       </div>
     </div>
 
@@ -212,14 +212,12 @@
         const section = document.getElementById('announcements-section');
         section.style.display = 'block';
 
-        // Unread badge
         const unreadCount = data.unread_count;
         const badge = document.getElementById('unread-badge');
         badge.innerHTML = unreadCount > 0
           ? `<span class="notif-badge">${unreadCount}</span>`
           : '';
 
-        // Show max 3, expand to show all
         renderAnnouncements(false);
       } catch (err) {
         console.error('Announcements error:', err);
@@ -275,12 +273,10 @@
 
       document.getElementById('ann-detail-modal').classList.add('active');
 
-      // Mark as read
       if (!a.is_read) {
         try {
           await API.call(`/announcements/${id}/read`, { method: 'POST' });
           a.is_read = 1;
-          // Update badge
           const unread = allAnnouncements.filter(x => !x.is_read).length;
           document.getElementById('unread-badge').innerHTML = unread > 0
             ? `<span class="notif-badge">${unread}</span>` : '';
@@ -290,7 +286,7 @@
 
     function closeAnnDetail() {
       document.getElementById('ann-detail-modal').classList.remove('active');
-      renderAnnouncements(false); // Refresh read state visually
+      renderAnnouncements(false);
     }
     document.getElementById('ann-detail-modal').addEventListener('click', (e) => {
       if (e.target.id === 'ann-detail-modal') closeAnnDetail();
@@ -360,13 +356,14 @@
           const days = (Date.now() - new Date(c.last_visit)) / 86400000;
           return days <= 30;
         }).length;
-        const totalPoints = clients.reduce((s, c) => s + c.points_balance, 0);
+        const revenue = clients.reduce((s, c) => s + c.total_spent, 0);
         const visits = clients.reduce((s, c) => s + c.visit_count, 0);
+        const avg = visits > 0 ? revenue / visits : 0;
 
         document.getElementById('stat-clients').textContent = total;
         document.getElementById('stat-active').textContent = active;
-        document.getElementById('stat-points').textContent = totalPoints.toLocaleString('fr-FR');
-        document.getElementById('stat-rewards').textContent = visits;
+        document.getElementById('stat-revenue').textContent = Format.currency(revenue);
+        document.getElementById('stat-avg').textContent = Format.currency(avg);
 
         // Recent clients
         const container = document.getElementById('recent-clients');
@@ -376,12 +373,12 @@
         }
 
         const recent = clients.slice(0, 5);
-        let html = '<table class="table"><thead><tr><th>Client</th><th>Points</th><th>Visites</th><th>Dernière visite</th></tr></thead><tbody>';
+        let html = '<table class="table"><thead><tr><th>Client</th><th>Points</th><th>Dépensé</th><th>Dernière visite</th></tr></thead><tbody>';
         recent.forEach(c => {
           html += `<tr>
             <td><a href="/clients" style="color: var(--primary); text-decoration: none;">${c.email || c.phone || c.name || 'N/A'}</a></td>
             <td><strong class="text-primary">${c.points_balance} pts</strong></td>
-            <td>${c.visit_count}</td>
+            <td>${Format.currency(c.total_spent)}</td>
             <td class="text-muted">${Format.timeSince(c.last_visit)}</td>
           </tr>`;
         });
