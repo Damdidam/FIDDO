@@ -223,6 +223,58 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
+  // 10. MERCHANT PREFERENCES (theme, notifications, etc.)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS merchant_preferences (
+      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
+      merchant_id          INTEGER UNIQUE NOT NULL REFERENCES merchants(id),
+      theme                TEXT NOT NULL DEFAULT 'teal',
+      language             TEXT NOT NULL DEFAULT 'fr',
+      timezone             TEXT NOT NULL DEFAULT 'Europe/Brussels',
+      reward_message       TEXT DEFAULT 'Félicitations ! Vous avez gagné votre récompense ! 🎁',
+      notify_new_client    INTEGER NOT NULL DEFAULT 1,
+      notify_reward_ready  INTEGER NOT NULL DEFAULT 1,
+      notify_weekly_report INTEGER NOT NULL DEFAULT 0,
+      logo_url             TEXT,
+      backup_frequency     TEXT NOT NULL DEFAULT 'manual',
+      last_backup_at       TEXT,
+      created_at           TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at           TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // ───────────────────────────────────────────
+  // 11. ANNOUNCEMENTS (admin → merchants)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      title       TEXT NOT NULL,
+      content     TEXT NOT NULL,
+      target_type TEXT NOT NULL DEFAULT 'all' CHECK(target_type IN ('all','merchant')),
+      target_id   INTEGER,
+      priority    TEXT NOT NULL DEFAULT 'info' CHECK(priority IN ('info','warning','critical')),
+      created_by  INTEGER REFERENCES super_admins(id),
+      expires_at  TEXT,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // ───────────────────────────────────────────
+  // 12. ANNOUNCEMENT READS (tracking)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS announcement_reads (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      announcement_id INTEGER NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+      staff_id        INTEGER NOT NULL REFERENCES staff_accounts(id),
+      read_at         TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(announcement_id, staff_id)
+    )
+  `);
+
+  // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
   db.exec(`
@@ -257,6 +309,13 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
+
+    -- merchant_preferences
+    CREATE INDEX IF NOT EXISTS ix_mp_merchant ON merchant_preferences(merchant_id);
+
+    -- announcements
+    CREATE INDEX IF NOT EXISTS ix_ann_target ON announcements(target_type, target_id);
+    CREATE INDEX IF NOT EXISTS ix_ann_reads  ON announcement_reads(announcement_id, staff_id);
   `);
 
   // ───────────────────────────────────────────
@@ -288,8 +347,8 @@ const adminQueries = {
 
 const merchantQueries = {
   create: db.prepare(`
-    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone, points_per_euro, points_for_reward, reward_description)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
   findById:    db.prepare('SELECT * FROM merchants WHERE id = ?'),
   findByVat:   db.prepare('SELECT * FROM merchants WHERE vat_number = ?'),
