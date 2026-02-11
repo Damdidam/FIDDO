@@ -50,7 +50,7 @@ const API = {
 
     const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-    if (response.status === 401) {
+    if (response.status === 401 && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) {
       Auth.clearSession();
       window.location.href = '/';
       return;
