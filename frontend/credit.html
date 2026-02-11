@@ -8,37 +8,37 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ═══════════════════════════════════════════════════════
-       CREDIT PAGE — Rigid, fixed, aligned, zero layout shift
+       CREDIT PAGE — Single column, no sidebar
        ═══════════════════════════════════════════════════════ */
 
     .credit-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
     .credit-page * { box-sizing: border-box; }
 
-    /* ── Layout ── */
-    .credit-layout {
-      max-width: 920px;
+    /* ── Centered layout ── */
+    .credit-wrap {
+      max-width: 520px;
       margin: 0 auto;
       padding: 1rem;
-      display: grid;
-      grid-template-columns: 1fr 260px;
-      gap: 1rem;
-      align-items: start;
     }
 
-    /* ── Shared card style ── */
-    .c-card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-      overflow: hidden;
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.4rem 0 0.8rem; letter-spacing: -0.3px;
     }
-    .c-card-header {
+
+    /* ── Card ── */
+    .c-card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden; position: relative;
+    }
+    .c-card-hdr {
       padding: 0.7rem 1rem;
       border-bottom: 1px solid #F1F5F9;
       font-weight: 600; font-size: 0.88rem; color: #1E293B;
       display: flex; align-items: center; gap: 0.45rem;
     }
-    .c-card-body { padding: 0.9rem 1rem; }
+    .c-card-body { padding: 0.9rem 1rem 1rem; }
 
     /* ── Alert ── */
     .credit-page .alert {
@@ -47,17 +47,17 @@
     }
 
     /* ── Segmented control ── */
-    .seg-ctrl {
+    .seg {
       display: grid; grid-template-columns: 1fr 1fr 1fr;
       background: #F1F5F9; border-radius: 7px; padding: 3px;
       margin-bottom: 0.9rem;
     }
-    .seg-ctrl button {
+    .seg button {
       padding: 0.4rem; border: none; background: transparent;
       border-radius: 5px; font-family: inherit; font-weight: 600;
       font-size: 0.78rem; color: #64748B; cursor: pointer;
     }
-    .seg-ctrl button.active {
+    .seg button.active {
       background: white; color: var(--primary-dark);
       box-shadow: 0 1px 2px rgba(0,0,0,0.06);
     }
@@ -124,8 +124,38 @@
     .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
     .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; font-size: 0.78rem; }
 
-    /* ── Amount + Notes row ── */
+    /* ── Inline lookup strip ── */
+    .lookup-strip {
+      border-radius: 6px; padding: 0.45rem 0.65rem;
+      font-size: 0.78rem; margin-top: 0.35rem;
+      line-height: 1.5; display: none;
+    }
+    .lookup-strip.show { display: block; }
+    .lookup-strip.found {
+      background: color-mix(in srgb, var(--primary-light) 30%, white);
+      border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
+    }
+    .lookup-strip.new-client {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+    }
+    .lookup-strip .l-name { font-weight: 600; }
+    .lookup-strip .l-pts { float: right; font-weight: 700; color: var(--primary); }
+    .lookup-strip .l-meta { font-size: 0.7rem; color: #64748B; }
+    .lookup-strip .l-prog { background: #E2E8F0; height: 3px; border-radius: 2px; margin: 0.25rem 0; overflow: hidden; }
+    .lookup-strip .l-prog-fill { height: 100%; background: var(--gradient); border-radius: 2px; }
+    .lookup-strip .l-reward {
+      background: var(--gradient); color: white;
+      padding: 0.3rem 0.5rem; border-radius: 4px; text-align: center;
+      margin-top: 0.3rem; cursor: pointer; font-size: 0.72rem; font-weight: 500;
+    }
+
+    /* ── Amount row + points counter ── */
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .pts-badge {
+      display: inline-block; background: var(--gradient); color: white;
+      padding: 1px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+      margin-left: 0.4rem; vertical-align: middle;
+    }
 
     /* ── Submit ── */
     .btn-credit {
@@ -140,91 +170,56 @@
     .btn-credit:disabled { opacity: 0.55; cursor: not-allowed; }
 
     /* ═══════════════════════════════════════════════════════
-       SIDEBAR — ONE card, 3 fixed zones, NOTHING moves
+       SUCCESS OVERLAY — covers the form, centered
        ═══════════════════════════════════════════════════════ */
 
-    .sb {
-      background: white; border-radius: 12px; overflow: hidden;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
-
-    /* Zone 1: Points — always 80px tall */
-    .sb-pts {
-      height: 80px;
-      background: var(--gradient); color: white;
-      display: flex; flex-direction: column;
-      align-items: center; justify-content: center;
+    .success-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      background: white;
+      border-radius: 12px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       text-align: center;
+      padding: 2rem 1.5rem;
     }
-    .sb-pts.is-success { background: linear-gradient(135deg, #059669, #10B981); }
-    .sb-pts-val { font-size: 1.8rem; font-weight: 700; line-height: 1; letter-spacing: -0.5px; }
-    .sb-pts-lbl { font-size: 0.68rem; opacity: 0.85; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 2px; }
+    .success-overlay.show { display: flex; }
 
-    /* Zone 2: Config — always 1-line, 32px tall */
-    .sb-cfg {
-      height: 32px;
-      padding: 0 0.75rem;
-      font-size: 0.68rem; color: #64748B;
-      border-bottom: 1px solid #F1F5F9;
-      display: flex; align-items: center;
-      overflow: hidden; white-space: nowrap;
+    .success-pts {
+      font-size: 2.5rem; font-weight: 700; color: #059669;
+      line-height: 1; letter-spacing: -1px;
     }
-
-    /* Zone 3: Client — fixed min-height */
-    .sb-cli {
-      min-height: 110px;
-      padding: 0.65rem 0.75rem;
-      font-size: 0.8rem; color: #1E293B;
+    .success-label {
+      font-size: 0.75rem; color: #059669; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-top: 4px; font-weight: 600;
     }
-    .sb-cli-hdr {
-      font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.4px; color: #94A3B8; margin-bottom: 0.35rem;
-    }
-    .sb-cli-empty {
-      color: #CBD5E1; font-size: 0.78rem;
-      text-align: center; padding: 1rem 0 0.5rem;
-    }
-    .sb-cli-box {
-      border-radius: 6px; padding: 0.5rem 0.6rem;
-      line-height: 1.55; font-size: 0.78rem;
-    }
-    .sb-cli-box.found {
-      background: color-mix(in srgb, var(--primary-light) 30%, white);
-      border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
-    }
-    .sb-cli-box.new-client {
-      background: #F8FAFC; border: 1px solid #E2E8F0;
-    }
-    .sb-cli-box.result {
+    .success-info {
+      margin-top: 1rem; font-size: 0.85rem; color: #1E293B;
+      line-height: 1.7;
       background: #F0FDF4; border: 1px solid #D1FAE5;
+      border-radius: 8px; padding: 0.75rem 1.25rem;
+      min-width: 240px;
     }
-    .sb-cli-name { font-weight: 600; }
-    .sb-cli-pts { float: right; font-weight: 700; color: var(--primary); }
-    .sb-cli-meta { font-size: 0.7rem; color: #64748B; }
-
-    /* Progress bar */
-    .sb-prog { background: #E2E8F0; height: 3px; border-radius: 2px; margin: 0.3rem 0; overflow: hidden; }
-    .sb-prog-fill { height: 100%; background: var(--gradient); border-radius: 2px; }
-
-    /* Reward banner */
-    .sb-reward {
-      background: var(--gradient); color: white;
-      padding: 0.35rem 0.5rem; border-radius: 4px; text-align: center;
-      margin-top: 0.35rem; cursor: pointer; font-size: 0.72rem; font-weight: 500;
+    .success-info strong { color: #047857; }
+    .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
+    .success-badge {
+      display: inline-block; background: color-mix(in srgb, var(--primary-light) 50%, white);
+      color: var(--primary-dark); padding: 2px 10px; border-radius: 12px;
+      font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
     }
-
-    /* Zone 4: Action (fixed 48px, visible or empty) */
-    .sb-act {
-      height: 48px;
-      padding: 0 0.75rem;
-      border-top: 1px solid #F1F5F9;
-      display: flex; align-items: center;
+    .success-btn {
+      margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 7px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
     }
-    .sb-act .btn-credit { font-size: 0.78rem; padding: 0.4rem; }
-    .sb-act.hidden { visibility: hidden; }
+    .success-btn:hover {
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
 
     /* ═══════════════════════════════════════════════════════
-       QR — Compact, contained
+       QR — Compact
        ═══════════════════════════════════════════════════════ */
 
     .qr-box {
@@ -233,6 +228,7 @@
       border-radius: 7px; margin-bottom: 0.8rem;
     }
     .qr-box .qr-sub { font-size: 0.7rem; color: #64748B; margin-bottom: 0.5rem; }
+
     .qr-frame {
       position: relative; display: inline-block; padding: 6px;
       background: white; border-radius: 6px; border: 1px solid #E2E8F0;
@@ -278,13 +274,11 @@
     }
     .qr-redo:hover { background: #F1F5F9; }
 
-    /* ═══════════════════════════════════════════════════════
-       TITLE
-       ═══════════════════════════════════════════════════════ */
-
-    .pg-title {
-      font-size: 1.05rem; font-weight: 700; color: #1E293B;
-      margin: 0.5rem 0; letter-spacing: -0.3px;
+    /* ── Cashier limit info ── */
+    .config-strip {
+      font-size: 0.7rem; color: #94A3B8; margin-bottom: 0.75rem;
+      padding: 0.3rem 0.5rem; background: #F8FAFC; border-radius: 5px;
+      border: 1px solid #F1F5F9;
     }
 
     /* ═══════════════════════════════════════════════════════
@@ -292,29 +286,17 @@
        ═══════════════════════════════════════════════════════ */
 
     @media (max-width: 768px) {
-      .credit-layout {
-        grid-template-columns: 1fr;
-        padding: 0.5rem; gap: 0.5rem;
-      }
-      /* Sidebar goes on top */
-      .sb { order: -1; }
-      /* Points zone: horizontal on mobile */
-      .sb-pts {
-        height: 56px; flex-direction: row;
-        gap: 0.5rem; justify-content: center;
-      }
-      .sb-pts-val { font-size: 1.4rem; }
-      .sb-pts-lbl { margin-top: 0; }
-      .sb-cfg { height: 28px; padding: 0 0.6rem; font-size: 0.65rem; }
-      .sb-cli { min-height: 70px; padding: 0.5rem 0.6rem; }
-      .sb-act { height: 42px; padding: 0 0.6rem; }
-      .row-2 { grid-template-columns: 1fr; gap: 0.4rem; }
+      .credit-wrap { padding: 0.5rem; }
       .c-card-body { padding: 0.75rem; }
-      .pg-title { font-size: 0.92rem; margin: 0.35rem 0; }
+      .row-2 { grid-template-columns: 1fr; gap: 0.4rem; }
+      .pg-title { font-size: 0.92rem; margin: 0.3rem 0 0.6rem; }
+      .success-overlay { padding: 1.5rem 1rem; }
+      .success-pts { font-size: 2rem; }
+      .success-info { min-width: auto; }
     }
 
     @media (max-width: 380px) {
-      .seg-ctrl button { font-size: 0.7rem; }
+      .seg button { font-size: 0.7rem; }
     }
   </style>
 </head>
@@ -324,116 +306,107 @@
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container">
+  <div class="credit-wrap">
     <h1 class="pg-title">Créditer des points</h1>
 
-    <div class="credit-layout">
-
-      <!-- ══════ LEFT: Form ══════ -->
-      <div class="c-card">
-        <div class="c-card-header">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--primary)">
-            <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M8 4.5v4M6 6.5l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          Nouveau passage
-        </div>
-        <div class="c-card-body">
-          <div id="credit-alert"></div>
-
-          <form id="credit-form" autocomplete="off">
-            <!-- Segmented toggle -->
-            <div class="seg-ctrl">
-              <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
-              <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
-              <button type="button" id="toggle-qr" onclick="switchMode('qr')">⬡ QR</button>
-            </div>
-
-            <!-- Email field -->
-            <div class="form-group" id="field-email">
-              <label class="form-label">Adresse email</label>
-              <div class="input-wrap">
-                <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
-                <div class="autocomplete-list" id="ac-email"></div>
-              </div>
-              <div id="typo-email"></div>
-            </div>
-
-            <!-- Phone field -->
-            <div class="form-group" id="field-phone" style="display:none;">
-              <label class="form-label">Numéro de téléphone</label>
-              <div class="input-wrap">
-                <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
-                <div class="autocomplete-list" id="ac-phone"></div>
-              </div>
-              <div class="form-hint">+32…, 0032…, 04…</div>
-            </div>
-
-            <!-- QR field (compact) -->
-            <div id="field-qr" style="display:none;">
-              <div class="qr-box" id="qr-inline">
-                <div class="qr-sub">Le client scanne ce QR</div>
-                <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
-                <div class="qr-stat" id="qr-pill"><span class="dot"></span><span id="qr-pill-text">En attente…</span></div>
-                <div class="qr-tmr" id="qr-timer-bar"><div class="qr-tmr-fill" id="qr-timer-fill"></div></div>
-                <div class="qr-tmr-txt" id="qr-timer-text"></div>
-                <div id="qr-confirmed-container"></div>
-                <button type="button" class="qr-redo" onclick="refreshQR()">Nouveau QR</button>
-              </div>
-            </div>
-
-            <!-- Name -->
-            <div class="form-group">
-              <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
-              <div class="input-wrap">
-                <input type="text" id="client-name" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off">
-                <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
-              </div>
-            </div>
-
-            <!-- Amount + Notes -->
-            <div class="row-2">
-              <div class="form-group">
-                <label class="form-label">Montant (€) *</label>
-                <div class="input-wrap">
-                  <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
-                  <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
-                </div>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
-                <div class="input-wrap">
-                  <input type="text" id="notes" class="form-control" placeholder="Menu midi…" autocomplete="off">
-                  <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
-                </div>
-              </div>
-            </div>
-
-            <button type="submit" class="btn-credit" id="submit-btn">Créditer les points</button>
-          </form>
-        </div>
+    <div class="c-card">
+      <div class="c-card-hdr">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--primary)">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 4.5v4M6 6.5l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Nouveau passage
       </div>
 
-      <!-- ══════ RIGHT: ONE fixed card, 4 zones, same size always ══════ -->
-      <div class="sb" id="sidebar">
-        <!-- Z1: Points (80px fixed) -->
-        <div class="sb-pts" id="sb-pts">
-          <div class="sb-pts-val" id="sb-pts-val">0</div>
-          <div class="sb-pts-lbl" id="sb-pts-lbl">Points à créditer</div>
-        </div>
-        <!-- Z2: Config (32px fixed) -->
-        <div class="sb-cfg" id="sb-cfg"></div>
-        <!-- Z3: Client (min 110px) -->
-        <div class="sb-cli">
-          <div class="sb-cli-hdr" id="sb-cli-hdr">Client</div>
-          <div id="sb-cli-body"><div class="sb-cli-empty">Entrez un email ou téléphone</div></div>
-        </div>
-        <!-- Z4: Action (48px fixed, hidden by default) -->
-        <div class="sb-act hidden" id="sb-act">
-          <button class="btn-credit" onclick="resetForm()">Nouveau crédit</button>
-        </div>
+      <div class="c-card-body">
+        <div id="credit-alert"></div>
+
+        <!-- Config strip -->
+        <div class="config-strip" id="config-strip"></div>
+
+        <form id="credit-form" autocomplete="off">
+          <!-- Segment toggle -->
+          <div class="seg">
+            <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
+            <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
+            <button type="button" id="toggle-qr" onclick="switchMode('qr')">⬡ QR</button>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group" id="field-email">
+            <label class="form-label">Adresse email</label>
+            <div class="input-wrap">
+              <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
+              <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
+              <div class="autocomplete-list" id="ac-email"></div>
+            </div>
+            <div id="typo-email"></div>
+            <div class="lookup-strip" id="lookup-email"></div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group" id="field-phone" style="display:none;">
+            <label class="form-label">Numéro de téléphone</label>
+            <div class="input-wrap">
+              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
+              <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
+              <div class="autocomplete-list" id="ac-phone"></div>
+            </div>
+            <div class="form-hint">+32…, 0032…, 04…</div>
+            <div class="lookup-strip" id="lookup-phone"></div>
+          </div>
+
+          <!-- QR (compact) -->
+          <div id="field-qr" style="display:none;">
+            <div class="qr-box" id="qr-inline">
+              <div class="qr-sub">Le client scanne ce QR</div>
+              <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
+              <div class="qr-stat" id="qr-pill"><span class="dot"></span><span id="qr-pill-text">En attente…</span></div>
+              <div class="qr-tmr" id="qr-timer-bar"><div class="qr-tmr-fill" id="qr-timer-fill"></div></div>
+              <div class="qr-tmr-txt" id="qr-timer-text"></div>
+              <div id="qr-confirmed-container"></div>
+              <button type="button" class="qr-redo" onclick="refreshQR()">Nouveau QR</button>
+            </div>
+            <div class="lookup-strip" id="lookup-qr"></div>
+          </div>
+
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+            <div class="input-wrap">
+              <input type="text" id="client-name" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off">
+              <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
+            </div>
+          </div>
+
+          <!-- Amount + Notes -->
+          <div class="row-2">
+            <div class="form-group">
+              <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
+              <div class="input-wrap">
+                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
+                <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+              <div class="input-wrap">
+                <input type="text" id="notes" class="form-control" placeholder="Menu midi…" autocomplete="off">
+                <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-credit" id="submit-btn">Créditer les points</button>
+        </form>
+      </div>
+
+      <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
+      <div class="success-overlay" id="success-overlay">
+        <div class="success-pts" id="s-pts"></div>
+        <div class="success-label">Crédités ✓</div>
+        <div class="success-info" id="s-info"></div>
+        <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
       </div>
 
     </div>
@@ -447,42 +420,35 @@
     const merchant = Auth.getMerchant();
     const staff = Auth.getStaff();
     let currentMode = 'email';
+    let lastCreditKey = null; // anti-double-credit
+
+    // Config strip
+    document.getElementById('config-strip').textContent =
+      merchant.points_per_euro + ' pt/€ · Récompense à ' + merchant.points_for_reward + ' pts — ' +
+      merchant.reward_description +
+      (staff.role === 'cashier' ? ' · Max 200€' : '');
 
     // ═══════════════════════════════════════════════════════
-    // SIDEBAR HELPERS — only text changes, structure never moves
+    // LOOKUP — inline strip under the active field
     // ═══════════════════════════════════════════════════════
 
-    function sbConfig() {
-      document.getElementById('sb-cfg').textContent =
-        merchant.points_per_euro + ' pt/€ · Récompense à ' + merchant.points_for_reward + ' pts' +
-        (staff.role === 'cashier' ? ' · Max 200€' : '');
-    }
-    sbConfig();
-
-    function sbReset() {
-      document.getElementById('sb-pts').classList.remove('is-success');
-      document.getElementById('sb-pts-val').textContent = '0';
-      document.getElementById('sb-pts-lbl').textContent = 'Points à créditer';
-      document.getElementById('sb-cli-hdr').textContent = 'Client';
-      document.getElementById('sb-cli-body').innerHTML = '<div class="sb-cli-empty">Entrez un email ou téléphone</div>';
-      document.getElementById('sb-act').classList.add('hidden');
-      sbConfig();
+    function getLookupEl() {
+      return document.getElementById('lookup-' + currentMode);
     }
 
-    // Lookup: just swap text inside sb-cli-body
-    function sbLookup(data) {
-      const hdr = document.getElementById('sb-cli-hdr');
-      const body = document.getElementById('sb-cli-body');
+    function showLookup(data) {
+      const el = getLookupEl();
+      if (!el) return;
 
       if (!data.found) {
-        hdr.textContent = 'Nouveau client';
-        body.innerHTML = '<div class="sb-cli-box new-client">Sera créé au crédit.</div>';
+        el.className = 'lookup-strip show new-client';
+        el.innerHTML = 'Nouveau client — sera créé au crédit.';
         return;
       }
       const c = data.client;
       if (data.isNew) {
-        hdr.textContent = 'Première visite';
-        body.innerHTML = '<div class="sb-cli-box new-client">Existe mais jamais venu ici.' + (c.name ? '<br>Nom : ' + c.name : '') + '</div>';
+        el.className = 'lookup-strip show new-client';
+        el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + c.name : '');
         if (c.name && !document.getElementById('client-name').value) {
           document.getElementById('client-name').value = c.name;
           document.getElementById('client-name').classList.add('has-value');
@@ -490,21 +456,18 @@
         return;
       }
 
-      hdr.textContent = 'Client trouvé';
+      el.className = 'lookup-strip show found';
       const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
-      let h = '<div class="sb-cli-box found">' +
-        '<span class="sb-cli-pts">' + c.points_balance + ' pts</span>' +
-        '<span class="sb-cli-name">' + (c.name || c.email || c.phone) + '</span>' +
+      let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
+        '<span class="l-name">' + (c.name || c.email || c.phone) + '</span>' +
         (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
-        '<div class="sb-cli-meta">' + c.visit_count + ' visite(s)</div>' +
-        '<div class="sb-prog"><div class="sb-prog-fill" style="width:' + pct + '%"></div></div>' +
-        '<div class="sb-cli-meta">' + c.points_balance + '/' + c.reward_threshold + '</div>';
+        '<div class="l-meta">' + c.visit_count + ' visite(s) · ' + c.points_balance + '/' + c.reward_threshold + '</div>' +
+        '<div class="l-prog"><div class="l-prog-fill" style="width:' + pct + '%"></div></div>';
       if (c.can_redeem) {
-        h += '<div class="sb-reward" onclick="redeemReward(' + c.id + ')">' +
+        h += '<div class="l-reward" onclick="redeemReward(' + c.id + ')">' +
           (c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
       }
-      h += '</div>';
-      body.innerHTML = h;
+      el.innerHTML = h;
 
       if (c.name && !document.getElementById('client-name').value) {
         document.getElementById('client-name').value = c.name;
@@ -512,27 +475,11 @@
       }
     }
 
-    function sbLookupReset() {
-      document.getElementById('sb-cli-hdr').textContent = 'Client';
-      document.getElementById('sb-cli-body').innerHTML = '<div class="sb-cli-empty">Entrez un email ou téléphone</div>';
-    }
-
-    // Success: just swap text
-    function sbSuccess(result) {
-      document.getElementById('sb-pts').classList.add('is-success');
-      document.getElementById('sb-pts-val').textContent = '+' + result.transaction.points_delta + ' pts';
-      document.getElementById('sb-pts-lbl').textContent = 'Crédités ✓';
-      document.getElementById('sb-cfg').textContent = '';
-
-      const n = result.client.name || result.client.email || result.client.phone || 'Client';
-      let d = '<strong>' + n + '</strong><br>Solde : <strong>' + result.client.points_balance + ' pts</strong>';
-      if (result.client.email) d += '<br>' + result.client.email;
-      if (result.client.phone) d += '<br>' + result.client.phone;
-      if (result.isNewClient) d += '<br><span class="badge badge-info" style="margin-top:0.2rem">Nouveau client</span>';
-
-      document.getElementById('sb-cli-hdr').textContent = 'Crédit effectué';
-      document.getElementById('sb-cli-body').innerHTML = '<div class="sb-cli-box result">' + d + '</div>';
-      document.getElementById('sb-act').classList.remove('hidden');
+    function hideLookup() {
+      document.querySelectorAll('.lookup-strip').forEach(el => {
+        el.classList.remove('show');
+        el.innerHTML = '';
+      });
     }
 
     // ═══════════════════════════════════════════════════════
@@ -564,7 +511,7 @@
       document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
       if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
       if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
-      sbLookupReset();
+      hideLookup();
       if (mode === 'qr') createQRSession();
     }
 
@@ -574,21 +521,22 @@
     function clearField(id) {
       const el = document.getElementById(id);
       el.value = ''; el.focus(); el.dispatchEvent(new Event('input'));
-      if (id === 'amount') document.getElementById('sb-pts-val').textContent = '0';
+      if (id === 'amount') document.getElementById('pts-badge').textContent = '0 pts';
     }
     document.querySelectorAll('.input-wrap .form-control').forEach(el => {
       el.addEventListener('input', () => el.classList.toggle('has-value', el.value.length > 0));
     });
 
     // ═══════════════════════════════════════════════════════
-    // POINTS PREVIEW
+    // POINTS BADGE
     // ═══════════════════════════════════════════════════════
     document.getElementById('amount').addEventListener('input', (e) => {
-      document.getElementById('sb-pts-val').textContent = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
+      const pts = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
+      document.getElementById('pts-badge').textContent = pts + ' pts';
     });
 
     // ═══════════════════════════════════════════════════════
-    // EMAIL TYPO DETECTION
+    // EMAIL TYPO
     // ═══════════════════════════════════════════════════════
     const TYPOS = {
       'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com',
@@ -668,13 +616,13 @@
       clearTimeout(lookupTimer);
       const email = document.getElementById('client-email').value.trim();
       const phone = document.getElementById('client-phone').value.trim();
-      if (!email && !phone) { sbLookupReset(); return; }
+      if (!email && !phone) { hideLookup(); return; }
       lookupTimer = setTimeout(async () => {
         try {
           const p = {};
           if (email) p.email = email;
           if (phone) p.phone = phone;
-          sbLookup(await API.clients.lookup(p));
+          showLookup(await API.clients.lookup(p));
         } catch (e) { console.error(e); }
       }, 300);
     }
@@ -692,7 +640,7 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // SUBMIT
+    // SUBMIT — with anti-double-credit
     // ═══════════════════════════════════════════════════════
     document.getElementById('credit-form').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -705,27 +653,73 @@
       if (!email && !phone) { UI.showAlert('credit-alert', currentMode === 'qr' ? 'Le client n\'a pas scanné le QR' : 'Email ou téléphone requis', 'error'); return; }
       if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
 
+      // ── Anti-double-credit: generate unique key per submission ──
+      const creditKey = (email || '') + '|' + (phone || '') + '|' + amount + '|' + Date.now();
+      if (lastCreditKey && lastCreditKey === creditKey) {
+        UI.showAlert('credit-alert', 'Ce crédit vient d\'être effectué', 'warning');
+        return;
+      }
+
       try {
         document.getElementById('submit-btn').disabled = true;
-        UI.showAlert('credit-alert', 'Traitement…', 'info');
+        document.getElementById('submit-btn').textContent = 'Traitement…';
+        UI.clearAlert('credit-alert');
+
+        const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+
         const r = await API.clients.credit({
           email: email || undefined, phone: phone || undefined,
           name: name || undefined, amount, notes: notes || undefined,
+          idempotencyKey,
         });
-        UI.clearAlert('credit-alert');
-        sbSuccess(r);
-      } catch (e) { UI.showAlert('credit-alert', e.message, 'error');
-      } finally { document.getElementById('submit-btn').disabled = false; }
+
+        // ── Mark this credit as done (prevent re-submit) ──
+        lastCreditKey = creditKey;
+
+        // ── Show success overlay (blocks form access) ──
+        const n = r.client.name || r.client.email || r.client.phone || 'Client';
+        document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
+
+        let info = '<strong>' + n + '</strong>';
+        info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
+        if (r.client.email) info += '<br><span class="s-detail">' + r.client.email + '</span>';
+        if (r.client.phone) info += '<br><span class="s-detail">' + r.client.phone + '</span>';
+        if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
+
+        document.getElementById('s-info').innerHTML = info;
+        document.getElementById('success-overlay').classList.add('show');
+
+      } catch (err) {
+        UI.showAlert('credit-alert', err.message, 'error');
+      } finally {
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('submit-btn').textContent = 'Créditer les points';
+      }
     });
 
+    // ═══════════════════════════════════════════════════════
+    // RESET — only way back from success overlay
+    // ═══════════════════════════════════════════════════════
     function resetForm() {
-      sbReset();
-      UI.clearAlert('credit-alert');
+      // Hide overlay
+      document.getElementById('success-overlay').classList.remove('show');
+
+      // Full form reset
+      lastCreditKey = null;
       document.getElementById('credit-form').reset();
       document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
+      document.getElementById('pts-badge').textContent = '0 pts';
+      hideLookup();
+      UI.clearAlert('credit-alert');
+
+      // QR cleanup
       document.getElementById('qr-confirmed-container').innerHTML = '';
       if (currentMode === 'qr') refreshQR();
-      else { stopQRPolling(); if (qrToken) { fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {}); qrToken = null; } }
+      else {
+        stopQRPolling();
+        if (qrToken) { fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {}); qrToken = null; }
+      }
+
       switchMode('email');
       document.getElementById('client-email').focus();
     }
