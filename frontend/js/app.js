@@ -84,6 +84,20 @@ const API = {
     unblock: (id) => API.call(`/clients/${id}/unblock`, { method: 'POST' }),
     exportCSV: () => { window.location.href = `${API_BASE_URL}/clients/export/csv`; },
   },
+
+  preferences: {
+    get: () => API.call('/preferences'),
+    update: (d) => API.call('/preferences', { method: 'PUT', body: JSON.stringify(d) }),
+    setTheme: (theme) => API.call('/preferences/theme', { method: 'PATCH', body: JSON.stringify({ theme }) }),
+    changePassword: (d) => API.call('/preferences/password', { method: 'PUT', body: JSON.stringify(d) }),
+    getMerchantInfo: () => API.call('/preferences/merchant-info'),
+    updateMerchantInfo: (d) => API.call('/preferences/merchant-info', { method: 'PUT', body: JSON.stringify(d) }),
+    exportBackup: () => {
+      window.location.href = `${API_BASE_URL}/preferences/backup/export`;
+    },
+    validateBackup: (data) => API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) }),
+    importBackup: (data) => API.call('/preferences/backup/import', { method: 'POST', body: JSON.stringify({ data, confirmReplace: true }) }),
+  },
 };
 
 
