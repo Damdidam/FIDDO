@@ -41,10 +41,11 @@ app.use('/api/preferences', require('./routes/preferences'));
 // Super admin
 app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
+app.use('/api/admin/backups', require('./routes/admin/backups'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '3.3.0', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: '3.5.0', timestamp: new Date().toISOString() });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -93,7 +94,11 @@ app.get('/validate', (req, res) => {
 // ═══════════════════════════════════════════════════════
 
 app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V3.3 Multi-Tenant — Port ${PORT}`);
+  console.log(`🐕 FIDDO V3.5 Multi-Tenant — Port ${PORT}`);
+
+  // Start automatic backup scheduler
+  const { startScheduler } = require('./services/backup-db');
+  startScheduler();
 });
 
 module.exports = app;
