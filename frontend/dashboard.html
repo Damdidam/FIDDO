@@ -6,41 +6,60 @@
   <title>Tableau de bord — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
-    /* ── Compact activity table ── */
-    .activity-table { width: 100%; border-collapse: collapse; border-spacing: 0; font-size: 0.85rem; }
-    .activity-table thead tr { background: var(--secondary); }
-    .activity-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; cursor: pointer; user-select: none; color: white; background: var(--secondary); border: none; }
-    .activity-table th:hover { background: #374151; }
-    .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.4; }
-    .sort-arrow.active { opacity: 1; }
-    .activity-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-    .activity-table tbody tr:hover { background: #f0fdf4; }
-    .activity-table tbody tr:last-child td { border-bottom: none; }
+    /* Announcements */
+    .announcements-section { margin-bottom: 1.5rem; }
+    .ann-banner {
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      border-left: 4px solid var(--primary);
+      background: white;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .ann-banner:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(0,0,0,0.12); }
+    .ann-banner.priority-warning { border-left-color: var(--warning); background: #fffbeb; }
+    .ann-banner.priority-urgent { border-left-color: var(--danger); background: #fef2f2; }
+    .ann-banner.is-read { opacity: 0.7; }
+    .ann-banner .ann-title { font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem; }
+    .ann-banner .ann-date { font-size: 0.75rem; color: var(--text-light); }
+    .ann-banner .ann-preview { font-size: 0.85rem; color: var(--text); margin-top: 0.25rem; }
+    .ann-unread-dot {
+      display: inline-block;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      margin-right: 0.5rem;
+      vertical-align: middle;
+    }
+    .ann-toggle { text-align: center; margin-top: 0.5rem; }
+    .ann-toggle a { color: var(--primary); cursor: pointer; font-size: 0.85rem; font-weight: 500; }
 
-    .tx-type { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
-    .tx-credit { background: #CFFAFE; color: var(--primary); }
-    .tx-reward { background: #e8f5e9; color: var(--success); }
-    .tx-adjustment { background: #fff3e0; color: var(--warning); }
+    /* Feedback */
+    .feedback-card {
+      background: linear-gradient(135deg, var(--secondary), #111827);
+      color: white;
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .feedback-card:hover { transform: translateY(-2px); }
+    .feedback-card h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+    .feedback-card p { margin: 0; font-size: 0.85rem; opacity: 0.8; }
 
-    .activity-scroll { max-height: 500px; overflow-y: auto; border-radius: 0 0 10px 10px; }
-
-    /* Staff pill */
-    .staff-pill { font-size: 0.75rem; color: var(--text-light); }
-    .staff-pill strong { color: var(--text); }
-
-    /* Points display */
-    .pts-positive { color: var(--primary); font-weight: 700; }
-    .pts-negative { color: var(--danger); font-weight: 700; }
-
-    /* Settings compact */
-    .settings-grid { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 0.75rem; align-items: end; }
-    @media (max-width: 768px) { .settings-grid { grid-template-columns: 1fr 1fr; } }
-
-    /* Mobile table */
-    @media (max-width: 600px) {
-      .activity-table { font-size: 0.8rem; }
-      .activity-table th, .activity-table td { padding: 6px 6px; }
-      .hide-mobile { display: none; }
+    /* Notification badge */
+    .notif-badge {
+      background: var(--danger);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      margin-left: 4px;
+      vertical-align: top;
     }
   </style>
 </head>
@@ -51,7 +70,15 @@
   </nav>
 
   <div class="container">
-    <h1 style="margin: 1rem 0 0.75rem; font-size: 1.3rem;">Tableau de bord</h1>
+    <h1 style="margin: 1.5rem 0;">Tableau de bord</h1>
+
+    <!-- Announcements Section -->
+    <div class="announcements-section" id="announcements-section" style="display: none;">
+      <div class="flex-between mb-1">
+        <h3 style="margin: 0;">📢 Annonces <span id="unread-badge"></span></h3>
+      </div>
+      <div id="announcements-list"></div>
+    </div>
 
     <!-- Stats -->
     <div class="stats-grid" id="stats-grid">
@@ -65,46 +92,92 @@
       </div>
       <div class="stat-card">
         <div class="stat-value" id="stat-points">-</div>
-        <div class="stat-label">Points émis</div>
+        <div class="stat-label">Points distribués</div>
       </div>
       <div class="stat-card">
         <div class="stat-value" id="stat-rewards">-</div>
-        <div class="stat-label">🎁 Récompenses dispo</div>
+        <div class="stat-label">Récompenses</div>
       </div>
     </div>
 
-    <!-- Recent Activity (full width) -->
-    <div class="card" style="padding: 0; overflow: hidden;">
-      <div class="card-header" style="padding: 1rem 1rem 0.75rem;">
-        Activité récente
-        <a href="/clients" class="btn btn-primary btn-sm">Voir tous les clients</a>
-      </div>
-      <div class="activity-scroll" id="activity-container">
-        <div class="loading" style="padding: 2rem;">Chargement...</div>
-      </div>
-    </div>
-
-    <!-- Settings (owner only) -->
-    <div class="card" id="settings-card" style="display: none;">
-      <div class="card-header" style="margin-bottom: 0.75rem;">⚙️ Paramètres de fidélité</div>
-      <div id="settings-alert"></div>
-      <form id="settings-form">
-        <div class="settings-grid">
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Points / €</label>
-            <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Pts récompense</label>
-            <input type="number" id="set-pfr" class="form-control" min="1">
-          </div>
-          <div class="form-group" style="margin-bottom: 0;">
-            <label class="form-label">Description</label>
-            <input type="text" id="set-desc" class="form-control" placeholder="Boisson offerte">
-          </div>
-          <button type="submit" class="btn btn-primary btn-sm" style="height: 40px;">Enregistrer</button>
+    <div class="grid grid-2">
+      <!-- Recent clients -->
+      <div class="card">
+        <div class="card-header">
+          Derniers clients
+          <a href="/clients" class="btn btn-primary btn-sm">Voir tous</a>
         </div>
-      </form>
+        <div id="recent-clients"></div>
+      </div>
+
+      <!-- Quick actions + Settings + Feedback -->
+      <div>
+        <div class="card">
+          <div class="card-header">Actions rapides</div>
+          <a href="/credit" class="btn btn-primary btn-block mb-1">➕ Créditer des points</a>
+          <a href="/clients" class="btn btn-secondary btn-block mb-1">👥 Voir les clients</a>
+          <button onclick="API.clients.exportCSV()" class="btn btn-outline btn-block">📥 Exporter CSV</button>
+        </div>
+
+        <!-- Feedback card -->
+        <div class="feedback-card" onclick="showFeedbackModal()">
+          <h3>💬 Contacter FIDDO</h3>
+          <p>Une question, suggestion ou problème ? Envoyez-nous un message.</p>
+        </div>
+
+        <div class="card" id="settings-card" style="display: none;">
+          <div class="card-header">⚙️ Paramètres de fidélité</div>
+          <div id="settings-alert"></div>
+          <form id="settings-form">
+            <div class="form-group">
+              <label class="form-label">Points par euro</label>
+              <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Points pour récompense</label>
+              <input type="number" id="set-pfr" class="form-control" min="1">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Description récompense</label>
+              <input type="text" id="set-desc" class="form-control" placeholder="Boisson offerte">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Announcement Detail Modal -->
+  <div id="ann-detail-modal" class="modal">
+    <div class="modal-content" style="max-width: 550px;">
+      <div class="modal-header">
+        <h2 id="ann-detail-title">Annonce</h2>
+        <button class="close-modal" onclick="closeAnnDetail()">×</button>
+      </div>
+      <div class="modal-body" id="ann-detail-body"></div>
+    </div>
+  </div>
+
+  <!-- Feedback Modal -->
+  <div id="feedback-modal" class="modal">
+    <div class="modal-content" style="max-width: 500px;">
+      <div class="modal-header">
+        <h2>💬 Contacter FIDDO</h2>
+        <button class="close-modal" onclick="closeFeedbackModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="feedback-alert"></div>
+        <div class="form-group">
+          <label class="form-label">Sujet (optionnel)</label>
+          <input type="text" id="fb-subject" class="form-control" placeholder="Ex: Question sur les récompenses">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Votre message *</label>
+          <textarea id="fb-message" class="form-control" rows="5" placeholder="Décrivez votre question ou suggestion..."></textarea>
+        </div>
+        <button class="btn btn-primary btn-block" id="fb-submit" onclick="submitFeedback()">Envoyer</button>
+      </div>
     </div>
   </div>
 
@@ -115,7 +188,7 @@
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
 
-    // Settings (owner)
+    // Show settings card for owner
     if (staff.role === 'owner') {
       document.getElementById('settings-card').style.display = 'block';
       document.getElementById('set-ppe').value = merchant.points_per_euro;
@@ -123,118 +196,204 @@
       document.getElementById('set-desc').value = merchant.reward_description;
     }
 
-    // ── Load stats from enriched endpoint ──
-    async function loadStats() {
+    // ═══════════════════════════════════════════════════════
+    // ANNOUNCEMENTS
+    // ═══════════════════════════════════════════════════════
+
+    let allAnnouncements = [];
+
+    async function loadAnnouncements() {
       try {
-        const data = await API.call('/clients/enriched');
+        const data = await API.call('/announcements');
+        allAnnouncements = data.announcements;
+
+        if (allAnnouncements.length === 0) return;
+
+        const section = document.getElementById('announcements-section');
+        section.style.display = 'block';
+
+        // Unread badge
+        const unreadCount = data.unread_count;
+        const badge = document.getElementById('unread-badge');
+        badge.innerHTML = unreadCount > 0
+          ? `<span class="notif-badge">${unreadCount}</span>`
+          : '';
+
+        // Show max 3, expand to show all
+        renderAnnouncements(false);
+      } catch (err) {
+        console.error('Announcements error:', err);
+      }
+    }
+
+    function renderAnnouncements(showAll) {
+      const list = document.getElementById('announcements-list');
+      const toShow = showAll ? allAnnouncements : allAnnouncements.slice(0, 3);
+      const prioIcons = { info: 'ℹ️', warning: '⚠️', urgent: '🚨' };
+
+      let html = '';
+      toShow.forEach(a => {
+        const preview = a.content.length > 120 ? a.content.substring(0, 120) + '...' : a.content;
+        html += `
+          <div class="ann-banner priority-${a.priority} ${a.is_read ? 'is-read' : ''}" onclick="showAnnDetail(${a.id})">
+            <div class="flex-between">
+              <div class="ann-title">
+                ${!a.is_read ? '<span class="ann-unread-dot"></span>' : ''}
+                ${prioIcons[a.priority]} ${a.title}
+              </div>
+              <span class="ann-date">${Format.timeSince(a.created_at)}</span>
+            </div>
+            <div class="ann-preview">${preview}</div>
+          </div>
+        `;
+      });
+
+      if (!showAll && allAnnouncements.length > 3) {
+        html += `<div class="ann-toggle"><a onclick="renderAnnouncements(true)">Voir toutes les annonces (${allAnnouncements.length})</a></div>`;
+      } else if (showAll && allAnnouncements.length > 3) {
+        html += `<div class="ann-toggle"><a onclick="renderAnnouncements(false)">Réduire</a></div>`;
+      }
+
+      list.innerHTML = html;
+    }
+
+    async function showAnnDetail(id) {
+      const a = allAnnouncements.find(x => x.id === id);
+      if (!a) return;
+
+      const prioLabels = { info: 'Information', warning: 'Important', urgent: 'Urgent' };
+      const prioColors = { info: 'var(--primary)', warning: 'var(--warning)', urgent: 'var(--danger)' };
+
+      document.getElementById('ann-detail-title').textContent = a.title;
+      document.getElementById('ann-detail-body').innerHTML = `
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-bottom: 1rem;">
+          <span class="badge" style="background: ${prioColors[a.priority]}20; color: ${prioColors[a.priority]};">${prioLabels[a.priority]}</span>
+          <span class="text-muted text-sm">${Format.datetime(a.created_at)}</span>
+        </div>
+        <div style="white-space: pre-wrap; line-height: 1.7; font-size: 0.95rem;">${a.content}</div>
+      `;
+
+      document.getElementById('ann-detail-modal').classList.add('active');
+
+      // Mark as read
+      if (!a.is_read) {
+        try {
+          await API.call(`/announcements/${id}/read`, { method: 'POST' });
+          a.is_read = 1;
+          // Update badge
+          const unread = allAnnouncements.filter(x => !x.is_read).length;
+          document.getElementById('unread-badge').innerHTML = unread > 0
+            ? `<span class="notif-badge">${unread}</span>` : '';
+        } catch (e) { /* silent */ }
+      }
+    }
+
+    function closeAnnDetail() {
+      document.getElementById('ann-detail-modal').classList.remove('active');
+      renderAnnouncements(false); // Refresh read state visually
+    }
+    document.getElementById('ann-detail-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'ann-detail-modal') closeAnnDetail();
+    });
+
+
+    // ═══════════════════════════════════════════════════════
+    // FEEDBACK
+    // ═══════════════════════════════════════════════════════
+
+    function showFeedbackModal() {
+      document.getElementById('fb-subject').value = '';
+      document.getElementById('fb-message').value = '';
+      UI.clearAlert('feedback-alert');
+      document.getElementById('fb-submit').disabled = false;
+      document.getElementById('feedback-modal').classList.add('active');
+    }
+
+    function closeFeedbackModal() {
+      document.getElementById('feedback-modal').classList.remove('active');
+    }
+    document.getElementById('feedback-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'feedback-modal') closeFeedbackModal();
+    });
+
+    async function submitFeedback() {
+      const subject = document.getElementById('fb-subject').value.trim();
+      const message = document.getElementById('fb-message').value.trim();
+
+      if (!message) {
+        UI.showAlert('feedback-alert', 'Veuillez écrire un message', 'error');
+        return;
+      }
+
+      try {
+        document.getElementById('fb-submit').disabled = true;
+        UI.showAlert('feedback-alert', 'Envoi en cours...', 'info');
+
+        await API.call('/announcements/feedback', {
+          method: 'POST',
+          body: JSON.stringify({ subject, message }),
+        });
+
+        UI.showAlert('feedback-alert', '✅ Message envoyé ! L\'équipe FIDDO vous répondra rapidement.', 'success');
+        document.getElementById('fb-subject').value = '';
+        document.getElementById('fb-message').value = '';
+
+        setTimeout(() => closeFeedbackModal(), 2000);
+      } catch (err) {
+        UI.showAlert('feedback-alert', err.message, 'error');
+        document.getElementById('fb-submit').disabled = false;
+      }
+    }
+
+
+    // ═══════════════════════════════════════════════════════
+    // DASHBOARD DATA
+    // ═══════════════════════════════════════════════════════
+
+    async function loadDashboard() {
+      try {
+        const data = await API.clients.getAll();
         const clients = data.clients;
 
         const total = clients.length;
-        const active = clients.filter(c => (Date.now() - new Date(c.last_visit)) / 86400000 <= 30).length;
+        const active = clients.filter(c => {
+          const days = (Date.now() - new Date(c.last_visit)) / 86400000;
+          return days <= 30;
+        }).length;
         const totalPoints = clients.reduce((s, c) => s + c.points_balance, 0);
-        const rewardReady = clients.filter(c => c.points_balance >= merchant.points_for_reward).length;
+        const visits = clients.reduce((s, c) => s + c.visit_count, 0);
 
         document.getElementById('stat-clients').textContent = total;
         document.getElementById('stat-active').textContent = active;
         document.getElementById('stat-points').textContent = totalPoints.toLocaleString('fr-FR');
-        document.getElementById('stat-rewards').textContent = rewardReady;
-      } catch (err) { console.error('Stats error:', err); }
-    }
+        document.getElementById('stat-rewards').textContent = visits;
 
-    // ── Load recent activity ──
-    let allTxs = [];
-    let sortCol = 'date';
-    let sortDir = 'desc';
-
-    async function loadActivity() {
-      try {
-        const data = await API.call('/clients/recent-activity?limit=30');
-        allTxs = data.transactions;
-        renderActivity();
-      } catch (err) {
-        console.error('Activity error:', err);
-        document.getElementById('activity-container').innerHTML = '<div class="alert alert-error" style="margin:1rem">Erreur de chargement</div>';
-      }
-    }
-
-    function sortActivity(col) {
-      if (sortCol === col) { sortDir = sortDir === 'asc' ? 'desc' : 'asc'; }
-      else { sortCol = col; sortDir = col === 'date' ? 'desc' : 'asc'; }
-      renderActivity();
-    }
-
-    function renderActivity() {
-      const container = document.getElementById('activity-container');
-      if (allTxs.length === 0) {
-        container.innerHTML = '<div class="empty-state" style="padding:2rem"><p class="text-muted">Aucune activité</p></div>';
-        return;
-      }
-
-      const sorted = [...allTxs].sort((a, b) => {
-        let va, vb;
-        switch (sortCol) {
-          case 'client':  va = (a.client_name || a.client_email || a.client_phone || '').toLowerCase(); vb = (b.client_name || b.client_email || b.client_phone || '').toLowerCase(); break;
-          case 'points':  va = a.points_delta; vb = b.points_delta; break;
-          case 'type':    va = a.transaction_type; vb = b.transaction_type; break;
-          case 'staff':   va = (a.staff_name || '').toLowerCase(); vb = (b.staff_name || '').toLowerCase(); break;
-          case 'date':    va = a.created_at; vb = b.created_at; break;
-          default:        va = 0; vb = 0;
+        // Recent clients
+        const container = document.getElementById('recent-clients');
+        if (clients.length === 0) {
+          container.innerHTML = '<div class="empty-state"><p class="text-muted">Aucun client pour le moment</p></div>';
+          return;
         }
-        if (va < vb) return sortDir === 'asc' ? -1 : 1;
-        if (va > vb) return sortDir === 'asc' ? 1 : -1;
-        return 0;
-      });
 
-      function arrow(col) {
-        if (sortCol !== col) return '<span class="sort-arrow">↕</span>';
-        return `<span class="sort-arrow active">${sortDir === 'asc' ? '▲' : '▼'}</span>`;
-      }
-
-      let html = `<table class="activity-table"><thead><tr>
-          <th onclick="sortActivity('client')">Client ${arrow('client')}</th>
-          <th onclick="sortActivity('points')">Points ${arrow('points')}</th>
-          <th onclick="sortActivity('type')">Type ${arrow('type')}</th>
-          <th onclick="sortActivity('staff')">Par ${arrow('staff')}</th>
-          <th onclick="sortActivity('date')">Date ${arrow('date')}</th>
-        </tr></thead><tbody>`;
-
-      sorted.forEach(t => {
-        const client = t.client_name || t.client_email || t.client_phone || '—';
-        const sign = t.points_delta >= 0 ? '+' : '';
-        const ptsClass = t.points_delta >= 0 ? 'pts-positive' : 'pts-negative';
-        const typeLabel = { credit: 'Crédit', reward: 'Récomp.', adjustment: 'Ajust.', merge: 'Fusion' }[t.transaction_type] || t.transaction_type;
-        const typeClass = `tx-${t.transaction_type}`;
-
-        html += `<tr>
-            <td><strong>${escHtml(client)}</strong></td>
-            <td class="${ptsClass}">${sign}${t.points_delta}</td>
-            <td><span class="tx-type ${typeClass}">${typeLabel}</span></td>
-            <td class="staff-pill"><strong>${escHtml(t.staff_name || 'Système')}</strong></td>
-            <td class="staff-pill">${formatShortDate(t.created_at)}</td>
+        const recent = clients.slice(0, 5);
+        let html = '<table class="table"><thead><tr><th>Client</th><th>Points</th><th>Visites</th><th>Dernière visite</th></tr></thead><tbody>';
+        recent.forEach(c => {
+          html += `<tr>
+            <td><a href="/clients" style="color: var(--primary); text-decoration: none;">${c.email || c.phone || c.name || 'N/A'}</a></td>
+            <td><strong class="text-primary">${c.points_balance} pts</strong></td>
+            <td>${c.visit_count}</td>
+            <td class="text-muted">${Format.timeSince(c.last_visit)}</td>
           </tr>`;
-      });
+        });
+        html += '</tbody></table>';
+        container.innerHTML = html;
 
-      html += '</tbody></table>';
-      container.innerHTML = html;
+      } catch (err) {
+        console.error('Dashboard error:', err);
+      }
     }
 
-    // ── Helpers ──
-    function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-
-    function formatShortDate(d) {
-      const dt = new Date(d);
-      const now = new Date();
-      const diffMs = now - dt;
-      const diffDays = Math.floor(diffMs / 86400000);
-      const time = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-
-      if (diffDays === 0) return `Auj. ${time}`;
-      if (diffDays === 1) return `Hier ${time}`;
-      if (diffDays < 7) return `${dt.toLocaleDateString('fr-FR', { weekday: 'short' })} ${time}`;
-      return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }) + ' ' + time;
-    }
-
-    // ── Settings form ──
+    // Settings form (owner only)
     document.getElementById('settings-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       try {
@@ -244,18 +403,22 @@
           rewardDescription: document.getElementById('set-desc').value,
         };
         await API.auth.updateSettings(settings);
+
         merchant.points_per_euro = settings.pointsPerEuro;
         merchant.points_for_reward = settings.pointsForReward;
         merchant.reward_description = settings.rewardDescription;
         Auth.setSession(staff, merchant);
+
         UI.showAlert('settings-alert', 'Paramètres mis à jour !', 'success');
         setTimeout(() => UI.clearAlert('settings-alert'), 3000);
-      } catch (err) { UI.showAlert('settings-alert', err.message, 'error'); }
+      } catch (err) {
+        UI.showAlert('settings-alert', err.message, 'error');
+      }
     });
 
     // Init
-    loadStats();
-    loadActivity();
+    loadAnnouncements();
+    loadDashboard();
   </script>
 </body>
 </html>
