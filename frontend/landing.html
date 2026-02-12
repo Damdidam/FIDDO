@@ -63,13 +63,10 @@
       display: flex; justify-content: space-between; align-items: center;
     }
     .nav-logo {
-      display: flex; align-items: center; gap: 0.5rem;
+      display: flex; align-items: center;
       text-decoration: none;
-    }
-    .nav-logo img { height: 36px; display: block; }
-    .nav-logo-text {
       font-family: var(--font-body);
-      font-size: 1.3rem; font-weight: 800;
+      font-size: 1.35rem; font-weight: 800;
       color: var(--teal); letter-spacing: -0.5px;
     }
     .nav-links { display: flex; gap: 2rem; align-items: center; }
@@ -295,22 +292,22 @@
       position: absolute; border-radius: 10px;
       padding: 0.6rem 1rem;
       font-size: 0.78rem; font-weight: 600;
-      border: 1px solid var(--border);
       animation: floatIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
       white-space: nowrap;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
     .fp1 {
-      top: 6%; right: -20px;
+      top: -14px; right: -24px;
       animation-delay: 1.4s;
-      background: rgba(16,185,129,0.08);
-      border-color: rgba(16,185,129,0.15);
+      background: #0d2118;
+      border: 1px solid rgba(16,185,129,0.25);
       color: var(--green);
     }
     .fp2 {
-      bottom: 14%; left: -28px;
+      bottom: -14px; left: -24px;
       animation-delay: 2s;
-      background: var(--amber-glow);
-      border-color: rgba(245,158,11,0.15);
+      background: #1a1508;
+      border: 1px solid rgba(245,158,11,0.25);
       color: var(--amber);
     }
     @keyframes floatIn {
@@ -661,9 +658,7 @@
   <!-- NAV -->
   <nav class="nav" id="nav">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">
-        <img src="/img/logo-fiddo.png" alt="FIDDO">
-      </a>
+      <a href="/" class="nav-logo">FIDDO</a>
       <button class="nav-toggle" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">
         <span></span><span></span><span></span>
       </button>
