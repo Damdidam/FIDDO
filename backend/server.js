@@ -44,6 +44,7 @@ app.use('/api/staff', require('./routes/staff'));
 
 // QR code self-identification
 app.use('/api/qr', require('./routes/qr'));
+app.use('/api/me', require('./routes/client-portal'));
 
 // Merchant preferences (theme, password, merchant-info, backup)   ← FIX thème
 app.use('/api/preferences', require('./routes/preferences'));
@@ -90,6 +91,11 @@ app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../fron
 
 // QR static deep link — /q/ABC123 → client portal
 app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
+
+// Client portal
+app.get('/me', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
+app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
+app.get('/c/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
 
 // Super admin pages
 app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
