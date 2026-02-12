@@ -1,31 +1,34 @@
 const express = require('express');
-const { authenticateStaff, requireRole } = require('../middleware/auth');
+const { authenticateStaff } = require('../middleware/auth');
 const { messageQueries, invoiceQueries } = require('../database-messages');
 
 const router = express.Router();
+
+// All routes require staff authentication
 router.use(authenticateStaff);
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/messages — List messages for current merchant
+// GET /api/messages — List messages for this merchant
+// Optional: ?type=info|maintenance|urgent
 // ═══════════════════════════════════════════════════════
 
 router.get('/', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const { type, limit } = req.query;
-    const lim = Math.min(parseInt(limit) || 50, 100);
+    const { type } = req.query;
+    const limit = 50;
 
     let messages;
     if (type && ['info', 'maintenance', 'urgent'].includes(type)) {
-      messages = messageQueries.getForMerchantByType.all(merchantId, merchantId, type, lim);
+      messages = messageQueries.getForMerchantByType.all(merchantId, merchantId, type, limit);
     } else {
-      messages = messageQueries.getForMerchant.all(merchantId, merchantId, lim);
+      messages = messageQueries.getForMerchant.all(merchantId, merchantId, limit);
     }
 
-    const { count: unread } = messageQueries.countUnreadForMerchant.get(merchantId, merchantId);
+    const unread = messageQueries.countUnreadForMerchant.get(merchantId, merchantId).count;
 
-    res.json({ messages, unread, count: messages.length });
+    res.json({ messages, unread });
   } catch (error) {
     console.error('Erreur liste messages:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -34,7 +37,7 @@ router.get('/', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/messages/unread-count — Badge count
+// GET /api/messages/unread-count — Badge count for navbar
 // ═══════════════════════════════════════════════════════
 
 router.get('/unread-count', (req, res) => {
@@ -50,7 +53,7 @@ router.get('/unread-count', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/messages/:id/read — Mark message as read
+// POST /api/messages/:id/read — Mark a single message as read
 // ═══════════════════════════════════════════════════════
 
 router.post('/:id/read', (req, res) => {
@@ -58,6 +61,11 @@ router.post('/:id/read', (req, res) => {
     const merchantId = req.staff.merchant_id;
     const messageId = parseInt(req.params.id);
 
+    if (!messageId) {
+      return res.status(400).json({ error: 'ID message invalide' });
+    }
+
+    // Verify message exists and is visible to this merchant
     const msg = messageQueries.findById.get(messageId);
     if (!msg) {
       return res.status(404).json({ error: 'Message non trouvé' });
@@ -73,21 +81,22 @@ router.post('/:id/read', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/messages/read-all — Mark all as read
+// POST /api/messages/read-all — Mark all messages as read
 // ═══════════════════════════════════════════════════════
 
 router.post('/read-all', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const messages = messageQueries.getForMerchant.all(merchantId, merchantId, 200);
 
-    for (const msg of messages) {
-      if (!msg.is_read) {
-        messageQueries.markRead.run(msg.id, merchantId);
-      }
+    // Get all visible unread messages for this merchant
+    const messages = messageQueries.getForMerchant.all(merchantId, merchantId, 500);
+    const unread = messages.filter(m => !m.is_read);
+
+    for (const msg of unread) {
+      messageQueries.markRead.run(msg.id, merchantId);
     }
 
-    res.json({ message: 'Tous les messages marqués comme lus' });
+    res.json({ message: 'Tous les messages marqués comme lus', count: unread.length });
   } catch (error) {
     console.error('Erreur read-all:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -96,16 +105,26 @@ router.post('/read-all', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/messages/invoices — List invoices for current merchant
+// GET /api/messages/invoices — List invoices for this merchant
 // ═══════════════════════════════════════════════════════
 
-router.get('/invoices', requireRole('owner', 'manager'), (req, res) => {
+router.get('/invoices', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const lim = Math.min(parseInt(req.query.limit) || 50, 100);
-    const invoices = invoiceQueries.getByMerchant.all(merchantId, lim);
+    const invoices = invoiceQueries.getByMerchant.all(merchantId, 100);
+    const { count } = invoiceQueries.countByMerchant.get(merchantId);
 
-    res.json({ invoices, count: invoices.length });
+    // Compute stats
+    const totalAmount = invoices.reduce((s, i) => s + i.amount, 0);
+    const pending = invoices.filter(i => i.status === 'pending').length;
+    const paid = invoices.filter(i => i.status === 'paid').length;
+    const overdue = invoices.filter(i => i.status === 'overdue').length;
+
+    res.json({
+      invoices,
+      count,
+      stats: { totalAmount, pending, paid, overdue },
+    });
   } catch (error) {
     console.error('Erreur liste factures:', error);
     res.status(500).json({ error: 'Erreur serveur' });
@@ -117,7 +136,7 @@ router.get('/invoices', requireRole('owner', 'manager'), (req, res) => {
 // GET /api/messages/invoices/:id/download — Download invoice PDF
 // ═══════════════════════════════════════════════════════
 
-router.get('/invoices/:id/download', requireRole('owner', 'manager'), (req, res) => {
+router.get('/invoices/:id/download', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const invoiceId = parseInt(req.params.id);
@@ -126,8 +145,9 @@ router.get('/invoices/:id/download', requireRole('owner', 'manager'), (req, res)
     if (!invoice) {
       return res.status(404).json({ error: 'Facture non trouvée' });
     }
+
     if (!invoice.file_data) {
-      return res.status(404).json({ error: 'Fichier non disponible' });
+      return res.status(404).json({ error: 'Aucun fichier attaché à cette facture' });
     }
 
     const buffer = Buffer.from(invoice.file_data, 'base64');
