@@ -109,6 +109,7 @@ function initDatabase() {
       validation_token  TEXT,
 
       qr_token          TEXT,
+      pin_hash          TEXT,
 
       consent_date      TEXT,
       consent_version   TEXT,
@@ -440,6 +441,8 @@ const endUserQueries = {
   `),
 
   getAll: db.prepare('SELECT * FROM end_users WHERE deleted_at IS NULL ORDER BY created_at DESC'),
+
+  setPin: db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?"),
 
   search: db.prepare(`
     SELECT * FROM end_users
