@@ -208,54 +208,62 @@ function requireManager() {
 }
 
 
-// ─── Navbar Setup ────────────────────────────────────
+// ─── Navbar Setup (Concept B — Pill Navigation) ─────
 
 function setupNavbar() {
   const staff = Auth.getStaff();
   const merchant = Auth.getMerchant();
   if (!staff || !merchant) return;
 
-  // Update brand
-  const brand = document.querySelector('.navbar-brand span');
-  if (brand) brand.textContent = ' | ' + merchant.business_name;
+  const navbar = document.querySelector('.navbar');
+  if (!navbar) return;
 
-  // Build navigation based on role
-  const menu = document.querySelector('.navbar-menu');
-  if (!menu) return;
-
-  const links = [];
   const path = window.location.pathname;
 
-  // All staff can credit
-  links.push({ href: '/credit', label: 'Créditer', icon: '➕' });
+  // Build links based on role
+  const links = [];
+  links.push({ href: '/credit', label: 'Créditer' });
 
-  // Owner & manager can see dashboard + clients
   if (['owner', 'manager'].includes(staff.role)) {
-    links.push({ href: '/dashboard', label: 'Tableau de bord', icon: '📊' });
-    links.push({ href: '/clients', label: 'Clients', icon: '👥' });
+    links.push({ href: '/dashboard', label: 'Tableau de bord' });
+    links.push({ href: '/clients', label: 'Clients' });
   }
 
-  // Owner only: staff management + preferences
   if (staff.role === 'owner') {
-    links.push({ href: '/staff', label: 'Équipe', icon: '🏷️' });
-    links.push({ href: '/preferences', label: 'Préférences', icon: '⚙️' });
+    links.push({ href: '/staff', label: 'Équipe' });
+    links.push({ href: '/preferences', label: 'Préférences' });
   }
 
   // V3.5: All staff can see messages
-  links.push({ href: '/messages', label: 'Messages', icon: '✉️', id: 'nav-messages' });
+  links.push({ href: '/messages', label: 'Messages', id: 'nav-messages' });
 
-  menu.innerHTML = links.map(l =>
+  // Generate initials for avatar
+  const initials = (staff.display_name || 'U')
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+
+  // Build complete navbar inner HTML
+  const linksHTML = links.map(l =>
     `<a href="${l.href}" class="navbar-link${path === l.href ? ' active' : ''}"${l.id ? ` id="${l.id}"` : ''}>${l.label}</a>`
   ).join('');
 
-  // User info + logout
-  const userInfo = document.createElement('div');
-  userInfo.className = 'navbar-user';
-  userInfo.innerHTML = `
-    <span class="navbar-role">${staff.display_name} (${staff.role})</span>
-    <button class="btn btn-outline btn-sm" onclick="Auth.logout()">Déconnexion</button>
+  navbar.innerHTML = `
+    <div class="navbar-inner">
+      <a href="/dashboard" class="navbar-brand">
+        <span class="brand-mark">fiddo<span class="brand-dot">.</span></span>
+        <span class="brand-sep"></span>
+        <span class="brand-merchant">${merchant.business_name}</span>
+      </a>
+      <div class="navbar-menu">${linksHTML}</div>
+      <div class="navbar-user">
+        <span class="navbar-user-name">${staff.display_name}</span>
+        <div class="navbar-avatar" onclick="Auth.logout()" title="Déconnexion">${initials}</div>
+      </div>
+    </div>
   `;
-  menu.appendChild(userInfo);
 
   // V3.5: Fetch unread badge
   loadUnreadBadge();
@@ -274,10 +282,7 @@ async function loadUnreadBadge() {
     if (data.unread > 0) {
       const navLink = document.getElementById('nav-messages');
       if (navLink) {
-        navLink.innerHTML = `Messages <span style="
-          background:#EF4444;color:#fff;font-size:.55rem;font-weight:700;
-          padding:1px 5px;border-radius:8px;margin-left:3px;vertical-align:top;
-        ">${data.unread}</span>`;
+        navLink.innerHTML = `Messages <span class="navbar-badge">${data.unread}</span>`;
       }
     }
   } catch (e) {
