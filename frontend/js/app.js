@@ -121,6 +121,15 @@ const API = {
     exportCSV: () => { window.location.href = `${API_BASE_URL}/clients/export/csv`; },
   },
 
+  staff: {
+    list: () => API.call('/staff'),
+    create: (d) => API.call('/staff', { method: 'POST', body: JSON.stringify(d) }),
+    updateRole: (id, role) => API.call(`/staff/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+    toggle: (id) => API.call(`/staff/${id}/toggle`, { method: 'PUT' }),
+    resetPassword: (id, password) => API.call(`/staff/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+    delete: (id) => API.call(`/staff/${id}`, { method: 'DELETE' }),
+  },
+
   preferences: {
     get: () => API.call('/preferences'),
     update: (d) => API.call('/preferences', { method: 'PUT', body: JSON.stringify(d) }),
