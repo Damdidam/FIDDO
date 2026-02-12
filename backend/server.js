@@ -38,6 +38,9 @@ app.use('/api/auth', require('./routes/auth'));
 // Client management (credit, reward, lookup, list, etc.)
 app.use('/api/clients', require('./routes/clients'));
 
+// Staff management (owner only)
+app.use('/api/staff', require('./routes/staff'));
+
 // QR code self-identification
 app.use('/api/qr', require('./routes/qr'));
 
