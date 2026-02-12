@@ -352,8 +352,45 @@ router.post('/client-auth', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/qr/register — PUBLIC: new client first visit (no PIN)
-// Adds to pending queue so staff can see them + credit + assign PIN
+// GET /api/qr/status/:identId — PUBLIC: check if identification still active
+// Used by client on page refresh to avoid re-submitting
+// ═══════════════════════════════════════════════════════
+
+router.get('/status/:identId', (req, res) => {
+  try {
+    const { identId } = req.params;
+    const { qrToken } = req.query;
+
+    if (!qrToken) return res.status(400).json({ error: 'Token QR requis' });
+
+    const merchant = merchantQueries.findByQrToken.get(qrToken);
+    if (!merchant) return res.status(404).json({ active: false });
+
+    const queue = pendingIdents.get(merchant.id);
+    if (!queue) return res.json({ active: false });
+
+    const ident = queue.get(identId);
+    if (!ident || Date.now() - ident.createdAt > IDENT_TTL_MS) {
+      return res.json({ active: false });
+    }
+
+    res.json({
+      active: true,
+      isNew: ident.isNew,
+      clientName: ident.name,
+      pointsBalance: ident.pointsBalance,
+    });
+  } catch (error) {
+    console.error('Status error:', error);
+    res.json({ active: false });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/qr/register — PUBLIC: client identification (new OR existing)
+// Single endpoint: adds client to staff's pending queue
+// No PIN needed — PIN is only for reward redemption
 // ═══════════════════════════════════════════════════════
 
 router.post('/register', (req, res) => {
@@ -375,22 +412,21 @@ router.post('/register', (req, res) => {
     const emailLower = normalizeEmail(email);
     const phoneE164 = normalizePhone(phone);
 
-    // Check if already exists with a PIN → should use login instead
-    const existing = findEndUser(emailLower, phoneE164);
-    if (existing && existing.pin_hash) {
-      return res.status(409).json({ error: 'Ce compte existe déjà. Utilisez votre code PIN pour vous connecter.' });
-    }
-
-    // Simple rate limit: max 10 registrations per IP per hour
+    // Simple rate limit: max 20 identifications per IP per hour
     const ip = getClientIP(req);
     const regKey = 'reg:' + ip;
     const regData = pinAttempts.get(regKey) || { count: 0, lastAttempt: 0 };
-    if (regData.count >= 10 && Date.now() - regData.lastAttempt < 3600000) {
-      return res.status(429).json({ error: 'Trop d\'inscriptions. Réessayez plus tard.' });
+    if (regData.count >= 20 && Date.now() - regData.lastAttempt < 3600000) {
+      return res.status(429).json({ error: 'Trop de requêtes. Réessayez plus tard.' });
     }
     regData.count++;
     regData.lastAttempt = Date.now();
     pinAttempts.set(regKey, regData);
+
+    // Check if client already exists
+    const existing = findEndUser(emailLower, phoneE164);
+    const mc = existing ? merchantClientQueries.find.get(merchant.id, existing.id) : null;
+    const isNew = !existing;
 
     // Add to pending identifications queue
     const identId = crypto.randomBytes(8).toString('hex');
@@ -412,18 +448,24 @@ router.post('/register', (req, res) => {
 
     merchantQueue.set(identId, {
       endUserId: existing?.id || null,
-      name: name || null,
-      email: email || null,
-      phone: phone || null,
+      name: name || existing?.name || null,
+      email: email || existing?.email || null,
+      phone: phone || existing?.phone || null,
       emailLower,
       phoneE164,
-      pointsBalance: 0,
-      visitCount: 0,
-      isNew: true,
+      pointsBalance: mc?.points_balance || 0,
+      visitCount: mc?.visit_count || 0,
+      isNew,
       createdAt: Date.now(),
     });
 
-    res.json({ ok: true, identId });
+    res.json({
+      ok: true,
+      identId,
+      isNew,
+      clientName: existing?.name || name || null,
+      pointsBalance: mc?.points_balance || 0,
+    });
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
