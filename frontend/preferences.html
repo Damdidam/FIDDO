@@ -239,6 +239,10 @@
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11l3 3 3-3"/><path d="M5 14V6"/><path d="M14 5l-3-3-3 3"/><path d="M11 2v8"/></svg>
         Sauvegarde
       </button>
+      <button class="pref-tab" onclick="switchTab('qrcode', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="10" y="10" width="3" height="3"/></svg>
+        QR Code
+      </button>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
@@ -533,8 +537,65 @@
         </div>
       </div>
     </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 7: QR CODE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-qrcode" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">QR Code de votre commerce</div>
+            <div id="qrcode-alert"></div>
+            <p style="font-size: 0.75rem; color: #64748B; margin-bottom: 1rem; line-height: 1.6;">
+              Affichez ce QR Code à votre comptoir. Vos clients le scannent pour s'identifier et accumuler leurs points fidélité.
+            </p>
+
+            <div style="text-align:center; padding: 1.2rem; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px;">
+              <div id="pref-qr-canvas" style="display:inline-block; padding: 12px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);"></div>
+              <div style="margin-top: 0.6rem; font-size: 0.72rem; color: #64748B;" id="pref-qr-url"></div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+              <button class="save-btn" style="flex:1; justify-content:center;" onclick="downloadQRPdf()">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M2 11v2.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V11"/><path d="M8 2v9"/><path d="M5 8l3 3 3-3"/></svg>
+                Télécharger PDF
+              </button>
+              <button class="save-btn" style="flex:1; justify-content:center; background: white; color: #334155; border: 1.5px solid #E2E8F0; box-shadow: none;" onclick="printQR()">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M4 5V1h8v4"/><rect x="2" y="5" width="12" height="7" rx="1"/><rect x="4" y="10" width="8" height="5"/><circle cx="11" cy="7.5" r="0.5" fill="currentColor"/></svg>
+                Imprimer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Conseils d'affichage</div>
+            Imprimez le QR et placez-le sur votre <strong>comptoir</strong>, près de la caisse ou sur les <strong>tables</strong>.<br><br>
+            Le client scanne le QR avec son téléphone, entre son email, et ses points sont crédités automatiquement lors du passage.<br><br>
+            <strong>Format recommandé :</strong> A6 (10.5 x 14.8 cm) ou plus grand pour une visibilité optimale.<br><br>
+            Le QR code est <strong>permanent</strong> et unique à votre commerce. Il ne change jamais.
+          </div>
+
+          <!-- Preview mini card -->
+          <div style="margin-top: 0.8rem; border: 1.5px solid #E2E8F0; border-radius: 10px; overflow: hidden;">
+            <div style="padding: 0.7rem 0.9rem; background: white;">
+              <div style="font-size: 0.68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.4rem;">Apercu impression</div>
+              <div id="pref-qr-preview-mini" style="text-align:center; padding:0.6rem; border:1px dashed #E2E8F0; border-radius:8px; background:#FAFBFC;">
+                <div style="font-weight:700; font-size:0.9rem; color:#1E293B; margin-bottom:2px;" id="preview-merchant-name"></div>
+                <div style="font-size:0.62rem; color:#94A3B8; margin-bottom:0.5rem;">Scannez pour gagner vos points fidélité</div>
+                <div id="pref-qr-mini" style="display:inline-block;"></div>
+                <div style="font-size:0.58rem; color:#CBD5E1; margin-top:0.4rem;">Propulsé par FIDDO</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
     if (!requireOwner()) throw 'Not authorized';
@@ -984,6 +1045,111 @@
       document.getElementById('backup-preview-container').style.display = 'none';
       document.getElementById('backup-drop').style.display = 'block';
       document.getElementById('backup-file').value = '';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 7: QR CODE
+    // ═══════════════════════════════════════════════════════
+
+    let merchantQrUrl = '';
+
+    async function loadMerchantQR() {
+      try {
+        // Fetch or auto-generate QR token
+        const data = await API.call('/qr/token');
+        const baseUrl = window.location.origin;
+        merchantQrUrl = baseUrl + '/q/' + data.token;
+
+        // Main QR
+        const canvas = document.getElementById('pref-qr-canvas');
+        canvas.innerHTML = '';
+        new QRCode(canvas, {
+          text: merchantQrUrl,
+          width: 200,
+          height: 200,
+          colorDark: '#1E293B',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+
+        // URL display
+        document.getElementById('pref-qr-url').textContent = merchantQrUrl;
+
+        // Mini preview
+        document.getElementById('preview-merchant-name').textContent = merchant.business_name;
+        const mini = document.getElementById('pref-qr-mini');
+        mini.innerHTML = '';
+        new QRCode(mini, {
+          text: merchantQrUrl,
+          width: 80,
+          height: 80,
+          colorDark: '#1E293B',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+      } catch (e) {
+        showAlert('qrcode-alert', 'Impossible de charger le QR Code : ' + e.message, 'error');
+      }
+    }
+
+    // Lazy-load when tab is opened
+    let qrLoaded = false;
+    const origSwitchTab = switchTab;
+    switchTab = function(tab, btn) {
+      origSwitchTab(tab, btn);
+      if (tab === 'qrcode' && !qrLoaded) {
+        qrLoaded = true;
+        loadMerchantQR();
+      }
+    };
+
+    function downloadQRPdf() {
+      if (!merchantQrUrl) return;
+
+      // Get QR as data URL from canvas
+      const qrCanvas = document.getElementById('pref-qr-canvas').querySelector('canvas');
+      if (!qrCanvas) { showAlert('qrcode-alert', 'QR non chargé', 'error'); return; }
+      const qrDataUrl = qrCanvas.toDataURL('image/png');
+
+      // Build a printable HTML page, then trigger print-to-PDF
+      const name = merchant.business_name || 'FIDDO';
+      const printHtml = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  @page { size: A6 landscape; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 148mm; height: 105mm;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    text-align: center; background: white;
+  }
+  .name { font-size: 18pt; font-weight: 800; color: #1E293B; margin-bottom: 4mm; letter-spacing: -0.5px; }
+  .sub { font-size: 9pt; color: #64748B; margin-bottom: 6mm; }
+  .qr { padding: 4mm; border: 1px solid #E2E8F0; border-radius: 4mm; display: inline-block; }
+  .qr img { display: block; width: 45mm; height: 45mm; }
+  .url { font-size: 7pt; color: #94A3B8; margin-top: 4mm; word-break: break-all; }
+  .footer { font-size: 7pt; color: #CBD5E1; margin-top: 5mm; }
+</style></head><body>
+  <div class="name">${name.replace(/"/g, '&quot;')}</div>
+  <div class="sub">Scannez pour gagner vos points fidelit&eacute;</div>
+  <div class="qr"><img src="${qrDataUrl}"></div>
+  <div class="url">${merchantQrUrl}</div>
+  <div class="footer">Propuls&eacute; par FIDDO</div>
+</body></html>`;
+
+      const win = window.open('', '_blank');
+      win.document.write(printHtml);
+      win.document.close();
+      // Small delay for image to render
+      setTimeout(() => {
+        win.print();
+      }, 400);
+    }
+
+    function printQR() {
+      downloadQRPdf(); // same flow — browser print dialog handles both print & save-as-PDF
     }
   </script>
 </body>
