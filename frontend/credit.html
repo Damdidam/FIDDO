@@ -380,6 +380,16 @@
           </div>
 
           <!-- Amount + Notes -->
+          <div id="pin-group" class="form-group" style="display:none;">
+            <label class="form-label">🔒 Code PIN du client (4 chiffres)</label>
+            <div class="input-wrap">
+              <input type="tel" id="client-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
+              <button type="button" class="btn-clear" onclick="clearField('client-pin')">×</button>
+            </div>
+            <div class="form-hint">Ce code sera demandé au client pour utiliser sa récompense</div>
+          </div>
+
+          <!-- Amount + Notes -->
           <div class="row-2">
             <div class="form-group">
               <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
@@ -421,6 +431,8 @@
     const staff = Auth.getStaff();
     let currentMode = 'email';
     let lastCreditKey = null; // anti-double-credit
+    let lookupIsNew = false;  // true when current client is new (needs PIN)
+    let qrPin = null;         // PIN from QR session (if provided by client)
 
     // Config strip
     document.getElementById('config-strip').textContent =
@@ -441,21 +453,27 @@
       if (!el) return;
 
       if (!data.found) {
+        lookupIsNew = true;
         el.className = 'lookup-strip show new-client';
         el.innerHTML = 'Nouveau client — sera créé au crédit.';
+        showPinField(true);
         return;
       }
       const c = data.client;
       if (data.isNew) {
+        lookupIsNew = true;
         el.className = 'lookup-strip show new-client';
         el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + c.name : '');
         if (c.name && !document.getElementById('client-name').value) {
           document.getElementById('client-name').value = c.name;
           document.getElementById('client-name').classList.add('has-value');
         }
+        showPinField(!c.has_pin); // only if they don't already have a PIN
         return;
       }
 
+      lookupIsNew = false;
+      showPinField(false);
       el.className = 'lookup-strip show found';
       const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
       let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
@@ -480,6 +498,21 @@
         el.classList.remove('show');
         el.innerHTML = '';
       });
+      lookupIsNew = false;
+      showPinField(false);
+    }
+
+    function showPinField(show) {
+      const g = document.getElementById('pin-group');
+      if (!g) return;
+      g.style.display = show ? 'block' : 'none';
+      if (!show) {
+        document.getElementById('client-pin').value = '';
+      }
+      // Auto-fill from QR session if available
+      if (show && qrPin) {
+        document.getElementById('client-pin').value = qrPin;
+      }
     }
 
     // ═══════════════════════════════════════════════════════
@@ -631,9 +664,14 @@
     // REDEEM
     // ═══════════════════════════════════════════════════════
     async function redeemReward(mcId) {
-      if (!confirm('Appliquer la récompense ?')) return;
+      const pin = prompt('🔒 Code PIN du client (4 chiffres) :');
+      if (!pin) return; // cancelled
+      if (!/^\d{4}$/.test(pin)) {
+        UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
+        return;
+      }
       try {
-        const r = await API.clients.reward({ merchantClientId: mcId });
+        const r = await API.clients.reward({ merchantClientId: mcId, pin });
         UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
         triggerLookup();
       } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
@@ -666,11 +704,13 @@
         UI.clearAlert('credit-alert');
 
         const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+        const pinVal = document.getElementById('client-pin').value.trim();
 
         const r = await API.clients.credit({
           email: email || undefined, phone: phone || undefined,
           name: name || undefined, amount, notes: notes || undefined,
           idempotencyKey,
+          pin: pinVal || undefined,
         });
 
         // ── Mark this credit as done (prevent re-submit) ──
@@ -706,6 +746,7 @@
 
       // Full form reset
       lastCreditKey = null;
+      qrPin = null;
       document.getElementById('credit-form').reset();
       document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
       document.getElementById('pts-badge').textContent = '0 pts';
@@ -807,6 +848,7 @@
       if (d.email) { document.getElementById('client-email').value = d.email; document.getElementById('client-email').classList.add('has-value'); }
       if (d.phone) { document.getElementById('client-phone').value = d.phone; document.getElementById('client-phone').classList.add('has-value'); }
       if (d.name) { document.getElementById('client-name').value = d.name; document.getElementById('client-name').classList.add('has-value'); }
+      if (d.pin) { qrPin = d.pin; } // Store PIN from QR for auto-fill
 
       setTimeout(triggerLookup, 300);
       setTimeout(() => document.getElementById('amount').focus(), 600);
