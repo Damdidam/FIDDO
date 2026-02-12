@@ -235,7 +235,8 @@ function initDatabase() {
   // ───────────────────────────────────────────
   try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
-  try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT UNIQUE'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
+  db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
 
   // ───────────────────────────────────────────
   // 10. MERCHANT PREFERENCES (theme, notifications, backup)
