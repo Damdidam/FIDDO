@@ -5,64 +5,197 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Équipe — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-light: #CFFAFE;
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    }
+    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .dash * { box-sizing: border-box; }
+    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
+
+    /* ═══ HEADER ROW ═══ */
+    .pg-header { display: flex; justify-content: space-between; align-items: center; margin: 0.3rem 0 0.8rem; }
+    .pg-title { font-size: 1.05rem; font-weight: 700; color: #1E293B; letter-spacing: -0.3px; margin: 0; }
+    .add-btn { display: inline-flex; align-items: center; gap: 5px; padding: 0.35rem 0.75rem; border: none; border-radius: 16px; background: var(--gradient); color: white; font-family: inherit; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: opacity 0.12s, transform 0.12s; box-shadow: 0 2px 8px rgba(8,145,178,0.2); }
+    .add-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+
+    /* ═══ INFO BANNER ═══ */
+    .info-banner { background: #F0F9FF; border: 1px solid #BAE6FD; border-radius: 10px; padding: 0.65rem 0.85rem; margin-bottom: 0.9rem; font-size: 0.75rem; color: #0C4A6E; line-height: 1.5; }
+    .info-banner strong { font-weight: 600; }
+
+    /* ═══ STAT CARDS ═══ */
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
+    .st { background: white; border-radius: 10px; padding: 0.7rem 0.6rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .st-val { font-size: 1.5rem; font-weight: 700; line-height: 1.15; letter-spacing: -0.5px; }
+    .st-val.cyan { color: var(--primary); }
+    .st-val.green { color: #059669; }
+    .st-val.amber { color: #D97706; }
+    .st-lbl { font-size: 0.62rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600; }
+
+    /* ═══ STAFF TABLE ═══ */
+    .staff-card { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; }
+    .col-hdr { display: grid; grid-template-columns: 1fr 120px 80px 90px; gap: 0.3rem; padding: 0.4rem 0.85rem; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
+    .col-th { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #94A3B8; white-space: nowrap; }
+    .col-th-center { text-align: center; }
+    .col-th-right { text-align: right; }
+
+    .staff-body { }
+    .staff-row { display: grid; grid-template-columns: 1fr 120px 80px 90px; gap: 0.3rem; padding: 0.55rem 0.85rem; border-bottom: 1px solid #F8FAFC; align-items: center; transition: background 0.1s; }
+    .staff-row:last-child { border-bottom: none; }
+    .staff-row:hover { background: #FAFBFC; }
+
+    .sf-info { min-width: 0; }
+    .sf-name { font-weight: 600; color: #1E293B; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sf-email { font-size: 0.66rem; color: #94A3B8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .sf-role { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2px; text-align: center; }
+    .sf-role.owner { background: #FEF3C7; color: #92400E; }
+    .sf-role.manager { background: #DBEAFE; color: #1E40AF; }
+    .sf-role.cashier { background: #F3E8FF; color: #6B21A8; }
+
+    .sf-status { text-align: center; }
+    .sf-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+    .sf-dot.active { background: #10B981; }
+    .sf-dot.inactive { background: #E2E8F0; }
+    .sf-status-text { font-size: 0.68rem; color: #64748B; }
+
+    .sf-last { font-size: 0.68rem; color: #94A3B8; text-align: right; }
+
+    .staff-empty { padding: 2rem 1rem; text-align: center; color: #94A3B8; font-size: 0.82rem; }
+
+    /* ═══ ROLE LEGEND ═══ */
+    .role-legend { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.9rem; }
+    .rl-card { background: white; border-radius: 10px; padding: 0.7rem 0.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .rl-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .rl-icon { width: 16px; height: 16px; flex-shrink: 0; }
+    .rl-title { font-size: 0.75rem; font-weight: 700; color: #1E293B; }
+    .rl-desc { font-size: 0.66rem; color: #94A3B8; line-height: 1.4; }
+
+    /* ═══ MODAL ═══ */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.45); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal-box { background: white; border-radius: 12px; width: 90%; max-width: 420px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+    .modal-top { padding: 1rem 1.2rem; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center; }
+    .modal-top h2 { font-size: 0.92rem; font-weight: 700; color: #1E293B; margin: 0; }
+    .modal-close { font-size: 1.2rem; cursor: pointer; color: #94A3B8; background: none; border: none; padding: 0.2rem; }
+    .modal-body { padding: 1rem 1.2rem 1.3rem; }
+    .fg { margin-bottom: 0.7rem; }
+    .fg label { display: block; font-size: 0.68rem; font-weight: 600; color: #475569; margin-bottom: 3px; }
+    .fg input, .fg select { width: 100%; padding: 0.4rem 0.5rem; border: 1.5px solid #E2E8F0; border-radius: 6px; font-family: inherit; font-size: 0.78rem; color: #334155; background: white; }
+    .fg input:focus, .fg select:focus { outline: none; border-color: var(--primary); }
+    .fg .help { font-size: 0.62rem; color: #94A3B8; margin-top: 2px; }
+    .submit-btn { width: 100%; padding: 0.45rem 1rem; border: none; border-radius: 10px; font-family: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; transition: all 0.12s; }
+    .submit-btn-primary { background: var(--gradient); color: white; box-shadow: 0 2px 8px rgba(8,145,178,0.2); }
+    .submit-btn-primary:hover { opacity: 0.92; transform: translateY(-1px); }
+    .submit-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+
+    .coming-soon { background: #FEF3C7; border: 1px solid #FDE68A; border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 0.72rem; color: #92400E; text-align: center; margin-bottom: 0.8rem; font-weight: 500; }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 768px) {
+      .dash-wrap { padding: 0.5rem; }
+      .stats-row { gap: 0.45rem; }
+      .st-val { font-size: 1.3rem; }
+      .col-hdr, .staff-row { grid-template-columns: 1fr 80px 70px; gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+      .col-th-last, .sf-last-cell { display: none; }
+      .role-legend { grid-template-columns: 1fr; }
+      .modal-box { width: 95%; }
+    }
+    @media (max-width: 480px) {
+      .col-hdr, .staff-row { grid-template-columns: 1fr 70px; }
+      .col-th-status, .sf-status-cell { display: none; }
+    }
+  </style>
 </head>
-<body>
+<body class="dash">
   <nav class="navbar">
     <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container">
-    <div class="flex-between" style="margin: 1.5rem 0;">
-      <h1>Mon équipe</h1>
-      <button class="btn btn-primary" onclick="showAddModal()">+ Ajouter un membre</button>
+  <div class="dash-wrap">
+    <div class="pg-header">
+      <h1 class="pg-title">Mon équipe</h1>
+      <button class="add-btn" onclick="showAddModal()">+ Ajouter</button>
     </div>
 
-    <div class="alert alert-info">
-      ℹ️ Les membres de votre équipe peuvent créditer des points aux clients.
-      Les <strong>managers</strong> peuvent aussi voir les clients et l'historique.
-      Les <strong>caissiers</strong> ont un accès limité (crédit uniquement, max 200€).
+    <div class="info-banner">
+      Les <strong>managers</strong> voient le tableau de bord, les clients et l'historique.
+      Les <strong>caissiers</strong> ont un accès limité : crédit uniquement, max 200 €.
     </div>
 
-    <div id="staff-list"></div>
+    <div class="stats-row">
+      <div class="st"><div class="st-val cyan" id="s-total">–</div><div class="st-lbl">Membres</div></div>
+      <div class="st"><div class="st-val green" id="s-active">–</div><div class="st-lbl">Actifs</div></div>
+      <div class="st"><div class="st-val amber" id="s-inactive">–</div><div class="st-lbl">Inactifs</div></div>
+    </div>
+
+    <div class="staff-card">
+      <div class="col-hdr">
+        <div class="col-th">Membre</div>
+        <div class="col-th">Rôle</div>
+        <div class="col-th col-th-center col-th-status">Statut</div>
+        <div class="col-th col-th-right col-th-last">Dernière cx.</div>
+      </div>
+      <div class="staff-body" id="staff-body">
+        <div class="staff-empty">Chargement…</div>
+      </div>
+    </div>
+
+    <div class="role-legend">
+      <div class="rl-card">
+        <div class="rl-header"><span class="rl-icon"><svg viewBox="0 0 16 16" fill="none" stroke="#92400E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8 1L2 4v4c0 3.3 2.6 5.5 6 7 3.4-1.5 6-3.7 6-7V4L8 1z"/></svg></span><span class="rl-title">Propriétaire</span></div>
+        <div class="rl-desc">Accès complet : paramètres, équipe, clients, crédit, export, fusion, suppression</div>
+      </div>
+      <div class="rl-card">
+        <div class="rl-header"><span class="rl-icon"><svg viewBox="0 0 16 16" fill="none" stroke="#1E40AF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="8" width="3" height="6" rx="0.5"/><rect x="6.5" y="4" width="3" height="10" rx="0.5"/><rect x="12" y="1" width="3" height="13" rx="0.5"/></svg></span><span class="rl-title">Manager</span></div>
+        <div class="rl-desc">Tableau de bord, liste clients, historique, ajustements, crédit illimité</div>
+      </div>
+      <div class="rl-card">
+        <div class="rl-header"><span class="rl-icon"><svg viewBox="0 0 16 16" fill="none" stroke="#6B21A8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="14" height="10" rx="1.5"/><line x1="1" y1="6.5" x2="15" y2="6.5"/><line x1="4" y1="10" x2="8" y2="10"/></svg></span><span class="rl-title">Caissier</span></div>
+        <div class="rl-desc">Crédit de points uniquement, montant max 200 €, session de 8h</div>
+      </div>
+    </div>
   </div>
 
-  <!-- Add Staff Modal -->
-  <div id="add-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
+  <!-- ═══ ADD STAFF MODAL ═══ -->
+  <div class="modal-overlay" id="add-modal">
+    <div class="modal-box">
+      <div class="modal-top">
         <h2>Ajouter un membre</h2>
-        <button class="close-modal" onclick="closeAddModal()">×</button>
+        <button class="modal-close" onclick="closeAddModal()">×</button>
       </div>
       <div class="modal-body">
+        <div class="coming-soon">
+          Bientôt disponible — la gestion d'équipe sera activée dans une prochaine mise à jour.
+        </div>
+
         <div id="add-alert"></div>
 
-        <p class="text-muted text-sm mb-2">
-          ⚠️ La gestion d'équipe sera bientôt disponible. Pour l'instant, contactez le support pour ajouter des membres.
-        </p>
-
-        <div class="form-group">
-          <label class="form-label">Nom *</label>
-          <input type="text" id="add-name" class="form-control" placeholder="Marie Dupont">
+        <div class="fg">
+          <label>Nom complet *</label>
+          <input type="text" id="add-name" placeholder="Marie Dupont">
         </div>
-        <div class="form-group">
-          <label class="form-label">Email de connexion *</label>
-          <input type="email" id="add-email" class="form-control" placeholder="marie@email.com">
-          <small class="form-help">Un seul compte par email (même entre différents commerces)</small>
+        <div class="fg">
+          <label>Email de connexion *</label>
+          <input type="email" id="add-email" placeholder="marie@email.com">
+          <div class="help">Un seul compte par email, même entre différents commerces</div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Mot de passe temporaire *</label>
-          <input type="text" id="add-password" class="form-control" placeholder="Minimum 6 caractères">
+        <div class="fg">
+          <label>Mot de passe temporaire *</label>
+          <input type="text" id="add-password" placeholder="Minimum 6 caractères">
         </div>
-        <div class="form-group">
-          <label class="form-label">Rôle *</label>
-          <select id="add-role" class="form-control">
-            <option value="cashier">Caissier — Créditer uniquement</option>
-            <option value="manager">Manager — Créditer + voir clients</option>
+        <div class="fg">
+          <label>Rôle *</label>
+          <select id="add-role">
+            <option value="cashier">Caissier — Crédit uniquement</option>
+            <option value="manager">Manager — Crédit + clients</option>
           </select>
         </div>
 
-        <button class="btn btn-primary btn-block" onclick="addStaffMember()" disabled>
+        <button class="submit-btn submit-btn-primary" onclick="addStaffMember()" disabled>
           Bientôt disponible
         </button>
       </div>
@@ -74,46 +207,87 @@
     if (!requireOwner()) throw 'Not authorized';
 
     const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
 
-    async function loadStaff() {
-      // For now, show the current user as the only staff member
-      // Staff management API endpoints will be added in a future version
-      const container = document.getElementById('staff-list');
-      
-      container.innerHTML = `
-        <div class="card">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Nom</th>
-                <th>Email</th>
-                <th>Rôle</th>
-                <th>Statut</th>
-                <th>Dernière connexion</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><strong>${staff.display_name}</strong></td>
-                <td>${staff.email}</td>
-                <td><span class="badge badge-info">owner</span></td>
-                <td><span class="badge badge-success">Actif</span></td>
-                <td>Maintenant</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-        <div class="alert alert-warning">
-          🚧 La gestion d'équipe complète (ajout/suppression de caissiers et managers) sera disponible dans une prochaine mise à jour.
-        </div>
-      `;
+    function fmtSince(d) {
+      if (!d) return '—';
+      const days = Math.floor((Date.now() - new Date(d)) / 86400000);
+      if (days === 0) return "Auj.";
+      if (days === 1) return 'Hier';
+      if (days < 7) return days + 'j';
+      if (days < 30) return Math.floor(days / 7) + ' sem.';
+      return Math.floor(days / 30) + ' mois';
     }
 
-    function showAddModal() { document.getElementById('add-modal').classList.add('active'); }
-    function closeAddModal() { document.getElementById('add-modal').classList.remove('active'); }
+    // ═══ LOAD STAFF ═══
+    // Uses existing GET /api/auth/verify which returns current staff.
+    // For now we show only the current user.
+    // When backend staff management is built, this will call a real list endpoint.
+
+    async function loadStaff() {
+      const body = document.getElementById('staff-body');
+      try {
+        // Try the staff list endpoint if it exists, fallback to current user only
+        let staffList;
+        try {
+          const data = await API.call('/staff');
+          staffList = data.staff;
+        } catch (e) {
+          // Endpoint doesn't exist yet — show current user only
+          staffList = [staff];
+        }
+
+        const totalCount = staffList.length;
+        const activeCount = staffList.filter(s => s.is_active !== 0 && s.is_active !== false).length;
+        const inactiveCount = totalCount - activeCount;
+
+        document.getElementById('s-total').textContent = totalCount;
+        document.getElementById('s-active').textContent = activeCount;
+        document.getElementById('s-inactive').textContent = inactiveCount;
+
+        if (staffList.length === 0) {
+          body.innerHTML = '<div class="staff-empty">Aucun membre</div>';
+          return;
+        }
+
+        // Role sort order
+        const roleOrder = { owner: 0, manager: 1, cashier: 2 };
+        staffList.sort((a, b) => (roleOrder[a.role] || 9) - (roleOrder[b.role] || 9));
+
+        let html = '';
+        staffList.forEach(s => {
+          const isActive = s.is_active !== 0 && s.is_active !== false;
+          const isSelf = s.id === staff.id;
+          html += '<div class="staff-row">';
+          html += '<div class="sf-info">';
+          html += '<div class="sf-name">' + esc(s.display_name || s.name || 'N/A') + (isSelf ? ' <span style="font-size:0.58rem;color:#94A3B8;font-weight:400">(vous)</span>' : '') + '</div>';
+          html += '<div class="sf-email">' + esc(s.email) + '</div>';
+          html += '</div>';
+          html += '<div><span class="sf-role ' + s.role + '">' + s.role + '</span></div>';
+          html += '<div class="sf-status sf-status-cell"><span class="sf-dot ' + (isActive ? 'active' : 'inactive') + '"></span><span class="sf-status-text">' + (isActive ? 'Actif' : 'Inactif') + '</span></div>';
+          html += '<div class="sf-last sf-last-cell">' + (isSelf ? 'Maintenant' : fmtSince(s.last_login)) + '</div>';
+          html += '</div>';
+        });
+
+        body.innerHTML = html;
+      } catch (err) {
+        body.innerHTML = '<div class="staff-empty">Erreur de chargement</div>';
+        console.error('Staff load error:', err);
+      }
+    }
+
+    // ═══ ADD MODAL ═══
+    function showAddModal() { document.getElementById('add-modal').classList.add('open'); }
+    function closeAddModal() { document.getElementById('add-modal').classList.remove('open'); }
     document.getElementById('add-modal').addEventListener('click', (e) => { if (e.target.id === 'add-modal') closeAddModal(); });
 
+    function addStaffMember() {
+      // Placeholder — will be implemented when backend routes are ready
+    }
+
+    // ═══ INIT ═══
     loadStaff();
   </script>
 </body>
