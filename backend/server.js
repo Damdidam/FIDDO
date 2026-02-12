@@ -15,12 +15,18 @@ const PORT = process.env.PORT || 3000;
 // ═══════════════════════════════════════════════════════
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));          // ← V3.5: raised from default for PDF upload
 app.use(cookieParser());
 app.use(requestIdMiddleware); // Attach unique request ID to every request
 
 // Static files
 app.use(express.static(path.join(__dirname, '../frontend')));
+
+// ═══════════════════════════════════════════════════════
+// INIT ADDITIONAL TABLES (V3.5)
+// ═══════════════════════════════════════════════════════
+
+require('./database-messages');                      // ← V3.5: messages & invoices tables
 
 // ═══════════════════════════════════════════════════════
 // API ROUTES
@@ -44,15 +50,19 @@ app.use('/api/announcements', require('./routes/announcements'));
 // Dashboard (stats + activity feed)
 app.use('/api/dashboard', require('./routes/dashboard'));
 
+// Messages (merchant-side: read messages, download invoices)  ← V3.5
+app.use('/api/messages', require('./routes/messages'));
+
 // Super admin
 app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
 app.use('/api/admin/backups', require('./routes/admin/backups'));
 app.use('/api/admin/announcements', require('./routes/admin/announcements'));
+app.use('/api/admin/messages', require('./routes/admin/messages'));  // ← V3.5
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '3.4.0', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: '3.5.0', timestamp: new Date().toISOString() });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -66,6 +76,7 @@ app.get('/clients',     (req, res) => res.sendFile(path.join(__dirname, '../fron
 app.get('/credit',      (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
 app.get('/staff',       (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
 app.get('/preferences', (req, res) => res.sendFile(path.join(__dirname, '../frontend/preferences.html')));
+app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/messages.html')));  // ← V3.5
 
 // QR client-facing form
 app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
@@ -73,6 +84,7 @@ app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../fron
 // Super admin pages
 app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html')));
+app.get('/admin/messages',  (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/messages.html')));  // ← V3.5
 
 // Email validation
 app.get('/validate', (req, res) => {
@@ -105,7 +117,7 @@ const { startScheduler } = require('./services/backup-db');
 startScheduler();
 
 app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V3.4 Multi-Tenant — Port ${PORT}`);
+  console.log(`🐕 FIDDO V3.5 Multi-Tenant — Port ${PORT}`);
 });
 
 module.exports = app;
