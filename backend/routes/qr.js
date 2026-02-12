@@ -150,8 +150,20 @@ function findEndUser(emailLower, phoneE164) {
 router.post('/generate', authenticateStaff, requireRole('owner'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const token = crypto.randomBytes(6).toString('base64url'); // ~8 chars, URL-safe
+    const merchant = merchantQueries.findById.get(merchantId);
 
+    // If token already exists, return it (never regenerate)
+    if (merchant.qr_token) {
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      return res.json({
+        token: merchant.qr_token,
+        url: `${baseUrl}/q/${merchant.qr_token}`,
+        existing: true,
+      });
+    }
+
+    // First time only: generate token
+    const token = crypto.randomBytes(6).toString('base64url'); // ~8 chars, URL-safe
     merchantQueries.setQrToken.run(token, merchantId);
 
     logAudit({
@@ -168,6 +180,7 @@ router.post('/generate', authenticateStaff, requireRole('owner'), (req, res) => 
     res.json({
       token,
       url: `${baseUrl}/q/${token}`,
+      existing: false,
     });
   } catch (error) {
     console.error('QR generate error:', error);
@@ -187,9 +200,16 @@ router.get('/token', authenticateStaff, (req, res) => {
 
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
 
+    // Auto-generate on first access (permanent, never changes)
+    let token = merchant.qr_token;
+    if (!token) {
+      token = crypto.randomBytes(6).toString('base64url');
+      merchantQueries.setQrToken.run(token, merchant.id);
+    }
+
     res.json({
-      token: merchant.qr_token || null,
-      url: merchant.qr_token ? `${baseUrl}/q/${merchant.qr_token}` : null,
+      token,
+      url: `${baseUrl}/q/${token}`,
     });
   } catch (error) {
     console.error('QR token fetch error:', error);
