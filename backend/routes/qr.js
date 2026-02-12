@@ -30,6 +30,10 @@ const pendingIdents = new Map();
 // Rate limiting for PIN attempts: Map<"ip:identifier", { count, lockedUntil }>
 const pinAttempts = new Map();
 
+// Cooldown for recent identifications: Map<"merchantId:identifier", { ts, identId, isNew, name, pointsBalance }>
+const identCooldowns = new Map();
+const IDENT_COOLDOWN_MS = 15 * 60 * 1000; // 15 min
+
 // Cleanup every 2 minutes
 setInterval(() => {
   const now = Date.now();
@@ -50,6 +54,13 @@ setInterval(() => {
       pinAttempts.delete(key);
     } else if (!data.lockedUntil && now - data.lastAttempt > PIN_LOCKOUT_MS) {
       pinAttempts.delete(key);
+    }
+  }
+
+  // Clean expired identification cooldowns
+  for (const [key, data] of identCooldowns) {
+    if (now - data.ts > IDENT_COOLDOWN_MS) {
+      identCooldowns.delete(key);
     }
   }
 }, 2 * 60 * 1000);
@@ -366,20 +377,33 @@ router.get('/status/:identId', (req, res) => {
     const merchant = merchantQueries.findByQrToken.get(qrToken);
     if (!merchant) return res.status(404).json({ active: false });
 
+    // Check pending queue first
     const queue = pendingIdents.get(merchant.id);
-    if (!queue) return res.json({ active: false });
-
-    const ident = queue.get(identId);
-    if (!ident || Date.now() - ident.createdAt > IDENT_TTL_MS) {
-      return res.json({ active: false });
+    if (queue) {
+      const ident = queue.get(identId);
+      if (ident && Date.now() - ident.createdAt <= IDENT_TTL_MS) {
+        return res.json({
+          active: true,
+          isNew: ident.isNew,
+          clientName: ident.name,
+          pointsBalance: ident.pointsBalance,
+        });
+      }
     }
 
-    res.json({
-      active: true,
-      isNew: ident.isNew,
-      clientName: ident.name,
-      pointsBalance: ident.pointsBalance,
-    });
+    // Check cooldown (ident may have been consumed by staff, but client is still "done")
+    for (const [key, cd] of identCooldowns) {
+      if (cd.identId === identId && Date.now() - cd.ts < IDENT_COOLDOWN_MS) {
+        return res.json({
+          active: true,
+          isNew: cd.isNew,
+          clientName: cd.name,
+          pointsBalance: cd.pointsBalance,
+        });
+      }
+    }
+
+    res.json({ active: false });
   } catch (error) {
     console.error('Status error:', error);
     res.json({ active: false });
@@ -423,6 +447,21 @@ router.post('/register', (req, res) => {
     regData.lastAttempt = Date.now();
     pinAttempts.set(regKey, regData);
 
+    // Cooldown check: if same person identified recently at this merchant, return cached response
+    const identifier = emailLower || phoneE164;
+    const cooldownKey = merchant.id + ':' + identifier;
+    const cooldown = identCooldowns.get(cooldownKey);
+    if (cooldown && Date.now() - cooldown.ts < IDENT_COOLDOWN_MS) {
+      return res.json({
+        ok: true,
+        identId: cooldown.identId,
+        isNew: cooldown.isNew,
+        clientName: cooldown.name,
+        pointsBalance: cooldown.pointsBalance,
+        cached: true,
+      });
+    }
+
     // Check if client already exists
     const existing = findEndUser(emailLower, phoneE164);
     const mc = existing ? merchantClientQueries.find.get(merchant.id, existing.id) : null;
@@ -459,13 +498,24 @@ router.post('/register', (req, res) => {
       createdAt: Date.now(),
     });
 
-    res.json({
+    // Save cooldown to prevent re-submission spam
+    const responseData = {
       ok: true,
       identId,
       isNew,
       clientName: existing?.name || name || null,
       pointsBalance: mc?.points_balance || 0,
+    };
+
+    identCooldowns.set(cooldownKey, {
+      ts: Date.now(),
+      identId,
+      isNew,
+      name: existing?.name || name || null,
+      pointsBalance: mc?.points_balance || 0,
     });
+
+    res.json(responseData);
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
