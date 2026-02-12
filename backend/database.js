@@ -237,6 +237,21 @@ function initDatabase() {
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
+  try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token_expires TEXT'); } catch (e) { /* already exists */ }
+
+  // Backfill qr_tokens for existing end_users
+  const usersWithoutQr = db.prepare('SELECT id FROM end_users WHERE qr_token IS NULL AND deleted_at IS NULL').all();
+  if (usersWithoutQr.length > 0) {
+    const setQr = db.prepare("UPDATE end_users SET qr_token = ? WHERE id = ?");
+    const backfill = db.transaction(() => {
+      for (const u of usersWithoutQr) {
+        setQr.run(require('crypto').randomBytes(8).toString('base64url'), u.id);
+      }
+    });
+    backfill();
+    console.log(`✅ Backfilled qr_token for ${usersWithoutQr.length} existing clients`);
+  }
 
   // ───────────────────────────────────────────
   // 10. MERCHANT PREFERENCES (theme, notifications, backup)
@@ -428,6 +443,11 @@ const endUserQueries = {
   `),
 
   setPin: db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?"),
+  findByQrToken: db.prepare('SELECT * FROM end_users WHERE qr_token = ? AND deleted_at IS NULL'),
+  setQrToken: db.prepare("UPDATE end_users SET qr_token = ?, updated_at = datetime('now') WHERE id = ?"),
+  setMagicToken: db.prepare("UPDATE end_users SET magic_token = ?, magic_token_expires = ?, updated_at = datetime('now') WHERE id = ?"),
+  findByMagicToken: db.prepare('SELECT * FROM end_users WHERE magic_token = ? AND deleted_at IS NULL'),
+  clearMagicToken: db.prepare("UPDATE end_users SET magic_token = NULL, magic_token_expires = NULL, updated_at = datetime('now') WHERE id = ?"),
 };
 
 // ─── End User Aliases ────────────────────────────────
