@@ -18,6 +18,7 @@ app.use(cors({ origin: true, credentials: true }));
 app.use(express.json({ limit: '10mb' }));          // raised for PDF upload
 app.use(cookieParser());
 app.use(requestIdMiddleware);
+app.use('/api/staff', require('./routes/staff'));
 
 // Static files
 app.use(express.static(path.join(__dirname, '../frontend')));
