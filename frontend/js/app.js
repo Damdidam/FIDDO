@@ -109,8 +109,16 @@ const API = {
     block: (id) => API.call(`/clients/${id}/block`, { method: 'POST' }),
     unblock: (id) => API.call(`/clients/${id}/unblock`, { method: 'POST' }),
     setCustomReward: (id, customReward) => API.call(`/clients/${id}/custom-reward`, { method: 'PUT', body: JSON.stringify({ customReward }) }),
-    setPin: (id, pin) => API.call(`/clients/${id}/pin`, { method: 'POST', body: JSON.stringify({ pin }) }),
     exportCSV: () => { window.location.href = `${API_BASE_URL}/clients/export/csv`; },
+  },
+
+  staff: {
+    list: () => API.call('/staff'),
+    create: (d) => API.call('/staff', { method: 'POST', body: JSON.stringify(d) }),
+    updateRole: (id, role) => API.call(`/staff/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+    toggle: (id) => API.call(`/staff/${id}/toggle`, { method: 'PUT' }),
+    resetPassword: (id, password) => API.call(`/staff/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+    delete: (id) => API.call(`/staff/${id}`, { method: 'DELETE' }),
   },
 
   preferences: {
