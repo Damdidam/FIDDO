@@ -206,44 +206,6 @@
     }
     .feed-more button:hover { border-color: var(--primary); color: var(--primary); }
 
-    /* ═══ SETTINGS (owner, below feed) ═══ */
-
-    .settings-card {
-      background: white; border-radius: 10px; padding: 0.85rem 1rem;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-top: 1rem;
-      max-width: 420px;
-    }
-    .settings-hdr { font-size: 0.78rem; font-weight: 600; color: #1E293B; margin-bottom: 0.6rem; }
-    .set-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 0.5rem; }
-    .set-label {
-      font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.3px; color: #64748B; margin-bottom: 0.15rem;
-    }
-    .set-input {
-      width: 100%; padding: 0.32rem 0.45rem; border: 1.5px solid #E2E8F0;
-      border-radius: 5px; font-family: inherit; font-size: 0.8rem;
-      color: #1E293B; background: #FAFBFC;
-    }
-    .set-input:focus {
-      outline: none; border-color: var(--primary);
-      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 12%, transparent);
-    }
-    .set-footer { display: flex; align-items: center; gap: 0.6rem; }
-    .set-btn {
-      padding: 0.35rem 1rem; border: none; border-radius: 6px;
-      background: var(--gradient); color: white; font-family: inherit;
-      font-size: 0.75rem; font-weight: 600; cursor: pointer;
-    }
-    .set-btn:hover { opacity: 0.92; }
-    .set-saved {
-      display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
-      background: #D1FAE5; color: #047857; font-size: 0.7rem; font-weight: 600;
-    }
-    .set-error {
-      display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
-      background: #FEE2E2; color: #B91C1C; font-size: 0.7rem; font-weight: 600;
-    }
-
     /* ═══ RESPONSIVE ═══ */
 
     @media (max-width: 768px) {
@@ -257,15 +219,12 @@
       }
       .col-th-amount, .tx-amount-cell { display: none; }
       .toolbar { gap: 0.25rem; }
-      .set-row { grid-template-columns: 1fr 1fr; }
-      .settings-card { max-width: 100%; }
     }
     @media (max-width: 480px) {
       .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.45rem; }
       .st { padding: 0.55rem 0.4rem; }
       .st-val { font-size: 1.15rem; }
       .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.68rem; }
-      .set-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -344,30 +303,7 @@
       </div>
     </div>
 
-    <!-- ════════ SETTINGS (owner only) ════════ -->
-    <div class="settings-card" id="settings-card" style="display:none;">
-      <div class="settings-hdr">⚙️ Paramètres fidélité</div>
-      <form id="settings-form">
-        <div class="set-row">
-          <div class="set-group">
-            <div class="set-label">Points par euro</div>
-            <input type="number" id="set-ppe" class="set-input" step="0.1" min="0.1">
-          </div>
-          <div class="set-group">
-            <div class="set-label">Points pour récompense</div>
-            <input type="number" id="set-pfr" class="set-input" min="1">
-          </div>
-          <div class="set-group">
-            <div class="set-label">Description récompense</div>
-            <input type="text" id="set-desc" class="set-input" placeholder="Boisson offerte">
-          </div>
-        </div>
-        <div class="set-footer">
-          <button type="submit" class="set-btn">Enregistrer</button>
-          <span id="settings-alert"></span>
-        </div>
-      </form>
-    </div>
+
   </div>
 
   <script src="/js/app.js"></script>
@@ -383,36 +319,6 @@
     let allTransactions = [];
     let sortCol = 'time';
     let sortAsc = false; // default: newest first
-
-    // ═══ SETTINGS (owner only) ═══
-
-    if (staff.role === 'owner') {
-      document.getElementById('settings-card').style.display = '';
-      document.getElementById('set-ppe').value = merchant.points_per_euro;
-      document.getElementById('set-pfr').value = merchant.points_for_reward;
-      document.getElementById('set-desc').value = merchant.reward_description;
-    }
-
-    document.getElementById('settings-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const alertEl = document.getElementById('settings-alert');
-      try {
-        const settings = {
-          pointsPerEuro: parseFloat(document.getElementById('set-ppe').value),
-          pointsForReward: parseInt(document.getElementById('set-pfr').value),
-          rewardDescription: document.getElementById('set-desc').value,
-        };
-        await API.auth.updateSettings(settings);
-        merchant.points_per_euro = settings.pointsPerEuro;
-        merchant.points_for_reward = settings.pointsForReward;
-        merchant.reward_description = settings.rewardDescription;
-        Auth.setSession(staff, merchant);
-        alertEl.innerHTML = '<span class="set-saved">✓ Enregistré</span>';
-        setTimeout(() => alertEl.innerHTML = '', 3000);
-      } catch (err) {
-        alertEl.innerHTML = '<span class="set-error">⚠ ' + err.message + '</span>';
-      }
-    });
 
     // ═══ DATE HELPERS ═══
 
