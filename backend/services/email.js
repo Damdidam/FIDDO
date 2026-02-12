@@ -172,16 +172,6 @@ function sendMerchantRejectedEmail(merchantEmail, businessName, reason) {
   });
 }
 
-module.exports = {
-  sendMail,
-  sendValidationEmail,
-  sendPointsCreditedEmail,
-  sendMerchantValidatedEmail,
-  sendMerchantRejectedEmail,
-  sendMerchantInfoChangedEmail,
-  sendPasswordChangedEmail,
-};
-
 /**
  * Email de notification au super admin quand un merchant modifie ses infos.
  */
@@ -234,3 +224,43 @@ function sendPasswordChangedEmail(staffEmail, displayName) {
     `,
   });
 }
+
+/**
+ * Email de notification de changement de code PIN fidélité.
+ */
+function sendPinChangedEmail(clientEmail, businessName) {
+  sendMail({
+    to: clientEmail,
+    subject: `${businessName} — Votre code PIN fidélité a été modifié 🔒`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891B2;">Code PIN modifié 🔒</h2>
+        <p>Votre code PIN de fidélité chez <strong>${businessName}</strong> a été modifié.</p>
+        <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <p style="margin: 0; color: #92400E;">
+            <strong>⚠️ Vous n'êtes pas à l'origine de ce changement ?</strong><br>
+            Rendez-vous en personne chez <strong>${businessName}</strong> pour faire corriger votre code PIN.
+          </p>
+        </div>
+        <p style="font-size: 13px; color: #666;">
+          Ce code PIN protège vos récompenses fidélité. Ne le partagez avec personne.
+        </p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+        <p style="font-size: 12px; color: #666; text-align: center;">
+          ${businessName} | Programme de fidélité
+        </p>
+      </div>
+    `,
+  });
+}
+
+module.exports = {
+  sendMail,
+  sendValidationEmail,
+  sendPointsCreditedEmail,
+  sendMerchantValidatedEmail,
+  sendMerchantRejectedEmail,
+  sendMerchantInfoChangedEmail,
+  sendPasswordChangedEmail,
+  sendPinChangedEmail,
+};
