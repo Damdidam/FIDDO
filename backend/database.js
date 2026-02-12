@@ -1,560 +1,891 @@
-const Database = require('better-sqlite3');
-const path = require('path');
-
-// ═══════════════════════════════════════════════════════
-// DATABASE INIT
-// ═══════════════════════════════════════════════════════
-
-const DB_PATH = process.env.NODE_ENV === 'production'
-  ? '/data/fiddo.db'
-  : path.join(__dirname, 'fiddo.db');
-
-const db = new Database(DB_PATH);
-
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
-// ═══════════════════════════════════════════════════════
-// DDL — Schema V3.1 (post-review)
-// ═══════════════════════════════════════════════════════
-
-function initDatabase() {
-
-  // ───────────────────────────────────────────
-  // 1. SUPER ADMINS
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS super_admins (
-      id         INTEGER PRIMARY KEY AUTOINCREMENT,
-      email      TEXT UNIQUE NOT NULL,
-      password   TEXT NOT NULL,
-      name       TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 2. MERCHANTS
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS merchants (
-      id                  INTEGER PRIMARY KEY AUTOINCREMENT,
-      business_name       TEXT NOT NULL,
-      address             TEXT NOT NULL,
-      vat_number          TEXT UNIQUE NOT NULL,
-      email               TEXT NOT NULL,
-      phone               TEXT NOT NULL,
-      owner_phone         TEXT NOT NULL,
-
-      status              TEXT NOT NULL DEFAULT 'pending'
-                          CHECK(status IN ('pending','active','suspended','rejected','cancelled')),
-      rejection_reason    TEXT,
-
-      points_per_euro     REAL NOT NULL DEFAULT 1.0,
-      points_for_reward   INTEGER NOT NULL DEFAULT 100,
-      reward_description  TEXT NOT NULL DEFAULT 'Récompense offerte',
-
-      billing_status      TEXT NOT NULL DEFAULT 'trial'
-                          CHECK(billing_status IN ('trial','paid','overdue','cancelled')),
-
-      validated_at        TEXT,
-      validated_by        INTEGER REFERENCES super_admins(id),
-      suspended_at        TEXT,
-      cancelled_at        TEXT,
-      cancellation_reason TEXT,
-
-      created_at          TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 3. STAFF ACCOUNTS
-  //    email = globalement unique (un humain = un login)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS staff_accounts (
-      id                        INTEGER PRIMARY KEY AUTOINCREMENT,
-      merchant_id               INTEGER NOT NULL REFERENCES merchants(id),
-      email                     TEXT UNIQUE NOT NULL,
-      password                  TEXT NOT NULL,
-      display_name              TEXT NOT NULL,
-      role                      TEXT NOT NULL CHECK(role IN ('owner','manager','cashier')),
-      is_active                 INTEGER NOT NULL DEFAULT 0,
-
-      last_login                TEXT,
-      failed_login_count        INTEGER NOT NULL DEFAULT 0,
-      locked_until              TEXT,
-
-      password_reset_token      TEXT,
-      password_reset_expires_at TEXT,
-
-      created_at                TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 4. END USERS (identité globale)
-  //    email/phone   = valeurs brutes (affichage)
-  //    email_lower/phone_e164 = normalisées (unicité + recherche)
-  //    CHECK : au moins un identifiant, sauf si soft-deleted
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS end_users (
-      id                INTEGER PRIMARY KEY AUTOINCREMENT,
-
-      email             TEXT,
-      phone             TEXT,
-      email_lower       TEXT,
-      phone_e164        TEXT,
-
-      name              TEXT,
-
-      email_validated   INTEGER NOT NULL DEFAULT 0,
-      validation_token  TEXT,
-
-      qr_token          TEXT,
-
-      consent_date      TEXT,
-      consent_version   TEXT,
-      consent_method    TEXT,
-
-      is_blocked        INTEGER NOT NULL DEFAULT 0,
-      deleted_at        TEXT,
-
-      created_at        TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at        TEXT NOT NULL DEFAULT (datetime('now')),
-
-      CHECK (
-        (email_lower IS NOT NULL OR phone_e164 IS NOT NULL)
-        OR deleted_at IS NOT NULL
-      )
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 5. END USER ALIASES (identifiants historiques post-fusion)
-  //    UNIQUE(alias_type, alias_value) → un alias ne peut pointer que vers un seul end_user
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS end_user_aliases (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      end_user_id INTEGER NOT NULL REFERENCES end_users(id),
-      alias_type  TEXT NOT NULL CHECK(alias_type IN ('email','phone')),
-      alias_value TEXT NOT NULL,
-      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 6. MERCHANT CLIENTS (relation merchant ↔ end_user, points isolés)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS merchant_clients (
-      id            INTEGER PRIMARY KEY AUTOINCREMENT,
-      merchant_id   INTEGER NOT NULL REFERENCES merchants(id),
-      end_user_id   INTEGER NOT NULL REFERENCES end_users(id),
-
-      points_balance INTEGER NOT NULL DEFAULT 0,
-      total_spent    REAL NOT NULL DEFAULT 0,
-      visit_count    INTEGER NOT NULL DEFAULT 0,
-
-      is_blocked     INTEGER NOT NULL DEFAULT 0,
-      notes_private  TEXT,
-
-      first_visit    TEXT NOT NULL DEFAULT (datetime('now')),
-      last_visit     TEXT NOT NULL DEFAULT (datetime('now')),
-      created_at     TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at     TEXT NOT NULL DEFAULT (datetime('now')),
-
-      UNIQUE(merchant_id, end_user_id)
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 7. TRANSACTIONS (ledger — source de vérité comptable)
-  //    points_delta : signé (+credit, -reward, +/-adjustment, 0 merge-trace)
-  //    amount : nullable (merge/adjustment n'ont pas de montant)
-  //    idempotency_key : unique par merchant pour éviter les double-crédits
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS transactions (
-      id                 INTEGER PRIMARY KEY AUTOINCREMENT,
-      merchant_id        INTEGER NOT NULL REFERENCES merchants(id),
-      merchant_client_id INTEGER NOT NULL REFERENCES merchant_clients(id),
-      staff_id           INTEGER REFERENCES staff_accounts(id),
-
-      amount             REAL,
-      points_delta       INTEGER NOT NULL,
-      transaction_type   TEXT NOT NULL
-                         CHECK(transaction_type IN ('credit','reward','merge','adjustment')),
-      idempotency_key    TEXT,
-      source             TEXT,
-      notes              TEXT,
-
-      created_at         TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 8. AUDIT LOGS (immuable)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS audit_logs (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      actor_type  TEXT NOT NULL CHECK(actor_type IN ('super_admin','staff','system')),
-      actor_id    INTEGER,
-      merchant_id INTEGER,
-      action      TEXT NOT NULL,
-      target_type TEXT,
-      target_id   INTEGER,
-      details     TEXT,
-      ip_address  TEXT,
-      request_id  TEXT,
-      user_agent  TEXT,
-      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 9. END USER MERGES (traçabilité des fusions)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS end_user_merges (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      source_user_id  INTEGER NOT NULL,
-      target_user_id  INTEGER NOT NULL REFERENCES end_users(id),
-      merged_by       INTEGER NOT NULL REFERENCES super_admins(id),
-      reason          TEXT,
-      details         TEXT,
-      created_at      TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // MIGRATIONS (colonnes ajoutées post-V3.1)
-  // ───────────────────────────────────────────
-  try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
-  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
-
-  // ───────────────────────────────────────────
-  // INDEXES
-  // ───────────────────────────────────────────
-  db.exec(`
-    -- merchants
-    CREATE INDEX IF NOT EXISTS ix_merchants_status ON merchants(status);
-    CREATE INDEX IF NOT EXISTS ix_merchants_vat    ON merchants(vat_number);
-
-    -- staff_accounts (email already has implicit UNIQUE index)
-    CREATE INDEX IF NOT EXISTS ix_staff_merchant ON staff_accounts(merchant_id);
-
-    -- end_users (normalized columns for lookup)
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_email_lower ON end_users(email_lower);
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_phone_e164  ON end_users(phone_e164);
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_qr_token    ON end_users(qr_token);
-
-    -- end_user_aliases (unique alias → one owner only)
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_alias_type_value ON end_user_aliases(alias_type, alias_value);
-    CREATE INDEX IF NOT EXISTS ix_alias_end_user          ON end_user_aliases(end_user_id);
-
-    -- merchant_clients
-    CREATE INDEX IF NOT EXISTS ix_mc_merchant ON merchant_clients(merchant_id);
-    CREATE INDEX IF NOT EXISTS ix_mc_enduser  ON merchant_clients(end_user_id);
-
-    -- transactions (idempotency: unique per merchant, only when key is present)
-    CREATE UNIQUE INDEX IF NOT EXISTS ux_tx_idempotency
-      ON transactions(merchant_id, idempotency_key)
-      WHERE idempotency_key IS NOT NULL;
-    CREATE INDEX IF NOT EXISTS ix_tx_merchant_created ON transactions(merchant_id, created_at);
-    CREATE INDEX IF NOT EXISTS ix_tx_mc_created       ON transactions(merchant_client_id, created_at);
-
-    -- audit_logs
-    CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
-    CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
-    CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
-  `);
-
-  console.log('✅ Database V3.4 initialized');
-}
-
-// Init on require
-initDatabase();
-
-
-// ═══════════════════════════════════════════════════════
-// PREPARED STATEMENTS
-// ═══════════════════════════════════════════════════════
-
-// ─── Super Admins ────────────────────────────────────
-
-const adminQueries = {
-  findByEmail: db.prepare('SELECT * FROM super_admins WHERE email = ?'),
-  findById:    db.prepare('SELECT * FROM super_admins WHERE id = ?'),
-  create:      db.prepare('INSERT INTO super_admins (email, password, name) VALUES (?, ?, ?)'),
-  count:       db.prepare('SELECT COUNT(*) as count FROM super_admins'),
-};
-
-// ─── Merchants ───────────────────────────────────────
-
-const merchantQueries = {
-  create: db.prepare(`
-    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `),
-  findById:    db.prepare('SELECT * FROM merchants WHERE id = ?'),
-  findByVat:   db.prepare('SELECT * FROM merchants WHERE vat_number = ?'),
-  getAll:      db.prepare('SELECT * FROM merchants ORDER BY created_at DESC'),
-  getByStatus: db.prepare('SELECT * FROM merchants WHERE status = ? ORDER BY created_at DESC'),
-
-  updateStatus: db.prepare(`
-    UPDATE merchants SET status = ?, validated_at = datetime('now'), validated_by = ? WHERE id = ?
-  `),
-  reject: db.prepare(`
-    UPDATE merchants
-    SET status = 'rejected', rejection_reason = ?, validated_at = datetime('now'), validated_by = ?
-    WHERE id = ?
-  `),
-  suspend: db.prepare(`
-    UPDATE merchants SET status = 'suspended', suspended_at = datetime('now') WHERE id = ?
-  `),
-  reactivate: db.prepare(`
-    UPDATE merchants SET status = 'active', suspended_at = NULL WHERE id = ?
-  `),
-  updateSettings: db.prepare(`
-    UPDATE merchants SET points_per_euro = ?, points_for_reward = ?, reward_description = ? WHERE id = ?
-  `),
-};
-
-// ─── Staff Accounts ──────────────────────────────────
-
-const staffQueries = {
-  create: db.prepare(`
-    INSERT INTO staff_accounts (merchant_id, email, password, display_name, role, is_active)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `),
-  findByEmail:         db.prepare('SELECT * FROM staff_accounts WHERE email = ?'),
-  findById:            db.prepare('SELECT * FROM staff_accounts WHERE id = ?'),
-  findByIdAndMerchant: db.prepare('SELECT * FROM staff_accounts WHERE id = ? AND merchant_id = ?'),
-
-  getByMerchant: db.prepare(`
-    SELECT id, merchant_id, email, display_name, role, is_active, last_login, created_at
-    FROM staff_accounts WHERE merchant_id = ? ORDER BY role, created_at
-  `),
-
-  updateLastLogin:     db.prepare("UPDATE staff_accounts SET last_login = datetime('now'), failed_login_count = 0 WHERE id = ?"),
-  incrementFailedLogin: db.prepare('UPDATE staff_accounts SET failed_login_count = failed_login_count + 1 WHERE id = ?'),
-  lockAccount:         db.prepare('UPDATE staff_accounts SET locked_until = ? WHERE id = ?'),
-  resetFailedLogins:   db.prepare('UPDATE staff_accounts SET failed_login_count = 0, locked_until = NULL WHERE id = ?'),
-
-  activate:   db.prepare('UPDATE staff_accounts SET is_active = 1 WHERE id = ?'),
-  deactivate: db.prepare('UPDATE staff_accounts SET is_active = 0 WHERE id = ?'),
-  updateRole: db.prepare('UPDATE staff_accounts SET role = ? WHERE id = ?'),
-  updatePassword: db.prepare('UPDATE staff_accounts SET password = ? WHERE id = ?'),
-  delete:     db.prepare('DELETE FROM staff_accounts WHERE id = ? AND merchant_id = ?'),
-
-  countActiveOwners:       db.prepare("SELECT COUNT(*) as count FROM staff_accounts WHERE merchant_id = ? AND role = 'owner' AND is_active = 1"),
-  deactivateAllByMerchant: db.prepare('UPDATE staff_accounts SET is_active = 0 WHERE merchant_id = ?'),
-  activateOwnersByMerchant: db.prepare("UPDATE staff_accounts SET is_active = 1 WHERE merchant_id = ? AND role = 'owner'"),
-};
-
-// ─── End Users ───────────────────────────────────────
-
-const endUserQueries = {
-  create: db.prepare(`
-    INSERT INTO end_users (email, phone, email_lower, phone_e164, name, validation_token)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `),
-  findById:         db.prepare('SELECT * FROM end_users WHERE id = ? AND deleted_at IS NULL'),
-  findByEmailLower: db.prepare('SELECT * FROM end_users WHERE email_lower = ? AND deleted_at IS NULL'),
-  findByPhoneE164:  db.prepare('SELECT * FROM end_users WHERE phone_e164 = ? AND deleted_at IS NULL'),
-
-  validateEmail: db.prepare(`
-    UPDATE end_users
-    SET email_validated = 1, consent_date = datetime('now'), updated_at = datetime('now')
-    WHERE validation_token = ? AND deleted_at IS NULL
-  `),
-
-  block:   db.prepare("UPDATE end_users SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
-  unblock: db.prepare("UPDATE end_users SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
-
-  softDelete: db.prepare(`
-    UPDATE end_users
-    SET deleted_at = datetime('now'),
-        email = NULL, phone = NULL, email_lower = NULL, phone_e164 = NULL,
-        name = NULL, qr_token = NULL, pin_hash = NULL, updated_at = datetime('now')
-    WHERE id = ?
-  `),
-
-  getAll: db.prepare('SELECT * FROM end_users WHERE deleted_at IS NULL ORDER BY created_at DESC'),
-
-  search: db.prepare(`
-    SELECT * FROM end_users
-    WHERE deleted_at IS NULL
-      AND (email_lower LIKE ? OR phone_e164 LIKE ? OR name LIKE ?)
-    ORDER BY created_at DESC
-  `),
-
-  updateIdentifiers: db.prepare(`
-    UPDATE end_users
-    SET email = ?, phone = ?, email_lower = ?, phone_e164 = ?,
-        email_validated = MAX(email_validated, ?),
-        updated_at = datetime('now')
-    WHERE id = ?
-  `),
-
-  setPin: db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?"),
-};
-
-// ─── End User Aliases ────────────────────────────────
-
-const aliasQueries = {
-  create:           db.prepare('INSERT OR IGNORE INTO end_user_aliases (end_user_id, alias_type, alias_value) VALUES (?, ?, ?)'),
-  findByValue:      db.prepare('SELECT * FROM end_user_aliases WHERE alias_value = ?'),
-  findByTypeAndValue: db.prepare('SELECT * FROM end_user_aliases WHERE alias_type = ? AND alias_value = ?'),
-  getByUser:        db.prepare('SELECT * FROM end_user_aliases WHERE end_user_id = ?'),
-};
-
-// ─── Merchant Clients ────────────────────────────────
-
-const merchantClientQueries = {
-  create: db.prepare('INSERT INTO merchant_clients (merchant_id, end_user_id) VALUES (?, ?)'),
-
-  findById:           db.prepare('SELECT * FROM merchant_clients WHERE id = ?'),
-  findByIdAndMerchant: db.prepare('SELECT * FROM merchant_clients WHERE id = ? AND merchant_id = ?'),
-  find:               db.prepare('SELECT * FROM merchant_clients WHERE merchant_id = ? AND end_user_id = ?'),
-
-  getByMerchant: db.prepare(`
-    SELECT mc.*, eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked
-    FROM merchant_clients mc
-    JOIN end_users eu ON mc.end_user_id = eu.id
-    WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
-    ORDER BY mc.last_visit DESC
-  `),
-
-  searchByMerchant: db.prepare(`
-    SELECT mc.*, eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked
-    FROM merchant_clients mc
-    JOIN end_users eu ON mc.end_user_id = eu.id
-    WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
-      AND (eu.email_lower LIKE ? OR eu.phone_e164 LIKE ? OR eu.name LIKE ?)
-    ORDER BY mc.last_visit DESC
-  `),
-
-  lookupByMerchant: db.prepare(`
-    SELECT mc.id, mc.points_balance, mc.visit_count, mc.is_blocked,
-           eu.name, eu.email, eu.phone
-    FROM merchant_clients mc
-    JOIN end_users eu ON mc.end_user_id = eu.id
-    WHERE mc.merchant_id = ? AND mc.end_user_id = ? AND eu.deleted_at IS NULL
-  `),
-
-  updateAfterCredit: db.prepare(`
-    UPDATE merchant_clients
-    SET points_balance = points_balance + ?,
-        total_spent = total_spent + ?,
-        visit_count = visit_count + 1,
-        last_visit = datetime('now'),
-        updated_at = datetime('now')
-    WHERE id = ?
-  `),
-
-  setPoints: db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
-  block:     db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
-  unblock:   db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
-
-  setCustomReward: db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
-
-  mergeStats: db.prepare(`
-    UPDATE merchant_clients
-    SET points_balance = points_balance + ?,
-        total_spent = total_spent + ?,
-        visit_count = visit_count + ?,
-        first_visit = MIN(first_visit, ?),
-        last_visit = MAX(last_visit, ?),
-        updated_at = datetime('now')
-    WHERE id = ?
-  `),
-
-  delete:        db.prepare('DELETE FROM merchant_clients WHERE id = ?'),
-  updateEndUser: db.prepare("UPDATE merchant_clients SET end_user_id = ?, updated_at = datetime('now') WHERE id = ?"),
-};
-
-// ─── Transactions (ledger) ───────────────────────────
-
-const transactionQueries = {
-  create: db.prepare(`
-    INSERT INTO transactions
-      (merchant_id, merchant_client_id, staff_id, amount, points_delta, transaction_type, idempotency_key, source, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `),
-
-  findByIdempotencyKey: db.prepare(
-    'SELECT * FROM transactions WHERE merchant_id = ? AND idempotency_key = ?'
-  ),
-
-  getByMerchantClient: db.prepare(`
-    SELECT t.*, sa.display_name as staff_name
-    FROM transactions t
-    LEFT JOIN staff_accounts sa ON t.staff_id = sa.id
-    WHERE t.merchant_client_id = ?
-    ORDER BY t.created_at DESC
-  `),
-
-  getByMerchant: db.prepare(`
-    SELECT t.*, eu.email, eu.phone, eu.name as client_name, sa.display_name as staff_name
-    FROM transactions t
-    JOIN merchant_clients mc ON t.merchant_client_id = mc.id
-    JOIN end_users eu ON mc.end_user_id = eu.id
-    LEFT JOIN staff_accounts sa ON t.staff_id = sa.id
-    WHERE t.merchant_id = ?
-    ORDER BY t.created_at DESC
-    LIMIT ?
-  `),
-
-  sumPointsByMerchantClient: db.prepare(
-    'SELECT COALESCE(SUM(points_delta), 0) as total FROM transactions WHERE merchant_client_id = ?'
-  ),
-
-  reassignClient: db.prepare(
-    'UPDATE transactions SET merchant_client_id = ? WHERE merchant_client_id = ?'
-  ),
-};
-
-// ─── Audit Logs ──────────────────────────────────────
-
-const auditQueries = {
-  create: db.prepare(`
-    INSERT INTO audit_logs
-      (actor_type, actor_id, merchant_id, action, target_type, target_id, details, ip_address, request_id, user_agent)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `),
-  getByMerchant: db.prepare('SELECT * FROM audit_logs WHERE merchant_id = ? ORDER BY created_at DESC LIMIT ?'),
-  getAll:        db.prepare('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT ?'),
-};
-
-// ─── End User Merges ─────────────────────────────────
-
-const mergeQueries = {
-  create: db.prepare(
-    'INSERT INTO end_user_merges (source_user_id, target_user_id, merged_by, reason, details) VALUES (?, ?, ?, ?, ?)'
-  ),
-  getAll: db.prepare('SELECT * FROM end_user_merges ORDER BY created_at DESC'),
-};
-
-
-// ═══════════════════════════════════════════════════════
-// EXPORTS
-// ═══════════════════════════════════════════════════════
-
-module.exports = {
-  db,
-  initDatabase,
-  adminQueries,
-  merchantQueries,
-  staffQueries,
-  endUserQueries,
-  aliasQueries,
-  merchantClientQueries,
-  transactionQueries,
-  auditQueries,
-  mergeQueries,
-};
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créditer — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════════════
+       CREDIT PAGE — Single column, no sidebar
+       ═══════════════════════════════════════════════════════ */
+
+    .credit-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .credit-page * { box-sizing: border-box; }
+
+    /* ── Centered layout ── */
+    .credit-wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.4rem 0 0.8rem; letter-spacing: -0.3px;
+    }
+
+    /* ── Card ── */
+    .c-card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden; position: relative;
+    }
+    .c-card-hdr {
+      padding: 0.7rem 1rem;
+      border-bottom: 1px solid #F1F5F9;
+      font-weight: 600; font-size: 0.88rem; color: #1E293B;
+      display: flex; align-items: center; gap: 0.45rem;
+    }
+    .c-card-body { padding: 0.9rem 1rem 1rem; }
+
+    /* ── Alert ── */
+    .credit-page .alert {
+      border-radius: 7px; font-size: 0.82rem;
+      padding: 0.5rem 0.75rem; margin-bottom: 0.75rem;
+    }
+
+    /* ── Segmented control ── */
+    .seg {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      background: #F1F5F9; border-radius: 7px; padding: 3px;
+      margin-bottom: 0.9rem;
+    }
+    .seg button {
+      padding: 0.4rem; border: none; background: transparent;
+      border-radius: 5px; font-family: inherit; font-weight: 600;
+      font-size: 0.78rem; color: #64748B; cursor: pointer;
+    }
+    .seg button.active {
+      background: white; color: var(--primary-dark);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
+
+    /* ── Form ── */
+    .credit-page .form-group { margin-bottom: 0.8rem; }
+    .credit-page .form-label {
+      display: block; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      color: #64748B; margin-bottom: 0.25rem;
+    }
+    .credit-page .form-control {
+      width: 100%; padding: 0.5rem 0.65rem;
+      border: 1.5px solid #E2E8F0; border-radius: 6px;
+      font-family: inherit; font-size: 0.88rem; color: #1E293B;
+      background: #FAFBFC;
+    }
+    .credit-page .form-control:focus {
+      outline: none; border-color: var(--primary); background: white;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 10%, transparent);
+    }
+    .credit-page .form-control::placeholder { color: #94A3B8; }
+    .credit-page .form-hint { font-size: 0.68rem; color: #94A3B8; margin-top: 0.15rem; }
+
+    /* ── Input wrap + clear ── */
+    .input-wrap { position: relative; }
+    .input-wrap .form-control { padding-right: 26px; }
+    .btn-clear {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; font-size: 0.82rem; cursor: pointer;
+      color: #94A3B8; padding: 2px 4px; line-height: 1; display: none;
+    }
+    .btn-clear:hover { color: #EF4444; }
+    .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
+    .input-wrap .form-control.has-value ~ .btn-clear { display: block; }
+
+    /* ── Typo warning ── */
+    .typo-warning {
+      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 5px;
+      padding: 0.35rem 0.6rem; margin-top: 0.25rem; font-size: 0.72rem; color: #92400E;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .typo-warning button {
+      background: #F59E0B; color: white; border: none; border-radius: 3px;
+      padding: 1px 6px; font-size: 0.68rem; cursor: pointer; font-weight: 600;
+      white-space: nowrap; font-family: inherit;
+    }
+
+    /* ── Autocomplete ── */
+    .autocomplete-list {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+      background: white; border: 1.5px solid #E2E8F0; border-top: none;
+      border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: none;
+    }
+    .autocomplete-list.show { display: block; }
+    .ac-item {
+      padding: 0.4rem 0.65rem; cursor: pointer;
+      border-bottom: 1px solid #F8FAFC; font-size: 0.78rem;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.selected { background: color-mix(in srgb, var(--primary-light) 40%, white); }
+    .ac-item .ac-name { font-weight: 600; color: #1E293B; }
+    .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
+    .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; font-size: 0.78rem; }
+
+    /* ── Inline lookup strip ── */
+    .lookup-strip {
+      border-radius: 6px; padding: 0.45rem 0.65rem;
+      font-size: 0.78rem; margin-top: 0.35rem;
+      line-height: 1.5; display: none;
+    }
+    .lookup-strip.show { display: block; }
+    .lookup-strip.found {
+      background: color-mix(in srgb, var(--primary-light) 30%, white);
+      border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
+    }
+    .lookup-strip.new-client {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+    }
+    .lookup-strip .l-name { font-weight: 600; }
+    .lookup-strip .l-pts { float: right; font-weight: 700; color: var(--primary); }
+    .lookup-strip .l-meta { font-size: 0.7rem; color: #64748B; }
+    .lookup-strip .l-prog { background: #E2E8F0; height: 3px; border-radius: 2px; margin: 0.25rem 0; overflow: hidden; }
+    .lookup-strip .l-prog-fill { height: 100%; background: var(--gradient); border-radius: 2px; }
+    .lookup-strip .l-reward {
+      background: var(--gradient); color: white;
+      padding: 0.3rem 0.5rem; border-radius: 4px; text-align: center;
+      margin-top: 0.3rem; cursor: pointer; font-size: 0.72rem; font-weight: 500;
+    }
+
+    /* ── Amount row + points counter ── */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .pts-badge {
+      display: inline-block; background: var(--gradient); color: white;
+      padding: 1px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+      margin-left: 0.4rem; vertical-align: middle;
+    }
+
+    /* ── Submit ── */
+    .btn-credit {
+      width: 100%; padding: 0.6rem; border: none; border-radius: 7px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
+    }
+    .btn-credit:hover:not(:disabled) {
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
+    .btn-credit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    /* ═══════════════════════════════════════════════════════
+       SUCCESS OVERLAY — covers the form, centered
+       ═══════════════════════════════════════════════════════ */
+
+    .success-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      background: white;
+      border-radius: 12px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .success-overlay.show { display: flex; }
+
+    .success-pts {
+      font-size: 2.5rem; font-weight: 700; color: #059669;
+      line-height: 1; letter-spacing: -1px;
+    }
+    .success-label {
+      font-size: 0.75rem; color: #059669; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-top: 4px; font-weight: 600;
+    }
+    .success-info {
+      margin-top: 1rem; font-size: 0.85rem; color: #1E293B;
+      line-height: 1.7;
+      background: #F0FDF4; border: 1px solid #D1FAE5;
+      border-radius: 8px; padding: 0.75rem 1.25rem;
+      min-width: 240px;
+    }
+    .success-info strong { color: #047857; }
+    .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
+    .success-badge {
+      display: inline-block; background: color-mix(in srgb, var(--primary-light) 50%, white);
+      color: var(--primary-dark); padding: 2px 10px; border-radius: 12px;
+      font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
+    }
+    .success-btn {
+      margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 7px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
+    }
+    .success-btn:hover {
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       QR — Compact
+       ═══════════════════════════════════════════════════════ */
+
+    .qr-box {
+      text-align: center; padding: 0.75rem;
+      background: #FAFBFC; border: 1.5px solid #E2E8F0;
+      border-radius: 7px; margin-bottom: 0.8rem;
+    }
+    .qr-box .qr-sub { font-size: 0.7rem; color: #64748B; margin-bottom: 0.5rem; }
+
+    .qr-frame {
+      position: relative; display: inline-block; padding: 6px;
+      background: white; border-radius: 6px; border: 1px solid #E2E8F0;
+    }
+    .qr-frame img { display: block; border-radius: 2px; }
+    .qr-frame::after {
+      content: ''; position: absolute; left: 6px; right: 6px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--primary), transparent);
+      animation: qrscan 2.5s ease-in-out infinite;
+    }
+    @keyframes qrscan { 0%{top:6px;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:calc(100% - 6px);opacity:0} }
+    .qr-frame.done::after { display: none; }
+
+    .qr-stat {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.4rem; margin-top: 0.4rem; font-size: 0.7rem; color: #64748B;
+    }
+    .qr-stat .dot {
+      width: 5px; height: 5px; border-radius: 50%; background: #F59E0B;
+      animation: qrp 1.5s ease-in-out infinite;
+    }
+    @keyframes qrp { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .qr-stat.ok .dot { background: var(--primary); animation: none; }
+    .qr-stat.ko .dot { background: #EF4444; animation: none; }
+
+    .qr-tmr { width: 100px; height: 2px; background: #E2E8F0; border-radius: 1px; margin: 0.25rem auto 0; overflow: hidden; }
+    .qr-tmr-fill { height: 100%; background: var(--primary); border-radius: 1px; width: 100%; }
+    .qr-tmr-txt { font-size: 0.62rem; color: #94A3B8; margin-top: 0.1rem; }
+
+    .qr-result {
+      padding: 0.5rem; margin-top: 0.35rem;
+      background: color-mix(in srgb, var(--primary-light) 35%, white);
+      border-radius: 5px; border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
+      font-size: 0.75rem; color: #1E293B; line-height: 1.5;
+    }
+    .qr-result strong { color: var(--primary-dark); }
+
+    .qr-redo {
+      margin-top: 0.35rem; padding: 0.15rem 0.5rem; border-radius: 4px;
+      font-size: 0.68rem; cursor: pointer;
+      border: 1px solid #E2E8F0; background: white; color: #64748B;
+      font-family: inherit;
+    }
+    .qr-redo:hover { background: #F1F5F9; }
+
+    /* ── Cashier limit info ── */
+    .config-strip {
+      font-size: 0.7rem; color: #94A3B8; margin-bottom: 0.75rem;
+      padding: 0.3rem 0.5rem; background: #F8FAFC; border-radius: 5px;
+      border: 1px solid #F1F5F9;
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════ */
+
+    @media (max-width: 768px) {
+      .credit-wrap { padding: 0.5rem; }
+      .c-card-body { padding: 0.75rem; }
+      .row-2 { grid-template-columns: 1fr; gap: 0.4rem; }
+      .pg-title { font-size: 0.92rem; margin: 0.3rem 0 0.6rem; }
+      .success-overlay { padding: 1.5rem 1rem; }
+      .success-pts { font-size: 2rem; }
+      .success-info { min-width: auto; }
+    }
+
+    @media (max-width: 380px) {
+      .seg button { font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body class="credit-page">
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="credit-wrap">
+    <h1 class="pg-title">Créditer des points</h1>
+
+    <div class="c-card">
+      <div class="c-card-hdr">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--primary)">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 4.5v4M6 6.5l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        Nouveau passage
+      </div>
+
+      <div class="c-card-body">
+        <div id="credit-alert"></div>
+
+        <!-- Config strip -->
+        <div class="config-strip" id="config-strip"></div>
+
+        <form id="credit-form" autocomplete="off">
+          <!-- Segment toggle -->
+          <div class="seg">
+            <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
+            <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
+            <button type="button" id="toggle-qr" onclick="switchMode('qr')">📱 QR</button>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group" id="field-email">
+            <label class="form-label">Adresse email</label>
+            <div class="input-wrap">
+              <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
+              <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
+              <div class="autocomplete-list" id="ac-email"></div>
+            </div>
+            <div id="typo-email"></div>
+            <div class="lookup-strip" id="lookup-email"></div>
+          </div>
+
+          <!-- Phone -->
+          <div class="form-group" id="field-phone" style="display:none;">
+            <label class="form-label">Numéro de téléphone</label>
+            <div class="input-wrap">
+              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
+              <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
+              <div class="autocomplete-list" id="ac-phone"></div>
+            </div>
+            <div class="form-hint">+32…, 0032…, 04…</div>
+            <div class="lookup-strip" id="lookup-phone"></div>
+          </div>
+
+          <!-- QR (static) -->
+          <div id="field-qr" style="display:none;">
+            <div class="qr-box" id="qr-inline">
+              <div class="qr-sub">Présentez ce QR au client</div>
+              <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
+              <button type="button" class="qr-redo" onclick="showQRFullscreen()">⛶ Plein écran</button>
+              <div id="qr-no-token" style="display:none; text-align:center; padding:1rem; color:#94A3B8; font-size:0.85rem;">
+                Aucun QR configuré.<br>
+                <span style="font-size:0.75rem;">Le propriétaire doit le générer dans <a href="/preferences" style="color:var(--primary)">Préférences</a>.</span>
+              </div>
+            </div>
+
+            <!-- Pending identifications -->
+            <div id="pending-clients" style="margin-top:0.75rem;"></div>
+            <div class="lookup-strip" id="lookup-qr"></div>
+          </div>
+
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+            <div class="input-wrap">
+              <input type="text" id="client-name" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off">
+              <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
+            </div>
+          </div>
+
+          <!-- Amount + Notes -->
+          <div id="pin-group" class="form-group" style="display:none;">
+            <label class="form-label">🔒 Code PIN du client (4 chiffres)</label>
+            <div class="input-wrap">
+              <input type="tel" id="client-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
+              <button type="button" class="btn-clear" onclick="clearField('client-pin')">×</button>
+            </div>
+            <div class="form-hint">Ce code sera demandé au client pour utiliser sa récompense</div>
+          </div>
+
+          <!-- Amount + Notes -->
+          <div class="row-2">
+            <div class="form-group">
+              <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
+              <div class="input-wrap">
+                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
+                <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+              <div class="input-wrap">
+                <input type="text" id="notes" class="form-control" placeholder="Menu midi…" autocomplete="off">
+                <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-credit" id="submit-btn">Créditer les points</button>
+        </form>
+      </div>
+
+      <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
+      <div class="success-overlay" id="success-overlay">
+        <div class="success-pts" id="s-pts"></div>
+        <div class="success-label">Crédités ✓</div>
+        <div class="success-info" id="s-info"></div>
+        <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Fullscreen QR overlay (for table service) -->
+  <div id="qr-fullscreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="closeQRFullscreen()">
+    <div style="text-align:center;">
+      <div style="font-size:1.1rem; font-weight:600; color:#1E293B; margin-bottom:0.5rem;" id="qr-fs-merchant"></div>
+      <div style="font-size:0.8rem; color:#64748B; margin-bottom:1.5rem;">Scannez pour gagner vos points fidélité</div>
+      <div id="qr-fs-canvas" style="display:inline-block; padding:16px; background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.1);"></div>
+      <div style="margin-top:1.5rem; font-size:0.7rem; color:#94A3B8;">Appuyez n'importe où pour fermer</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'Not authenticated';
+
+    const merchant = Auth.getMerchant();
+    const staff = Auth.getStaff();
+    let currentMode = 'email';
+    let lastCreditKey = null; // anti-double-credit
+    let lookupIsNew = false;  // true when current client is new (needs PIN)
+
+    // Config strip
+    document.getElementById('config-strip').textContent =
+      merchant.points_per_euro + ' pt/€ · Récompense à ' + merchant.points_for_reward + ' pts — ' +
+      merchant.reward_description +
+      (staff.role === 'cashier' ? ' · Max 200€' : '');
+
+    // ═══════════════════════════════════════════════════════
+    // LOOKUP — inline strip under the active field
+    // ═══════════════════════════════════════════════════════
+
+    function getLookupEl() {
+      return document.getElementById('lookup-' + currentMode);
+    }
+
+    function showLookup(data) {
+      const el = getLookupEl();
+      if (!el) return;
+
+      if (!data.found) {
+        lookupIsNew = true;
+        el.className = 'lookup-strip show new-client';
+        el.innerHTML = 'Nouveau client — sera créé au crédit.';
+        showPinField(true);
+        return;
+      }
+      const c = data.client;
+      if (data.isNew) {
+        lookupIsNew = true;
+        el.className = 'lookup-strip show new-client';
+        el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + c.name : '');
+        if (c.name && !document.getElementById('client-name').value) {
+          document.getElementById('client-name').value = c.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+        showPinField(!c.has_pin); // only if they don't already have a PIN
+        return;
+      }
+
+      lookupIsNew = false;
+      showPinField(false);
+      el.className = 'lookup-strip show found';
+      const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+      let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
+        '<span class="l-name">' + (c.name || c.email || c.phone) + '</span>' +
+        (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
+        '<div class="l-meta">' + c.visit_count + ' visite(s) · ' + c.points_balance + '/' + c.reward_threshold + '</div>' +
+        '<div class="l-prog"><div class="l-prog-fill" style="width:' + pct + '%"></div></div>';
+      if (c.can_redeem) {
+        h += '<div class="l-reward" onclick="redeemReward(' + c.id + ')">' +
+          (c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
+      }
+      el.innerHTML = h;
+
+      if (c.name && !document.getElementById('client-name').value) {
+        document.getElementById('client-name').value = c.name;
+        document.getElementById('client-name').classList.add('has-value');
+      }
+    }
+
+    function hideLookup() {
+      document.querySelectorAll('.lookup-strip').forEach(el => {
+        el.classList.remove('show');
+        el.innerHTML = '';
+      });
+      lookupIsNew = false;
+      showPinField(false);
+    }
+
+    function showPinField(show) {
+      const g = document.getElementById('pin-group');
+      if (!g) return;
+      g.style.display = show ? 'block' : 'none';
+      if (!show) {
+        document.getElementById('client-pin').value = '';
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // PRE-FILL FROM URL
+    // ═══════════════════════════════════════════════════════
+    (function() {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); }
+      else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); }
+      if (p.get('name')) document.getElementById('client-name').value = p.get('name');
+      if (p.get('email') || p.get('phone')) setTimeout(triggerLookup, 500);
+      if (p.toString()) window.history.replaceState({}, '', window.location.pathname);
+    })();
+
+    // ═══════════════════════════════════════════════════════
+    // MODE SWITCH
+    // ═══════════════════════════════════════════════════════
+    function switchMode(mode) {
+      if (currentMode === 'qr' && mode !== 'qr') {
+        stopPendingPoll();
+      }
+      currentMode = mode;
+      document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
+      document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
+      document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
+      document.getElementById('field-email').style.display = mode === 'email' ? '' : 'none';
+      document.getElementById('field-phone').style.display = mode === 'phone' ? '' : 'none';
+      document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
+      if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
+      if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
+      hideLookup();
+      if (mode === 'qr') startPendingPoll();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // CLEAR
+    // ═══════════════════════════════════════════════════════
+    function clearField(id) {
+      const el = document.getElementById(id);
+      el.value = ''; el.focus(); el.dispatchEvent(new Event('input'));
+      if (id === 'amount') document.getElementById('pts-badge').textContent = '0 pts';
+    }
+    document.querySelectorAll('.input-wrap .form-control').forEach(el => {
+      el.addEventListener('input', () => el.classList.toggle('has-value', el.value.length > 0));
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // POINTS BADGE
+    // ═══════════════════════════════════════════════════════
+    document.getElementById('amount').addEventListener('input', (e) => {
+      const pts = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
+      document.getElementById('pts-badge').textContent = pts + ' pts';
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // EMAIL TYPO
+    // ═══════════════════════════════════════════════════════
+    const TYPOS = {
+      'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com',
+      'gamil.com':'gmail.com','gnail.com':'gmail.com','gmali.com':'gmail.com',
+      'gmai.com':'gmail.com','gmail.co':'gmail.com','gmail.be':'gmail.com',
+      'hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmaill.com':'hotmail.com',
+      'hotmial.com':'hotmail.com','hotamil.com':'hotmail.com',
+      'outloo.com':'outlook.com','outlok.com':'outlook.com',
+      'yahooo.com':'yahoo.com','yaho.com':'yahoo.com','yahooo.fr':'yahoo.fr',
+      'iclould.com':'icloud.com','iclou.com':'icloud.com',
+    };
+    function checkEmailTypo(v) {
+      const c = document.getElementById('typo-email'); c.innerHTML = '';
+      if (!v || !v.includes('@')) return;
+      const parts = v.split('@'); if (parts.length !== 2) return;
+      const fix = TYPOS[parts[1].toLowerCase()];
+      if (fix) {
+        const corrected = parts[0] + '@' + fix;
+        c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + corrected + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + corrected + '\')">Corriger</button></div>';
+      }
+    }
+    function applyTypo(v) {
+      document.getElementById('client-email').value = v;
+      document.getElementById('typo-email').innerHTML = '';
+      triggerLookup();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // AUTOCOMPLETE
+    // ═══════════════════════════════════════════════════════
+    let acTimer;
+    function setupAC(inputId, listId) {
+      const inp = document.getElementById(inputId), list = document.getElementById(listId);
+      inp.addEventListener('input', () => {
+        clearTimeout(acTimer);
+        const v = inp.value.trim();
+        triggerLookup();
+        if (v.length < 3) { list.classList.remove('show'); if (inputId === 'client-email') checkEmailTypo(v); return; }
+        if (inputId === 'client-email') checkEmailTypo(v);
+        acTimer = setTimeout(async () => {
+          try {
+            const d = await API.clients.searchGlobal(v);
+            if (!d.clients || !d.clients.length) { list.classList.remove('show'); return; }
+            list.innerHTML = d.clients.slice(0, 6).map(c =>
+              '<div class="ac-item" data-email="' + (c.email || '') + '" data-phone="' + (c.phone || '') + '" data-name="' + (c.name || '') + '">' +
+              '<span class="ac-pts">' + (c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>') + '</span>' +
+              '<div class="ac-name">' + (c.name || c.email || c.phone || '?') + '</div>' +
+              '<div class="ac-meta">' + (c.email || '') + (c.email && c.phone ? ' · ' : '') + (c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
+            ).join('');
+            list.classList.add('show');
+            list.querySelectorAll('.ac-item').forEach(item => {
+              item.addEventListener('click', () => {
+                const e = item.dataset.email, p = item.dataset.phone, n = item.dataset.name;
+                if (currentMode === 'email' && e) { inp.value = e; inp.classList.add('has-value'); }
+                else if (currentMode === 'phone' && p) { inp.value = p; inp.classList.add('has-value'); }
+                else if (e) { switchMode('email'); document.getElementById('client-email').value = e; }
+                else if (p) { switchMode('phone'); document.getElementById('client-phone').value = p; }
+                if (n) { document.getElementById('client-name').value = n; document.getElementById('client-name').classList.add('has-value'); }
+                list.classList.remove('show');
+                document.getElementById('typo-email').innerHTML = '';
+                triggerLookup();
+              });
+            });
+          } catch (e) { list.classList.remove('show'); }
+        }, 350);
+      });
+      document.addEventListener('click', (e) => { if (!inp.contains(e.target) && !list.contains(e.target)) list.classList.remove('show'); });
+    }
+    setupAC('client-email', 'ac-email');
+    setupAC('client-phone', 'ac-phone');
+
+    // ═══════════════════════════════════════════════════════
+    // LOOKUP
+    // ═══════════════════════════════════════════════════════
+    let lookupTimer;
+    function triggerLookup() {
+      clearTimeout(lookupTimer);
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      if (!email && !phone) { hideLookup(); return; }
+      lookupTimer = setTimeout(async () => {
+        try {
+          const p = {};
+          if (email) p.email = email;
+          if (phone) p.phone = phone;
+          showLookup(await API.clients.lookup(p));
+        } catch (e) { console.error(e); }
+      }, 300);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // REDEEM
+    // ═══════════════════════════════════════════════════════
+    async function redeemReward(mcId) {
+      const pin = prompt('🔒 Code PIN du client (4 chiffres) :');
+      if (!pin) return; // cancelled
+      if (!/^\d{4}$/.test(pin)) {
+        UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
+        return;
+      }
+      try {
+        const r = await API.clients.reward({ merchantClientId: mcId, pin });
+        UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
+        triggerLookup();
+      } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // SUBMIT — with anti-double-credit
+    // ═══════════════════════════════════════════════════════
+    document.getElementById('credit-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      const name = document.getElementById('client-name').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const notes = document.getElementById('notes').value.trim();
+
+      if (!email && !phone) { UI.showAlert('credit-alert', currentMode === 'qr' ? 'Le client n\'a pas scanné le QR' : 'Email ou téléphone requis', 'error'); return; }
+      if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
+
+      // ── Anti-double-credit: generate unique key per submission ──
+      const creditKey = (email || '') + '|' + (phone || '') + '|' + amount + '|' + Date.now();
+      if (lastCreditKey && lastCreditKey === creditKey) {
+        UI.showAlert('credit-alert', 'Ce crédit vient d\'être effectué', 'warning');
+        return;
+      }
+
+      try {
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').textContent = 'Traitement…';
+        UI.clearAlert('credit-alert');
+
+        const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+        const pinVal = document.getElementById('client-pin').value.trim();
+
+        const r = await API.clients.credit({
+          email: email || undefined, phone: phone || undefined,
+          name: name || undefined, amount, notes: notes || undefined,
+          idempotencyKey,
+          pin: pinVal || undefined,
+        });
+
+        // ── Mark this credit as done (prevent re-submit) ──
+        lastCreditKey = creditKey;
+
+        // ── Show success overlay (blocks form access) ──
+        const n = r.client.name || r.client.email || r.client.phone || 'Client';
+        document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
+
+        let info = '<strong>' + n + '</strong>';
+        info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
+        if (r.client.email) info += '<br><span class="s-detail">' + r.client.email + '</span>';
+        if (r.client.phone) info += '<br><span class="s-detail">' + r.client.phone + '</span>';
+        if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
+
+        document.getElementById('s-info').innerHTML = info;
+        document.getElementById('success-overlay').classList.add('show');
+
+      } catch (err) {
+        UI.showAlert('credit-alert', err.message, 'error');
+      } finally {
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('submit-btn').textContent = 'Créditer les points';
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // RESET — only way back from success overlay
+    // ═══════════════════════════════════════════════════════
+    function resetForm() {
+      // Hide overlay
+      document.getElementById('success-overlay').classList.remove('show');
+
+      // Full form reset
+      lastCreditKey = null;
+      document.getElementById('credit-form').reset();
+      document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
+      document.getElementById('pts-badge').textContent = '0 pts';
+      hideLookup();
+      UI.clearAlert('credit-alert');
+
+      // QR cleanup — poll refresh
+      if (currentMode === 'qr') pollPending();
+      else {
+        stopPendingPoll();
+      }
+
+      switchMode('email');
+      document.getElementById('client-email').focus();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // QR CODE
+    // ═══════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // QR STATIC — Display + Pending identifications polling
+    // ═══════════════════════════════════════════════════════
+
+    let merchantQrUrl = null;
+    let merchantQrToken = null;
+    let qrInst = null;
+    let pendingPoll = null;
+
+    async function loadStaticQR() {
+      try {
+        const resp = await API.call('/qr/token');
+        if (!resp.token) {
+          document.getElementById('qr-frame').style.display = 'none';
+          document.getElementById('qr-no-token').style.display = 'block';
+          return;
+        }
+        merchantQrToken = resp.token;
+        merchantQrUrl = resp.url;
+
+        document.getElementById('qr-frame').style.display = 'inline-block';
+        document.getElementById('qr-no-token').style.display = 'none';
+
+        const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
+        qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      } catch (e) {
+        console.error('QR load error:', e);
+        document.getElementById('qr-frame').style.display = 'none';
+        document.getElementById('qr-no-token').style.display = 'block';
+      }
+    }
+
+    function showQRFullscreen() {
+      if (!merchantQrUrl) return;
+      const overlay = document.getElementById('qr-fullscreen');
+      const cv = document.getElementById('qr-fs-canvas'); cv.innerHTML = '';
+      document.getElementById('qr-fs-merchant').textContent = merchant.business_name;
+      new QRCode(cv, { text: merchantQrUrl, width: 260, height: 260, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      overlay.style.display = 'flex';
+    }
+
+    function closeQRFullscreen() {
+      document.getElementById('qr-fullscreen').style.display = 'none';
+    }
+
+    // Pending identifications polling
+    function startPendingPoll() {
+      stopPendingPoll();
+      pollPending(); // immediate first call
+      pendingPoll = setInterval(pollPending, 3000);
+    }
+
+    function stopPendingPoll() {
+      if (pendingPoll) { clearInterval(pendingPoll); pendingPoll = null; }
+    }
+
+    async function pollPending() {
+      try {
+        const resp = await API.call('/qr/pending');
+        renderPending(resp.clients);
+      } catch (e) {}
+    }
+
+    function renderPending(clients) {
+      const el = document.getElementById('pending-clients');
+      if (!clients || clients.length === 0) {
+        el.innerHTML = '<div style="text-align:center;padding:0.5rem;color:#94A3B8;font-size:0.75rem;">En attente de clients…</div>';
+        return;
+      }
+      let html = '';
+      clients.forEach(c => {
+        const label = c.name || c.email || c.phone || 'Client';
+        const badge = c.isNew
+          ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
+          : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+        const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + c.identId + '\')">' +
+          '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
+          '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+          '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
+      });
+      el.innerHTML = html;
+    }
+
+    async function consumeIdent(identId) {
+      try {
+        const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
+
+        // Pre-fill the credit form
+        if (d.email) {
+          switchMode('email');
+          document.getElementById('client-email').value = d.email;
+          document.getElementById('client-email').classList.add('has-value');
+        } else if (d.phone) {
+          switchMode('phone');
+          document.getElementById('client-phone').value = d.phone;
+          document.getElementById('client-phone').classList.add('has-value');
+        }
+        if (d.name) {
+          document.getElementById('client-name').value = d.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+
+        setTimeout(triggerLookup, 300);
+        setTimeout(() => document.getElementById('amount').focus(), 600);
+      } catch (e) {
+        console.error('Consume error:', e);
+      }
+    }
+
+    // Load QR on page init (lazy)
+    loadStaticQR();
+
+    window.addEventListener('beforeunload', stopPendingPoll);
+  </script>
+</body>
+</html>
