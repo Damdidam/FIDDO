@@ -330,6 +330,7 @@
             <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
             <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
             <button type="button" id="toggle-qr" onclick="switchMode('qr')">📱 QR</button>
+            <button type="button" id="toggle-scan" onclick="switchMode('scan')">📷 Scan</button>
           </div>
 
           <!-- Email -->
@@ -367,6 +368,17 @@
             <!-- Pending identifications -->
             <div id="pending-clients" style="margin-top:0.75rem;"></div>
             <div class="lookup-strip" id="lookup-qr"></div>
+          </div>
+
+          <!-- Scanner (camera) -->
+          <div id="field-scan" style="display:none;">
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;">
+              <div id="scan-reader" style="width:100%;"></div>
+              <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
+                Scannez le QR du client
+              </div>
+            </div>
+            <div class="lookup-strip" id="lookup-scan"></div>
           </div>
 
           <!-- Name -->
@@ -432,6 +444,7 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
     if (!requireAuth()) throw 'Not authenticated';
@@ -538,17 +551,23 @@
       if (currentMode === 'qr' && mode !== 'qr') {
         stopPendingPoll();
       }
+      if (currentMode === 'scan' && mode !== 'scan') {
+        stopScanner();
+      }
       currentMode = mode;
       document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
       document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
       document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
+      document.getElementById('toggle-scan').classList.toggle('active', mode === 'scan');
       document.getElementById('field-email').style.display = mode === 'email' ? '' : 'none';
       document.getElementById('field-phone').style.display = mode === 'phone' ? '' : 'none';
       document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
+      document.getElementById('field-scan').style.display = mode === 'scan' ? '' : 'none';
       if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
       if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
       hideLookup();
       if (mode === 'qr') startPendingPoll();
+      if (mode === 'scan') startScanner();
     }
 
     // ═══════════════════════════════════════════════════════
@@ -667,15 +686,23 @@
     // REDEEM
     // ═══════════════════════════════════════════════════════
     async function redeemReward(mcId) {
-      const pin = prompt('🔒 Code PIN du client (4 chiffres) :');
-      if (!pin) return; // cancelled
-      if (!/^\d{4}$/.test(pin)) {
-        UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
-        return;
+      let pin = null;
+      if (!qrVerifiedFlag) {
+        pin = prompt('🔒 Code PIN du client (4 chiffres) :');
+        if (!pin) return; // cancelled
+        if (!/^\d{4}$/.test(pin)) {
+          UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
+          return;
+        }
       }
       try {
-        const r = await API.clients.reward({ merchantClientId: mcId, pin });
+        const r = await API.clients.reward({
+          merchantClientId: mcId,
+          pin: pin || undefined,
+          qrVerified: qrVerifiedFlag || undefined,
+        });
         UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
+        qrVerifiedFlag = false; // reset after use
         triggerLookup();
       } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
     }
@@ -691,7 +718,7 @@
       const amount = parseFloat(document.getElementById('amount').value);
       const notes = document.getElementById('notes').value.trim();
 
-      if (!email && !phone) { UI.showAlert('credit-alert', currentMode === 'qr' ? 'Le client n\'a pas scanné le QR' : 'Email ou téléphone requis', 'error'); return; }
+      if (!email && !phone) { UI.showAlert('credit-alert', (currentMode === 'qr' || currentMode === 'scan') ? 'Scannez d\'abord le QR du client' : 'Email ou téléphone requis', 'error'); return; }
       if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
 
       // ── Anti-double-credit: generate unique key per submission ──
@@ -749,6 +776,7 @@
 
       // Full form reset
       lastCreditKey = null;
+      qrVerifiedFlag = false;
       document.getElementById('credit-form').reset();
       document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
       document.getElementById('pts-badge').textContent = '0 pts';
@@ -875,10 +903,106 @@
       }
     }
 
+    // ═══════════════════════════════════════════════════════
+    // QR SCANNER (camera)
+    // ═══════════════════════════════════════════════════════
+
+    let html5QrScanner = null;
+    let qrVerifiedFlag = false;  // true if client was identified by QR scan
+
+    function startScanner() {
+      document.getElementById('scan-status').textContent = 'Démarrage de la caméra…';
+      document.getElementById('scan-status').style.color = '#64748B';
+
+      html5QrScanner = new Html5Qrcode('scan-reader');
+      html5QrScanner.start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: { width: 200, height: 200 } },
+        onScanSuccess,
+        () => {} // ignore scan failures
+      ).catch(err => {
+        console.error('Scanner error:', err);
+        document.getElementById('scan-status').textContent = '⚠️ Impossible d\'accéder à la caméra';
+        document.getElementById('scan-status').style.color = '#DC2626';
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrScanner) {
+        html5QrScanner.stop().catch(() => {});
+        html5QrScanner.clear();
+        html5QrScanner = null;
+      }
+    }
+
+    async function onScanSuccess(decodedText) {
+      // Extract client token from URL: fiddo.be/c/TOKEN
+      let clientQrToken = null;
+      try {
+        const url = new URL(decodedText);
+        const parts = url.pathname.split('/');
+        if (parts[1] === 'c' && parts[2]) {
+          clientQrToken = parts[2];
+        }
+      } catch (e) {
+        // Not a URL — maybe just the token itself
+        if (/^[A-Za-z0-9_-]{6,20}$/.test(decodedText)) {
+          clientQrToken = decodedText;
+        }
+      }
+
+      if (!clientQrToken) {
+        document.getElementById('scan-status').textContent = '⚠️ QR non reconnu';
+        document.getElementById('scan-status').style.color = '#D97706';
+        return;
+      }
+
+      // Stop scanner immediately
+      stopScanner();
+      document.getElementById('scan-status').textContent = '✓ QR lu ! Recherche du client…';
+      document.getElementById('scan-status').style.color = '#059669';
+
+      // Lookup client
+      try {
+        const d = await API.call('/qr/client-lookup/' + clientQrToken);
+
+        // Set QR verified flag (for PIN bypass on redeem)
+        qrVerifiedFlag = true;
+
+        // Pre-fill credit form
+        if (d.email) {
+          switchMode('email');
+          document.getElementById('client-email').value = d.email;
+          document.getElementById('client-email').classList.add('has-value');
+        } else if (d.phone) {
+          switchMode('phone');
+          document.getElementById('client-phone').value = d.phone;
+          document.getElementById('client-phone').classList.add('has-value');
+        }
+        if (d.name) {
+          document.getElementById('client-name').value = d.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+
+        UI.showAlert('credit-alert',
+          (d.isNew ? '✨ Nouveau client : ' : '✓ Client identifié : ') +
+          (d.name || d.email || d.phone) +
+          (d.pointsBalance > 0 ? ' — ' + d.pointsBalance + ' pts' : ''),
+          'success');
+
+        setTimeout(triggerLookup, 300);
+        setTimeout(() => document.getElementById('amount').focus(), 600);
+      } catch (e) {
+        document.getElementById('scan-status').textContent = '⚠️ Client non trouvé';
+        document.getElementById('scan-status').style.color = '#DC2626';
+        setTimeout(() => switchMode('scan'), 2000); // restart scanner
+      }
+    }
+
     // Load QR on page init (lazy)
     loadStaticQR();
 
-    window.addEventListener('beforeunload', stopPendingPoll);
+    window.addEventListener('beforeunload', () => { stopPendingPoll(); stopScanner(); });
   </script>
 </body>
 </html>
