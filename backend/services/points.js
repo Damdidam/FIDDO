@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 const {
   db,
   endUserQueries,
@@ -14,7 +15,7 @@ const { normalizeEmail, normalizePhone } = require('./normalizer');
 // 3-step lookup: end_users → aliases → create
 // ═══════════════════════════════════════════════════════
 
-function findOrCreateEndUser({ email, phone, name }) {
+function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
   const emailLower = normalizeEmail(email);
   const phoneE164 = normalizePhone(phone);
 
@@ -64,6 +65,13 @@ function findOrCreateEndUser({ email, phone, name }) {
   );
 
   endUser = endUserQueries.findById.get(result.lastInsertRowid);
+
+  // Set PIN if provided (new client only)
+  if (pinHash && endUser) {
+    endUserQueries.setPin.run(pinHash, endUser.id);
+    endUser = endUserQueries.findById.get(endUser.id);
+  }
+
   return { endUser, isNew: true };
 }
 
@@ -99,6 +107,7 @@ function creditPoints({
   notes = null,
   idempotencyKey = null,
   source = 'manual',
+  pinHash = null,
 }) {
   if (!amount || amount <= 0) {
     throw new Error('Montant invalide');
@@ -127,7 +136,7 @@ function creditPoints({
   }
 
   const run = db.transaction(() => {
-    const { endUser, isNew: isNewClient } = findOrCreateEndUser({ email, phone, name });
+    const { endUser, isNew: isNewClient } = findOrCreateEndUser({ email, phone, name, pinHash });
 
     if (endUser.is_blocked) {
       throw new Error('Ce client est bloqué');
@@ -181,6 +190,7 @@ function redeemReward({
   staffId = null,
   notes = null,
   idempotencyKey = null,
+  pin = null,
 }) {
   const merchant = merchantQueries.findById.get(merchantId);
   if (!merchant) throw new Error('Commerce non trouvé');
@@ -194,6 +204,23 @@ function redeemReward({
       const mc = merchantClientQueries.findById.get(existing.merchant_client_id);
       return { merchantClient: mc, transaction: existing, idempotent: true };
     }
+  }
+
+  // ── PIN verification (before transaction for early fail) ──
+  const mcCheck = merchantClientQueries.findByIdAndMerchant.get(merchantClientId, merchantId);
+  if (!mcCheck) throw new Error('Client non trouvé');
+
+  const endUser = endUserQueries.findById.get(mcCheck.end_user_id);
+  if (!endUser) throw new Error('Client non trouvé');
+
+  if (!endUser.pin_hash) {
+    throw new Error('Ce client n\'a pas de code PIN. Veuillez en définir un avant de réclamer la récompense.');
+  }
+  if (!pin) {
+    throw new Error('Code PIN requis pour appliquer la récompense');
+  }
+  if (!bcrypt.compareSync(pin, endUser.pin_hash)) {
+    throw new Error('Code PIN incorrect');
   }
 
   const run = db.transaction(() => {
