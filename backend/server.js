@@ -72,8 +72,11 @@ app.get('/api/health', (req, res) => {
 // HTML PAGES
 // ═══════════════════════════════════════════════════════
 
+// Landing page (public)
+app.get('/',            (req, res) => res.sendFile(path.join(__dirname, '../frontend/landing.html')));
+app.get('/login',       (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
+
 // Merchant pages
-app.get('/',            (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
 app.get('/dashboard',   (req, res) => res.sendFile(path.join(__dirname, '../frontend/dashboard.html')));
 app.get('/clients',     (req, res) => res.sendFile(path.join(__dirname, '../frontend/clients.html')));
 app.get('/credit',      (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
