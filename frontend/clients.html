@@ -639,9 +639,17 @@
       const c = currentClientData;
       const rewardDesc = c.custom_reward || c.reward_description || merchant.reward_description;
       const newBal = c.points_balance - c.reward_threshold;
+
+      const pin = prompt('🔒 Code PIN du client (4 chiffres) :');
+      if (!pin) return; // cancelled
+      if (!/^\d{4}$/.test(pin)) {
+        alert('Le code PIN doit contenir 4 chiffres');
+        return;
+      }
+
       if (!confirm('🎁 Appliquer la récompense ?\n\n→ ' + rewardDesc + '\n\nSolde : ' + c.points_balance + ' pts → ' + newBal + ' pts')) return;
       try {
-        const result = await API.clients.reward({ merchantClientId: mcId });
+        const result = await API.clients.reward({ merchantClientId: mcId, pin });
         const box = document.getElementById('detail-box');
         const ov = document.createElement('div');
         ov.className = 'celebration';
