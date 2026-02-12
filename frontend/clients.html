@@ -233,9 +233,22 @@
       .col-hdr, .cl-row { grid-template-columns: 1fr 55px 72px; gap: 0.15rem; }
       .col-th-visits, .cl-visits-cell { display: none; }
     }
-    .pin-section { background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; }
-    .pin-hdr { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
-    .pin-row { display: flex; align-items: center; }
+    .pin-section { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 1rem 1.15rem; margin-bottom: 0.75rem; }
+    .pin-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
+    .pin-hdr-left { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 600; color: #334155; }
+    .pin-status { font-size: 0.58rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; letter-spacing: 0.3px; }
+    .pin-status.set { background: #DCFCE7; color: #16A34A; }
+    .pin-status.unset { background: #FEE2E2; color: #DC2626; }
+    .pin-body { display: flex; align-items: center; gap: 0.75rem; }
+    .pin-digits { display: flex; gap: 6px; }
+    .pin-digit { width: 36px; height: 40px; text-align: center; font-size: 1.15rem; font-weight: 700; color: #1E293B; border: 2px solid #CBD5E1; border-radius: 8px; background: white; outline: none; transition: border-color 0.2s, box-shadow 0.2s; caret-color: var(--primary); }
+    .pin-digit:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(8,145,178,0.12); }
+    .pin-digit.filled { border-color: var(--primary); background: #F0FDFA; }
+    .pin-save { padding: 7px 14px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
+    .pin-save:hover { background: var(--primary-dark); transform: translateY(-1px); }
+    .pin-save:active { transform: translateY(0); }
+    .pin-warn { font-size: 0.68rem; color: #DC2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 4px; }
+    .pin-hint { font-size: 0.6rem; color: #94A3B8; margin-top: 6px; }
   </style>
 </head>
 <body class="dash">
@@ -552,16 +565,21 @@
         // PIN SECTION (always visible for manager+)
         if (isManager) {
           h += '<div class="pin-section">';
-          h += '<div class="pin-hdr"><span>🔒 Code PIN récompense</span>';
-          if (c.has_pin) h += '<span class="hero-badge validated" style="font-size:0.6rem">Défini</span>';
-          else h += '<span class="hero-badge blocked" style="font-size:0.6rem">Non défini</span>';
+          h += '<div class="pin-hdr"><div class="pin-hdr-left">🔒 Code PIN récompense</div>';
+          if (c.has_pin) h += '<span class="pin-status set">✓ Défini</span>';
+          else h += '<span class="pin-status unset">Non défini</span>';
           h += '</div>';
-          if (!c.has_pin) h += '<div style="font-size:0.7rem;color:#EF4444;margin-bottom:0.5rem">⚠️ Ce client n\'a pas de PIN — impossible de valider une récompense</div>';
-          h += '<div class="pin-row">';
-          h += '<input type="tel" id="pin-input" maxlength="4" pattern="\\d{4}" inputmode="numeric" placeholder="4 chiffres" style="width:80px;text-align:center;letter-spacing:6px;font-size:1.1rem;font-weight:700;padding:0.4rem 0.5rem;border:2px solid var(--border);border-radius:8px">';
-          h += '<button class="notes-save" onclick="savePin()" style="margin-left:0.5rem">' + (c.has_pin ? 'Modifier' : 'Définir') + '</button>';
+          if (!c.has_pin) h += '<div class="pin-warn">⚠ Aucun PIN — ce client ne peut pas valider de récompense</div>';
+          h += '<div class="pin-body">';
+          h += '<div class="pin-digits">';
+          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="0" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
+          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="1" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
+          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="2" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
+          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="3" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
           h += '</div>';
-          h += '<div style="font-size:0.6rem;color:#94A3B8;margin-top:4px">Code requis pour valider les récompenses</div>';
+          h += '<button class="pin-save" onclick="savePin()">' + (c.has_pin ? '✏️ Modifier' : '✓ Définir') + '</button>';
+          h += '</div>';
+          h += '<div class="pin-hint">Code à 4 chiffres requis pour valider les récompenses</div>';
           h += '</div>';
         }
 
@@ -651,12 +669,29 @@
     }
 
     async function savePin() {
-      const pin = document.getElementById('pin-input').value.trim();
-      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); return; }
+      const digits = document.querySelectorAll('.pin-digit');
+      const pin = Array.from(digits).map(d => d.value).join('');
+      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); digits[0].focus(); return; }
       try {
         await API.clients.setPin(currentClientId, pin);
         showDetail(currentClientId);
       } catch (err) { alert(err.message); }
+    }
+
+    function pinDigitNav(el) {
+      el.value = el.value.replace(/\D/g, '').slice(-1);
+      if (el.value) el.classList.add('filled'); else el.classList.remove('filled');
+      if (el.value && el.dataset.pin < 3) {
+        const next = document.querySelector('.pin-digit[data-pin="' + (parseInt(el.dataset.pin) + 1) + '"]');
+        if (next) next.focus();
+      }
+    }
+
+    function pinDigitBack(e) {
+      if (e.key === 'Backspace' && !e.target.value && e.target.dataset.pin > 0) {
+        const prev = document.querySelector('.pin-digit[data-pin="' + (parseInt(e.target.dataset.pin) - 1) + '"]');
+        if (prev) { prev.value = ''; prev.classList.remove('filled'); prev.focus(); }
+      }
     }
 
     // ════════════════════════════════════════
