@@ -188,9 +188,9 @@ router.post('/credit', async (req, res) => {
 router.post('/reward', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const { merchantClientId, notes, idempotencyKey, pin } = req.body;
+    const { merchantClientId, notes, idempotencyKey, pin, qrVerified } = req.body;
     if (!merchantClientId) return res.status(400).json({ error: 'ID client requis' });
-    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null });
+    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null, qrVerified: !!qrVerified });
     if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta } });
     res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction, rewardLabel: result.rewardLabel || null });
   } catch (error) {
