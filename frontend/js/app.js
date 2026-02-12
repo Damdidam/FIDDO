@@ -58,7 +58,7 @@ const Auth = {
   logout: async () => {
     try { await API.auth.logout(); } catch (e) { /* ignore */ }
     Auth.clearSession();
-    window.location.href = '/';
+    window.location.href = '/login';
   },
 };
 
@@ -77,7 +77,7 @@ const API = {
 
     if (response.status === 401 && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) {
       Auth.clearSession();
-      window.location.href = '/';
+      window.location.href = '/login';
       return;
     }
 
@@ -226,7 +226,7 @@ const UI = {
 
 function requireAuth() {
   if (!Auth.isAuthenticated()) {
-    window.location.href = '/';
+    window.location.href = '/login';
     return false;
   }
   return true;
