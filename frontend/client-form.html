@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0891B2">
-  <title>FIDDO — Mon compte fidélité</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" href="/logo-fiddo.png">
-  <link rel="apple-touch-icon" href="/logo-fiddo.png">
+  <meta name="theme-color" content="#0F172A">
+  <title>FIDDO — Fidélité</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -17,21 +15,23 @@
       --accent: #0891B2;
       --accent-dark: #0E7490;
       --accent-light: #ECFEFF;
-      --accent-glow: rgba(8,145,178,0.12);
-      --dark: #1F2937;
+      --accent-glow: rgba(8,145,178,0.18);
+      --dark: #0F172A;
+      --card: #FFFFFF;
+      --bg: #F1F5F9;
       --gradient: linear-gradient(135deg, var(--accent), var(--accent-dark));
     }
 
-    [data-theme="navy"]   { --accent: #1E40AF; --accent-dark: #1E3A8A; --accent-light: #DBEAFE; --accent-glow: rgba(30,64,175,0.12); --dark: #1E293B; }
-    [data-theme="violet"] { --accent: #7C3AED; --accent-dark: #6D28D9; --accent-light: #EDE9FE; --accent-glow: rgba(124,58,237,0.12); --dark: #1E1B4B; }
-    [data-theme="forest"] { --accent: #059669; --accent-dark: #047857; --accent-light: #D1FAE5; --accent-glow: rgba(5,150,105,0.12); --dark: #1A2E1A; }
-    [data-theme="brick"]  { --accent: #DC2626; --accent-dark: #B91C1C; --accent-light: #FEE2E2; --accent-glow: rgba(220,38,38,0.12); --dark: #2D1B1B; }
-    [data-theme="amber"]  { --accent: #D97706; --accent-dark: #B45309; --accent-light: #FEF3C7; --accent-glow: rgba(217,119,6,0.12); --dark: #2D2415; }
-    [data-theme="slate"]  { --accent: #475569; --accent-dark: #334155; --accent-light: #F1F5F9; --accent-glow: rgba(71,85,105,0.12); --dark: #0F172A; }
+    [data-theme="navy"]   { --accent: #1E40AF; --accent-dark: #1E3A8A; --accent-light: #DBEAFE; --accent-glow: rgba(30,64,175,0.18); }
+    [data-theme="violet"] { --accent: #7C3AED; --accent-dark: #6D28D9; --accent-light: #EDE9FE; --accent-glow: rgba(124,58,237,0.18); }
+    [data-theme="forest"] { --accent: #059669; --accent-dark: #047857; --accent-light: #D1FAE5; --accent-glow: rgba(5,150,105,0.18); }
+    [data-theme="brick"]  { --accent: #DC2626; --accent-dark: #B91C1C; --accent-light: #FEE2E2; --accent-glow: rgba(220,38,38,0.18); }
+    [data-theme="amber"]  { --accent: #D97706; --accent-dark: #B45309; --accent-light: #FEF3C7; --accent-glow: rgba(217,119,6,0.18); }
+    [data-theme="slate"]  { --accent: #475569; --accent-dark: #334155; --accent-light: #F1F5F9; --accent-glow: rgba(71,85,105,0.18); }
 
     body {
       font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: #F1F5F9;
+      background: var(--dark);
       color: #1E293B;
       min-height: 100vh;
       min-height: 100dvh;
@@ -39,466 +39,302 @@
       flex-direction: column;
     }
 
-    /* ── Header ── */
-    .hdr {
-      background: var(--gradient);
-      color: white;
-      padding: 1.1rem 1rem 0.9rem;
+    /* ── Dark top area ── */
+    .top-zone {
+      background: var(--dark);
+      padding: 2.5rem 1.5rem 3.5rem;
       text-align: center;
       position: relative;
-      overflow: hidden;
     }
-    .hdr::after {
+    .top-zone::after {
       content: '';
       position: absolute;
       bottom: -1px; left: 0; right: 0;
-      height: 20px;
-      background: #F1F5F9;
-      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      height: 32px;
+      background: var(--bg);
+      border-radius: 24px 24px 0 0;
     }
-    .hdr h1 { font-size: 1.15rem; font-weight: 700; }
-    .hdr p { font-size: 0.75rem; opacity: 0.85; margin-top: 2px; }
 
-    /* ── Main ── */
-    .main {
+    .brand {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      margin-bottom: 0.75rem;
+    }
+    .merchant-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      margin-bottom: 0.25rem;
+    }
+    .merchant-sub {
+      font-size: 0.78rem;
+      color: #94A3B8;
+    }
+
+    /* ── Content area ── */
+    .content {
       flex: 1;
-      padding: 0.75rem 1rem 2rem;
-      max-width: 420px;
+      background: var(--bg);
+      padding: 0 1.25rem 2rem;
+    }
+    .content-inner {
+      max-width: 400px;
       margin: 0 auto;
-      width: 100%;
     }
 
     /* ── Card ── */
     .card {
-      background: white;
-      border-radius: 14px;
-      padding: 1.25rem;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-      margin-bottom: 0.75rem;
+      background: var(--card);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
     }
 
     /* ── Form ── */
     .form-group { margin-bottom: 1rem; }
-    .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: #64748B; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #64748B;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
     .form-control {
       width: 100%;
-      padding: 12px 14px;
+      padding: 14px 16px;
       border: 2px solid #E2E8F0;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 1rem;
       font-family: inherit;
-      transition: border-color 0.2s;
-      background: white;
+      transition: all 0.25s;
+      background: #F8FAFC;
+      color: #1E293B;
     }
-    .form-control:focus { outline: none; border-color: var(--accent); }
-    .form-hint { font-size: 0.72rem; color: #94A3B8; margin-top: 3px; }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--accent);
+      background: white;
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+    .form-control::placeholder { color: #CBD5E1; }
 
     /* ── Segment toggle ── */
     .seg {
       display: flex;
       background: #F1F5F9;
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 3px;
       margin-bottom: 1rem;
     }
     .seg button {
       flex: 1;
-      padding: 8px;
+      padding: 10px;
       border: none;
       background: none;
-      border-radius: 8px;
+      border-radius: 10px;
       font-size: 0.85rem;
       font-weight: 600;
-      color: #64748B;
+      color: #94A3B8;
       cursor: pointer;
       font-family: inherit;
-      transition: all 0.2s;
+      transition: all 0.25s;
     }
     .seg button.active {
       background: white;
       color: var(--accent);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
 
-    /* ── PIN input ── */
-    .pin-row {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      margin: 0.5rem 0;
-    }
-    .pin-digit {
-      width: 52px;
-      height: 56px;
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 700;
-      border: 2px solid #E2E8F0;
-      border-radius: 10px;
-      font-family: inherit;
-      transition: border-color 0.2s;
-    }
-    .pin-digit:focus { outline: none; border-color: var(--accent); }
-
-    /* ── Buttons ── */
-    .btn {
+    /* ── Button ── */
+    .btn-submit {
       display: block;
       width: 100%;
-      padding: 14px;
+      padding: 16px;
       border: none;
-      border-radius: 12px;
-      font-size: 1rem;
+      border-radius: 14px;
+      font-size: 1.05rem;
       font-weight: 700;
       font-family: inherit;
       cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-primary { background: var(--gradient); color: white; }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px var(--accent-glow); }
-    .btn-primary:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
-
-    .btn-identify {
-      background: linear-gradient(135deg, #10B981, #059669);
+      background: var(--gradient);
       color: white;
-      font-size: 1.1rem;
-      padding: 18px;
-      border-radius: 14px;
+      transition: all 0.25s;
+      margin-top: 0.5rem;
+      position: relative;
+      overflow: hidden;
     }
-    .btn-identify:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(16,185,129,0.3); }
-    .btn-identify:disabled { opacity: 0.5; transform: none; }
-
-    .btn-outline {
-      background: none;
-      border: 2px solid #E2E8F0;
-      color: #64748B;
-      font-size: 0.85rem;
-      padding: 10px;
-    }
-    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
 
     /* ── Alert ── */
     .alert {
-      padding: 0.65rem 0.85rem;
+      padding: 0.7rem 0.9rem;
       border-radius: 10px;
       font-size: 0.85rem;
       margin-bottom: 0.75rem;
+      animation: slideIn 0.3s ease;
     }
     .alert-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
-    .alert-success { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
-    .alert-info { background: var(--accent-light); color: var(--accent-dark); border: 1px solid var(--accent); border-opacity: 0.3; }
 
-    /* ── Points display ── */
-    .pts-hero {
-      text-align: center;
-      padding: 1.5rem 0 0.75rem;
-    }
-    .pts-hero .value {
-      font-size: 3.5rem;
-      font-weight: 800;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1;
-    }
-    .pts-hero .label {
-      font-size: 0.85rem;
-      color: #64748B;
-      margin-top: 4px;
-    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ── Progress bar ── */
-    .progress-wrap { margin: 0.75rem 0; }
-    .progress-bar {
-      height: 10px;
-      background: #E2E8F0;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-    .progress-fill {
-      height: 100%;
-      background: var(--gradient);
-      border-radius: 5px;
-      transition: width 0.6s ease;
-    }
-    .progress-text {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.72rem;
-      color: #94A3B8;
-      margin-top: 4px;
-    }
-
-    /* ── Reward banner ── */
-    .reward-banner {
-      background: linear-gradient(135deg, #10B981, #059669);
-      color: white;
-      padding: 1rem;
+    /* ── Reward info ── */
+    .reward-info {
+      background: var(--accent-light);
       border-radius: 12px;
+      padding: 0.75rem 1rem;
       text-align: center;
-      margin-bottom: 0.75rem;
+      font-size: 0.82rem;
+      color: var(--accent-dark);
+      margin-bottom: 1rem;
+      font-weight: 500;
     }
-    .reward-banner h3 { font-size: 1.1rem; margin-bottom: 4px; }
-    .reward-banner p { font-size: 0.8rem; opacity: 0.9; }
 
-    /* ── Stats ── */
-    .stats-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-    }
-    .stats-row .stat {
-      background: #F8FAFC;
-      border-radius: 10px;
-      padding: 0.75rem;
+    /* ── Success screen ── */
+    .success-card {
       text-align: center;
+      padding: 2rem 1.5rem;
+      animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-    .stats-row .stat .val { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
-    .stats-row .stat .lbl { font-size: 0.7rem; color: #94A3B8; text-transform: uppercase; }
-
-    /* ── Identified confirmation ── */
-    .identified {
-      background: #F0FDF4;
-      border: 2px solid #BBF7D0;
-      border-radius: 14px;
-      padding: 1.5rem;
-      text-align: center;
-      margin-bottom: 0.75rem;
-      animation: pop 0.4s ease;
+    .success-icon {
+      width: 72px;
+      height: 72px;
+      background: linear-gradient(135deg, #10B981, #059669);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+      font-size: 2rem;
+      box-shadow: 0 8px 24px rgba(16,185,129,0.25);
     }
-    .identified .icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-    .identified h3 { color: #166534; font-size: 1rem; }
-    .identified p { color: #64748B; font-size: 0.8rem; margin-top: 4px; }
+    .success-card h2 { font-size: 1.2rem; color: #166534; margin-bottom: 0.5rem; }
+    .success-card p { font-size: 0.88rem; color: #64748B; line-height: 1.5; }
+    .success-points {
+      display: inline-block;
+      background: var(--accent-light);
+      color: var(--accent-dark);
+      font-weight: 700;
+      padding: 0.4rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      margin-top: 0.75rem;
+    }
 
     @keyframes pop {
-      0% { transform: scale(0.9); opacity: 0; }
+      0% { transform: scale(0.85); opacity: 0; }
       100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* ── Error screen ── */
+    .error-card {
+      text-align: center;
+      padding: 2rem 1.5rem;
     }
 
     /* ── Loading ── */
     .spinner {
-      width: 32px; height: 32px;
-      border: 3px solid #E2E8F0;
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,0.15);
       border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 2rem auto;
+      animation: spin 0.7s linear infinite;
+      margin: 3rem auto;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ── Footer ── */
-    .footer {
-      text-align: center;
-      padding: 1rem;
-      font-size: 0.7rem;
-      color: #94A3B8;
-    }
-    .footer a { color: var(--accent); text-decoration: none; }
 
     /* ── Screens ── */
     .screen { display: none; }
     .screen.active { display: block; }
 
-    /* ── Install prompt ── */
-    .install-hint {
-      background: var(--accent-light);
-      border-radius: 10px;
-      padding: 0.6rem 0.85rem;
-      font-size: 0.75rem;
-      color: var(--accent-dark);
-      margin-bottom: 0.75rem;
+    /* ── Footer ── */
+    .footer {
+      background: var(--bg);
       text-align: center;
+      padding: 0.75rem;
+      font-size: 0.68rem;
+      color: #CBD5E1;
     }
   </style>
 </head>
 <body>
 
-  <div class="hdr">
-    <h1 id="merchant-name">Chargement…</h1>
-    <p>Programme de fidélité</p>
+  <!-- ═══ DARK TOP ═══ -->
+  <div class="top-zone">
+    <div class="merchant-name" id="merchant-name">Chargement…</div>
+    <div class="merchant-sub">Programme de fidélité</div>
   </div>
 
-  <div class="main">
+  <!-- ═══ CONTENT ═══ -->
+  <div class="content">
+    <div class="content-inner">
 
-    <!-- ═══ LOADING ═══ -->
-    <div id="screen-loading" class="screen active">
-      <div class="spinner"></div>
-    </div>
-
-    <!-- ═══ ERROR ═══ -->
-    <div id="screen-error" class="screen">
-      <div class="card" style="text-align:center; padding:2rem;">
-        <div style="font-size:2.5rem; margin-bottom:0.75rem;">😕</div>
-        <h2 style="font-size:1.1rem; margin-bottom:0.5rem;" id="error-title">Commerce non trouvé</h2>
-        <p style="font-size:0.85rem; color:#64748B;" id="error-msg">Ce QR code n'est pas valide ou le commerce n'est plus actif.</p>
+      <!-- LOADING -->
+      <div id="screen-loading" class="screen active">
+        <div class="spinner"></div>
       </div>
-    </div>
 
-    <!-- ═══ WELCOME (choice) ═══ -->
-    <div id="screen-welcome" class="screen">
-      <div class="card" style="text-align:center; padding:1.5rem;">
-        <div style="font-size:2.5rem; margin-bottom:0.5rem;">🐕</div>
-        <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:0.3rem;">Bienvenue !</h2>
-        <p style="font-size:0.85rem; color:#64748B; margin-bottom:1.25rem;" id="welcome-sub">Programme de fidélité</p>
-
-        <button class="btn btn-primary" onclick="showScreen('screen-auth')" style="margin-bottom:0.65rem;">
-          🔑 J'ai déjà un compte
-        </button>
-        <button class="btn btn-outline" onclick="showScreen('screen-register')" style="border-color:var(--accent); color:var(--accent);">
-          ✨ Première visite
-        </button>
-      </div>
-    </div>
-
-    <!-- ═══ REGISTER (new client) ═══ -->
-    <div id="screen-register" class="screen">
-      <div class="card">
-        <h2 style="font-size:1rem; font-weight:700; margin-bottom:0.25rem; text-align:center;">Première visite</h2>
-        <p style="font-size:0.8rem; color:#64748B; text-align:center; margin-bottom:1rem;">Enregistrez-vous pour gagner des points fidélité</p>
-
-        <div id="reg-alert"></div>
-
-        <div class="form-group">
-          <label class="form-label">Votre nom / prénom</label>
-          <input type="text" id="reg-name" class="form-control" placeholder="Pierre" autocomplete="name">
-        </div>
-
-        <div class="seg">
-          <button type="button" id="seg-reg-email" class="active" onclick="setRegMode('email')">@ Email</button>
-          <button type="button" id="seg-reg-phone" onclick="setRegMode('phone')"># Téléphone</button>
-        </div>
-
-        <div class="form-group" id="reg-email-group">
-          <label class="form-label">Adresse email</label>
-          <input type="email" id="reg-email" class="form-control" placeholder="votre@email.com" autocomplete="email" inputmode="email">
-        </div>
-
-        <div class="form-group" id="reg-phone-group" style="display:none;">
-          <label class="form-label">Numéro de téléphone</label>
-          <input type="tel" id="reg-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="tel" inputmode="tel">
-        </div>
-
-        <button class="btn btn-primary" id="btn-register" onclick="doRegister()">M'enregistrer</button>
-
-        <button class="btn btn-outline" onclick="showScreen('screen-welcome')" style="margin-top:0.5rem;">← Retour</button>
-      </div>
-    </div>
-
-    <!-- ═══ REGISTERED (confirmation) ═══ -->
-    <div id="screen-registered" class="screen">
-      <div class="card" style="text-align:center; padding:1.5rem;">
-        <div class="identified">
-          <div class="icon">🎉</div>
-          <h3 style="font-size:1.1rem;">Bienvenue dans le club !</h3>
-          <p>Vous êtes enregistré. Le commerce va créditer vos premiers points.</p>
-          <p style="margin-top:0.75rem; font-size:0.8rem; color:var(--accent-dark);">
-            Vous recevrez un <strong>code PIN</strong> pour vos prochaines visites.
-          </p>
+      <!-- ERROR -->
+      <div id="screen-error" class="screen">
+        <div class="card error-card">
+          <div style="font-size:2.5rem; margin-bottom:0.75rem;">😕</div>
+          <h2 style="font-size:1.1rem; margin-bottom:0.5rem;" id="error-title">Commerce non trouvé</h2>
+          <p style="font-size:0.85rem; color:#64748B;" id="error-msg">Ce QR code n'est pas valide ou le commerce n'est plus actif.</p>
         </div>
       </div>
-    </div>
 
-    <!-- ═══ AUTH (existing client) ═══ -->
-    <div id="screen-auth" class="screen">
-      <div class="card">
-        <h2 style="font-size:1rem; font-weight:700; margin-bottom:1rem; text-align:center;">Identifiez-vous</h2>
+      <!-- FORM -->
+      <div id="screen-form" class="screen">
+        <div id="reward-info" class="reward-info"></div>
 
-        <div id="auth-alert"></div>
+        <div class="card">
+          <div id="form-alert"></div>
 
-        <div class="seg">
-          <button type="button" id="seg-email" class="active" onclick="setAuthMode('email')">@ Email</button>
-          <button type="button" id="seg-phone" onclick="setAuthMode('phone')"># Téléphone</button>
-        </div>
-
-        <div class="form-group" id="auth-email-group">
-          <label class="form-label">Adresse email</label>
-          <input type="email" id="auth-email" class="form-control" placeholder="votre@email.com" autocomplete="email" inputmode="email">
-        </div>
-
-        <div class="form-group" id="auth-phone-group" style="display:none;">
-          <label class="form-label">Numéro de téléphone</label>
-          <input type="tel" id="auth-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="tel" inputmode="tel">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Code PIN (4 chiffres)</label>
-          <div class="pin-row">
-            <input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="0" autocomplete="off">
-            <input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="1" autocomplete="off">
-            <input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="2" autocomplete="off">
-            <input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="3" autocomplete="off">
+          <div class="seg">
+            <button type="button" id="seg-email" class="active" onclick="setMode('email')">@ Email</button>
+            <button type="button" id="seg-phone" onclick="setMode('phone')"># Téléphone</button>
           </div>
-          <p class="form-hint" style="text-align:center;">Le code PIN attribué par le commerce</p>
-        </div>
 
-        <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Se connecter</button>
-        <button class="btn btn-outline" onclick="showScreen('screen-welcome')" style="margin-top:0.5rem;">← Retour</button>
-      </div>
-    </div>
-
-    <!-- ═══ DASHBOARD ═══ -->
-    <div id="screen-dashboard" class="screen">
-
-      <div id="dash-reward-banner"></div>
-
-      <div class="card">
-        <div class="pts-hero">
-          <div class="value" id="dash-points">0</div>
-          <div class="label">points</div>
-        </div>
-
-        <div class="progress-wrap">
-          <div class="progress-bar">
-            <div class="progress-fill" id="dash-progress" style="width:0%;"></div>
+          <div class="form-group" id="group-email">
+            <label class="form-label">Adresse email</label>
+            <input type="email" id="inp-email" class="form-control" placeholder="votre@email.com" autocomplete="email" inputmode="email">
           </div>
-          <div class="progress-text">
-            <span id="dash-prog-left">0 pts</span>
-            <span id="dash-prog-right">Récompense : 0 pts</span>
+
+          <div class="form-group" id="group-phone" style="display:none;">
+            <label class="form-label">Numéro de téléphone</label>
+            <input type="tel" id="inp-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="tel" inputmode="tel">
           </div>
+
+          <div class="form-group">
+            <label class="form-label">Nom / prénom <span style="font-weight:400; text-transform:none; letter-spacing:0;">(optionnel)</span></label>
+            <input type="text" id="inp-name" class="form-control" placeholder="Pierre" autocomplete="name">
+          </div>
+
+          <button class="btn-submit" id="btn-submit" onclick="doSubmit()">
+            ✓ C'est moi !
+          </button>
         </div>
       </div>
 
-      <div id="dash-identified" style="display:none;">
-        <div class="identified">
-          <div class="icon">✅</div>
-          <h3>Vous êtes identifié !</h3>
-          <p>Le commerce va créditer vos points.</p>
+      <!-- SUCCESS -->
+      <div id="screen-success" class="screen">
+        <div class="card success-card">
+          <div class="success-icon">✓</div>
+          <h2 id="success-title">Vous êtes identifié !</h2>
+          <p id="success-msg">Le commerce va créditer vos points. Bon appétit !</p>
+          <div class="success-points" id="success-points" style="display:none;"></div>
         </div>
       </div>
 
-      <div id="dash-identify-btn">
-        <button class="btn btn-identify" id="btn-identify" onclick="doIdentify()">
-          📍 Je suis là !
-        </button>
-        <p style="text-align:center; font-size:0.72rem; color:#94A3B8; margin-top:6px;">
-          Appuyez pour signaler votre présence au commerce
-        </p>
-      </div>
-
-      <div class="stats-row" style="margin-top:0.75rem;">
-        <div class="stat">
-          <div class="val" id="dash-visits">0</div>
-          <div class="lbl">Visites</div>
-        </div>
-        <div class="stat">
-          <div class="val" id="dash-spent">0 €</div>
-          <div class="lbl">Dépensé</div>
-        </div>
-      </div>
-
-      <div id="install-hint" class="install-hint" style="display:none;">
-        💡 Ajoutez cette page à votre écran d'accueil pour un accès rapide !
-      </div>
-
-      <button class="btn btn-outline" onclick="doLogout()" style="margin-top:0.5rem;">Déconnexion</button>
     </div>
-
   </div>
 
-  <div class="footer">
-    Propulsé par <a href="https://fiddo.be">FIDDO</a> 🐕
-  </div>
+  <div class="footer">Propulsé par FIDDO</div>
 
   <script>
     // ═══════════════════════════════════════════════════════
@@ -506,27 +342,24 @@
     // ═══════════════════════════════════════════════════════
 
     const API_BASE = window.location.hostname === 'localhost'
-      ? 'http://localhost:3000/api'
-      : '/api';
+      ? 'http://localhost:3000/api' : '/api';
 
-    let qrToken = null;  // merchant QR token from URL
-    let clientToken = null;
+    let qrToken = null;
     let merchantInfo = null;
-    let clientData = null;
-    let authMode = 'email';
+    let mode = 'email';
 
     // ═══════════════════════════════════════════════════════
-    // INIT — extract token from URL
+    // INIT
     // ═══════════════════════════════════════════════════════
 
     (async function init() {
-      // Extract token: /q/ABC123 or /client-form?s=TOKEN
-      const pathParts = window.location.pathname.split('/');
-      if (pathParts[1] === 'q' && pathParts[2]) {
-        qrToken = pathParts[2];
+      // Extract token: /q/ABC123
+      const parts = window.location.pathname.split('/');
+      if (parts[1] === 'q' && parts[2]) {
+        qrToken = parts[2];
       } else {
-        const params = new URLSearchParams(window.location.search);
-        qrToken = params.get('s') || params.get('token');
+        const p = new URLSearchParams(window.location.search);
+        qrToken = p.get('s') || p.get('token');
       }
 
       if (!qrToken) {
@@ -534,7 +367,6 @@
         return;
       }
 
-      // Fetch merchant info
       try {
         const resp = await fetch(`${API_BASE}/qr/info/${qrToken}`);
         if (!resp.ok) {
@@ -543,45 +375,44 @@
         }
         merchantInfo = await resp.json();
 
-        // Apply theme
+        // Theme
         document.body.setAttribute('data-theme', merchantInfo.theme || 'teal');
         document.getElementById('merchant-name').textContent = merchantInfo.merchantName;
-        document.getElementById('welcome-sub').textContent = 'Programme de fidélité — ' + merchantInfo.merchantName;
         document.title = `${merchantInfo.merchantName} — Fidélité`;
 
-        // Update theme-color meta
         const themeColors = {
           teal: '#0891B2', navy: '#1E40AF', violet: '#7C3AED',
           forest: '#059669', brick: '#DC2626', amber: '#D97706', slate: '#475569'
         };
         document.querySelector('meta[name="theme-color"]').content = themeColors[merchantInfo.theme] || '#0891B2';
 
-      } catch (e) {
-        showError('Erreur de connexion', 'Impossible de contacter le serveur. Vérifiez votre connexion.');
-        return;
-      }
+        // Reward info
+        document.getElementById('reward-info').innerHTML =
+          '🎁 ' + merchantInfo.pointsPerEuro + ' pt/€ · Récompense à ' +
+          merchantInfo.pointsForReward + ' pts — <strong>' + merchantInfo.rewardDescription + '</strong>';
 
-      // Check saved session
-      const saved = localStorage.getItem('fiddo_client_' + qrToken);
-      if (saved) {
-        try {
-          const session = JSON.parse(saved);
-          clientToken = session.token;
-          // Validate token by fetching fresh data
-          const freshData = await fetchClientData();
-          if (freshData) {
-            clientData = freshData;
-            showDashboard();
-            return;
-          }
-        } catch (e) {
-          // Invalid session, clear it
-          localStorage.removeItem('fiddo_client_' + qrToken);
+        // Check if already identified (session ID from previous submit)
+        const savedIdentId = sessionStorage.getItem('fiddo_ident_' + qrToken);
+        if (savedIdentId) {
+          try {
+            const check = await fetch(`${API_BASE}/qr/status/${savedIdentId}?qrToken=${qrToken}`);
+            const status = await check.json();
+            if (status.active) {
+              showSuccess(status);
+              return;
+            }
+          } catch (e) {}
+          sessionStorage.removeItem('fiddo_ident_' + qrToken);
         }
-      }
 
-      // Show welcome (choice between login / register)
-      showScreen('screen-welcome');
+        showScreen('screen-form');
+
+        // Focus first field
+        setTimeout(() => document.getElementById('inp-email').focus(), 400);
+
+      } catch (e) {
+        showError('Erreur de connexion', 'Impossible de contacter le serveur.');
+      }
     })();
 
     // ═══════════════════════════════════════════════════════
@@ -601,152 +432,45 @@
     }
 
     // ═══════════════════════════════════════════════════════
-    // AUTH
+    // MODE TOGGLE
     // ═══════════════════════════════════════════════════════
 
-    function setAuthMode(mode) {
-      authMode = mode;
-      document.getElementById('seg-email').classList.toggle('active', mode === 'email');
-      document.getElementById('seg-phone').classList.toggle('active', mode === 'phone');
-      document.getElementById('auth-email-group').style.display = mode === 'email' ? '' : 'none';
-      document.getElementById('auth-phone-group').style.display = mode === 'phone' ? '' : 'none';
+    function setMode(m) {
+      mode = m;
+      document.getElementById('seg-email').classList.toggle('active', m === 'email');
+      document.getElementById('seg-phone').classList.toggle('active', m === 'phone');
+      document.getElementById('group-email').style.display = m === 'email' ? '' : 'none';
+      document.getElementById('group-phone').style.display = m === 'phone' ? '' : 'none';
+
+      const inp = document.getElementById(m === 'email' ? 'inp-email' : 'inp-phone');
+      setTimeout(() => inp.focus(), 100);
     }
 
-    // PIN digit auto-advance
-    document.querySelectorAll('.pin-digit').forEach((el, i, all) => {
-      el.addEventListener('input', (e) => {
-        el.value = el.value.replace(/\D/g, '').slice(-1);
-        if (el.value && i < 3) all[i + 1].focus();
-        // Auto-submit when all 4 digits entered
-        if (i === 3 && el.value) {
-          const pin = Array.from(all).map(d => d.value).join('');
-          if (pin.length === 4) setTimeout(doLogin, 100);
-        }
-      });
-      el.addEventListener('keydown', (e) => {
-        if (e.key === 'Backspace' && !el.value && i > 0) {
-          all[i - 1].focus();
-          all[i - 1].value = '';
-        }
-      });
-      // Paste support
-      el.addEventListener('paste', (e) => {
-        e.preventDefault();
-        const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 4);
-        text.split('').forEach((ch, j) => { if (all[j]) all[j].value = ch; });
-        if (text.length >= 4) all[3].focus();
-        else if (all[text.length]) all[text.length].focus();
-      });
-    });
+    // ═══════════════════════════════════════════════════════
+    // SUBMIT
+    // ═══════════════════════════════════════════════════════
 
-    function getPin() {
-      return Array.from(document.querySelectorAll('.pin-digit')).map(d => d.value).join('');
-    }
+    async function doSubmit() {
+      document.getElementById('form-alert').innerHTML = '';
 
-    function clearPin() {
-      document.querySelectorAll('.pin-digit').forEach(d => d.value = '');
-      document.querySelector('.pin-digit').focus();
-    }
+      const email = mode === 'email' ? document.getElementById('inp-email').value.trim() : null;
+      const phone = mode === 'phone' ? document.getElementById('inp-phone').value.trim() : null;
+      const name = document.getElementById('inp-name').value.trim() || null;
 
-    function showAuthAlert(msg, type) {
-      const el = document.getElementById('auth-alert');
-      el.innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    }
-
-    function clearAuthAlert() {
-      document.getElementById('auth-alert').innerHTML = '';
-    }
-
-    async function doLogin() {
-      clearAuthAlert();
-
-      const email = authMode === 'email' ? document.getElementById('auth-email').value.trim() : null;
-      const phone = authMode === 'phone' ? document.getElementById('auth-phone').value.trim() : null;
-      const pin = getPin();
-
-      if (!email && !phone) {
-        showAuthAlert(authMode === 'email' ? 'Saisissez votre email' : 'Saisissez votre téléphone', 'error');
-        return;
+      // Validation
+      if (mode === 'email' && !email) {
+        showAlert('Saisissez votre adresse email'); return;
       }
-      if (pin.length !== 4) {
-        showAuthAlert('Saisissez votre code PIN (4 chiffres)', 'error');
-        return;
+      if (mode === 'email' && !/\S+@\S+\.\S+/.test(email)) {
+        showAlert('Adresse email invalide'); return;
+      }
+      if (mode === 'phone' && !phone) {
+        showAlert('Saisissez votre numéro de téléphone'); return;
       }
 
-      const btn = document.getElementById('btn-login');
+      const btn = document.getElementById('btn-submit');
       btn.disabled = true;
-      btn.textContent = 'Connexion…';
-
-      try {
-        const resp = await fetch(`${API_BASE}/qr/client-auth`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ qrToken, email, phone, pin }),
-        });
-
-        const data = await resp.json();
-
-        if (!resp.ok) {
-          showAuthAlert(data.error || 'Erreur de connexion', 'error');
-          clearPin();
-          btn.disabled = false;
-          btn.textContent = 'Se connecter';
-          return;
-        }
-
-        // Success
-        clientToken = data.token;
-        clientData = data;
-
-        // Save session
-        localStorage.setItem('fiddo_client_' + qrToken, JSON.stringify({
-          token: clientToken,
-          clientName: data.client.name,
-        }));
-
-        showDashboard();
-
-      } catch (e) {
-        showAuthAlert('Erreur réseau. Réessayez.', 'error');
-      }
-
-      btn.disabled = false;
-      btn.textContent = 'Se connecter';
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // REGISTER (first visit)
-    // ═══════════════════════════════════════════════════════
-
-    let regMode = 'email';
-
-    function setRegMode(mode) {
-      regMode = mode;
-      document.getElementById('seg-reg-email').classList.toggle('active', mode === 'email');
-      document.getElementById('seg-reg-phone').classList.toggle('active', mode === 'phone');
-      document.getElementById('reg-email-group').style.display = mode === 'email' ? '' : 'none';
-      document.getElementById('reg-phone-group').style.display = mode === 'phone' ? '' : 'none';
-    }
-
-    function showRegAlert(msg, type) {
-      document.getElementById('reg-alert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
-    }
-
-    async function doRegister() {
-      document.getElementById('reg-alert').innerHTML = '';
-
-      const name = document.getElementById('reg-name').value.trim();
-      const email = regMode === 'email' ? document.getElementById('reg-email').value.trim() : null;
-      const phone = regMode === 'phone' ? document.getElementById('reg-phone').value.trim() : null;
-
-      if (!email && !phone) {
-        showRegAlert(regMode === 'email' ? 'Saisissez votre email' : 'Saisissez votre téléphone', 'error');
-        return;
-      }
-
-      const btn = document.getElementById('btn-register');
-      btn.disabled = true;
-      btn.textContent = 'Enregistrement…';
+      btn.textContent = 'Envoi…';
 
       try {
         const resp = await fetch(`${API_BASE}/qr/register`, {
@@ -758,178 +482,54 @@
         const data = await resp.json();
 
         if (!resp.ok) {
-          if (resp.status === 409) {
-            // Account exists → redirect to login
-            showRegAlert(data.error, 'info');
-            setTimeout(() => showScreen('screen-auth'), 2000);
-          } else {
-            showRegAlert(data.error || 'Erreur', 'error');
-          }
+          showAlert(data.error || 'Erreur');
           btn.disabled = false;
-          btn.textContent = 'M\'enregistrer';
+          btn.textContent = '✓ C\'est moi !';
           return;
         }
 
-        // Success → show confirmation
-        showScreen('screen-registered');
+        // Success — save session ID
+        sessionStorage.setItem('fiddo_ident_' + qrToken, data.identId);
+
+        showSuccess(data);
 
       } catch (e) {
-        showRegAlert('Erreur réseau. Réessayez.', 'error');
+        showAlert('Erreur réseau. Réessayez.');
+        btn.disabled = false;
+        btn.textContent = '✓ C\'est moi !';
       }
-
-      btn.disabled = false;
-      btn.textContent = 'M\'enregistrer';
     }
 
-    // ═══════════════════════════════════════════════════════
-    // DASHBOARD
-    // ═══════════════════════════════════════════════════════
-
-    function showDashboard() {
-      showScreen('screen-dashboard');
-      updateDashboard();
-      checkInstallHint();
-    }
-
-    function updateDashboard() {
-      if (!clientData) return;
-
-      const pts = clientData.points;
-      const m = clientData.merchant;
-
-      if (pts) {
-        document.getElementById('dash-points').textContent = pts.balance;
-        const pct = Math.min((pts.balance / m.pointsForReward) * 100, 100);
-        document.getElementById('dash-progress').style.width = pct + '%';
-        document.getElementById('dash-prog-left').textContent = pts.balance + ' pts';
-        document.getElementById('dash-prog-right').textContent = 'Récompense : ' + m.pointsForReward + ' pts';
-        document.getElementById('dash-visits').textContent = pts.visitCount;
-        document.getElementById('dash-spent').textContent = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(pts.totalSpent);
-
-        // Reward banner
-        if (pts.canRedeem) {
-          document.getElementById('dash-reward-banner').innerHTML =
-            '<div class="reward-banner"><h3>🎁 Récompense disponible !</h3><p>' +
-            (pts.customReward || m.rewardDescription) +
-            '</p></div>';
-        } else {
-          const remaining = m.pointsForReward - pts.balance;
-          document.getElementById('dash-reward-banner').innerHTML =
-            '<div style="background:var(--accent-light);border-radius:12px;padding:0.75rem;text-align:center;margin-bottom:0.75rem;font-size:0.85rem;color:var(--accent-dark);">' +
-            'Plus que <strong>' + remaining + ' points</strong> avant : ' + m.rewardDescription + '</div>';
-        }
+    function showSuccess(data) {
+      if (data.isNew) {
+        document.getElementById('success-title').textContent = 'Bienvenue ! 🎉';
+        document.getElementById('success-msg').textContent =
+          'Vous êtes enregistré chez ' + merchantInfo.merchantName + '. Vos premiers points arrivent !';
       } else {
-        // First visit
-        document.getElementById('dash-points').textContent = '0';
-        document.getElementById('dash-progress').style.width = '0%';
-        document.getElementById('dash-prog-left').textContent = '0 pts';
-        document.getElementById('dash-prog-right').textContent = 'Récompense : ' + m.pointsForReward + ' pts';
-        document.getElementById('dash-visits').textContent = '0';
-        document.getElementById('dash-spent').textContent = '0,00 €';
-        document.getElementById('dash-reward-banner').innerHTML =
-          '<div style="background:var(--accent-light);border-radius:12px;padding:0.75rem;text-align:center;margin-bottom:0.75rem;font-size:0.85rem;color:var(--accent-dark);">' +
-          '🆕 Première visite ! Gagnez ' + m.pointsForReward + ' points pour : ' + m.rewardDescription + '</div>';
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // IDENTIFY
-    // ═══════════════════════════════════════════════════════
-
-    async function doIdentify() {
-      const btn = document.getElementById('btn-identify');
-      btn.disabled = true;
-      btn.textContent = '⏳ Envoi…';
-
-      try {
-        const resp = await fetch(`${API_BASE}/qr/identify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ clientToken, qrToken }),
-        });
-
-        const data = await resp.json();
-
-        if (!resp.ok) {
-          if (resp.status === 401) {
-            // Token expired, force re-auth
-            doLogout();
-            return;
-          }
-          alert(data.error || 'Erreur');
-          btn.disabled = false;
-          btn.textContent = '📍 Je suis là !';
-          return;
+        document.getElementById('success-title').textContent = 'Content de vous revoir !';
+        document.getElementById('success-msg').textContent =
+          (data.clientName ? data.clientName + ', v' : 'V') + 'ous êtes identifié. Vos points arrivent !';
+        if (data.pointsBalance > 0) {
+          const el = document.getElementById('success-points');
+          el.textContent = '💰 Solde actuel : ' + data.pointsBalance + ' pts';
+          el.style.display = 'inline-block';
         }
-
-        // Show confirmation
-        document.getElementById('dash-identify-btn').style.display = 'none';
-        document.getElementById('dash-identified').style.display = 'block';
-
-        // Refresh data after a delay (merchant may credit quickly)
-        setTimeout(refreshDashboard, 8000);
-        setTimeout(refreshDashboard, 20000);
-
-      } catch (e) {
-        alert('Erreur réseau. Réessayez.');
       }
-
-      btn.disabled = false;
-      btn.textContent = '📍 Je suis là !';
+      showScreen('screen-success');
     }
 
-    async function refreshDashboard() {
-      const freshData = await fetchClientData();
-      if (freshData) {
-        clientData = freshData;
-        updateDashboard();
+    function showAlert(msg) {
+      document.getElementById('form-alert').innerHTML =
+        '<div class="alert alert-error">' + msg + '</div>';
+    }
+
+    // Submit on Enter
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && document.getElementById('screen-form').classList.contains('active')) {
+        e.preventDefault();
+        doSubmit();
       }
-    }
-
-    async function fetchClientData() {
-      try {
-        const resp = await fetch(`${API_BASE}/qr/client-data?qrToken=${qrToken}`, {
-          headers: { 'Authorization': 'Bearer ' + clientToken },
-        });
-        if (!resp.ok) return null;
-        return await resp.json();
-      } catch (e) {
-        return null;
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // LOGOUT
-    // ═══════════════════════════════════════════════════════
-
-    function doLogout() {
-      localStorage.removeItem('fiddo_client_' + qrToken);
-      clientToken = null;
-      clientData = null;
-
-      // Reset UI
-      document.getElementById('auth-email').value = '';
-      document.getElementById('auth-phone').value = '';
-      clearPin();
-      clearAuthAlert();
-      document.getElementById('dash-identified').style.display = 'none';
-      document.getElementById('dash-identify-btn').style.display = 'block';
-
-      showScreen('screen-auth');
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // PWA INSTALL HINT
-    // ═══════════════════════════════════════════════════════
-
-    function checkInstallHint() {
-      // Show hint on mobile if not in standalone mode
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-      const isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
-      if (isMobile && !isStandalone) {
-        document.getElementById('install-hint').style.display = 'block';
-      }
-    }
+    });
   </script>
 </body>
 </html>
