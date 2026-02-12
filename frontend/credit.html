@@ -329,7 +329,7 @@
           <div class="seg">
             <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
             <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
-            <button type="button" id="toggle-qr" onclick="switchMode('qr')">⬡ QR</button>
+            <button type="button" id="toggle-qr" onclick="switchMode('qr')">📱 QR</button>
           </div>
 
           <!-- Email -->
@@ -356,17 +356,20 @@
             <div class="lookup-strip" id="lookup-phone"></div>
           </div>
 
-          <!-- QR (compact) -->
+          <!-- QR (static) -->
           <div id="field-qr" style="display:none;">
             <div class="qr-box" id="qr-inline">
-              <div class="qr-sub">Le client scanne ce QR</div>
+              <div class="qr-sub">Présentez ce QR au client</div>
               <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
-              <div class="qr-stat" id="qr-pill"><span class="dot"></span><span id="qr-pill-text">En attente…</span></div>
-              <div class="qr-tmr" id="qr-timer-bar"><div class="qr-tmr-fill" id="qr-timer-fill"></div></div>
-              <div class="qr-tmr-txt" id="qr-timer-text"></div>
-              <div id="qr-confirmed-container"></div>
-              <button type="button" class="qr-redo" onclick="refreshQR()">Nouveau QR</button>
+              <button type="button" class="qr-redo" onclick="showQRFullscreen()">⛶ Plein écran</button>
+              <div id="qr-no-token" style="display:none; text-align:center; padding:1rem; color:#94A3B8; font-size:0.85rem;">
+                Aucun QR configuré.<br>
+                <span style="font-size:0.75rem;">Le propriétaire doit le générer dans <a href="/preferences" style="color:var(--primary)">Préférences</a>.</span>
+              </div>
             </div>
+
+            <!-- Pending identifications -->
+            <div id="pending-clients" style="margin-top:0.75rem;"></div>
             <div class="lookup-strip" id="lookup-qr"></div>
           </div>
 
@@ -422,6 +425,16 @@
     </div>
   </div>
 
+  <!-- Fullscreen QR overlay (for table service) -->
+  <div id="qr-fullscreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="closeQRFullscreen()">
+    <div style="text-align:center;">
+      <div style="font-size:1.1rem; font-weight:600; color:#1E293B; margin-bottom:0.5rem;" id="qr-fs-merchant"></div>
+      <div style="font-size:0.8rem; color:#64748B; margin-bottom:1.5rem;">Scannez pour gagner vos points fidélité</div>
+      <div id="qr-fs-canvas" style="display:inline-block; padding:16px; background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.1);"></div>
+      <div style="margin-top:1.5rem; font-size:0.7rem; color:#94A3B8;">Appuyez n'importe où pour fermer</div>
+    </div>
+  </div>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
@@ -432,7 +445,6 @@
     let currentMode = 'email';
     let lastCreditKey = null; // anti-double-credit
     let lookupIsNew = false;  // true when current client is new (needs PIN)
-    let qrPin = null;         // PIN from QR session (if provided by client)
 
     // Config strip
     document.getElementById('config-strip').textContent =
@@ -509,10 +521,6 @@
       if (!show) {
         document.getElementById('client-pin').value = '';
       }
-      // Auto-fill from QR session if available
-      if (show && qrPin) {
-        document.getElementById('client-pin').value = qrPin;
-      }
     }
 
     // ═══════════════════════════════════════════════════════
@@ -532,8 +540,7 @@
     // ═══════════════════════════════════════════════════════
     function switchMode(mode) {
       if (currentMode === 'qr' && mode !== 'qr') {
-        stopQRPolling();
-        if (qrToken) { fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {}); qrToken = null; }
+        stopPendingPoll();
       }
       currentMode = mode;
       document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
@@ -545,7 +552,7 @@
       if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
       if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
       hideLookup();
-      if (mode === 'qr') createQRSession();
+      if (mode === 'qr') startPendingPoll();
     }
 
     // ═══════════════════════════════════════════════════════
@@ -746,19 +753,16 @@
 
       // Full form reset
       lastCreditKey = null;
-      qrPin = null;
       document.getElementById('credit-form').reset();
       document.querySelectorAll('.form-control').forEach(el => el.classList.remove('has-value'));
       document.getElementById('pts-badge').textContent = '0 pts';
       hideLookup();
       UI.clearAlert('credit-alert');
 
-      // QR cleanup
-      document.getElementById('qr-confirmed-container').innerHTML = '';
-      if (currentMode === 'qr') refreshQR();
+      // QR cleanup — poll refresh
+      if (currentMode === 'qr') pollPending();
       else {
-        stopQRPolling();
-        if (qrToken) { fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {}); qrToken = null; }
+        stopPendingPoll();
       }
 
       switchMode('email');
@@ -768,93 +772,120 @@
     // ═══════════════════════════════════════════════════════
     // QR CODE
     // ═══════════════════════════════════════════════════════
-    let qrToken = null, qrPoll = null, qrTmr = null, qrExp = null, qrInst = null;
-    const QR_TTL = 10 * 60 * 1000;
+    // ═══════════════════════════════════════════════════════
+    // QR STATIC — Display + Pending identifications polling
+    // ═══════════════════════════════════════════════════════
 
-    async function createQRSession() {
+    let merchantQrUrl = null;
+    let merchantQrToken = null;
+    let qrInst = null;
+    let pendingPoll = null;
+
+    async function loadStaticQR() {
       try {
-        document.getElementById('qr-confirmed-container').innerHTML = '';
-        document.getElementById('qr-frame').classList.remove('done');
-        document.getElementById('qr-frame').style.display = 'inline-block';
-        const pill = document.getElementById('qr-pill');
-        pill.className = 'qr-stat'; pill.style.display = 'flex';
-        document.getElementById('qr-pill-text').textContent = 'En attente…';
-        document.getElementById('qr-timer-bar').style.display = '';
+        const resp = await API.call('/qr/token');
+        if (!resp.token) {
+          document.getElementById('qr-frame').style.display = 'none';
+          document.getElementById('qr-no-token').style.display = 'block';
+          return;
+        }
+        merchantQrToken = resp.token;
+        merchantQrUrl = resp.url;
 
-        const resp = await API.call('/qr/session', { method: 'POST' });
-        qrToken = resp.token;
-        qrExp = Date.now() + (resp.expiresIn * 1000);
+        document.getElementById('qr-frame').style.display = 'inline-block';
+        document.getElementById('qr-no-token').style.display = 'none';
 
         const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
         qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-
-        startPoll(); startTmr();
       } catch (e) {
-        document.getElementById('qr-pill-text').textContent = 'Erreur';
-        document.getElementById('qr-pill').className = 'qr-stat ko';
+        console.error('QR load error:', e);
+        document.getElementById('qr-frame').style.display = 'none';
+        document.getElementById('qr-no-token').style.display = 'block';
       }
     }
 
-    async function refreshQR() {
-      stopQRPolling();
-      if (qrToken) fetch(API_BASE_URL + '/qr/session/' + qrToken, { method: 'DELETE', credentials: 'include' }).catch(() => {});
-      await createQRSession();
+    function showQRFullscreen() {
+      if (!merchantQrUrl) return;
+      const overlay = document.getElementById('qr-fullscreen');
+      const cv = document.getElementById('qr-fs-canvas'); cv.innerHTML = '';
+      document.getElementById('qr-fs-merchant').textContent = merchant.business_name;
+      new QRCode(cv, { text: merchantQrUrl, width: 260, height: 260, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      overlay.style.display = 'flex';
     }
 
-    function startPoll() {
-      stopQRPolling();
-      qrPoll = setInterval(async () => {
-        if (!qrToken) return;
-        try {
-          const r = await fetch(API_BASE_URL + '/qr/poll/' + qrToken, { credentials: 'include' });
-          const d = await r.json();
-          if (r.status === 410 || r.status === 404) { stopQRPolling(); document.getElementById('qr-pill').className = 'qr-stat ko'; document.getElementById('qr-pill-text').textContent = 'Expiré'; return; }
-          if (!d.pending) { stopQRPolling(); onQR(d); }
-        } catch (e) {}
-      }, 1500);
+    function closeQRFullscreen() {
+      document.getElementById('qr-fullscreen').style.display = 'none';
     }
 
-    function stopQRPolling() {
-      if (qrPoll) { clearInterval(qrPoll); qrPoll = null; }
-      if (qrTmr) { clearInterval(qrTmr); qrTmr = null; }
+    // Pending identifications polling
+    function startPendingPoll() {
+      stopPendingPoll();
+      pollPending(); // immediate first call
+      pendingPoll = setInterval(pollPending, 3000);
     }
 
-    function startTmr() {
-      if (qrTmr) clearInterval(qrTmr);
-      const fill = document.getElementById('qr-timer-fill'), txt = document.getElementById('qr-timer-text');
-      qrTmr = setInterval(() => {
-        if (!qrExp) return;
-        const el = Date.now() - (qrExp - QR_TTL);
-        const rem = Math.max(0, Math.ceil((qrExp - Date.now()) / 1000));
-        fill.style.width = Math.max(0, (1 - el / QR_TTL) * 100) + '%';
-        txt.textContent = Math.floor(rem / 60) + ':' + (rem % 60).toString().padStart(2, '0');
-        if (rem <= 0) { clearInterval(qrTmr); txt.textContent = 'Expiré'; document.getElementById('qr-pill').className = 'qr-stat ko'; document.getElementById('qr-pill-text').textContent = 'Expiré'; }
-      }, 1000);
+    function stopPendingPoll() {
+      if (pendingPoll) { clearInterval(pendingPoll); pendingPoll = null; }
     }
 
-    function onQR(d) {
-      document.getElementById('qr-pill').className = 'qr-stat ok';
-      document.getElementById('qr-pill-text').textContent = 'Reçu !';
-      document.getElementById('qr-frame').style.display = 'none';
-      document.getElementById('qr-timer-bar').style.display = 'none';
-      document.getElementById('qr-timer-text').textContent = '';
-
-      let det = [];
-      if (d.email) det.push('@ ' + d.email);
-      if (d.phone) det.push('# ' + d.phone);
-      if (d.name) det.push(d.name);
-      document.getElementById('qr-confirmed-container').innerHTML = '<div class="qr-result"><strong>✓ Client identifié</strong><br>' + det.join(' · ') + '</div>';
-
-      if (d.email) { document.getElementById('client-email').value = d.email; document.getElementById('client-email').classList.add('has-value'); }
-      if (d.phone) { document.getElementById('client-phone').value = d.phone; document.getElementById('client-phone').classList.add('has-value'); }
-      if (d.name) { document.getElementById('client-name').value = d.name; document.getElementById('client-name').classList.add('has-value'); }
-      if (d.pin) { qrPin = d.pin; } // Store PIN from QR for auto-fill
-
-      setTimeout(triggerLookup, 300);
-      setTimeout(() => document.getElementById('amount').focus(), 600);
+    async function pollPending() {
+      try {
+        const resp = await API.call('/qr/pending');
+        renderPending(resp.clients);
+      } catch (e) {}
     }
 
-    window.addEventListener('beforeunload', stopQRPolling);
+    function renderPending(clients) {
+      const el = document.getElementById('pending-clients');
+      if (!clients || clients.length === 0) {
+        el.innerHTML = '<div style="text-align:center;padding:0.5rem;color:#94A3B8;font-size:0.75rem;">En attente de clients…</div>';
+        return;
+      }
+      let html = '';
+      clients.forEach(c => {
+        const label = c.name || c.email || c.phone || 'Client';
+        const badge = c.isNew
+          ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
+          : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+        const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + c.identId + '\')">' +
+          '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
+          '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+          '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
+      });
+      el.innerHTML = html;
+    }
+
+    async function consumeIdent(identId) {
+      try {
+        const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
+
+        // Pre-fill the credit form
+        if (d.email) {
+          switchMode('email');
+          document.getElementById('client-email').value = d.email;
+          document.getElementById('client-email').classList.add('has-value');
+        } else if (d.phone) {
+          switchMode('phone');
+          document.getElementById('client-phone').value = d.phone;
+          document.getElementById('client-phone').classList.add('has-value');
+        }
+        if (d.name) {
+          document.getElementById('client-name').value = d.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+
+        setTimeout(triggerLookup, 300);
+        setTimeout(() => document.getElementById('amount').focus(), 600);
+      } catch (e) {
+        console.error('Consume error:', e);
+      }
+    }
+
+    // Load QR on page init (lazy)
+    loadStaticQR();
+
+    window.addEventListener('beforeunload', stopPendingPoll);
   </script>
 </body>
 </html>
