@@ -5,367 +5,430 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Clients — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ── Toolbar ── */
-    .toolbar { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-bottom: 0.75rem; }
-    .toolbar-left { display: flex; gap: 0.5rem; flex: 1; min-width: 200px; flex-wrap: wrap; align-items: center; }
-    .toolbar-right { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-
-    .search-compact { flex: 1; min-width: 180px; padding: 8px 10px 8px 32px; border: 2px solid var(--border); border-radius: 6px; font-size: 0.85rem; }
-    .search-compact:focus { outline: none; border-color: var(--primary); }
-    .search-wrap { position: relative; flex: 1; min-width: 180px; }
-    .search-wrap .search-ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; }
-
-    /* Date pills */
-    .date-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-    .date-pill { padding: 4px 10px; border: 1px solid var(--border); border-radius: 20px; font-size: 0.75rem; cursor: pointer; background: white; color: var(--text-light); transition: all 0.15s; white-space: nowrap; }
-    .date-pill:hover { border-color: var(--primary); color: var(--primary); }
-    .date-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
-    .date-range { display: none; gap: 4px; align-items: center; }
-    .date-range.show { display: flex; }
-    .date-input { padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; font-size: 0.75rem; width: 120px; -webkit-appearance: none; }
-
-    /* ── Tabs ── */
-    .client-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 0.75rem; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; -ms-overflow-style: none; }
-    .client-tabs::-webkit-scrollbar { display: none; }
-    .client-tab { padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; font-weight: 500; color: var(--text-light); font-size: 0.85rem; transition: all 0.2s; background: none; border-top: none; border-left: none; border-right: none; white-space: nowrap; }
-    .client-tab:hover { color: var(--text); }
-    .client-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-    /* ── Sortable table ── */
-    .clients-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    .clients-table thead { background: var(--secondary); color: white; }
-    .clients-table th { padding: 8px 10px; text-align: left; font-weight: 600; font-size: 0.73rem; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; user-select: none; white-space: nowrap; }
-    .clients-table th:hover { background: #374151; }
-    .clients-table th .sort-arrow { margin-left: 4px; font-size: 0.65rem; opacity: 0.5; }
-    .clients-table th.sorted .sort-arrow { opacity: 1; }
-    .clients-table td { padding: 8px 10px; border-bottom: 1px solid var(--border); }
-    .clients-table tbody tr { cursor: pointer; transition: background 0.1s; }
-    .clients-table tbody tr:hover { background: #f0fdf4; }
-    .table-scroll { overflow-x: auto; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); background: white; scrollbar-width: thin; }
-    .table-scroll::-webkit-scrollbar { height: 4px; }
-    .table-scroll::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
-
-    /* Rank */
-    .rank { font-weight: 700; color: var(--text-light); text-align: center; min-width: 30px; }
-    .rank-1 { color: #F59E0B; } .rank-2 { color: #9CA3AF; } .rank-3 { color: #D97706; }
-
-    /* Points bar mini */
-    .pts-bar { display: flex; align-items: center; gap: 6px; }
-    .pts-bar-track { width: 40px; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
-    .pts-bar-fill { height: 100%; background: var(--primary); border-radius: 2px; min-width: 2px; }
-    .staff-sm { font-size: 0.75rem; color: var(--text-light); }
-    .tab-count { font-size: 0.7rem; background: var(--light); color: var(--text-light); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
-
-    /* ── Modal redesign V2 ── */
-    .modal-section { margin-bottom: 1rem; }
-    .modal-section-title { font-size: 0.78rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
-
-    /* Hero header */
-    .client-hero {
-      background: linear-gradient(135deg, var(--secondary) 0%, #374151 100%);
-      padding: 1.5rem;
-      color: white;
-      position: relative;
-      border-radius: 12px 12px 0 0;
+    :root {
+      --primary-light: #CFFAFE;
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
     }
-    .client-hero-close { position: absolute; top: 12px; right: 16px; background: rgba(255,255,255,0.15); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
-    .client-hero-close:hover { background: rgba(255,255,255,0.3); }
-    .client-hero-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .client-hero-sub { font-size: 0.82rem; opacity: 0.7; }
-    .client-hero-badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-    .hero-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.68rem; font-weight: 600; letter-spacing: 0.3px; }
-    .hero-badge-custom { background: rgba(8,145,178,0.25); color: #67e8f9; }
-    .hero-badge-blocked { background: rgba(239,68,68,0.25); color: #fca5a5; }
-    .hero-badge-validated { background: rgba(16,185,129,0.25); color: #6ee7b7; }
 
-    /* Stats row */
-    .client-stats-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      overflow: hidden;
-      margin: -20px 1.25rem 0;
-      position: relative;
-      z-index: 2;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .client-stat {
-      text-align: center;
-      padding: 14px 8px;
-    }
-    .client-stat:not(:last-child) { border-right: 1px solid var(--border); }
-    .client-stat-val { font-size: 1.4rem; font-weight: 800; color: var(--primary); line-height: 1; }
-    .client-stat-label { font-size: 0.68rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .dash * { box-sizing: border-box; }
+    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
 
-    /* Reward card */
-    .reward-card {
-      background: #f8fafc;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 16px;
-      position: relative;
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.3rem 0 0.6rem; letter-spacing: -0.3px;
     }
-    .reward-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .reward-card-label { font-size: 0.72rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; }
-    .reward-card-name { font-size: 0.95rem; font-weight: 600; color: var(--text); }
-    .reward-card-edit { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; font-size: 0.72rem; cursor: pointer; color: var(--text-light); transition: all 0.15s; }
-    .reward-card-edit:hover { border-color: var(--primary); color: var(--primary); }
-    .reward-progress { margin-top: 10px; }
-    .reward-progress-bar { height: 8px; background: #e5e7eb; border-radius: 4px; overflow: hidden; }
-    .reward-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s ease; }
-    .reward-progress-fill.near { background: linear-gradient(90deg, var(--primary), #06b6d4); }
-    .reward-progress-fill.ready { background: linear-gradient(90deg, var(--success), #34d399); }
-    .reward-progress-text { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-light); margin-top: 4px; }
-    .reward-ready-banner {
-      background: linear-gradient(135deg, var(--success), #059669);
-      color: white;
-      padding: 10px 14px;
-      border-radius: 8px;
-      margin-top: 10px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-align: center;
-      animation: pulse-glow 2s ease-in-out infinite;
-    }
-    @keyframes pulse-glow { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); } 50% { box-shadow: 0 0 12px 4px rgba(16,185,129,0.15); } }
 
-    /* Reward celebration overlay */
-    .reward-celebration {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(255,255,255,0.97);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      border-radius: 12px;
-      animation: fadeIn 0.3s ease;
-    }
-    .reward-celebration-content { text-align: center; padding: 2rem; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    .reward-edit-area { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    /* ═══ TOOLBAR ═══ */
 
-    /* Action toolbar */
-    .action-toolbar {
-      display: flex;
-      gap: 3px;
-      flex-wrap: wrap;
-      justify-content: center;
-      padding: 10px 0;
+    .toolbar {
+      display: flex; align-items: center; gap: 0.5rem;
+      margin-bottom: 0.9rem;
     }
-    .action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      padding: 5px 8px;
-      border: none;
-      border-radius: 5px;
-      font-size: 0.7rem;
-      font-weight: 500;
-      cursor: pointer;
-      background: #f3f4f6;
-      color: var(--text);
-      transition: all 0.15s;
-      text-decoration: none;
+    .search-wrap {
+      flex: 1; position: relative;
+    }
+    .search-wrap .ico {
+      position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+      font-size: 0.8rem; color: #94A3B8; pointer-events: none;
+    }
+    .search-wrap input {
+      width: 100%; padding: 0.4rem 0.6rem 0.4rem 2rem;
+      border: 1.5px solid #E2E8F0; border-radius: 16px;
+      font-family: inherit; font-size: 0.78rem; color: #334155;
+      background: white; transition: border-color 0.15s;
+    }
+    .search-wrap input:focus { outline: none; border-color: var(--primary); }
+    .search-wrap input::placeholder { color: #CBD5E1; }
+
+    .toolbar-count {
+      font-size: 0.68rem; color: #94A3B8; font-weight: 500;
       white-space: nowrap;
     }
-    .action-btn:hover { background: #e5e7eb; }
-    .action-btn.danger { color: var(--danger); }
-    .action-btn.danger:hover { background: #fef2f2; }
-    .action-btn.success { color: var(--success); }
-    .action-btn.success:hover { background: #f0fdf4; }
 
-    /* Expandable sections */
-    .expand-section { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-    .expand-header {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 10px 14px; cursor: pointer; background: #fafafa;
-      font-size: 0.82rem; font-weight: 600; color: var(--text);
-      user-select: none; transition: background 0.15s;
+    .csv-btn {
+      padding: 0.3rem 0.65rem; border: 1.5px solid #E2E8F0;
+      border-radius: 16px; background: white; font-family: inherit;
+      font-size: 0.72rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
     }
-    .expand-header:hover { background: #f3f4f6; }
-    .expand-arrow { transition: transform 0.2s; font-size: 0.7rem; color: var(--text-light); }
-    .expand-section.open .expand-arrow { transform: rotate(90deg); }
-    .expand-body { display: none; padding: 12px 14px; border-top: 1px solid var(--border); }
-    .expand-section.open .expand-body { display: block; }
+    .csv-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
 
-    /* Notes */
-    .notes-area { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; font-family: inherit; resize: vertical; min-height: 56px; max-height: 120px; }
-    .notes-area:focus { outline: none; border-color: var(--primary); }
-    .notes-meta { font-size: 0.7rem; color: var(--text-light); text-align: right; margin-top: 4px; }
+    /* ═══ STAT CARDS ═══ */
 
-    /* Timeline V2 */
-    .tx-list { display: flex; flex-direction: column; gap: 0; }
-    .tx-item {
-      display: flex; gap: 12px; align-items: flex-start;
-      padding: 10px 0;
-      border-bottom: 1px solid #f3f4f6;
-      font-size: 0.83rem;
+    .stats-row {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.6rem; margin-bottom: 1rem;
     }
-    .tx-item:last-child { border-bottom: none; }
-    .tx-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
-    .tx-dot.credit { background: var(--primary); }
-    .tx-dot.reward { background: var(--success); }
-    .tx-dot.adjustment { background: var(--warning); }
-    .tx-dot.merge { background: #8b5cf6; }
-    .tx-body { flex: 1; }
-    .tx-top { display: flex; justify-content: space-between; align-items: baseline; }
-    .tx-amount { font-weight: 700; }
-    .tx-date { font-size: 0.72rem; color: var(--text-light); }
-    .tx-detail { font-size: 0.75rem; color: var(--text-light); margin-top: 2px; }
+    .st {
+      background: white; border-radius: 10px; padding: 0.7rem 0.6rem;
+      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .st-val {
+      font-size: 1.5rem; font-weight: 700; color: var(--primary);
+      line-height: 1.15; letter-spacing: -0.5px;
+    }
+    .st-val.green { color: #059669; }
+    .st-val.amber { color: #D97706; }
+    .st-lbl {
+      font-size: 0.62rem; color: #94A3B8; text-transform: uppercase;
+      letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600;
+    }
 
-    /* Custom reward indicator in list */
-    .cr-star { color: #f59e0b; font-size: 0.7rem; margin-left: 2px; }
+    /* ═══ CLIENTS TABLE ═══ */
 
-    /* Edit form compact */
-    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-    .edit-grid .form-group { margin-bottom: 0; }
-    .edit-grid .form-label { font-size: 0.75rem; margin-bottom: 2px; }
-    .edit-grid .form-control { padding: 6px 10px; font-size: 0.85rem; }
-    .edit-grid .full-width { grid-column: 1 / -1; }
+    .cl-card {
+      background: white; border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden;
+    }
 
-    /* Merge search */
-    .merge-search-wrap { position: relative; }
-    .merge-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: white; border: 2px solid var(--primary); border-top: none; border-radius: 0 0 8px 8px; max-height: 160px; overflow-y: auto; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    .merge-results.open { display: block; }
-    .merge-item { padding: 8px 10px; cursor: pointer; font-size: 0.83rem; border-bottom: 1px solid var(--border); }
-    .merge-item:hover { background: #ECFEFF; }
-    .merge-item .m-name { font-weight: 600; }
-    .merge-item .m-detail { font-size: 0.72rem; color: var(--text-light); }
-    .merge-selected { background: #F0FDF4; border: 2px solid var(--success); border-radius: 8px; padding: 8px 10px; font-size: 0.83rem; display: none; justify-content: space-between; align-items: center; }
-    .merge-selected.show { display: flex; }
+    /* ── Sortable column headers ── */
+    .col-hdr {
+      display: grid;
+      grid-template-columns: 1fr 72px 60px 85px 100px;
+      gap: 0.3rem;
+      padding: 0.4rem 0.85rem;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .col-th {
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: #94A3B8; cursor: pointer;
+      user-select: none; display: flex; align-items: center; gap: 3px;
+      transition: color 0.12s; white-space: nowrap;
+    }
+    .col-th:hover { color: #475569; }
+    .col-th.active { color: var(--primary-dark); }
+    .col-th .arrow {
+      font-size: 0.55rem; opacity: 0; transition: opacity 0.12s;
+    }
+    .col-th.active .arrow { opacity: 1; }
+    .col-th-right { justify-content: flex-end; }
+    .col-th-center { justify-content: center; }
 
-    /* Contact links */
+    /* ── Client rows ── */
+    .cl-body { max-height: 560px; overflow-y: auto; }
 
+    .cl-row {
+      display: grid;
+      grid-template-columns: 1fr 72px 60px 85px 100px;
+      gap: 0.3rem;
+      padding: 0.5rem 0.85rem;
+      border-bottom: 1px solid #F8FAFC;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.1s;
+    }
+    .cl-row:last-child { border-bottom: none; }
+    .cl-row:hover { background: #FAFBFC; }
 
-    /* Mobile */
+    .cl-info { min-width: 0; }
+    .cl-name {
+      font-weight: 600; color: #1E293B; font-size: 0.82rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cl-sub {
+      font-size: 0.66rem; color: #94A3B8; margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cl-badges { display: flex; gap: 3px; margin-top: 2px; }
+    .cl-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 8px;
+      font-size: 0.55rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.2px;
+    }
+    .cl-badge.active { background: #D1FAE5; color: #047857; }
+    .cl-badge.inactive { background: #FEF3C7; color: #92400E; }
+    .cl-badge.blocked { background: #FEE2E2; color: #B91C1C; }
+    .cl-badge.reward { background: #D1FAE5; color: #047857; }
+
+    .cl-pts { font-weight: 700; font-size: 0.88rem; color: var(--primary); text-align: right; }
+    .cl-visits { font-size: 0.82rem; color: #64748B; text-align: center; font-weight: 500; }
+    .cl-last { font-size: 0.72rem; color: #64748B; text-align: right; }
+
+    /* ── Progression bar ── */
+    .cl-prog { display: flex; align-items: center; gap: 0.35rem; }
+    .prog-bar {
+      flex: 1; height: 6px; background: #E2E8F0;
+      border-radius: 3px; overflow: hidden;
+    }
+    .prog-fill {
+      height: 100%; border-radius: 3px;
+      background: var(--primary);
+      transition: width 0.3s;
+    }
+    .prog-fill.full { background: #059669; }
+    .prog-pct {
+      font-size: 0.6rem; font-weight: 600; color: #94A3B8;
+      min-width: 28px; text-align: right;
+    }
+    .prog-pct.full { color: #059669; }
+
+    /* ── Empty / Loading ── */
+    .cl-empty { padding: 2.5rem 1rem; text-align: center; color: #94A3B8; font-size: 0.85rem; }
+    .cl-empty-icon { font-size: 2rem; margin-bottom: 0.4rem; }
+    .cl-loading { padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.78rem; }
+
+    /* ═══ MODAL — detail ═══ */
+
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(15,23,42,0.45); z-index: 1000;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal-box {
+      background: white; border-radius: 12px;
+      width: 90%; max-width: 580px; max-height: 88vh;
+      overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .modal-top {
+      padding: 0.85rem 1.2rem; border-bottom: 1px solid #F1F5F9;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-top h2 {
+      font-size: 0.95rem; font-weight: 700; color: #1E293B;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: calc(100% - 40px);
+    }
+    .modal-close {
+      font-size: 1.3rem; cursor: pointer; color: #94A3B8;
+      background: none; border: none; line-height: 1; padding: 0.2rem;
+    }
+    .modal-close:hover { color: #475569; }
+    .modal-inner { padding: 1.2rem; }
+
+    /* ── Detail stats ── */
+    .dt-stats {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .dt-st {
+      text-align: center; padding: 0.5rem;
+      background: #F8FAFC; border-radius: 8px;
+    }
+    .dt-st-val { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+    .dt-st-val.green { color: #059669; }
+    .dt-st-lbl { font-size: 0.6rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.3px; font-weight: 600; }
+
+    /* ── Progress section ── */
+    .dt-prog-wrap { margin-bottom: 1.2rem; }
+    .dt-prog-top {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.72rem; color: #64748B; margin-bottom: 0.3rem;
+    }
+    .dt-prog-bar {
+      height: 10px; background: #E2E8F0; border-radius: 5px; overflow: hidden;
+    }
+    .dt-prog-fill {
+      height: 100%; border-radius: 5px;
+      background: var(--gradient);
+      transition: width 0.4s;
+    }
+    .dt-prog-fill.full { background: linear-gradient(135deg, #10B981, #059669); }
+    .dt-reward-banner {
+      margin-top: 0.5rem; padding: 0.5rem 0.75rem;
+      background: #D1FAE5; border-radius: 8px;
+      font-size: 0.78rem; color: #047857; font-weight: 600;
+      text-align: center; cursor: pointer; transition: background 0.12s;
+    }
+    .dt-reward-banner:hover { background: #A7F3D0; }
+
+    /* ── Timeline ── */
+    .dt-section {
+      font-size: 0.72rem; font-weight: 700; color: #94A3B8;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      margin-bottom: 0.6rem;
+    }
+    .tl { border-left: 2px solid #E2E8F0; padding-left: 1rem; margin-left: 0.4rem; }
+    .tl-item { position: relative; margin-bottom: 0.8rem; }
+    .tl-item:last-child { margin-bottom: 0; }
+    .tl-item::before {
+      content: '';
+      position: absolute; left: -1.28rem; top: 0.35rem;
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--primary); border: 2px solid white;
+      box-shadow: 0 0 0 1.5px #E2E8F0;
+    }
+    .tl-item.reward::before { background: #10B981; }
+    .tl-item.adjustment::before { background: #F59E0B; }
+    .tl-item.merge::before { background: #8B5CF6; }
+    .tl-date { font-size: 0.66rem; color: #94A3B8; }
+    .tl-body {
+      background: #F8FAFC; padding: 0.45rem 0.6rem;
+      border-radius: 6px; margin-top: 0.15rem;
+      font-size: 0.78rem; color: #334155;
+    }
+    .tl-pts { font-weight: 700; }
+    .tl-pts.credit { color: var(--primary); }
+    .tl-pts.reward { color: #059669; }
+    .tl-pts.adjustment { color: #D97706; }
+    .tl-pts.merge { color: #7C3AED; }
+    .tl-badge {
+      display: inline-block; padding: 1px 6px; border-radius: 6px;
+      font-size: 0.58rem; font-weight: 600; text-transform: uppercase;
+      margin-left: 0.3rem; vertical-align: middle;
+    }
+    .tl-badge.credit { background: color-mix(in srgb, var(--primary-light) 50%, white); color: var(--primary-dark); }
+    .tl-badge.reward { background: #D1FAE5; color: #047857; }
+    .tl-badge.adjustment { background: #FEF3C7; color: #92400E; }
+    .tl-badge.merge { background: #EDE9FE; color: #6D28D9; }
+    .tl-notes { font-size: 0.66rem; color: #94A3B8; margin-top: 0.15rem; }
+    .tl-empty { font-size: 0.78rem; color: #94A3B8; text-align: center; padding: 1rem; }
+
+    /* ── Modal footer actions ── */
+    .modal-foot {
+      padding: 0.6rem 1.2rem; border-top: 1px solid #F1F5F9;
+      display: flex; gap: 0.5rem; justify-content: flex-end;
+    }
+    .act-btn {
+      padding: 0.3rem 0.65rem; border: 1.5px solid #E2E8F0;
+      border-radius: 14px; background: white; font-family: inherit;
+      font-size: 0.72rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s;
+    }
+    .act-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+    .act-btn.danger { border-color: #FCA5A5; color: #DC2626; }
+    .act-btn.danger:hover { background: #FEF2F2; }
+    .act-btn.success { border-color: #86EFAC; color: #059669; }
+    .act-btn.success:hover { background: #F0FDF4; }
+
+    /* ═══ ADJUST MODAL ═══ */
+
+    .adj-form .form-group { margin-bottom: 0.8rem; }
+    .adj-form .form-label {
+      display: block; font-size: 0.72rem; font-weight: 600;
+      color: #475569; margin-bottom: 0.25rem;
+    }
+    .adj-form input {
+      width: 100%; padding: 0.4rem 0.6rem;
+      border: 1.5px solid #E2E8F0; border-radius: 8px;
+      font-family: inherit; font-size: 0.82rem; color: #334155;
+    }
+    .adj-form input:focus { outline: none; border-color: var(--primary); }
+    .adj-submit {
+      padding: 0.4rem 1rem; border: none; border-radius: 14px;
+      background: var(--primary); color: white; font-family: inherit;
+      font-size: 0.78rem; font-weight: 600; cursor: pointer;
+      transition: background 0.12s;
+    }
+    .adj-submit:hover { background: var(--primary-dark); }
+
+    /* ═══ RESPONSIVE ═══ */
+
     @media (max-width: 768px) {
-      .toolbar { flex-direction: column; }
-      .toolbar-left, .toolbar-right { width: 100%; }
-      .hide-mobile { display: none; }
-      .clients-table { font-size: 0.8rem; }
-      .clients-table th, .clients-table td { padding: 6px 6px; }
-      .date-input { width: 100px; }
-      .edit-grid { grid-template-columns: 1fr; }
-      .modal-content { width: 95%; max-height: 95vh; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
-      .client-hero { padding: 1.25rem 1rem; border-radius: 0; }
-      .client-hero-name { font-size: 1.1rem; }
-      .client-stats-row { margin: -16px 0.75rem 0; }
-      .client-stat-val { font-size: 1.1rem; }
-      .action-toolbar { gap: 3px; }
-      .action-btn { padding: 4px 6px; font-size: 0.65rem; }
+      .dash-wrap { padding: 0.5rem; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.45rem; }
+      .st-val { font-size: 1.3rem; }
+      .cl-body { max-height: 440px; }
+      .col-hdr, .cl-row {
+        grid-template-columns: 1fr 60px 45px 75px;
+        gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem;
+      }
+      .col-th-prog, .cl-prog-cell { display: none; }
+      .cl-last { font-size: 0.66rem; }
+      .modal-box { width: 95%; max-height: 92vh; }
+      .dt-stats { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { gap: 0.35rem; }
+      .st { padding: 0.55rem 0.4rem; }
+      .st-val { font-size: 1.15rem; }
+      .toolbar { gap: 0.3rem; }
+      .col-hdr, .cl-row {
+        grid-template-columns: 1fr 55px 72px;
+        gap: 0.15rem;
+      }
+      .col-th-visits, .cl-visits-cell { display: none; }
     }
   </style>
 </head>
-<body>
+<body class="dash">
   <nav class="navbar">
     <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container">
-    <h1 style="margin: 1rem 0 0.5rem; font-size: 1.3rem;">Mes clients</h1>
+  <div class="dash-wrap">
+    <h1 class="pg-title">Clients</h1>
 
-    <!-- Stats -->
-    <div class="stats-grid" style="margin-bottom: 0.75rem;">
-      <div class="stat-card"><div class="stat-value" id="total-clients">0</div><div class="stat-label">Clients</div></div>
-      <div class="stat-card"><div class="stat-value" id="active-clients">0</div><div class="stat-label">Actifs (30j)</div></div>
-      <div class="stat-card"><div class="stat-value" id="total-points">0</div><div class="stat-label">Points émis</div></div>
-      <div class="stat-card"><div class="stat-value" id="reward-ready">0</div><div class="stat-label">🎁 Récompenses dispo</div></div>
-    </div>
-
-    <!-- Tabs -->
-    <div class="client-tabs" id="tabs-row">
-      <button class="client-tab active" data-tab="all">👥 Tous <span class="tab-count" id="cnt-all">0</span></button>
-      <button class="client-tab" data-tab="top-points">🏆 Top Points</button>
-      <button class="client-tab" data-tab="top-visits">🔄 Plus fréquents</button>
-      <button class="client-tab" data-tab="recent">🕐 Récents</button>
-      <button class="client-tab" data-tab="inactive">😴 Inactifs</button>
-    </div>
-
-    <!-- Toolbar -->
+    <!-- ════════ TOOLBAR ════════ -->
     <div class="toolbar">
-      <div class="toolbar-left">
-        <div class="search-wrap">
-          <span class="search-ico">🔍</span>
-          <input type="text" id="search-input" class="search-compact" placeholder="Rechercher...">
-        </div>
+      <div class="search-wrap">
+        <span class="ico">🔍</span>
+        <input type="text" id="search-input" placeholder="Rechercher par email, téléphone ou nom…">
       </div>
-      <div class="toolbar-right">
-        <div class="date-pills" id="date-pills">
-          <button class="date-pill active" data-period="all">Tout</button>
-          <button class="date-pill" data-period="today">Auj.</button>
-          <button class="date-pill" data-period="yesterday">Hier</button>
-          <button class="date-pill" data-period="week">Semaine</button>
-          <button class="date-pill" data-period="month">Mois</button>
-          <button class="date-pill" data-period="custom">📅</button>
-        </div>
-        <div class="date-range" id="date-range">
-          <input type="date" id="date-from" class="date-input">
-          <span style="font-size:0.75rem;color:var(--text-light)">→</span>
-          <input type="date" id="date-to" class="date-input">
-        </div>
-        <button class="btn btn-outline btn-sm" onclick="exportCSV()" id="csv-btn" style="display:none" title="Exporter CSV">📥 CSV</button>
-      </div>
+      <span class="toolbar-count" id="result-count"></span>
+      <button class="csv-btn" onclick="API.clients.exportCSV()">📥 CSV</button>
     </div>
 
-    <div class="table-scroll"><div id="clients-container"></div></div>
-  </div>
+    <!-- ════════ STATS ════════ -->
+    <div class="stats-row">
+      <div class="st"><div class="st-val" id="s-total">–</div><div class="st-lbl">Clients</div></div>
+      <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Actifs (30j)</div></div>
+      <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses dispo</div></div>
+    </div>
 
-  <!-- ═══ Client Detail Modal ═══ -->
-  <div id="detail-modal" class="modal">
-    <div class="modal-content" style="max-width:580px;padding:0;overflow-y:auto;position:relative;">
-      <div id="modal-body"></div>
+    <!-- ════════ CLIENT TABLE ════════ -->
+    <div class="cl-card">
+      <div class="col-hdr">
+        <div class="col-th active" onclick="sortBy('name',this)">
+          Client <span class="arrow">▲</span>
+        </div>
+        <div class="col-th col-th-right" onclick="sortBy('points',this)">
+          Points <span class="arrow">▼</span>
+        </div>
+        <div class="col-th col-th-center col-th-visits" onclick="sortBy('visits',this)">
+          Visites <span class="arrow">▼</span>
+        </div>
+        <div class="col-th col-th-right" onclick="sortBy('last',this)">
+          Dernière <span class="arrow">▼</span>
+        </div>
+        <div class="col-th col-th-prog" onclick="sortBy('progress',this)">
+          Progression <span class="arrow">▼</span>
+        </div>
+      </div>
+      <div class="cl-body" id="cl-body">
+        <div class="cl-loading">Chargement…</div>
+      </div>
     </div>
   </div>
 
-  <!-- ═══ Adjust Modal ═══ -->
-  <div id="adjust-modal" class="modal">
-    <div class="modal-content" style="max-width:400px;">
-      <div class="modal-header"><h2 style="font-size:1.05rem">Ajuster les points</h2><button class="close-modal" onclick="closeAdjustModal()">×</button></div>
-      <div class="modal-body">
+  <!-- ════════ DETAIL MODAL ════════ -->
+  <div class="modal-overlay" id="detail-modal">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h2 id="modal-title">Client</h2>
+        <button class="modal-close" onclick="closeDetail()">×</button>
+      </div>
+      <div class="modal-inner" id="modal-body"></div>
+      <div class="modal-foot" id="modal-foot"></div>
+    </div>
+  </div>
+
+  <!-- ════════ ADJUST MODAL ════════ -->
+  <div class="modal-overlay" id="adjust-modal">
+    <div class="modal-box" style="max-width: 400px;">
+      <div class="modal-top">
+        <h2>Ajuster les points</h2>
+        <button class="modal-close" onclick="closeAdjust()">×</button>
+      </div>
+      <div class="modal-inner">
         <div id="adjust-alert"></div>
-        <div class="form-group"><label class="form-label">Ajustement (+ ou -)</label><input type="number" id="adjust-delta" class="form-control" placeholder="-10 ou +20"></div>
-        <div class="form-group"><label class="form-label">Raison *</label><input type="text" id="adjust-reason" class="form-control" placeholder="Correction erreur..."></div>
-        <button class="btn btn-primary btn-block" onclick="submitAdjustment()">Confirmer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ Merge Modal ═══ -->
-  <div id="merge-modal" class="modal">
-    <div class="modal-content" style="max-width:450px;">
-      <div class="modal-header"><h2 style="font-size:1.05rem">🔀 Fusionner</h2><button class="close-modal" onclick="closeMergeModal()">×</button></div>
-      <div class="modal-body">
-        <div id="merge-alert"></div>
-        <div class="alert alert-info" style="font-size:0.78rem;padding:6px 10px;">
-          ⚠️ Le client source sera <strong>supprimé</strong>. Points, visites et historique transférés vers le client cible.
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-title">🎯 Cible (conservé)</div>
-          <div id="merge-target" style="background:var(--light);border-radius:6px;padding:6px 10px;font-size:0.83rem;font-weight:600;"></div>
-        </div>
-        <div class="modal-section">
-          <div class="modal-section-title">📦 Source (sera supprimé)</div>
-          <div class="merge-search-wrap">
-            <input type="text" id="merge-search" class="form-control" placeholder="Rechercher..." style="font-size:0.83rem;">
-            <div class="merge-results" id="merge-results"></div>
+        <div class="adj-form">
+          <div class="form-group">
+            <label class="form-label">Ajustement (positif ou négatif)</label>
+            <input type="number" id="adj-delta" placeholder="ex: -10 ou +20">
           </div>
-          <div class="merge-selected" id="merge-selected">
-            <span id="merge-selected-name"></span>
-            <button class="btn btn-sm" style="padding:2px 8px;font-size:0.72rem;" onclick="clearMergeSelection()">✕</button>
+          <div class="form-group">
+            <label class="form-label">Raison *</label>
+            <input type="text" id="adj-reason" placeholder="Correction erreur de saisie">
           </div>
+          <button class="adj-submit" onclick="submitAdjust()">Confirmer</button>
         </div>
-        <div class="form-group" style="margin-bottom:0.75rem;">
-          <label class="form-label" style="font-size:0.78rem;">Raison (optionnel)</label>
-          <input type="text" id="merge-reason" class="form-control" placeholder="Doublon, couple..." style="font-size:0.83rem;">
-        </div>
-        <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="submitMerge()" disabled>Confirmer la fusion</button>
       </div>
     </div>
   </div>
@@ -376,581 +439,342 @@
 
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
-    const isOwner = staff.role === 'owner';
-    const isManager = ['owner', 'manager'].includes(staff.role);
+    const rewardThreshold = merchant.points_for_reward;
+
     let allClients = [];
-    let currentTab = 'all';
-    let currentSort = { key: 'last_visit', dir: 'desc' };
-    let currentPeriod = 'all';
+    let displayedClients = [];
     let currentClientId = null;
-    let currentClientData = null;
-    let mergeSourceId = null;
 
-    // Show CSV button for owner only
-    if (isOwner) document.getElementById('csv-btn').style.display = '';
+    // Sort state
+    let sortCol = 'name';
+    let sortAsc = true;
 
-    // ════════════════════════════════════════
-    // LOAD
-    // ════════════════════════════════════════
+    // ═══ HELPERS ═══
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function fmtNum(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n.toString(); }
+
+    function daysSince(d) {
+      if (!d) return 9999;
+      return Math.floor((Date.now() - new Date(d)) / 86400000);
+    }
+    function fmtSince(d) {
+      const days = daysSince(d);
+      if (days === 0) return "Aujourd'hui";
+      if (days === 1) return 'Hier';
+      if (days < 7) return days + 'j';
+      if (days < 30) return Math.floor(days / 7) + ' sem.';
+      if (days < 365) return Math.floor(days / 30) + ' mois';
+      return Math.floor(days / 365) + ' an(s)';
+    }
+
+    // ═══ LOAD CLIENTS ═══
 
     async function loadClients() {
       try {
-        UI.showLoading('clients-container');
-        const data = await API.call('/clients/enriched');
-        allClients = data.clients;
+        const data = await API.clients.getAll();
+        allClients = data.clients.map(c => ({
+          ...c,
+          _label: c.name || c.email || c.phone || 'N/A',
+          _sub: c.name ? (c.email || c.phone || '') : (c.phone || ''),
+          _days: daysSince(c.last_visit),
+          _progress: Math.min(Math.round((c.points_balance / rewardThreshold) * 100), 100),
+          _canRedeem: c.points_balance >= rewardThreshold,
+        }));
+        displayedClients = allClients;
         updateStats();
-        applyFilters();
-      } catch (err) { UI.showError('clients-container', err.message); }
+        renderClients();
+      } catch (err) {
+        document.getElementById('cl-body').innerHTML =
+          '<div class="cl-empty"><div class="cl-empty-icon">⚠️</div>Erreur de chargement</div>';
+      }
     }
+
+    // ═══ STATS ═══
 
     function updateStats() {
       const total = allClients.length;
-      const active = allClients.filter(c => daysSince(c.last_visit) <= 30).length;
-      const pts = allClients.reduce((s, c) => s + c.points_balance, 0);
-      const merchant = Auth.getMerchant();
-      const rewardReady = merchant ? allClients.filter(c => c.points_balance >= merchant.points_for_reward).length : 0;
-      document.getElementById('total-clients').textContent = total;
-      document.getElementById('active-clients').textContent = active;
-      document.getElementById('total-points').textContent = pts.toLocaleString('fr-FR');
-      document.getElementById('reward-ready').textContent = rewardReady;
-      document.getElementById('cnt-all').textContent = total;
+      const active = allClients.filter(c => c._days <= 30).length;
+      const rewards = allClients.filter(c => c._canRedeem).length;
+
+      document.getElementById('s-total').textContent = fmtNum(total);
+      document.getElementById('s-active').textContent = fmtNum(active);
+      document.getElementById('s-rewards').textContent = fmtNum(rewards);
     }
 
-    // ════════════════════════════════════════
-    // FILTER + SORT
-    // ════════════════════════════════════════
-
-    function applyFilters() {
-      let clients = [...allClients];
-      const q = document.getElementById('search-input').value.trim().toLowerCase();
-      if (q.length >= 2) clients = clients.filter(c => (c.email||'').toLowerCase().includes(q) || (c.phone||'').toLowerCase().includes(q) || (c.name||'').toLowerCase().includes(q));
-
-      const { from, to } = getDateRange();
-      if (from) clients = clients.filter(c => { const lv = new Date(c.last_visit); return lv >= from && (!to || lv <= to); });
-
-      switch (currentTab) {
-        case 'inactive': clients = clients.filter(c => daysSince(c.last_visit) > 30); break;
-        case 'recent': clients = clients.filter(c => daysSince(c.last_visit) <= 7); break;
-      }
-
-      clients.sort((a, b) => {
-        if (currentTab === 'top-points') return b.points_balance - a.points_balance;
-        if (currentTab === 'top-visits') return b.visit_count - a.visit_count;
-        let va = a[currentSort.key] ?? '', vb = b[currentSort.key] ?? '';
-        if (currentSort.key.includes('visit') || currentSort.key.includes('_at')) { va = new Date(va || 0).getTime(); vb = new Date(vb || 0).getTime(); }
-        if (typeof va === 'string') va = va.toLowerCase();
-        if (typeof vb === 'string') vb = vb.toLowerCase();
-        return currentSort.dir === 'asc' ? (va < vb ? -1 : va > vb ? 1 : 0) : (va > vb ? -1 : va < vb ? 1 : 0);
-      });
-
-      renderTable(clients);
-    }
-
-    function getDateRange() {
-      if (currentPeriod === 'all') return {};
-      if (currentPeriod === 'custom') {
-        const f = document.getElementById('date-from').value, t = document.getElementById('date-to').value;
-        return { from: f ? new Date(f) : null, to: t ? endOfDay(new Date(t)) : null };
-      }
-      const now = new Date(), today = startOfDay(now);
-      const ranges = {
-        today:     { from: today, to: endOfDay(now) },
-        yesterday: { from: (() => { const y = new Date(today); y.setDate(y.getDate()-1); return y; })(), to: (() => { const y = new Date(today); y.setDate(y.getDate()-1); return endOfDay(y); })() },
-        week:      { from: (() => { const w = new Date(today); w.setDate(w.getDate()-7); return w; })(), to: endOfDay(now) },
-        month:     { from: (() => { const m = new Date(today); m.setMonth(m.getMonth()-1); return m; })(), to: endOfDay(now) },
-      };
-      return ranges[currentPeriod] || {};
-    }
-
-    function startOfDay(d) { const r = new Date(d); r.setHours(0,0,0,0); return r; }
-    function endOfDay(d) { const r = new Date(d); r.setHours(23,59,59,999); return r; }
-    function daysSince(d) { return (Date.now() - new Date(d)) / 86400000; }
-
-    // ════════════════════════════════════════
-    // RENDER TABLE
-    // ════════════════════════════════════════
-
-    function renderTable(clients) {
-      const container = document.getElementById('clients-container');
-      if (clients.length === 0) { container.innerHTML = '<div class="empty-state" style="padding:2rem"><div class="empty-state-icon">👥</div><p>Aucun client trouvé</p></div>'; return; }
-
-      const showRank = ['top-points', 'top-visits'].includes(currentTab);
-      const maxPts = Math.max(...clients.map(c => c.points_balance), 1);
-
-      const cols = [
-        ...(showRank ? [{ key: '_rank', label: '#', noSort: true }] : []),
-        { key: 'name', label: 'Client' },
-        { key: 'points_balance', label: 'Points' },
-        { key: 'visit_count', label: 'Visites' },
-        { key: 'custom_reward', label: 'Récompense', hide: 'hide-mobile' },
-        { key: 'last_credited_by', label: 'Par', hide: 'hide-mobile' },
-        { key: 'last_visit', label: 'Dernière visite' },
-      ];
-
-      let html = '<table class="clients-table"><thead><tr>';
-      cols.forEach(col => {
-        const sorted = currentSort.key === col.key;
-        const arrow = col.noSort ? '' : `<span class="sort-arrow">${sorted ? (currentSort.dir==='asc'?'▲':'▼') : '⇅'}</span>`;
-        html += `<th class="${col.hide||''} ${sorted?'sorted':''}" ${col.noSort?'':`onclick="sortBy('${col.key}')"`}>${col.label}${arrow}</th>`;
-      });
-      html += '</tr></thead><tbody>';
-
-      clients.forEach((c, i) => {
-        const display = c.name || c.email || c.phone || 'N/A';
-        const sub = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
-        const progress = Math.min(c.points_balance / maxPts * 100, 100);
-        const medal = showRank ? (i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)) : null;
-
-        html += `<tr onclick="showDetails(${c.id})">`;
-        if (showRank) html += `<td class="rank ${i<3?'rank-'+(i+1):''}">${medal}</td>`;
-
-        const rewardLabel = c.custom_reward || merchant.reward_description;
-        const isCustom = !!c.custom_reward;
-
-        html += `
-          <td><strong>${esc(display)}</strong>${sub?`<br><span class="staff-sm">${esc(sub)}</span>`:''}${c.is_blocked?' <span class="badge badge-danger">Bloqué</span>':''}</td>
-          <td><div class="pts-bar"><strong style="color:var(--primary)">${c.points_balance}</strong><div class="pts-bar-track"><div class="pts-bar-fill" style="width:${progress}%"></div></div></div></td>
-          <td>${c.visit_count}</td>
-          <td class="hide-mobile"><span class="staff-sm" style="${isCustom?'color:var(--primary);font-weight:600':''}">${isCustom?'⭐ ':''}${esc(rewardLabel)}</span></td>
-          <td class="hide-mobile"><span class="staff-sm">${esc(c.last_credited_by||'—')}</span></td>
-          <td><span class="staff-sm">${fmtDate(c.last_visit)}</span>${daysSince(c.last_visit)>30?'<br><span class="badge badge-warning" style="font-size:0.6rem">Inactif</span>':''}</td>
-        </tr>`;
-      });
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function sortBy(key) {
-      if (currentSort.key === key) currentSort.dir = currentSort.dir === 'asc' ? 'desc' : 'asc';
-      else currentSort = { key, dir: key === 'name' ? 'asc' : 'desc' };
-      applyFilters();
-    }
-
-    // ════════════════════════════════════════
-    // TABS + DATE PILLS + SEARCH
-    // ════════════════════════════════════════
-
-    document.getElementById('tabs-row').addEventListener('click', (e) => {
-      const tab = e.target.closest('.client-tab'); if (!tab) return;
-      document.querySelectorAll('.client-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentTab = tab.dataset.tab;
-      const defaults = { 'all':'last_visit','top-points':'points_balance','top-visits':'visit_count','recent':'last_visit','inactive':'last_visit' };
-      currentSort = { key: defaults[currentTab]||'last_visit', dir: currentTab==='inactive'?'asc':'desc' };
-      applyFilters();
-    });
-
-    document.getElementById('date-pills').addEventListener('click', (e) => {
-      const pill = e.target.closest('.date-pill'); if (!pill) return;
-      document.querySelectorAll('.date-pill').forEach(p => p.classList.remove('active'));
-      pill.classList.add('active');
-      currentPeriod = pill.dataset.period;
-      document.getElementById('date-range').classList.toggle('show', currentPeriod==='custom');
-      if (currentPeriod !== 'custom') applyFilters();
-    });
-    document.getElementById('date-from').addEventListener('change', applyFilters);
-    document.getElementById('date-to').addEventListener('change', applyFilters);
+    // ═══ SEARCH ═══
 
     let searchTimeout;
-    document.getElementById('search-input').addEventListener('input', () => { clearTimeout(searchTimeout); searchTimeout = setTimeout(applyFilters, 200); });
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      clearTimeout(searchTimeout);
 
-    function exportCSV() { window.location.href = `${API_BASE_URL}/clients/export/csv`; }
+      if (q.length === 0) {
+        displayedClients = allClients;
+        renderClients();
+        return;
+      }
+      if (q.length < 2) return;
 
-    // ════════════════════════════════════════
-    // CLIENT DETAIL MODAL
-    // ════════════════════════════════════════
+      searchTimeout = setTimeout(async () => {
+        try {
+          const data = await API.clients.search(q);
+          displayedClients = data.clients.map(c => ({
+            ...c,
+            _label: c.name || c.email || c.phone || 'N/A',
+            _sub: c.name ? (c.email || c.phone || '') : (c.phone || ''),
+            _days: daysSince(c.last_visit),
+            _progress: Math.min(Math.round((c.points_balance / rewardThreshold) * 100), 100),
+            _canRedeem: c.points_balance >= rewardThreshold,
+          }));
+          renderClients();
+        } catch (err) { console.error(err); }
+      }, 300);
+    });
 
-    async function showDetails(mcId) {
+    // ═══ SORTING ═══
+
+    function sortBy(col, el) {
+      if (sortCol === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = col;
+        sortAsc = (col === 'name'); // alpha = asc default, rest = desc
+      }
+      document.querySelectorAll('.col-th').forEach(th => th.classList.remove('active'));
+      el.classList.add('active');
+      el.querySelector('.arrow').textContent = sortAsc ? '▲' : '▼';
+      renderClients();
+    }
+
+    function getSorted(list) {
+      const sorted = [...list];
+      const dir = sortAsc ? 1 : -1;
+
+      sorted.sort((a, b) => {
+        switch (sortCol) {
+          case 'name':
+            return dir * a._label.toLowerCase().localeCompare(b._label.toLowerCase());
+          case 'points':
+            return dir * (a.points_balance - b.points_balance);
+          case 'visits':
+            return dir * (a.visit_count - b.visit_count);
+          case 'last':
+            // ascending = oldest first, descending = newest first
+            return dir * (a._days - b._days) * -1;
+          case 'progress':
+            return dir * (a._progress - b._progress);
+          default:
+            return 0;
+        }
+      });
+      return sorted;
+    }
+
+    // ═══ RENDER TABLE ═══
+
+    function renderClients() {
+      const body = document.getElementById('cl-body');
+      const count = document.getElementById('result-count');
+      count.textContent = displayedClients.length + ' client(s)';
+
+      if (displayedClients.length === 0) {
+        body.innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">👥</div>Aucun client trouvé</div>';
+        return;
+      }
+
+      const sorted = getSorted(displayedClients);
+      let html = '';
+
+      sorted.forEach(c => {
+        const isActive = c._days <= 30;
+        const progClass = c._progress >= 100 ? 'full' : '';
+
+        html += '<div class="cl-row" onclick="showDetail(' + c.id + ')">';
+
+        // Col 1: Client info
+        html += '<div class="cl-info">';
+        html += '<div class="cl-name">' + esc(c._label) + '</div>';
+        if (c._sub) html += '<div class="cl-sub">' + esc(c._sub) + '</div>';
+        html += '<div class="cl-badges">';
+        if (c.is_blocked) html += '<span class="cl-badge blocked">bloqué</span>';
+        else if (isActive) html += '<span class="cl-badge active">actif</span>';
+        else html += '<span class="cl-badge inactive">inactif</span>';
+        if (c._canRedeem) html += '<span class="cl-badge reward">🎁</span>';
+        html += '</div>';
+        html += '</div>';
+
+        // Col 2: Points
+        html += '<div class="cl-pts">' + c.points_balance + '</div>';
+
+        // Col 3: Visits
+        html += '<div class="cl-visits cl-visits-cell">' + c.visit_count + '</div>';
+
+        // Col 4: Last visit
+        html += '<div class="cl-last">' + fmtSince(c.last_visit) + '</div>';
+
+        // Col 5: Progression bar
+        html += '<div class="cl-prog cl-prog-cell">';
+        html += '<div class="prog-bar"><div class="prog-fill ' + progClass + '" style="width:' + c._progress + '%;"></div></div>';
+        html += '<span class="prog-pct ' + progClass + '">' + c._progress + '%</span>';
+        html += '</div>';
+
+        html += '</div>';
+      });
+
+      body.innerHTML = html;
+    }
+
+    // ═══ DETAIL MODAL ═══
+
+    async function showDetail(mcId) {
       try {
         currentClientId = mcId;
         const data = await API.clients.getById(mcId);
         const c = data.client;
         const txs = data.transactions;
-        currentClientData = c;
 
-        const progress = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
-        const isReady = c.can_redeem;
-        const hasCustom = !!c.custom_reward;
-        const displayName = c.name || c.email || c.phone || `Client #${mcId}`;
-        const subLine = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
-        const hasEmail = !!c.email;
-        const hasPhone = !!c.phone;
+        const progress = Math.min(Math.round((c.points_balance / c.reward_threshold) * 100), 100);
+        const progClass = progress >= 100 ? 'full' : '';
+
+        document.getElementById('modal-title').textContent = c.name || c.email || c.phone || 'Client #' + mcId;
 
         let html = '';
 
-        // ═══ HERO HEADER ═══
-        html += `<div class="client-hero">
-          <button class="client-hero-close" onclick="closeModal()">×</button>
-          <div class="client-hero-name">${esc(displayName)}</div>
-          ${subLine ? `<div class="client-hero-sub">${esc(subLine)}</div>` : ''}
-          <div class="client-hero-badges">
-            ${hasCustom ? '<span class="hero-badge hero-badge-custom">⭐ Récompense perso</span>' : ''}
-            ${c.is_blocked ? '<span class="hero-badge hero-badge-blocked">Bloqué</span>' : ''}
-            ${c.email_validated ? '<span class="hero-badge hero-badge-validated">✓ Email validé</span>' : ''}
-          </div>
-        </div>`;
+        // Stats row
+        html += '<div class="dt-stats">';
+        html += '<div class="dt-st"><div class="dt-st-val">' + c.points_balance + '</div><div class="dt-st-lbl">Points</div></div>';
+        html += '<div class="dt-st"><div class="dt-st-val">' + c.visit_count + '</div><div class="dt-st-lbl">Visites</div></div>';
+        html += '<div class="dt-st"><div class="dt-st-val">' + Format.date(c.first_visit) + '</div><div class="dt-st-lbl">Depuis</div></div>';
+        html += '</div>';
 
-        // ═══ FLOATING STATS ═══
-        html += `<div class="client-stats-row">
-          <div class="client-stat"><div class="client-stat-val">${c.points_balance}</div><div class="client-stat-label">Points</div></div>
-          <div class="client-stat"><div class="client-stat-val">${c.visit_count}</div><div class="client-stat-label">Visites</div></div>
-          <div class="client-stat"><div class="client-stat-val">${Format.date(c.first_visit)}</div><div class="client-stat-label">Depuis</div></div>
-        </div>`;
-
-        // ═══ BODY CONTENT (padded) ═══
-        html += '<div style="padding:1.25rem 1.5rem 2.5rem;">';
-
-        // ═══ REWARD CARD ═══
-        const rewardDesc = c.reward_description || merchant.reward_description;
-        html += `<div class="reward-card">
-          <div class="reward-card-header">
-            <div>
-              <div class="reward-card-label">🎁 Récompense ${hasCustom ? '<span class="badge badge-info" style="font-size:0.58rem;margin-left:4px">Perso</span>' : ''}</div>
-              <div class="reward-card-name">${esc(rewardDesc)}</div>
-            </div>
-            ${isManager ? '<button class="reward-card-edit" onclick="toggleRewardEdit()">Modifier</button>' : ''}
-          </div>
-          <div class="reward-progress">
-            <div class="reward-progress-bar"><div class="reward-progress-fill ${isReady ? 'ready' : 'near'}" style="width:${progress}%"></div></div>
-            <div class="reward-progress-text"><span>${c.points_balance} / ${c.reward_threshold} pts</span><span>${isReady ? '✅ Prêt !' : `Encore ${c.reward_threshold - c.points_balance}`}</span></div>
-          </div>
-          ${isReady ? `<div class="reward-ready-banner" onclick="redeemRewardFromModal(${c.id})" style="cursor:pointer">
-            🎁 Récompense disponible — Cliquer pour appliquer !
-            <div style="font-size:0.7rem;opacity:0.85;margin-top:4px">${c.points_balance} pts → ${c.points_balance - c.reward_threshold} pts après déduction</div>
-          </div>` : ''}
-          ${isManager ? `<div class="reward-edit-area" id="reward-edit-section" style="display:none">
-            <div id="reward-alert"></div>
-            <div style="display:flex;gap:8px;align-items:flex-end">
-              <div class="form-group" style="flex:1;margin-bottom:0">
-                <label class="form-label" style="font-size:0.75rem">Récompense sur mesure</label>
-                <input type="text" id="custom-reward-input" class="form-control" style="font-size:0.85rem"
-                  value="${esc(c.custom_reward||'')}" placeholder="${esc(c.default_reward || merchant.reward_description)}" maxlength="150">
-                <small class="form-help">Vide = récompense par défaut</small>
-              </div>
-              <button class="btn btn-primary btn-sm" style="margin-bottom:18px" onclick="saveCustomReward()">Enregistrer</button>
-            </div>
-          </div>` : ''}
-        </div>`;
-
-        // ═══ ACTION TOOLBAR ═══
-        if (isManager) {
-          const creditParams = hasEmail ? `email=${encodeURIComponent(c.email)}` : `phone=${encodeURIComponent(c.phone||'')}`;
-          html += `<div class="action-toolbar">
-            <a href="/credit?${creditParams}${c.name ? '&name='+encodeURIComponent(c.name) : ''}" class="action-btn">➕ Créditer</a>
-            <button class="action-btn" onclick="toggleEditForm()">✏️ Modifier</button>
-            <button class="action-btn" onclick="showAdjustModal()">📏 Ajuster</button>
-            ${isOwner ? '<button class="action-btn" onclick="showMergeModal()">🔀 Fusionner</button>' : ''}
-            ${c.is_blocked
-              ? '<button class="action-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>'
-              : '<button class="action-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>'}
-            ${isOwner ? '<button class="action-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>' : ''}
-          </div>`;
+        // Progress
+        html += '<div class="dt-prog-wrap">';
+        html += '<div class="dt-prog-top"><span>Progression vers récompense</span><span>' + c.points_balance + '/' + c.reward_threshold + '</span></div>';
+        html += '<div class="dt-prog-bar"><div class="dt-prog-fill ' + progClass + '" style="width:' + progress + '%;"></div></div>';
+        if (c.can_redeem) {
+          html += '<div class="dt-reward-banner" onclick="redeemReward(' + c.id + ')">🎁 Récompense disponible — cliquez pour appliquer<br><small>' + esc(c.reward_description) + '</small></div>';
         }
+        html += '</div>';
 
-        // ═══ EDIT FORM (hidden) ═══
-        if (isManager) {
-          html += `<div class="modal-section" id="edit-section" style="display:none;margin-top:1rem">
-            <div id="edit-alert"></div>
-            <div class="edit-grid">
-              <div class="form-group full-width"><label class="form-label">Nom / surnom</label>
-                <input type="text" id="edit-name" class="form-control" value="${esc(c.name||'')}"></div>
-              <div class="form-group"><label class="form-label">Email</label>
-                <input type="email" id="edit-email" class="form-control" value="${esc(c.email||'')}"></div>
-              <div class="form-group"><label class="form-label">Téléphone</label>
-                <input type="tel" id="edit-phone" class="form-control" value="${esc(c.phone||'')}"></div>
-              <div class="form-group full-width" style="text-align:right">
-                <button class="btn btn-sm" onclick="toggleEditForm()" style="margin-right:0.5rem">Annuler</button>
-                <button class="btn btn-primary btn-sm" onclick="saveEdit()">Enregistrer</button>
-              </div>
-            </div>
-          </div>`;
-        }
-
-        // ═══ NOTES (expandable) ═══
-        if (isManager) {
-          const hasNotes = !!(c.notes_private && c.notes_private.trim());
-          html += `<div class="expand-section ${hasNotes ? 'open' : ''}" style="margin-top:1rem" onclick="this.classList.toggle('open')" id="notes-section">
-            <div class="expand-header">
-              <span>📝 Notes privées ${hasNotes ? '' : '<span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:6px">Aucune</span>'}</span>
-              <span class="expand-arrow">▶</span>
-            </div>
-            <div class="expand-body" onclick="event.stopPropagation()">
-              <textarea class="notes-area" id="notes-area" placeholder="VIP, allergique noix, couple table 12..." maxlength="500">${esc(c.notes_private||'')}</textarea>
-              <div class="notes-meta"><span id="notes-count">${(c.notes_private||'').length}</span>/500
-                <button class="btn btn-sm" style="padding:2px 10px;font-size:0.72rem;margin-left:6px" onclick="saveNotes()">Sauver</button>
-              </div>
-            </div>
-          </div>`;
-        }
-
-        // ═══ TRANSACTIONS (expandable, open by default) ═══
-        html += `<div class="expand-section open" style="margin-top:0.75rem" onclick="this.classList.toggle('open')">
-          <div class="expand-header">
-            <span>📜 Historique <span style="font-size:0.72rem;color:var(--text-light);font-weight:400;margin-left:6px">${txs.length} transaction${txs.length !== 1 ? 's' : ''}</span></span>
-            <span class="expand-arrow">▶</span>
-          </div>
-          <div class="expand-body" onclick="event.stopPropagation()">`;
-
+        // Timeline
+        html += '<div class="dt-section">Historique</div>';
         if (txs.length === 0) {
-          html += '<p class="text-muted" style="font-size:0.85rem;text-align:center;padding:1rem 0">Aucune transaction</p>';
+          html += '<div class="tl-empty">Aucun historique</div>';
         } else {
-          html += '<div class="tx-list">';
+          html += '<div class="tl">';
           txs.forEach(t => {
+            const type = t.transaction_type;
             const sign = t.points_delta >= 0 ? '+' : '';
-            const colors = { reward: 'var(--success)', adjustment: 'var(--warning)', merge: '#8b5cf6', credit: 'var(--primary)' };
-            const color = colors[t.transaction_type] || 'var(--primary)';
-            html += `<div class="tx-item">
-              <div class="tx-dot ${t.transaction_type}"></div>
-              <div class="tx-body">
-                <div class="tx-top">
-                  <span class="tx-amount" style="color:${color}">${sign}${t.points_delta} pts</span>
-                  <span class="tx-date">${Format.datetime(t.created_at)}</span>
-                </div>
-                <div class="tx-detail">
-                  ${t.amount ? Format.currency(t.amount) + ' · ' : ''}${t.transaction_type}${t.staff_name ? ' · ' + esc(t.staff_name) : ''}
-                  ${t.notes ? '<br>' + esc(t.notes) : ''}
-                </div>
-              </div>
-            </div>`;
+            const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion' };
+            const dt = new Date(t.created_at + 'Z');
+            const dateStr = dt.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+            html += '<div class="tl-item ' + type + '">';
+            html += '<div class="tl-date">' + dateStr + (t.staff_name ? ' — ' + esc(t.staff_name) : '') + '</div>';
+            html += '<div class="tl-body">';
+            html += '<span class="tl-pts ' + type + '">' + sign + t.points_delta + ' pts</span>';
+            if (t.amount) html += ' pour ' + Format.currency(t.amount);
+            html += '<span class="tl-badge ' + type + '">' + (badges[type] || type) + '</span>';
+            if (t.notes) html += '<div class="tl-notes">' + esc(t.notes) + '</div>';
+            html += '</div>';
+            html += '</div>';
           });
           html += '</div>';
         }
-        html += '</div></div>';
-
-        // Close padded body
-        html += '</div>';
 
         document.getElementById('modal-body').innerHTML = html;
 
-        // Notes character counter
-        const notesEl = document.getElementById('notes-area');
-        if (notesEl) notesEl.addEventListener('input', () => { document.getElementById('notes-count').textContent = notesEl.value.length; });
+        // Footer actions
+        let foot = '';
+        if (staff.role === 'owner' || staff.role === 'manager') {
+          foot += '<button class="act-btn" onclick="openAdjust()">📏 Ajuster</button>';
+          if (c.is_blocked) {
+            foot += '<button class="act-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>';
+          } else {
+            foot += '<button class="act-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>';
+          }
+        }
+        document.getElementById('modal-foot').innerHTML = foot;
 
-        document.getElementById('detail-modal').classList.add('active');
-      } catch (err) { console.error(err); }
-    }
-
-    function closeModal() { document.getElementById('detail-modal').classList.remove('active'); }
-    document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeModal(); });
-
-    // ── Edit ──
-    function toggleEditForm() { const el = document.getElementById('edit-section'); if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
-
-    async function saveEdit() {
-      try {
-        const name = document.getElementById('edit-name').value.trim();
-        const email = document.getElementById('edit-email').value.trim();
-        const phone = document.getElementById('edit-phone').value.trim();
-        if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
-        await API.call(`/clients/${currentClientId}/edit`, { method: 'PUT', body: JSON.stringify({ name: name||null, email: email||null, phone: phone||null }) });
-        closeModal(); loadClients();
-      } catch (err) { UI.showAlert('edit-alert', err.message, 'error'); }
-    }
-
-    // ── Notes ──
-    async function saveNotes() {
-      try {
-        const notes = document.getElementById('notes-area').value;
-        await API.call(`/clients/${currentClientId}/notes`, { method: 'PUT', body: JSON.stringify({ notes }) });
-        // Update local data
-        const idx = allClients.findIndex(c => c.id === currentClientId);
-        if (idx >= 0) allClients[idx].notes_private = notes;
-      } catch (err) { alert('Erreur : ' + err.message); }
-    }
-
-    // ── Custom Reward ──
-    function toggleRewardEdit() {
-      const el = document.getElementById('reward-edit-section');
-      if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
-    }
-
-    async function saveCustomReward() {
-      try {
-        const value = document.getElementById('custom-reward-input').value.trim();
-        await API.clients.setCustomReward(currentClientId, value || null);
-        showDetails(currentClientId); // refresh modal
-      } catch (err) { UI.showAlert('reward-alert', err.message, 'error'); }
-    }
-
-    // ── Resend email ──
-    async function resendEmail() {
-      try {
-        const result = await API.call(`/clients/${currentClientId}/resend-email`, { method: 'POST' });
-        const msg = result.type === 'validation' ? 'Email de validation renvoyé ✅' : 'Récapitulatif des points envoyé ✅';
-        alert(msg);
-      } catch (err) { alert('Erreur : ' + err.message); }
-    }
-
-    // ── Redeem Reward from Modal ──
-    async function redeemRewardFromModal(mcId) {
-      const c = currentClientData;
-      const rewardDesc = c.custom_reward || c.reward_description || merchant.reward_description;
-      const newBalance = c.points_balance - c.reward_threshold;
-
-      if (!confirm(`🎁 Appliquer la récompense ?\n\n→ ${rewardDesc}\n\nSolde : ${c.points_balance} pts → ${newBalance} pts`)) return;
-
-      try {
-        const result = await API.clients.reward({ merchantClientId: mcId });
-
-        // Show celebration overlay inside modal
-        const body = document.querySelector('#detail-modal .modal-content');
-        const overlay = document.createElement('div');
-        overlay.className = 'reward-celebration';
-        overlay.innerHTML = `
-          <div class="reward-celebration-content">
-            <div style="font-size:3rem;margin-bottom:0.5rem">🎉</div>
-            <h2 style="margin:0 0 0.5rem;color:var(--success)">Récompense appliquée !</h2>
-            <p style="font-size:1.1rem;font-weight:600;margin:0 0 0.75rem">${esc(rewardDesc)}</p>
-            <div style="display:flex;justify-content:center;gap:2rem;margin-bottom:1rem">
-              <div style="text-align:center">
-                <div style="font-size:0.7rem;color:var(--text-light);text-transform:uppercase">Avant</div>
-                <div style="font-size:1.4rem;font-weight:700;color:var(--text-light);text-decoration:line-through">${c.points_balance} pts</div>
-              </div>
-              <div style="font-size:1.5rem;color:var(--text-light)">→</div>
-              <div style="text-align:center">
-                <div style="font-size:0.7rem;color:var(--text-light);text-transform:uppercase">Après</div>
-                <div style="font-size:1.4rem;font-weight:700;color:var(--primary)">${result.client.points_balance} pts</div>
-              </div>
-            </div>
-            <button class="btn btn-primary" onclick="this.closest('.reward-celebration').remove(); showDetails(${mcId});">OK</button>
-          </div>
-        `;
-        body.appendChild(overlay);
-
-        // Refresh client list behind
-        loadClients();
+        document.getElementById('detail-modal').classList.add('open');
       } catch (err) {
-        alert('Erreur : ' + err.message);
+        console.error('Detail error:', err);
       }
     }
 
-    // ── Block / Unblock ──
-    async function toggleBlock(block) {
-      if (!confirm(`${block ? '🔒 Bloquer' : '🔓 Débloquer'} ce client ?`)) return;
+    function closeDetail() { document.getElementById('detail-modal').classList.remove('open'); }
+    document.getElementById('detail-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'detail-modal') closeDetail();
+    });
+
+    // ═══ REWARD ═══
+
+    async function redeemReward(mcId) {
+      if (!confirm('🎁 Appliquer la récompense pour ce client ?')) return;
       try {
-        if (block) await API.clients.block(currentClientId); else await API.clients.unblock(currentClientId);
-        closeModal(); loadClients();
+        await API.clients.reward({ merchantClientId: mcId });
+        showDetail(mcId);
+        loadClients();
       } catch (err) { alert(err.message); }
     }
 
-    // ── Delete ──
-    async function deleteClient() {
-      const c = currentClientData;
-      const label = c.name || c.email || c.phone || '#'+currentClientId;
-      if (!confirm(`🗑️ Supprimer "${label}" ?\n\nCette action est irréversible.\nTous les points et l'historique seront perdus.`)) return;
-      if (!confirm(`⚠️ DERNIÈRE CONFIRMATION\n\nSupprimer définitivement "${label}" et toutes ses données ?`)) return;
+    // ═══ BLOCK / UNBLOCK ═══
+
+    async function toggleBlock(block) {
+      if (!currentClientId) return;
+      const action = block ? 'bloquer' : 'débloquer';
+      if (!confirm((block ? '🔒' : '🔓') + ' Voulez-vous ' + action + ' ce client ?')) return;
       try {
-        await API.call(`/clients/${currentClientId}`, { method: 'DELETE' });
-        closeModal(); loadClients();
-      } catch (err) { alert('Erreur : ' + err.message); }
+        if (block) await API.clients.block(currentClientId);
+        else await API.clients.unblock(currentClientId);
+        closeDetail();
+        loadClients();
+      } catch (err) { alert(err.message); }
     }
 
-    // ════════════════════════════════════════
-    // ADJUST MODAL
-    // ════════════════════════════════════════
+    // ═══ ADJUST ═══
 
-    function showAdjustModal() {
-      document.getElementById('adjust-delta').value = '';
-      document.getElementById('adjust-reason').value = '';
-      UI.clearAlert('adjust-alert');
-      document.getElementById('adjust-modal').classList.add('active');
+    function openAdjust() {
+      document.getElementById('adj-delta').value = '';
+      document.getElementById('adj-reason').value = '';
+      document.getElementById('adjust-alert').innerHTML = '';
+      document.getElementById('adjust-modal').classList.add('open');
     }
-    function closeAdjustModal() { document.getElementById('adjust-modal').classList.remove('active'); }
-    document.getElementById('adjust-modal').addEventListener('click', (e) => { if (e.target.id === 'adjust-modal') closeAdjustModal(); });
-
-    async function submitAdjustment() {
-      const delta = parseInt(document.getElementById('adjust-delta').value);
-      const reason = document.getElementById('adjust-reason').value.trim();
-      if (!delta) { UI.showAlert('adjust-alert', 'Ajustement requis', 'error'); return; }
-      if (!reason) { UI.showAlert('adjust-alert', 'Raison requise', 'error'); return; }
-      try {
-        await API.clients.adjust({ merchantClientId: currentClientId, pointsDelta: delta, reason });
-        closeAdjustModal(); showDetails(currentClientId); loadClients();
-      } catch (err) { UI.showAlert('adjust-alert', err.message, 'error'); }
-    }
-
-    // ════════════════════════════════════════
-    // MERGE MODAL
-    // ════════════════════════════════════════
-
-    function showMergeModal() {
-      mergeSourceId = null;
-      document.getElementById('merge-search').value = '';
-      document.getElementById('merge-search').style.display = '';
-      document.getElementById('merge-results').classList.remove('open');
-      document.getElementById('merge-selected').classList.remove('show');
-      document.getElementById('merge-confirm-btn').disabled = true;
-      document.getElementById('merge-reason').value = '';
-      UI.clearAlert('merge-alert');
-      const c = currentClientData;
-      document.getElementById('merge-target').innerHTML = `<strong>${esc(c.name||c.email||c.phone||'#'+currentClientId)}</strong> — ${c.points_balance} pts, ${c.visit_count} visites`;
-      document.getElementById('merge-modal').classList.add('active');
-    }
-    function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
-    document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
-
-    let mergeSearchTimeout;
-    document.getElementById('merge-search').addEventListener('input', (e) => {
-      clearTimeout(mergeSearchTimeout);
-      const q = e.target.value.trim();
-      if (q.length < 2) { document.getElementById('merge-results').classList.remove('open'); return; }
-      mergeSearchTimeout = setTimeout(() => {
-        const results = allClients.filter(c => c.id !== currentClientId && ((c.email||'').toLowerCase().includes(q.toLowerCase()) || (c.phone||'').toLowerCase().includes(q.toLowerCase()) || (c.name||'').toLowerCase().includes(q.toLowerCase()))).slice(0, 8);
-        const dd = document.getElementById('merge-results');
-        dd.innerHTML = results.length === 0
-          ? '<div style="padding:8px 10px;font-size:0.83rem;color:var(--text-light)">Aucun résultat</div>'
-          : results.map(r => `<div class="merge-item" onclick="selectMergeSource(${r.id})"><div class="m-name">${esc(r.name||r.email||r.phone||'#'+r.id)}</div><div class="m-detail">${r.points_balance} pts · ${r.visit_count} vis.</div></div>`).join('');
-        dd.classList.add('open');
-      }, 200);
+    function closeAdjust() { document.getElementById('adjust-modal').classList.remove('open'); }
+    document.getElementById('adjust-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'adjust-modal') closeAdjust();
     });
 
-    function selectMergeSource(id) {
-      mergeSourceId = id;
-      const c = allClients.find(x => x.id === id); if (!c) return;
-      document.getElementById('merge-results').classList.remove('open');
-      document.getElementById('merge-search').style.display = 'none';
-      document.getElementById('merge-selected-name').innerHTML = `<strong>${esc(c.name||c.email||c.phone)}</strong> — ${c.points_balance} pts, ${c.visit_count} vis.`;
-      document.getElementById('merge-selected').classList.add('show');
-      document.getElementById('merge-confirm-btn').disabled = false;
-    }
+    async function submitAdjust() {
+      const delta = parseInt(document.getElementById('adj-delta').value);
+      const reason = document.getElementById('adj-reason').value.trim();
+      const alertEl = document.getElementById('adjust-alert');
 
-    function clearMergeSelection() {
-      mergeSourceId = null;
-      document.getElementById('merge-selected').classList.remove('show');
-      document.getElementById('merge-search').style.display = '';
-      document.getElementById('merge-search').value = '';
-      document.getElementById('merge-confirm-btn').disabled = true;
-    }
+      if (!delta || delta === 0) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="font-size:0.78rem;">Ajustement requis</div>';
+        return;
+      }
+      if (!reason) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="font-size:0.78rem;">Raison requise</div>';
+        return;
+      }
 
-    async function submitMerge() {
-      if (!mergeSourceId) return;
-      const src = allClients.find(x => x.id === mergeSourceId);
-      const label = src ? (src.name||src.email||src.phone) : '#'+mergeSourceId;
-      if (!confirm(`⚠️ ATTENTION\n\n"${label}" sera SUPPRIMÉ.\nSes points et historique transférés vers le client actuel.\n\nIrréversible. Continuer ?`)) return;
       try {
-        const reason = document.getElementById('merge-reason').value.trim();
-        await API.call(`/clients/${currentClientId}/merge`, { method: 'POST', body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason||'Fusion manuelle' }) });
-        closeMergeModal(); closeModal(); loadClients();
-        setTimeout(() => showDetails(currentClientId), 300);
-      } catch (err) { UI.showAlert('merge-alert', err.message, 'error'); }
+        await API.clients.adjust({
+          merchantClientId: currentClientId,
+          pointsDelta: delta,
+          reason,
+        });
+        closeAdjust();
+        showDetail(currentClientId);
+        loadClients();
+      } catch (err) {
+        alertEl.innerHTML = '<div class="alert alert-error" style="font-size:0.78rem;">' + esc(err.message) + '</div>';
+      }
     }
 
-    document.addEventListener('click', (e) => { if (!e.target.closest('.merge-search-wrap')) document.getElementById('merge-results').classList.remove('open'); });
-
-    // ════════════════════════════════════════
-    // HELPERS
-    // ════════════════════════════════════════
-
-    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-    function fmtDate(d) {
-      if (!d) return '—';
-      const dt = new Date(d), days = Math.floor((Date.now()-dt)/86400000);
-      const time = dt.toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
-      if (days === 0) return `Auj. ${time}`;
-      if (days === 1) return `Hier ${time}`;
-      if (days < 7) return `${dt.toLocaleDateString('fr-FR',{weekday:'short'})} ${time}`;
-      return dt.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})+' '+time;
-    }
+    // ═══ INIT ═══
 
     loadClients();
   </script>
