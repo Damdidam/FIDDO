@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
@@ -138,19 +139,23 @@ router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
 // POST /api/clients/credit
 // ═══════════════════════════════════════════════════════
 
-router.post('/credit', (req, res) => {
+router.post('/credit', async (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const staffId = req.staff.id;
-    const { email, phone, name, amount, notes, idempotencyKey } = req.body;
+    const { email, phone, name, amount, notes, idempotencyKey, pin } = req.body;
 
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
     if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
     if (req.staff.role === 'cashier' && parseFloat(amount) > 200) return res.status(403).json({ error: 'Max 200€ pour un caissier' });
 
+    // Hash PIN if provided (only stored for new clients)
+    const pinHash = pin ? await bcrypt.hash(pin, 10) : null;
+
     const result = creditPoints({
       merchantId, staffId, email: email || null, phone: phone || null, name: name || null,
       amount: parseFloat(amount), notes: notes || null, idempotencyKey: idempotencyKey || null, source: 'manual',
+      pinHash,
     });
 
     if (!result.idempotent) {
@@ -183,12 +188,17 @@ router.post('/credit', (req, res) => {
 router.post('/reward', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const { merchantClientId, notes, idempotencyKey } = req.body;
+    const { merchantClientId, notes, idempotencyKey, pin } = req.body;
     if (!merchantClientId) return res.status(400).json({ error: 'ID client requis' });
-    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null });
+    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null });
     if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta } });
     res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction, rewardLabel: result.rewardLabel || null });
-  } catch (error) { console.error('Erreur reward:', error); res.status(error.message.includes('insuffisant') ? 400 : 500).json({ error: error.message }); }
+  } catch (error) {
+    console.error('Erreur reward:', error);
+    const msg = error.message;
+    const status = msg.includes('insuffisant') ? 400 : msg.includes('PIN') ? 403 : 500;
+    res.status(status).json({ error: msg });
+  }
 });
 
 router.post('/adjust', requireRole('owner', 'manager'), (req, res) => {
@@ -449,7 +459,7 @@ router.get('/lookup', (req, res) => {
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
     if (!mc) return res.json({ found: true, isNew: true, client: { name: endUser.name, email: endUser.email, phone: endUser.phone } });
     const merchant = merchantQueries.findById.get(merchantId);
-    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: mc.custom_reward || merchant.reward_description, custom_reward: mc.custom_reward || null, can_redeem: mc.points_balance >= merchant.points_for_reward } });
+    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: mc.custom_reward || merchant.reward_description, custom_reward: mc.custom_reward || null, can_redeem: mc.points_balance >= merchant.points_for_reward, has_pin: !!endUser.pin_hash } });
   } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
 
@@ -521,7 +531,7 @@ router.get('/:id', requireRole('owner', 'manager'), (req, res) => {
       client: { ...mc, email: eu?.email, phone: eu?.phone, name: eu?.name, email_validated: eu?.email_validated,
         reward_threshold: m.points_for_reward, reward_description: mc.custom_reward || m.reward_description,
         custom_reward: mc.custom_reward || null, default_reward: m.reward_description,
-        can_redeem: mc.points_balance >= m.points_for_reward },
+        can_redeem: mc.points_balance >= m.points_for_reward, has_pin: !!eu?.pin_hash },
       transactions: txs,
     });
   } catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
