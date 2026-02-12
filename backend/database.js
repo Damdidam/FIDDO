@@ -328,6 +328,7 @@ function initDatabase() {
   // SAFE MIGRATIONS (idempotent ALTERs)
   // ───────────────────────────────────────────
   try { db.exec(`ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT`); } catch (e) { /* already exists */ }
+  try { db.exec(`ALTER TABLE end_users ADD COLUMN pin_hash TEXT`); } catch (e) { /* already exists */ }
 
   console.log('✅ Database V3.4 initialized');
 }
