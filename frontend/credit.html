@@ -48,15 +48,17 @@
 
     /* ── Segmented control ── */
     .seg {
-      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
       background: #F1F5F9; border-radius: 7px; padding: 3px;
       margin-bottom: 0.9rem;
     }
     .seg button {
       padding: 0.4rem; border: none; background: transparent;
       border-radius: 5px; font-family: inherit; font-weight: 600;
-      font-size: 0.78rem; color: #64748B; cursor: pointer;
+      font-size: 0.75rem; color: #64748B; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
     }
+    .seg button svg { width: 13px; height: 13px; flex-shrink: 0; }
     .seg button.active {
       background: white; color: var(--primary-dark);
       box-shadow: 0 1px 2px rgba(0,0,0,0.06);
@@ -223,56 +225,29 @@
        ═══════════════════════════════════════════════════════ */
 
     .qr-box {
-      text-align: center; padding: 0.75rem;
+      text-align: center; padding: 1rem;
       background: #FAFBFC; border: 1.5px solid #E2E8F0;
       border-radius: 7px; margin-bottom: 0.8rem;
     }
-    .qr-box .qr-sub { font-size: 0.7rem; color: #64748B; margin-bottom: 0.5rem; }
+    .qr-box .qr-sub { font-size: 0.72rem; color: #64748B; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .qr-box .qr-sub svg { width: 14px; height: 14px; }
 
     .qr-frame {
       position: relative; display: inline-block; padding: 6px;
       background: white; border-radius: 6px; border: 1px solid #E2E8F0;
     }
     .qr-frame img { display: block; border-radius: 2px; }
-    .qr-frame::after {
-      content: ''; position: absolute; left: 6px; right: 6px; height: 2px;
-      background: linear-gradient(90deg, transparent, var(--primary), transparent);
-      animation: qrscan 2.5s ease-in-out infinite;
-    }
-    @keyframes qrscan { 0%{top:6px;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:calc(100% - 6px);opacity:0} }
-    .qr-frame.done::after { display: none; }
+    .qr-frame::after { display: none; }
 
-    .qr-stat {
-      display: flex; align-items: center; justify-content: center;
-      gap: 0.4rem; margin-top: 0.4rem; font-size: 0.7rem; color: #64748B;
+    .qr-fullscreen-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 0.65rem; padding: 6px 14px;
+      background: white; border: 1px solid #E2E8F0; border-radius: 6px;
+      font-family: inherit; font-size: 0.72rem; font-weight: 600;
+      color: #64748B; cursor: pointer; transition: all 0.2s;
     }
-    .qr-stat .dot {
-      width: 5px; height: 5px; border-radius: 50%; background: #F59E0B;
-      animation: qrp 1.5s ease-in-out infinite;
-    }
-    @keyframes qrp { 0%,100%{opacity:1} 50%{opacity:.3} }
-    .qr-stat.ok .dot { background: var(--primary); animation: none; }
-    .qr-stat.ko .dot { background: #EF4444; animation: none; }
-
-    .qr-tmr { width: 100px; height: 2px; background: #E2E8F0; border-radius: 1px; margin: 0.25rem auto 0; overflow: hidden; }
-    .qr-tmr-fill { height: 100%; background: var(--primary); border-radius: 1px; width: 100%; }
-    .qr-tmr-txt { font-size: 0.62rem; color: #94A3B8; margin-top: 0.1rem; }
-
-    .qr-result {
-      padding: 0.5rem; margin-top: 0.35rem;
-      background: color-mix(in srgb, var(--primary-light) 35%, white);
-      border-radius: 5px; border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
-      font-size: 0.75rem; color: #1E293B; line-height: 1.5;
-    }
-    .qr-result strong { color: var(--primary-dark); }
-
-    .qr-redo {
-      margin-top: 0.35rem; padding: 0.15rem 0.5rem; border-radius: 4px;
-      font-size: 0.68rem; cursor: pointer;
-      border: 1px solid #E2E8F0; background: white; color: #64748B;
-      font-family: inherit;
-    }
-    .qr-redo:hover { background: #F1F5F9; }
+    .qr-fullscreen-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .qr-fullscreen-btn svg { width: 13px; height: 13px; }
 
     /* ── Cashier limit info ── */
     .config-strip {
@@ -327,10 +302,22 @@
         <form id="credit-form" autocomplete="off">
           <!-- Segment toggle -->
           <div class="seg">
-            <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">@ Email</button>
-            <button type="button" id="toggle-phone" onclick="switchMode('phone')"># Tél</button>
-            <button type="button" id="toggle-qr" onclick="switchMode('qr')">📱 QR</button>
-            <button type="button" id="toggle-scan" onclick="switchMode('scan')">📷 Scan</button>
+            <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              Email
+            </button>
+            <button type="button" id="toggle-phone" onclick="switchMode('phone')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+              Tél
+            </button>
+            <button type="button" id="toggle-qr" onclick="switchMode('qr')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14"/><line x1="21" y1="21" x2="21" y2="21"/></svg>
+              QR
+            </button>
+            <button type="button" id="toggle-scan" onclick="switchMode('scan')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Scan
+            </button>
           </div>
 
           <!-- Email -->
@@ -360,9 +347,16 @@
           <!-- QR (static) -->
           <div id="field-qr" style="display:none;">
             <div class="qr-box" id="qr-inline">
-              <div class="qr-sub">Présentez ce QR au client</div>
+              <div class="qr-sub">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+                Présentez ce QR au client
+              </div>
               <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
-              <button type="button" class="qr-redo" onclick="showQRFullscreen()">⛶ Plein écran</button>
+              <br>
+              <button type="button" class="qr-fullscreen-btn" onclick="showQRFullscreen()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                Plein écran
+              </button>
             </div>
 
             <!-- Pending identifications -->
@@ -392,7 +386,7 @@
 
           <!-- Amount + Notes -->
           <div id="pin-group" class="form-group" style="display:none;">
-            <label class="form-label">🔒 Code PIN du client (4 chiffres)</label>
+            <label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Code PIN du client (4 chiffres)</label>
             <div class="input-wrap">
               <input type="tel" id="client-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
               <button type="button" class="btn-clear" onclick="clearField('client-pin')">×</button>
@@ -688,7 +682,7 @@
     async function redeemReward(mcId) {
       let pin = null;
       if (!qrVerifiedFlag) {
-        pin = prompt('🔒 Code PIN du client (4 chiffres) :');
+        pin = prompt('Code PIN du client (4 chiffres) :');
         if (!pin) return; // cancelled
         if (!/^\d{4}$/.test(pin)) {
           UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
@@ -937,12 +931,12 @@
           }).catch(err => {
             console.error('Scanner start error:', err);
             document.getElementById('scan-status').innerHTML =
-              '⚠️ Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
+              '⚠ Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
             document.getElementById('scan-status').style.color = '#DC2626';
           });
         } catch (err) {
           console.error('Scanner init error:', err);
-          document.getElementById('scan-status').textContent = '⚠️ Erreur d\'initialisation du scanner';
+          document.getElementById('scan-status').textContent = '⚠ Erreur d\'initialisation du scanner';
           document.getElementById('scan-status').style.color = '#DC2626';
         }
       }, 300);
@@ -983,7 +977,7 @@
       }
 
       if (!clientQrToken) {
-        document.getElementById('scan-status').textContent = '⚠️ QR non reconnu';
+        document.getElementById('scan-status').textContent = '⚠ QR non reconnu';
         document.getElementById('scan-status').style.color = '#D97706';
         setTimeout(() => { scannerBusy = false; }, 2000);
         return;
@@ -991,7 +985,7 @@
 
       // Stop scanner immediately
       stopScanner();
-      document.getElementById('scan-status').textContent = '✓ QR lu ! Recherche du client…';
+      document.getElementById('scan-status').textContent = 'QR lu ! Recherche du client…';
       document.getElementById('scan-status').style.color = '#059669';
 
       // Lookup client
@@ -1017,7 +1011,7 @@
         }
 
         UI.showAlert('credit-alert',
-          (d.isNew ? '✨ Nouveau client : ' : '✓ Client identifié : ') +
+          (d.isNew ? 'Nouveau client : ' : 'Client identifié : ') +
           (d.name || d.email || d.phone) +
           (d.pointsBalance > 0 ? ' — ' + d.pointsBalance + ' pts' : ''),
           'success');
@@ -1025,7 +1019,7 @@
         setTimeout(triggerLookup, 300);
         setTimeout(() => document.getElementById('amount').focus(), 600);
       } catch (e) {
-        document.getElementById('scan-status').textContent = '⚠️ Client non trouvé';
+        document.getElementById('scan-status').textContent = '⚠ Client non trouvé';
         document.getElementById('scan-status').style.color = '#DC2626';
         scannerBusy = false;
         setTimeout(() => switchMode('scan'), 2000); // restart scanner
