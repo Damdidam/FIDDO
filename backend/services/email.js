@@ -254,6 +254,30 @@ function sendPinChangedEmail(clientEmail, businessName) {
   });
 }
 
+function sendMagicLinkEmail(clientEmail, magicUrl) {
+  sendMail({
+    to: clientEmail,
+    subject: 'Votre lien de connexion FIDDO',
+    html: `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+        <h1 style="color: #0891B2; font-size: 24px; margin-bottom: 8px;">FIDDO</h1>
+        <p style="color: #64748B; font-size: 14px; margin-bottom: 24px;">Votre espace fidélité</p>
+        <p style="color: #1E293B; font-size: 16px; line-height: 1.5;">
+          Cliquez sur le bouton ci-dessous pour accéder à vos cartes de fidélité :
+        </p>
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${magicUrl}" style="background: linear-gradient(135deg, #0891B2, #0E7490); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
+            Accéder à mon compte
+          </a>
+        </div>
+        <p style="color: #94A3B8; font-size: 13px; line-height: 1.5;">
+          Ce lien est valable 15 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+        </p>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   sendMail,
   sendValidationEmail,
@@ -263,4 +287,5 @@ module.exports = {
   sendMerchantInfoChangedEmail,
   sendPasswordChangedEmail,
   sendPinChangedEmail,
+  sendMagicLinkEmail,
 };
