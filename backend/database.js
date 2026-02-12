@@ -15,7 +15,7 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 // ═══════════════════════════════════════════════════════
-// DDL — Schema V3.4
+// DDL — Schema V3.1 (post-review)
 // ═══════════════════════════════════════════════════════
 
 function initDatabase() {
@@ -69,6 +69,7 @@ function initDatabase() {
 
   // ───────────────────────────────────────────
   // 3. STAFF ACCOUNTS
+  //    email = globalement unique (un humain = un login)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS staff_accounts (
@@ -92,7 +93,10 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 4. END USERS
+  // 4. END USERS (identité globale)
+  //    email/phone   = valeurs brutes (affichage)
+  //    email_lower/phone_e164 = normalisées (unicité + recherche)
+  //    CHECK : au moins un identifiant, sauf si soft-deleted
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_users (
@@ -109,7 +113,6 @@ function initDatabase() {
       validation_token  TEXT,
 
       qr_token          TEXT,
-      pin_hash          TEXT,
 
       consent_date      TEXT,
       consent_version   TEXT,
@@ -129,7 +132,8 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 5. END USER ALIASES
+  // 5. END USER ALIASES (identifiants historiques post-fusion)
+  //    UNIQUE(alias_type, alias_value) → un alias ne peut pointer que vers un seul end_user
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_user_aliases (
@@ -142,7 +146,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 6. MERCHANT CLIENTS
+  // 6. MERCHANT CLIENTS (relation merchant ↔ end_user, points isolés)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS merchant_clients (
@@ -167,7 +171,10 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 7. TRANSACTIONS
+  // 7. TRANSACTIONS (ledger — source de vérité comptable)
+  //    points_delta : signé (+credit, -reward, +/-adjustment, 0 merge-trace)
+  //    amount : nullable (merge/adjustment n'ont pas de montant)
+  //    idempotency_key : unique par merchant pour éviter les double-crédits
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -189,7 +196,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 8. AUDIT LOGS
+  // 8. AUDIT LOGS (immuable)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS audit_logs (
@@ -209,7 +216,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 9. END USER MERGES
+  // 9. END USER MERGES (traçabilité des fusions)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_user_merges (
@@ -224,61 +231,10 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 10. MERCHANT PREFERENCES (theme, notifications, etc.)
-  //     DROP+CREATE to handle schema changes on existing DBs
+  // MIGRATIONS (colonnes ajoutées post-V3.1)
   // ───────────────────────────────────────────
-  db.exec(`DROP TABLE IF EXISTS announcement_reads`);
-  db.exec(`DROP TABLE IF EXISTS announcements`);
-  db.exec(`DROP TABLE IF EXISTS merchant_preferences`);
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS merchant_preferences (
-      id                   INTEGER PRIMARY KEY AUTOINCREMENT,
-      merchant_id          INTEGER UNIQUE NOT NULL REFERENCES merchants(id),
-      theme                TEXT NOT NULL DEFAULT 'teal',
-      language             TEXT NOT NULL DEFAULT 'fr',
-      timezone             TEXT NOT NULL DEFAULT 'Europe/Brussels',
-      reward_message       TEXT DEFAULT 'Félicitations ! Vous avez gagné votre récompense ! 🎁',
-      notify_new_client    INTEGER NOT NULL DEFAULT 1,
-      notify_reward_ready  INTEGER NOT NULL DEFAULT 1,
-      notify_weekly_report INTEGER NOT NULL DEFAULT 0,
-      logo_url             TEXT,
-      backup_frequency     TEXT NOT NULL DEFAULT 'manual',
-      last_backup_at       TEXT,
-      created_at           TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at           TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 11. ANNOUNCEMENTS (admin → merchants)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS announcements (
-      id          INTEGER PRIMARY KEY AUTOINCREMENT,
-      title       TEXT NOT NULL,
-      content     TEXT NOT NULL,
-      target_type TEXT NOT NULL DEFAULT 'all' CHECK(target_type IN ('all','merchant')),
-      target_id   INTEGER,
-      priority    TEXT NOT NULL DEFAULT 'info' CHECK(priority IN ('info','warning','critical')),
-      created_by  INTEGER REFERENCES super_admins(id),
-      expires_at  TEXT,
-      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
-    )
-  `);
-
-  // ───────────────────────────────────────────
-  // 12. ANNOUNCEMENT READS (tracking)
-  // ───────────────────────────────────────────
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS announcement_reads (
-      id              INTEGER PRIMARY KEY AUTOINCREMENT,
-      announcement_id INTEGER NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
-      staff_id        INTEGER NOT NULL REFERENCES staff_accounts(id),
-      read_at         TEXT NOT NULL DEFAULT (datetime('now')),
-      UNIQUE(announcement_id, staff_id)
-    )
-  `);
+  try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
 
   // ───────────────────────────────────────────
   // INDEXES
@@ -288,15 +244,15 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_merchants_status ON merchants(status);
     CREATE INDEX IF NOT EXISTS ix_merchants_vat    ON merchants(vat_number);
 
-    -- staff_accounts
+    -- staff_accounts (email already has implicit UNIQUE index)
     CREATE INDEX IF NOT EXISTS ix_staff_merchant ON staff_accounts(merchant_id);
 
-    -- end_users
+    -- end_users (normalized columns for lookup)
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_email_lower ON end_users(email_lower);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_phone_e164  ON end_users(phone_e164);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_qr_token    ON end_users(qr_token);
 
-    -- end_user_aliases
+    -- end_user_aliases (unique alias → one owner only)
     CREATE UNIQUE INDEX IF NOT EXISTS ux_alias_type_value ON end_user_aliases(alias_type, alias_value);
     CREATE INDEX IF NOT EXISTS ix_alias_end_user          ON end_user_aliases(end_user_id);
 
@@ -304,7 +260,7 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_mc_merchant ON merchant_clients(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_mc_enduser  ON merchant_clients(end_user_id);
 
-    -- transactions
+    -- transactions (idempotency: unique per merchant, only when key is present)
     CREATE UNIQUE INDEX IF NOT EXISTS ux_tx_idempotency
       ON transactions(merchant_id, idempotency_key)
       WHERE idempotency_key IS NOT NULL;
@@ -315,20 +271,7 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
-
-    -- merchant_preferences
-    CREATE INDEX IF NOT EXISTS ix_mp_merchant ON merchant_preferences(merchant_id);
-
-    -- announcements
-    CREATE INDEX IF NOT EXISTS ix_ann_target ON announcements(target_type, target_id);
-    CREATE INDEX IF NOT EXISTS ix_ann_reads  ON announcement_reads(announcement_id, staff_id);
   `);
-
-  // ───────────────────────────────────────────
-  // SAFE MIGRATIONS (idempotent ALTERs)
-  // ───────────────────────────────────────────
-  try { db.exec(`ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT`); } catch (e) { /* already exists */ }
-  try { db.exec(`ALTER TABLE end_users ADD COLUMN pin_hash TEXT`); } catch (e) { /* already exists */ }
 
   console.log('✅ Database V3.4 initialized');
 }
@@ -354,8 +297,8 @@ const adminQueries = {
 
 const merchantQueries = {
   create: db.prepare(`
-    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone, points_per_euro, points_for_reward, reward_description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone)
+    VALUES (?, ?, ?, ?, ?, ?)
   `),
   findById:    db.prepare('SELECT * FROM merchants WHERE id = ?'),
   findByVat:   db.prepare('SELECT * FROM merchants WHERE vat_number = ?'),
@@ -437,13 +380,11 @@ const endUserQueries = {
     UPDATE end_users
     SET deleted_at = datetime('now'),
         email = NULL, phone = NULL, email_lower = NULL, phone_e164 = NULL,
-        name = NULL, qr_token = NULL, updated_at = datetime('now')
+        name = NULL, qr_token = NULL, pin_hash = NULL, updated_at = datetime('now')
     WHERE id = ?
   `),
 
   getAll: db.prepare('SELECT * FROM end_users WHERE deleted_at IS NULL ORDER BY created_at DESC'),
-
-  setPin: db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?"),
 
   search: db.prepare(`
     SELECT * FROM end_users
@@ -459,6 +400,8 @@ const endUserQueries = {
         updated_at = datetime('now')
     WHERE id = ?
   `),
+
+  setPin: db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?"),
 };
 
 // ─── End User Aliases ────────────────────────────────
@@ -514,10 +457,11 @@ const merchantClientQueries = {
     WHERE id = ?
   `),
 
-  setPoints:        db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
-  setCustomReward:  db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
-  block:            db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
-  unblock:          db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
+  setPoints: db.prepare("UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"),
+  block:     db.prepare("UPDATE merchant_clients SET is_blocked = 1, updated_at = datetime('now') WHERE id = ?"),
+  unblock:   db.prepare("UPDATE merchant_clients SET is_blocked = 0, updated_at = datetime('now') WHERE id = ?"),
+
+  setCustomReward: db.prepare("UPDATE merchant_clients SET custom_reward = ?, updated_at = datetime('now') WHERE id = ?"),
 
   mergeStats: db.prepare(`
     UPDATE merchant_clients
