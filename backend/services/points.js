@@ -66,6 +66,13 @@ function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
 
   endUser = endUserQueries.findById.get(result.lastInsertRowid);
 
+  // Generate unique QR token for client portal
+  if (endUser) {
+    const qrToken = crypto.randomBytes(8).toString('base64url');
+    endUserQueries.setQrToken.run(qrToken, endUser.id);
+    endUser = endUserQueries.findById.get(endUser.id);
+  }
+
   // Set PIN if provided (new client only)
   if (pinHash && endUser) {
     endUserQueries.setPin.run(pinHash, endUser.id);
@@ -191,6 +198,7 @@ function redeemReward({
   notes = null,
   idempotencyKey = null,
   pin = null,
+  qrVerified = false,
 }) {
   const merchant = merchantQueries.findById.get(merchantId);
   if (!merchant) throw new Error('Commerce non trouvé');
@@ -207,20 +215,23 @@ function redeemReward({
   }
 
   // ── PIN verification (before transaction for early fail) ──
+  // QR scan bypasses PIN — the scan itself proves client presence & consent
   const mcCheck = merchantClientQueries.findByIdAndMerchant.get(merchantClientId, merchantId);
   if (!mcCheck) throw new Error('Client non trouvé');
 
   const endUser = endUserQueries.findById.get(mcCheck.end_user_id);
   if (!endUser) throw new Error('Client non trouvé');
 
-  if (!endUser.pin_hash) {
-    throw new Error('Ce client n\'a pas de code PIN. Veuillez en définir un avant de réclamer la récompense.');
-  }
-  if (!pin) {
-    throw new Error('Code PIN requis pour appliquer la récompense');
-  }
-  if (!bcrypt.compareSync(pin, endUser.pin_hash)) {
-    throw new Error('Code PIN incorrect');
+  if (!qrVerified) {
+    if (!endUser.pin_hash) {
+      throw new Error('Ce client n\'a pas de code PIN. Veuillez en définir un avant de réclamer la récompense.');
+    }
+    if (!pin) {
+      throw new Error('Code PIN requis pour appliquer la récompense');
+    }
+    if (!bcrypt.compareSync(pin, endUser.pin_hash)) {
+      throw new Error('Code PIN incorrect');
+    }
   }
 
   const run = db.transaction(() => {
