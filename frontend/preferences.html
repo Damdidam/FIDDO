@@ -5,285 +5,530 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Préférences — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ─── Tabs ─── */
-    .pref-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); margin-bottom: 1.5rem; overflow-x: auto; }
-    .pref-tab {
-      padding: 0.75rem 1.25rem; cursor: pointer; border-bottom: 3px solid transparent;
-      margin-bottom: -2px; font-weight: 500; color: var(--text-light); transition: all 0.2s;
-      background: none; border-top: none; border-left: none; border-right: none;
-      font-size: 0.9rem; white-space: nowrap;
+    :root {
+      --primary-light: #CFFAFE;
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
     }
-    .pref-tab:hover { color: var(--text); }
-    .pref-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .dash * { box-sizing: border-box; }
+    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
+
+    /* ═══ HEADER ═══ */
+    .pg-title { font-size: 1.05rem; font-weight: 700; color: #1E293B; letter-spacing: -0.3px; margin: 0.3rem 0 0.8rem; }
+
+    /* ═══ TABS ═══ */
+    .pref-tabs { display: flex; gap: 0.3rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .pref-tab {
+      padding: 0.32rem 0.72rem; border: 1.5px solid #E2E8F0;
+      border-radius: 16px; background: white; font-family: inherit;
+      font-size: 0.72rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .pref-tab.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .pref-tab:hover:not(.active) { border-color: #CBD5E1; }
+    .pref-tab svg { width: 13px; height: 13px; flex-shrink: 0; }
+
     .pref-section { display: none; }
     .pref-section.active { display: block; }
 
-    /* ─── Theme picker ─── */
-    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 1rem; }
-    .theme-option {
-      border: 3px solid var(--border); border-radius: 12px; padding: 1rem;
-      cursor: pointer; transition: all 0.2s; text-align: center; position: relative;
+    /* ═══ CARDS ═══ */
+    .pref-card {
+      background: white; border-radius: 10px; padding: 1rem 1.1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 0.8rem;
     }
-    .theme-option:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .theme-option.selected { border-color: var(--success); box-shadow: 0 0 0 2px var(--success); }
-    .theme-option .swatch {
-      width: 100%; height: 50px; border-radius: 8px; margin-bottom: 0.5rem;
+    .pref-card-title {
+      font-size: 0.82rem; font-weight: 700; color: #1E293B;
+      margin-bottom: 0.8rem; letter-spacing: -0.2px;
     }
-    .theme-option .name { font-weight: 600; font-size: 0.85rem; }
-    .theme-option .check {
-      display: none; position: absolute; top: 8px; right: 8px;
-      background: var(--success); color: white; width: 22px; height: 22px;
-      border-radius: 50%; font-size: 0.75rem; line-height: 22px; text-align: center;
-    }
-    .theme-option.selected .check { display: block; }
+    .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
 
-    /* ─── Preview card ─── */
-    .preview-card {
-      border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem;
-      color: white; line-height: 1.7;
+    /* ═══ FORM FIELDS ═══ */
+    .fg { margin-bottom: 0.7rem; }
+    .fg:last-child { margin-bottom: 0; }
+    .fg label { display: block; font-size: 0.68rem; font-weight: 600; color: #475569; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .fg input, .fg select, .fg textarea {
+      width: 100%; padding: 0.42rem 0.55rem; border: 1.5px solid #E2E8F0;
+      border-radius: 6px; font-family: inherit; font-size: 0.78rem;
+      color: #334155; background: white; transition: border-color 0.12s;
     }
-    .preview-card strong { font-size: 1.05rem; }
-    .preview-card .preview-example {
+    .fg input:focus, .fg select:focus, .fg textarea:focus { outline: none; border-color: var(--primary); }
+    .fg textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+    .fg .help { font-size: 0.62rem; color: #94A3B8; margin-top: 2px; }
+    .fg .error-text { font-size: 0.62rem; color: #DC2626; margin-top: 2px; }
+
+    /* ═══ SAVE BUTTON ═══ */
+    .save-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 0.4rem 1rem; border: none; border-radius: 8px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.12s, transform 0.12s;
+      box-shadow: 0 2px 8px rgba(8,145,178,0.2);
+    }
+    .save-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .save-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+    .save-btn-block { width: 100%; justify-content: center; }
+    .save-row { display: flex; justify-content: flex-end; margin-top: 0.8rem; }
+
+    /* ═══ ALERTS ═══ */
+    .pref-alert {
+      padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.72rem;
+      margin-bottom: 0.7rem; border-left: 3px solid; line-height: 1.5;
+    }
+    .pref-alert-success { background: #F0FDF4; color: #166534; border-color: #10B981; }
+    .pref-alert-error { background: #FEF2F2; color: #991B1B; border-color: #EF4444; }
+    .pref-alert-info { background: #F0F9FF; color: #0C4A6E; border-color: var(--primary); }
+    .pref-alert-warning { background: #FFFBEB; color: #92400E; border-color: #F59E0B; }
+
+    /* ═══ THEME GRID ═══ */
+    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
+    .theme-opt {
+      border: 2px solid #E2E8F0; border-radius: 10px; padding: 0.6rem 0.5rem;
+      cursor: pointer; transition: all 0.15s; text-align: center; position: relative;
+    }
+    .theme-opt:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+    .theme-opt.selected { border-color: #10B981; box-shadow: 0 0 0 1.5px #10B981; }
+    .theme-swatch { width: 100%; height: 36px; border-radius: 6px; margin-bottom: 0.35rem; }
+    .theme-name { font-weight: 600; font-size: 0.68rem; color: #475569; }
+    .theme-check {
+      display: none; position: absolute; top: 5px; right: 5px;
+      background: #10B981; color: white; width: 16px; height: 16px;
+      border-radius: 50%; font-size: 0.55rem; line-height: 16px; text-align: center;
+    }
+    .theme-opt.selected .theme-check { display: block; }
+
+    /* ═══ PREVIEW CARD ═══ */
+    .reward-preview {
+      border-radius: 10px; padding: 1rem 1.1rem; color: white; line-height: 1.6; font-size: 0.78rem;
+    }
+    .reward-preview strong { font-size: 0.82rem; }
+    .reward-preview .preview-box {
       background: rgba(255,255,255,0.15); border-radius: 8px;
-      padding: 1rem; margin-top: 1rem; font-size: 0.9rem;
+      padding: 0.7rem 0.8rem; margin-top: 0.6rem; font-size: 0.75rem;
     }
 
-    /* ─── Backup ─── */
+    /* ═══ INFO SIDE CARD ═══ */
+    .info-side {
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;
+      padding: 0.85rem 0.9rem; font-size: 0.72rem; color: #64748B; line-height: 1.6;
+    }
+    .info-side strong { color: #475569; font-weight: 600; }
+    .info-side-title { font-size: 0.68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.4rem; }
+
+    /* ═══ TOGGLES ═══ */
+    .toggle-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.55rem 0; border-bottom: 1px solid #F1F5F9;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 0.78rem; color: #334155; font-weight: 500; }
+    .toggle-desc { font-size: 0.62rem; color: #94A3B8; margin-top: 1px; }
+    .toggle-switch {
+      position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #CBD5E1; border-radius: 10px;
+      transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: ''; position: absolute; left: 2px; top: 2px;
+      width: 16px; height: 16px; background: white; border-radius: 50%;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+
+    /* ═══ LANGUAGE PILLS ═══ */
+    .lang-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .lang-pill {
+      padding: 0.35rem 0.7rem; border: 1.5px solid #E2E8F0; border-radius: 8px;
+      background: white; font-family: inherit; font-size: 0.72rem; font-weight: 500;
+      color: #64748B; cursor: pointer; transition: all 0.12s;
+    }
+    .lang-pill.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .lang-pill:hover:not(.active) { border-color: #CBD5E1; }
+
+    /* ═══ PASSWORD STRENGTH ═══ */
+    .pw-bar { height: 3px; border-radius: 2px; background: #E2E8F0; margin-top: 0.4rem; overflow: hidden; }
+    .pw-bar-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
+    .pw-bar-text { font-size: 0.62rem; margin-top: 2px; }
+
+    /* ═══ BACKUP ═══ */
     .backup-drop {
-      border: 2px dashed var(--border); border-radius: 10px; padding: 2rem;
-      text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1rem;
+      border: 2px dashed #CBD5E1; border-radius: 10px; padding: 1.5rem 1rem;
+      text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 0.8rem;
     }
     .backup-drop:hover, .backup-drop.dragover {
-      border-color: var(--primary); background: rgba(8,145,178,0.05);
+      border-color: var(--primary); background: rgba(8,145,178,0.03);
     }
-    .backup-drop-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-    .backup-preview { background: var(--light); border-radius: 8px; padding: 1rem; margin: 1rem 0; font-size: 0.9rem; }
+    .backup-drop-icon { margin-bottom: 0.4rem; }
+    .backup-drop-icon svg { width: 32px; height: 32px; color: #94A3B8; }
+    .backup-drop p { font-size: 0.78rem; color: #475569; font-weight: 500; margin: 0 0 3px; }
+    .backup-drop small { font-size: 0.62rem; color: #94A3B8; }
 
-    /* ─── Password strength ─── */
-    .pw-strength { height: 4px; border-radius: 2px; background: #e5e7eb; margin-top: 0.5rem; overflow: hidden; }
-    .pw-strength-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
-    .pw-strength-text { font-size: 0.75rem; margin-top: 0.25rem; }
+    .backup-preview {
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;
+      padding: 0.8rem 0.9rem; margin: 0.8rem 0; font-size: 0.75rem; color: #475569; line-height: 1.6;
+    }
+    .btn-danger-full {
+      width: 100%; padding: 0.4rem 1rem; border: none; border-radius: 8px;
+      background: #EF4444; color: white; font-family: inherit; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; transition: all 0.12s;
+    }
+    .btn-danger-full:hover { background: #DC2626; }
+    .btn-danger-full:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-outline-full {
+      width: 100%; padding: 0.4rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 8px;
+      background: white; color: #64748B; font-family: inherit; font-size: 0.75rem;
+      font-weight: 500; cursor: pointer; transition: all 0.12s; margin-top: 0.4rem;
+    }
+    .btn-outline-full:hover { border-color: #CBD5E1; color: #334155; }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 768px) {
+      .dash-wrap { padding: 0.5rem; }
+      .pref-grid { grid-template-columns: 1fr; }
+      .theme-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+      .pref-tabs { gap: 0.25rem; }
+      .pref-tab { font-size: 0.68rem; padding: 0.28rem 0.55rem; }
+    }
   </style>
 </head>
-<body>
+<body class="dash">
   <nav class="navbar">
     <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="container">
-    <h1 style="margin: 1.5rem 0;">⚙️ Préférences</h1>
+  <div class="dash-wrap">
+    <h1 class="pg-title">Préférences</h1>
 
     <!-- ═══ TABS ═══ -->
     <div class="pref-tabs">
-      <button class="pref-tab active" onclick="switchTab('reward')">🎁 Récompenses</button>
-      <button class="pref-tab" onclick="switchTab('theme')">🎨 Thème</button>
-      <button class="pref-tab" onclick="switchTab('info')">🏪 Mon commerce</button>
-      <button class="pref-tab" onclick="switchTab('password')">🔒 Mot de passe</button>
-      <button class="pref-tab" onclick="switchTab('backup')">💾 Sauvegarde</button>
+      <button class="pref-tab active" onclick="switchTab('reward', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5v7M5.5 8.5L8 11l2.5-2.5"/></svg>
+        Récompenses
+      </button>
+      <button class="pref-tab" onclick="switchTab('theme', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="2"/></svg>
+        Thème
+      </button>
+      <button class="pref-tab" onclick="switchTab('notif', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a4 4 0 018 0c0 2 1 3.5 1.5 4.5H2.5C3 9.5 4 8 4 6z"/><path d="M6.5 12a1.5 1.5 0 003 0"/></svg>
+        Notifications
+      </button>
+      <button class="pref-tab" onclick="switchTab('info', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 5.5h6M5 8h4M5 10.5h5"/></svg>
+        Mon commerce
+      </button>
+      <button class="pref-tab" onclick="switchTab('password', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+        Mot de passe
+      </button>
+      <button class="pref-tab" onclick="switchTab('backup', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11l3 3 3-3"/><path d="M5 14V6"/><path d="M14 5l-3-3-3 3"/><path d="M11 2v8"/></svg>
+        Sauvegarde
+      </button>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         TAB 1: REWARD CONFIGURATION
+         TAB 1: RÉCOMPENSES
          ═══════════════════════════════════════════════════════ -->
     <div id="tab-reward" class="pref-section active">
-      <div class="grid grid-2">
+      <div class="pref-grid">
         <div>
-          <div class="card">
-            <div class="card-header">Système de récompenses</div>
+          <div class="pref-card">
+            <div class="pref-card-title">Système de points</div>
             <div id="reward-alert"></div>
 
             <form id="reward-form">
-              <div class="form-group">
-                <label class="form-label">Points par euro dépensé</label>
-                <input type="number" id="set-ppe" class="form-control" step="0.1" min="0.1">
-                <small class="form-help">Nombre de points gagnés pour chaque euro dépensé</small>
+              <div class="fg">
+                <label>Points par euro dépensé</label>
+                <input type="number" id="set-ppe" step="0.1" min="0.1">
+                <div class="help">Nombre de points gagnés pour chaque euro</div>
+              </div>
+              <div class="fg">
+                <label>Points pour la récompense</label>
+                <input type="number" id="set-pfr" min="1">
+                <div class="help">Seuil à atteindre pour débloquer la récompense</div>
+              </div>
+              <div class="fg">
+                <label>Description de la récompense</label>
+                <input type="text" id="set-desc" maxlength="200" placeholder="Ex : Boisson offerte, 10% de réduction...">
+                <div class="help">Texte affiché au client et dans les emails (max 200 car.)</div>
+              </div>
+              <div class="fg">
+                <label>Message personnalisé de récompense</label>
+                <textarea id="set-reward-msg" maxlength="300" placeholder="Ex : Félicitations ! Vous avez gagné votre récompense !"></textarea>
+                <div class="help">Message affiché au client lorsqu'il atteint le seuil (max 300 car.)</div>
               </div>
 
-              <div class="form-group">
-                <label class="form-label">Points nécessaires pour la récompense</label>
-                <input type="number" id="set-pfr" class="form-control" min="1">
-                <small class="form-help">Seuil à atteindre pour débloquer la récompense</small>
+              <div class="save-row">
+                <button type="submit" class="save-btn">Enregistrer</button>
               </div>
-
-              <div class="form-group">
-                <label class="form-label">Description de la récompense</label>
-                <input type="text" id="set-desc" class="form-control" maxlength="200" placeholder="Ex : Boisson offerte, 10% de réduction...">
-                <small class="form-help">Texte affiché au client et dans les emails (max 200 car.)</small>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-block">Enregistrer</button>
             </form>
+          </div>
+
+          <!-- Language default -->
+          <div class="pref-card">
+            <div class="pref-card-title">Langue par défaut (formulaire client)</div>
+            <div id="lang-alert"></div>
+            <div class="help" style="margin-bottom: 0.5rem;">Langue affichée par défaut sur le formulaire QR code client</div>
+            <div class="lang-grid" id="lang-grid"></div>
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveLang()">Enregistrer</button>
+            </div>
           </div>
         </div>
 
         <div>
-          <div class="preview-card" id="reward-preview" style="background: linear-gradient(135deg, var(--primary), var(--primary-dark));">
-          </div>
-          <div class="card">
-            <div class="card-header">ℹ️ Comment ça marche</div>
-            <p style="font-size: 0.9rem; color: var(--text-light); line-height: 1.7;">
-              Chaque passage client → les points sont calculés automatiquement.<br><br>
-              Une fois le seuil atteint, la récompense s'affiche sur l'écran du caissier.<br><br>
-              <strong>Note :</strong> modifier ces paramètres n'affecte que les futurs crédits.
-              Les soldes existants ne sont pas recalculés.
-            </p>
+          <div class="reward-preview" id="reward-preview" style="background: var(--gradient);"></div>
+
+          <div class="info-side" style="margin-top: 0.8rem;">
+            <div class="info-side-title">Comment ça marche</div>
+            Chaque passage client — les points sont calculés automatiquement.<br><br>
+            Une fois le seuil atteint, la récompense s'affiche sur l'écran du caissier.<br><br>
+            <strong>Note :</strong> modifier ces paramètres n'affecte que les futurs crédits. Les soldes existants ne sont pas recalculés.
           </div>
         </div>
       </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         TAB 2: THEME SELECTION
+         TAB 2: THÈME
          ═══════════════════════════════════════════════════════ -->
     <div id="tab-theme" class="pref-section">
-      <div class="card">
-        <div class="card-header">Choisissez votre thème couleur</div>
+      <div class="pref-card">
+        <div class="pref-card-title">Thème couleur</div>
         <div id="theme-alert"></div>
-        <p class="text-muted text-sm mb-2">Le thème s'applique à toutes les pages de votre espace FIDDO.</p>
+        <div class="help" style="margin-bottom: 0.6rem;">Le thème s'applique à toutes les pages de votre espace FIDDO et au formulaire client.</div>
         <div class="theme-grid" id="theme-grid"></div>
       </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         TAB 3: MERCHANT INFO
+         TAB 3: NOTIFICATIONS
          ═══════════════════════════════════════════════════════ -->
-    <div id="tab-info" class="pref-section">
-      <div class="grid grid-2">
-        <div class="card">
-          <div class="card-header">Informations de mon commerce</div>
-          <div id="info-alert"></div>
+    <div id="tab-notif" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Notifications par email</div>
+            <div id="notif-alert"></div>
 
-          <form id="info-form">
-            <div class="form-group">
-              <label class="form-label">Nom du commerce *</label>
-              <input type="text" id="info-business" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Adresse *</label>
-              <input type="text" id="info-address" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">N° TVA *</label>
-              <input type="text" id="info-vat" class="form-control" required>
-              <small class="form-help">Format : BE0123456789</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email du commerce *</label>
-              <input type="email" id="info-email" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Téléphone du commerce *</label>
-              <input type="tel" id="info-phone" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Téléphone propriétaire *</label>
-              <input type="tel" id="info-owner-phone" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Nom du propriétaire</label>
-              <input type="text" id="info-owner-name" class="form-control">
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Nouveau client</div>
+                <div class="toggle-desc">Recevoir un email lorsqu'un nouveau client s'inscrit</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-new-client">
+                <span class="toggle-track"></span>
+              </label>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Enregistrer les modifications</button>
-          </form>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Récompense disponible</div>
+                <div class="toggle-desc">Notification quand un client atteint le seuil de récompense</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-reward-ready">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Rapport hebdomadaire</div>
+                <div class="toggle-desc">Résumé de l'activité de la semaine chaque lundi</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-weekly">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveNotif()">Enregistrer</button>
+            </div>
+          </div>
         </div>
 
         <div>
-          <div class="card">
-            <div class="card-header">ℹ️ Informations</div>
-            <p style="font-size: 0.9rem; color: var(--text-light); line-height: 1.7;">
-              Toute modification de vos informations sera <strong>notifiée à l'administrateur FIDDO</strong> par email pour des raisons de sécurité.<br><br>
-              Le numéro de TVA doit être au format belge (BE0 suivi de 9 chiffres).<br><br>
-              Votre email de connexion ne peut pas être modifié ici. Contactez le support si nécessaire.
-            </p>
+          <div class="info-side">
+            <div class="info-side-title">À propos des notifications</div>
+            Les emails sont envoyés à l'adresse de connexion du propriétaire.<br><br>
+            <strong>Nouveau client :</strong> envoyé dès la première visite d'un client inconnu.<br><br>
+            <strong>Récompense :</strong> envoyé quand un client peut réclamer sa récompense.<br><br>
+            <strong>Rapport :</strong> résumé avec nombre de visites, points distribués et nouveaux clients de la semaine.
           </div>
         </div>
       </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         TAB 4: PASSWORD CHANGE
+         TAB 4: MON COMMERCE
          ═══════════════════════════════════════════════════════ -->
-    <div id="tab-password" class="pref-section">
-      <div class="grid grid-2">
-        <div class="card">
-          <div class="card-header">Modifier mon mot de passe</div>
-          <div id="pw-alert"></div>
+    <div id="tab-info" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Informations du commerce</div>
+            <div id="info-alert"></div>
 
-          <form id="pw-form">
-            <div class="form-group">
-              <label class="form-label">Mot de passe actuel *</label>
-              <input type="password" id="pw-current" class="form-control" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Nouveau mot de passe *</label>
-              <input type="password" id="pw-new" class="form-control" minlength="6" required>
-              <div class="pw-strength"><div class="pw-strength-fill" id="pw-strength-fill"></div></div>
-              <div class="pw-strength-text" id="pw-strength-text"></div>
-              <small class="form-help">Minimum 6 caractères</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Confirmer le nouveau mot de passe *</label>
-              <input type="password" id="pw-confirm" class="form-control" minlength="6" required>
-            </div>
+            <form id="info-form">
+              <div class="fg">
+                <label>Nom du commerce *</label>
+                <input type="text" id="info-business" required>
+              </div>
+              <div class="fg">
+                <label>Adresse *</label>
+                <input type="text" id="info-address" required>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="fg">
+                  <label>N° TVA *</label>
+                  <input type="text" id="info-vat" required>
+                  <div class="help">Format : BE0123456789</div>
+                </div>
+                <div class="fg">
+                  <label>Email commerce *</label>
+                  <input type="email" id="info-email" required>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="fg">
+                  <label>Téléphone commerce *</label>
+                  <input type="tel" id="info-phone" required>
+                </div>
+                <div class="fg">
+                  <label>Téléphone propriétaire *</label>
+                  <input type="tel" id="info-owner-phone" required>
+                </div>
+              </div>
+              <div class="fg">
+                <label>Nom du propriétaire</label>
+                <input type="text" id="info-owner-name">
+              </div>
 
-            <button type="submit" class="btn btn-primary btn-block">Modifier le mot de passe</button>
-          </form>
+              <div class="save-row">
+                <button type="submit" class="save-btn">Enregistrer les modifications</button>
+              </div>
+            </form>
+          </div>
         </div>
 
-        <div class="card">
-          <div class="card-header">🔒 Sécurité</div>
-          <p style="font-size: 0.9rem; color: var(--text-light); line-height: 1.7;">
-            Un <strong>email de confirmation</strong> sera envoyé à votre adresse après le changement de mot de passe.<br><br>
-            Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement le support.<br><br>
-            Après 5 tentatives échouées, votre compte sera temporairement verrouillé pendant 15 minutes.
-          </p>
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Informations</div>
+            Toute modification sera <strong>notifiée à l'administrateur FIDDO</strong> par email pour des raisons de sécurité.<br><br>
+            Le numéro de TVA doit être au format belge (BE0 suivi de 9 chiffres).<br><br>
+            Votre email de connexion ne peut pas être modifié ici. Contactez le support si nécessaire.
+          </div>
         </div>
       </div>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
-         TAB 5: BACKUP & RESTORE
+         TAB 5: MOT DE PASSE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-password" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Modifier le mot de passe</div>
+            <div id="pw-alert"></div>
+
+            <form id="pw-form">
+              <div class="fg">
+                <label>Mot de passe actuel *</label>
+                <input type="password" id="pw-current" required>
+              </div>
+              <div class="fg">
+                <label>Nouveau mot de passe *</label>
+                <input type="password" id="pw-new" minlength="6" required>
+                <div class="pw-bar"><div class="pw-bar-fill" id="pw-bar-fill"></div></div>
+                <div class="pw-bar-text" id="pw-bar-text"></div>
+                <div class="help">Minimum 6 caractères</div>
+              </div>
+              <div class="fg">
+                <label>Confirmer le nouveau mot de passe *</label>
+                <input type="password" id="pw-confirm" minlength="6" required>
+              </div>
+
+              <div class="save-row">
+                <button type="submit" class="save-btn">Modifier le mot de passe</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Sécurité</div>
+            Un <strong>email de confirmation</strong> sera envoyé à votre adresse après le changement.<br><br>
+            Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement le support.<br><br>
+            Après 5 tentatives échouées, votre compte sera temporairement verrouillé pendant 15 minutes.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 6: SAUVEGARDE
          ═══════════════════════════════════════════════════════ -->
     <div id="tab-backup" class="pref-section">
-      <div class="grid grid-2">
+      <div class="pref-grid">
         <!-- Export -->
-        <div class="card">
-          <div class="card-header">📤 Exporter mes données</div>
-          <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem; line-height: 1.6;">
-            Téléchargez un fichier JSON contenant toutes vos données :
-            paramètres, clients, historique de transactions, préférences.
-          </p>
-          <button class="btn btn-primary btn-block" onclick="exportBackup()">
-            📥 Télécharger le backup (JSON)
-          </button>
-          <div id="export-alert" style="margin-top: 1rem;"></div>
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Exporter mes données</div>
+            <div id="export-alert"></div>
+            <p style="font-size: 0.75rem; color: #64748B; margin-bottom: 0.8rem; line-height: 1.6;">
+              Téléchargez un fichier JSON contenant toutes vos données : paramètres, clients, historique de transactions, préférences.
+            </p>
+            <button class="save-btn save-btn-block" onclick="exportBackup()">
+              Télécharger le backup
+            </button>
+          </div>
         </div>
 
         <!-- Import -->
-        <div class="card">
-          <div class="card-header">📥 Restaurer des données</div>
-          <div id="import-alert"></div>
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Restaurer des données</div>
+            <div id="import-alert"></div>
 
-          <div class="backup-drop" id="backup-drop" onclick="document.getElementById('backup-file').click();">
-            <div class="backup-drop-icon">📁</div>
-            <p><strong>Cliquez ici</strong> ou glissez votre fichier JSON</p>
-            <small class="text-muted">Fichier .json généré par FIDDO uniquement</small>
-          </div>
-          <input type="file" id="backup-file" accept=".json" style="display:none;">
-
-          <div id="backup-preview-container" style="display: none;">
-            <div class="backup-preview" id="backup-preview"></div>
-            <div class="alert alert-warning">
-              ⚠️ <strong>Attention :</strong> la restauration remplacera TOUTES vos données actuelles
-              (clients, transactions, paramètres). Cette action est irréversible.
+            <div class="backup-drop" id="backup-drop" onclick="document.getElementById('backup-file').click();">
+              <div class="backup-drop-icon">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="20" height="24" rx="2"/><path d="M12 4v6h8V4"/><path d="M12 20h8M12 24h5"/></svg>
+              </div>
+              <p><strong>Cliquez ici</strong> ou glissez votre fichier</p>
+              <small>Fichier .json généré par FIDDO uniquement</small>
             </div>
-            <button class="btn btn-danger btn-block" id="import-btn" onclick="importBackup()">
-              ⚠️ Restaurer ces données
-            </button>
-            <button class="btn btn-outline btn-block mt-1" onclick="cancelImport()">Annuler</button>
+            <input type="file" id="backup-file" accept=".json" style="display:none;">
+
+            <div id="backup-preview-container" style="display: none;">
+              <div class="backup-preview" id="backup-preview"></div>
+              <div class="pref-alert pref-alert-warning">
+                <strong>Attention :</strong> la restauration remplacera TOUTES vos données actuelles (clients, transactions, paramètres). Cette action est irréversible.
+              </div>
+              <button class="btn-danger-full" id="import-btn" onclick="importBackup()">
+                Restaurer ces données
+              </button>
+              <button class="btn-outline-full" onclick="cancelImport()">Annuler</button>
+            </div>
           </div>
         </div>
       </div>
@@ -297,24 +542,73 @@
     const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
 
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ═══ ALERT HELPER ═══
+    function showAlert(id, msg, type) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="pref-alert pref-alert-' + type + '">' + msg + '</div>';
+    }
+    function clearAlert(id) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    }
+
     // ═══════════════════════════════════════════════════════
     // TAB SWITCHING
     // ═══════════════════════════════════════════════════════
 
-    function switchTab(tab) {
+    function switchTab(tab, btn) {
       document.querySelectorAll('.pref-tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.pref-section').forEach(s => s.classList.remove('active'));
-      event.target.classList.add('active');
+      btn.classList.add('active');
       document.getElementById('tab-' + tab).classList.add('active');
     }
 
     // ═══════════════════════════════════════════════════════
-    // TAB 1: REWARD CONFIGURATION
+    // TAB 1: REWARDS
     // ═══════════════════════════════════════════════════════
 
     document.getElementById('set-ppe').value = merchant.points_per_euro;
     document.getElementById('set-pfr').value = merchant.points_for_reward;
     document.getElementById('set-desc').value = merchant.reward_description;
+
+    // Load reward message from prefs
+    let currentPrefs = {};
+
+    (async () => {
+      try {
+        const data = await API.preferences.get();
+        currentPrefs = data.preferences || {};
+        document.getElementById('set-reward-msg').value = currentPrefs.reward_message || '';
+
+        // Notifications
+        document.getElementById('notif-new-client').checked = !!currentPrefs.notify_new_client;
+        document.getElementById('notif-reward-ready').checked = !!currentPrefs.notify_reward_ready;
+        document.getElementById('notif-weekly').checked = !!currentPrefs.notify_weekly_report;
+
+        // Theme
+        if (currentPrefs.theme) {
+          currentTheme = currentPrefs.theme;
+          const t = THEMES.find(x => x.id === currentTheme);
+          if (t) {
+            document.documentElement.style.setProperty('--primary', t.colors[0]);
+            document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
+            document.getElementById('reward-preview').style.background =
+              'linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ')';
+          }
+        }
+
+        // Language
+        if (currentPrefs.language) currentLang = currentPrefs.language;
+
+        renderThemes();
+        renderLangs();
+      } catch (e) {
+        renderThemes();
+        renderLangs();
+      }
+    })();
 
     function updateRewardPreview() {
       const ppe = parseFloat(document.getElementById('set-ppe').value) || 1;
@@ -322,14 +616,13 @@
       const desc = document.getElementById('set-desc').value.trim() || 'Récompense offerte';
       const eurosNeeded = Math.ceil(pfr / ppe);
 
-      document.getElementById('reward-preview').innerHTML = `
-        <strong>🎁 Aperçu du programme</strong>
-        <div class="preview-example">
-          <strong>1 €</strong> dépensé = <strong>${ppe} point${ppe > 1 ? 's' : ''}</strong><br>
-          Seuil : <strong>${pfr} points</strong> (≈ <strong>${eurosNeeded} €</strong>)<br><br>
-          ➜ <strong>${desc}</strong>
-        </div>
-      `;
+      document.getElementById('reward-preview').innerHTML =
+        '<strong>Aperçu du programme</strong>' +
+        '<div class="preview-box">' +
+          '<strong>1 €</strong> dépensé = <strong>' + ppe + ' point' + (ppe > 1 ? 's' : '') + '</strong><br>' +
+          'Seuil : <strong>' + pfr + ' points</strong> (≈ <strong>' + eurosNeeded + ' €</strong>)<br><br>' +
+          '→ <strong>' + esc(desc) + '</strong>' +
+        '</div>';
     }
 
     document.getElementById('set-ppe').addEventListener('input', updateRewardPreview);
@@ -342,26 +635,70 @@
       const ppe = parseFloat(document.getElementById('set-ppe').value);
       const pfr = parseInt(document.getElementById('set-pfr').value);
       const desc = document.getElementById('set-desc').value.trim();
+      const rewardMsg = document.getElementById('set-reward-msg').value.trim();
 
-      if (!ppe || ppe <= 0) return UI.showAlert('reward-alert', 'Points par euro doit être > 0', 'error');
-      if (!pfr || pfr <= 0) return UI.showAlert('reward-alert', 'Points pour récompense doit être > 0', 'error');
-      if (!desc) return UI.showAlert('reward-alert', 'Description requise', 'error');
+      if (!ppe || ppe <= 0) return showAlert('reward-alert', 'Points par euro doit être supérieur à 0', 'error');
+      if (!pfr || pfr <= 0) return showAlert('reward-alert', 'Points pour récompense doit être supérieur à 0', 'error');
+      if (!desc) return showAlert('reward-alert', 'Description requise', 'error');
 
       try {
+        // Save reward settings
         await API.auth.updateSettings({ pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: desc });
         merchant.points_per_euro = ppe;
         merchant.points_for_reward = pfr;
         merchant.reward_description = desc;
         Auth.setSession(staff, merchant);
-        UI.showAlert('reward-alert', 'Paramètres de récompense mis à jour !', 'success');
-        setTimeout(() => UI.clearAlert('reward-alert'), 4000);
+
+        // Save reward message in preferences
+        if (rewardMsg !== (currentPrefs.reward_message || '')) {
+          await API.preferences.update({ reward_message: rewardMsg });
+          currentPrefs.reward_message = rewardMsg;
+        }
+
+        showAlert('reward-alert', 'Paramètres de récompense enregistrés', 'success');
+        setTimeout(() => clearAlert('reward-alert'), 4000);
       } catch (err) {
-        UI.showAlert('reward-alert', err.message, 'error');
+        showAlert('reward-alert', err.message, 'error');
       }
     });
 
+    // ═══ LANGUAGE ═══
+
+    const LANGS = [
+      { id: 'fr', label: 'Français' },
+      { id: 'en', label: 'English' },
+      { id: 'nl', label: 'Nederlands' },
+      { id: 'tr', label: 'Türkçe' },
+      { id: 'zh', label: '中文' },
+      { id: 'ar', label: 'العربية' },
+    ];
+    let currentLang = 'fr';
+
+    function renderLangs() {
+      const grid = document.getElementById('lang-grid');
+      grid.innerHTML = LANGS.map(l =>
+        '<button type="button" class="lang-pill' + (l.id === currentLang ? ' active' : '') + '" onclick="pickLang(\'' + l.id + '\')">' + l.label + '</button>'
+      ).join('');
+    }
+
+    function pickLang(id) {
+      currentLang = id;
+      renderLangs();
+    }
+
+    async function saveLang() {
+      try {
+        await API.preferences.update({ language: currentLang });
+        currentPrefs.language = currentLang;
+        showAlert('lang-alert', 'Langue par défaut enregistrée', 'success');
+        setTimeout(() => clearAlert('lang-alert'), 3000);
+      } catch (err) {
+        showAlert('lang-alert', err.message, 'error');
+      }
+    }
+
     // ═══════════════════════════════════════════════════════
-    // TAB 2: THEME SELECTION
+    // TAB 2: THEME
     // ═══════════════════════════════════════════════════════
 
     const THEMES = [
@@ -378,14 +715,13 @@
 
     function renderThemes() {
       const grid = document.getElementById('theme-grid');
-      grid.innerHTML = THEMES.map(t => `
-        <div class="theme-option ${t.id === currentTheme ? 'selected' : ''}"
-             onclick="selectTheme('${t.id}')" id="theme-${t.id}">
-          <div class="check">✓</div>
-          <div class="swatch" style="background: linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]});"></div>
-          <div class="name">${t.name}</div>
-        </div>
-      `).join('');
+      grid.innerHTML = THEMES.map(t =>
+        '<div class="theme-opt' + (t.id === currentTheme ? ' selected' : '') + '" onclick="selectTheme(\'' + t.id + '\')" id="theme-' + t.id + '">' +
+          '<div class="theme-check">✓</div>' +
+          '<div class="theme-swatch" style="background: linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ');"></div>' +
+          '<div class="theme-name">' + t.name + '</div>' +
+        '</div>'
+      ).join('');
     }
 
     async function selectTheme(themeId) {
@@ -394,42 +730,45 @@
         currentTheme = themeId;
         renderThemes();
 
-        // Apply theme live
         const t = THEMES.find(x => x.id === themeId);
         if (t) {
           document.documentElement.style.setProperty('--primary', t.colors[0]);
           document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
           document.getElementById('reward-preview').style.background =
-            `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})`;
+            'linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ')';
         }
 
-        UI.showAlert('theme-alert', `Thème "${t.name}" appliqué !`, 'success');
-        setTimeout(() => UI.clearAlert('theme-alert'), 3000);
+        showAlert('theme-alert', 'Thème « ' + t.name + ' » appliqué', 'success');
+        setTimeout(() => clearAlert('theme-alert'), 3000);
       } catch (err) {
-        UI.showAlert('theme-alert', err.message, 'error');
+        showAlert('theme-alert', err.message, 'error');
       }
     }
 
-    // Load current theme from preferences
-    (async () => {
+    // ═══════════════════════════════════════════════════════
+    // TAB 3: NOTIFICATIONS
+    // ═══════════════════════════════════════════════════════
+
+    async function saveNotif() {
       try {
-        const data = await API.preferences.get();
-        if (data.preferences && data.preferences.theme) {
-          currentTheme = data.preferences.theme;
-          const t = THEMES.find(x => x.id === currentTheme);
-          if (t) {
-            document.documentElement.style.setProperty('--primary', t.colors[0]);
-            document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
-            document.getElementById('reward-preview').style.background =
-              `linear-gradient(135deg, ${t.colors[0]}, ${t.colors[1]})`;
-          }
-        }
-      } catch (e) { /* use default */ }
-      renderThemes();
-    })();
+        await API.preferences.update({
+          notify_new_client: document.getElementById('notif-new-client').checked,
+          notify_reward_ready: document.getElementById('notif-reward-ready').checked,
+          notify_weekly_report: document.getElementById('notif-weekly').checked,
+        });
+        currentPrefs.notify_new_client = document.getElementById('notif-new-client').checked ? 1 : 0;
+        currentPrefs.notify_reward_ready = document.getElementById('notif-reward-ready').checked ? 1 : 0;
+        currentPrefs.notify_weekly_report = document.getElementById('notif-weekly').checked ? 1 : 0;
+
+        showAlert('notif-alert', 'Préférences de notification enregistrées', 'success');
+        setTimeout(() => clearAlert('notif-alert'), 3000);
+      } catch (err) {
+        showAlert('notif-alert', err.message, 'error');
+      }
+    }
 
     // ═══════════════════════════════════════════════════════
-    // TAB 3: MERCHANT INFO
+    // TAB 4: MERCHANT INFO
     // ═══════════════════════════════════════════════════════
 
     async function loadMerchantInfo() {
@@ -443,7 +782,7 @@
         document.getElementById('info-owner-phone').value = data.ownerPhone || '';
         document.getElementById('info-owner-name').value = data.ownerName || '';
       } catch (err) {
-        UI.showAlert('info-alert', 'Impossible de charger les informations', 'error');
+        showAlert('info-alert', 'Impossible de charger les informations', 'error');
       }
     }
     loadMerchantInfo();
@@ -461,7 +800,7 @@
       };
 
       if (!payload.businessName || !payload.address || !payload.vatNumber || !payload.email || !payload.phone || !payload.ownerPhone) {
-        return UI.showAlert('info-alert', 'Tous les champs marqués * sont requis', 'error');
+        return showAlert('info-alert', 'Tous les champs marqués * sont requis', 'error');
       }
 
       try {
@@ -469,25 +808,24 @@
 
         if (result.changes && result.changes.length > 0) {
           if (result.merchant) Auth.setSession(staff, result.merchant);
-          const changeList = result.changes.map(c => `<strong>${c.field}</strong> : ${c.old} → ${c.new}`).join('<br>');
-          UI.showAlert('info-alert',
-            `Informations mises à jour !<br><small>${changeList}</small><br><small class="text-muted">L'administrateur a été notifié par email.</small>`,
+          const changeList = result.changes.map(c => '<strong>' + esc(c.field) + '</strong> : ' + esc(c.old) + ' → ' + esc(c.new)).join('<br>');
+          showAlert('info-alert',
+            'Informations mises à jour<br><small>' + changeList + '</small><br><small style="color:#94A3B8;">L\'administrateur a été notifié par email.</small>',
             'success'
           );
         } else {
-          UI.showAlert('info-alert', 'Aucune modification détectée', 'info');
+          showAlert('info-alert', 'Aucune modification détectée', 'info');
         }
-        setTimeout(() => UI.clearAlert('info-alert'), 6000);
+        setTimeout(() => clearAlert('info-alert'), 6000);
       } catch (err) {
-        UI.showAlert('info-alert', err.message, 'error');
+        showAlert('info-alert', err.message, 'error');
       }
     });
 
     // ═══════════════════════════════════════════════════════
-    // TAB 4: PASSWORD CHANGE
+    // TAB 5: PASSWORD
     // ═══════════════════════════════════════════════════════
 
-    // Password strength indicator
     document.getElementById('pw-new').addEventListener('input', (e) => {
       const pw = e.target.value;
       let score = 0;
@@ -497,10 +835,10 @@
       if (/\d/.test(pw)) score++;
       if (/[^A-Za-z0-9]/.test(pw)) score++;
 
-      const fill = document.getElementById('pw-strength-fill');
-      const text = document.getElementById('pw-strength-text');
+      const fill = document.getElementById('pw-bar-fill');
+      const text = document.getElementById('pw-bar-text');
       const levels = [
-        { w: '0%', c: '#e5e7eb', t: '' },
+        { w: '0%', c: '#E2E8F0', t: '' },
         { w: '20%', c: '#EF4444', t: 'Très faible' },
         { w: '40%', c: '#F59E0B', t: 'Faible' },
         { w: '60%', c: '#F59E0B', t: 'Moyen' },
@@ -521,41 +859,41 @@
       const confirmPw = document.getElementById('pw-confirm').value;
 
       if (!current || !newPw || !confirmPw) {
-        return UI.showAlert('pw-alert', 'Tous les champs sont requis', 'error');
+        return showAlert('pw-alert', 'Tous les champs sont requis', 'error');
       }
       if (newPw.length < 6) {
-        return UI.showAlert('pw-alert', 'Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
+        return showAlert('pw-alert', 'Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
       }
       if (newPw !== confirmPw) {
-        return UI.showAlert('pw-alert', 'Les deux mots de passe ne correspondent pas', 'error');
+        return showAlert('pw-alert', 'Les deux mots de passe ne correspondent pas', 'error');
       }
       if (current === newPw) {
-        return UI.showAlert('pw-alert', 'Le nouveau mot de passe doit être différent de l\'actuel', 'error');
+        return showAlert('pw-alert', 'Le nouveau mot de passe doit être différent de l\'actuel', 'error');
       }
 
       try {
         await API.preferences.changePassword({ currentPassword: current, newPassword: newPw });
-        UI.showAlert('pw-alert', 'Mot de passe modifié avec succès ! Un email de confirmation a été envoyé.', 'success');
+        showAlert('pw-alert', 'Mot de passe modifié avec succès. Un email de confirmation a été envoyé.', 'success');
         document.getElementById('pw-form').reset();
-        document.getElementById('pw-strength-fill').style.width = '0';
-        document.getElementById('pw-strength-text').textContent = '';
+        document.getElementById('pw-bar-fill').style.width = '0';
+        document.getElementById('pw-bar-text').textContent = '';
       } catch (err) {
-        UI.showAlert('pw-alert', err.message, 'error');
+        showAlert('pw-alert', err.message, 'error');
       }
     });
 
     // ═══════════════════════════════════════════════════════
-    // TAB 5: BACKUP & RESTORE
+    // TAB 6: BACKUP
     // ═══════════════════════════════════════════════════════
 
     let pendingBackupData = null;
 
     function exportBackup() {
-      UI.showAlert('export-alert', 'Préparation du backup...', 'info');
-      API.preferences.exportBackup(); // triggers download via redirect
+      showAlert('export-alert', 'Préparation du backup...', 'info');
+      API.preferences.exportBackup();
       setTimeout(() => {
-        UI.showAlert('export-alert', 'Backup téléchargé !', 'success');
-        setTimeout(() => UI.clearAlert('export-alert'), 3000);
+        showAlert('export-alert', 'Backup téléchargé', 'success');
+        setTimeout(() => clearAlert('export-alert'), 3000);
       }, 1500);
     }
 
@@ -576,42 +914,40 @@
 
     async function handleBackupFile(file) {
       if (!file.name.endsWith('.json')) {
-        return UI.showAlert('import-alert', 'Seuls les fichiers .json sont acceptés', 'error');
+        return showAlert('import-alert', 'Seuls les fichiers .json sont acceptés', 'error');
       }
 
       try {
-        UI.showAlert('import-alert', 'Validation du fichier...', 'info');
+        showAlert('import-alert', 'Validation du fichier...', 'info');
         const text = await file.text();
         const data = JSON.parse(text);
 
         const result = await API.preferences.validateBackup(data);
 
         if (!result.valid) {
-          UI.showAlert('import-alert', 'Fichier invalide : ' + result.errors.join(', '), 'error');
+          showAlert('import-alert', 'Fichier invalide : ' + result.errors.join(', '), 'error');
           return;
         }
 
-        // Show preview
         pendingBackupData = data;
         const p = result.preview;
-        document.getElementById('backup-preview').innerHTML = `
-          <strong>📋 Aperçu du backup</strong><br><br>
-          <strong>Commerce :</strong> ${p.business_name}<br>
-          <strong>Date d'export :</strong> ${Format.datetime(p.exported_at)}<br>
-          <strong>Version :</strong> ${p.version}<br><br>
-          <strong>${p.clients}</strong> clients · <strong>${p.transactions}</strong> transactions<br>
-          <strong>${Format.currency(p.total_spent)}</strong> de CA · <strong>${p.total_points}</strong> points
-        `;
+        document.getElementById('backup-preview').innerHTML =
+          '<strong>Aperçu du backup</strong><br><br>' +
+          '<strong>Commerce :</strong> ' + esc(p.business_name) + '<br>' +
+          '<strong>Date d\'export :</strong> ' + Format.datetime(p.exported_at) + '<br>' +
+          '<strong>Version :</strong> ' + esc(p.version) + '<br><br>' +
+          '<strong>' + p.clients + '</strong> clients · <strong>' + p.transactions + '</strong> transactions<br>' +
+          '<strong>' + Format.currency(p.total_spent) + '</strong> de CA · <strong>' + p.total_points + '</strong> points';
 
         document.getElementById('backup-preview-container').style.display = 'block';
         dropZone.style.display = 'none';
-        UI.clearAlert('import-alert');
+        clearAlert('import-alert');
 
       } catch (err) {
         if (err instanceof SyntaxError) {
-          UI.showAlert('import-alert', 'Le fichier n\'est pas un JSON valide', 'error');
+          showAlert('import-alert', 'Le fichier n\'est pas un JSON valide', 'error');
         } else {
-          UI.showAlert('import-alert', err.message, 'error');
+          showAlert('import-alert', err.message, 'error');
         }
       }
     }
@@ -619,28 +955,27 @@
     async function importBackup() {
       if (!pendingBackupData) return;
 
-      if (!confirm('⚠️ ATTENTION :\n\nToutes vos données actuelles (clients, transactions) seront REMPLACÉES par celles du backup.\n\nCette action est IRRÉVERSIBLE.\n\nConfirmer la restauration ?')) {
+      if (!confirm('ATTENTION :\n\nToutes vos données actuelles (clients, transactions) seront REMPLACÉES par celles du backup.\n\nCette action est IRRÉVERSIBLE.\n\nConfirmer la restauration ?')) {
         return;
       }
 
       try {
         document.getElementById('import-btn').disabled = true;
-        UI.showAlert('import-alert', 'Restauration en cours...', 'info');
+        showAlert('import-alert', 'Restauration en cours...', 'info');
 
         const result = await API.preferences.importBackup(pendingBackupData);
-        UI.showAlert('import-alert',
-          `Restauration réussie !<br>
-           ${result.result.clients_restored} clients · ${result.result.transactions_restored} transactions restaurées`,
+        showAlert('import-alert',
+          'Restauration réussie — ' +
+          result.result.clients_restored + ' clients · ' +
+          result.result.transactions_restored + ' transactions restaurées',
           'success'
         );
         cancelImport();
 
-        // Refresh session
         const verifyData = await API.auth.verify();
         Auth.setSession(verifyData.staff, verifyData.merchant);
-
       } catch (err) {
-        UI.showAlert('import-alert', err.message, 'error');
+        showAlert('import-alert', err.message, 'error');
       } finally {
         document.getElementById('import-btn').disabled = false;
       }
