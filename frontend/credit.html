@@ -362,10 +362,6 @@
               <div class="qr-sub">Présentez ce QR au client</div>
               <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
               <button type="button" class="qr-redo" onclick="showQRFullscreen()">⛶ Plein écran</button>
-              <div id="qr-no-token" style="display:none; text-align:center; padding:1rem; color:#94A3B8; font-size:0.85rem;">
-                Aucun QR configuré.<br>
-                <span style="font-size:0.75rem;">Le propriétaire doit le générer dans <a href="/preferences" style="color:var(--primary)">Préférences</a>.</span>
-              </div>
             </div>
 
             <!-- Pending identifications -->
@@ -784,23 +780,13 @@
     async function loadStaticQR() {
       try {
         const resp = await API.call('/qr/token');
-        if (!resp.token) {
-          document.getElementById('qr-frame').style.display = 'none';
-          document.getElementById('qr-no-token').style.display = 'block';
-          return;
-        }
         merchantQrToken = resp.token;
         merchantQrUrl = resp.url;
-
-        document.getElementById('qr-frame').style.display = 'inline-block';
-        document.getElementById('qr-no-token').style.display = 'none';
 
         const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
         qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
       } catch (e) {
         console.error('QR load error:', e);
-        document.getElementById('qr-frame').style.display = 'none';
-        document.getElementById('qr-no-token').style.display = 'block';
       }
     }
 
