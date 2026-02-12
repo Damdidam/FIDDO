@@ -20,8 +20,8 @@ app.use(cookieParser());
 app.use(requestIdMiddleware);
 app.use('/api/staff', require('./routes/staff'));
 
-// Static files
-app.use(express.static(path.join(__dirname, '../frontend')));
+// Static files — index: false so that GET / hits our landing route, not index.html
+app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
 
 // ═══════════════════════════════════════════════════════
 // INIT ADDITIONAL TABLES (V3.5)
