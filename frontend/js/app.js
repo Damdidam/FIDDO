@@ -310,8 +310,8 @@ function setupNavbar() {
   navbar.innerHTML = `
     <div class="navbar-inner">
       <a href="/dashboard" class="navbar-brand">
-        <span class="brand-mark">fiddo<span class="brand-dot">.</span></span>
-        <span class="brand-sep"></span>
+        <span class="brand-mark">FIDDO</span>
+        <span class="brand-divider"></span>
         <span class="brand-merchant">${merchant.business_name}</span>
       </a>
       <div class="navbar-menu">${linksHTML}</div>
