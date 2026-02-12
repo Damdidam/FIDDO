@@ -6,6 +6,30 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000/api'
   : '/api';
 
+// ─── Theme Colors ────────────────────────────────────
+
+const THEME_COLORS = {
+  teal:   ['#0891B2', '#0E7490'],
+  navy:   ['#2563EB', '#1D4ED8'],
+  violet: ['#7C3AED', '#6D28D9'],
+  forest: ['#059669', '#047857'],
+  brick:  ['#DC2626', '#B91C1C'],
+  amber:  ['#D97706', '#B45309'],
+  slate:  ['#475569', '#334155'],
+};
+
+/**
+ * Apply a theme globally: set CSS variables + persist in sessionStorage.
+ * Called from setupNavbar() on every page load and from preferences selectTheme().
+ */
+function applyTheme(themeId) {
+  const colors = THEME_COLORS[themeId];
+  if (!colors) return;
+  document.documentElement.style.setProperty('--primary', colors[0]);
+  document.documentElement.style.setProperty('--primary-dark', colors[1]);
+  sessionStorage.setItem('fiddo_theme', themeId);
+}
+
 // ─── Auth ────────────────────────────────────────────
 
 const Auth = {
@@ -24,6 +48,7 @@ const Auth = {
   clearSession: () => {
     sessionStorage.removeItem('staff');
     sessionStorage.removeItem('merchant');
+    sessionStorage.removeItem('fiddo_theme');
   },
   isAuthenticated: () => !!Auth.getStaff(),
   hasRole: (...roles) => {
@@ -215,6 +240,20 @@ function setupNavbar() {
   const merchant = Auth.getMerchant();
   if (!staff || !merchant) return;
 
+  // ── Apply saved theme immediately (sessionStorage cache = instant) ──
+  const cachedTheme = sessionStorage.getItem('fiddo_theme');
+  if (cachedTheme && THEME_COLORS[cachedTheme]) {
+    applyTheme(cachedTheme);
+  }
+
+  // ── Sync from server in background (first login or other-device change) ──
+  API.preferences.get().then(data => {
+    const serverTheme = data?.preferences?.theme;
+    if (serverTheme && THEME_COLORS[serverTheme] && serverTheme !== cachedTheme) {
+      applyTheme(serverTheme);
+    }
+  }).catch(() => { /* silent */ });
+
   const navbar = document.querySelector('.navbar');
   if (!navbar) return;
 
@@ -272,10 +311,6 @@ function setupNavbar() {
 
 // ─── Unread Messages Badge (V3.5) ───────────────────
 
-/**
- * Fetch unread message count and show red badge on Messages nav link.
- * Silent on error — badge is non-critical UI.
- */
 async function loadUnreadBadge() {
   try {
     const data = await API.messages.getUnreadCount();
