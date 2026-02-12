@@ -590,10 +590,9 @@
         // Theme
         if (currentPrefs.theme) {
           currentTheme = currentPrefs.theme;
+          applyTheme(currentTheme); // ← persists in sessionStorage + sets CSS vars
           const t = THEMES.find(x => x.id === currentTheme);
           if (t) {
-            document.documentElement.style.setProperty('--primary', t.colors[0]);
-            document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
             document.getElementById('reward-preview').style.background =
               'linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ')';
           }
@@ -728,12 +727,11 @@
       try {
         await API.preferences.setTheme(themeId);
         currentTheme = themeId;
+        applyTheme(themeId); // ← persists in sessionStorage + sets CSS vars
         renderThemes();
 
         const t = THEMES.find(x => x.id === themeId);
         if (t) {
-          document.documentElement.style.setProperty('--primary', t.colors[0]);
-          document.documentElement.style.setProperty('--primary-dark', t.colors[1]);
           document.getElementById('reward-preview').style.background =
             'linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ')';
         }
