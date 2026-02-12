@@ -1,123 +1,514 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const path = require('path');
-const { requestIdMiddleware } = require('./middleware/audit');
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Centre de messages — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{font-family:'DM Sans',sans-serif}
+    :root{--g-from:#0891B2;--g-to:#06B6D4;--gradient:linear-gradient(135deg,var(--g-from),var(--g-to));--primary:#0891B2;--primary-light:#ECFEFF;--primary-dark:#0E7490;--slate-900:#0F172A;--slate-700:#334155;--slate-500:#64748B;--slate-400:#94A3B8;--slate-200:#E2E8F0;--slate-100:#F1F5F9;--slate-50:#F8FAFC;--green-600:#059669;--green-100:#D1FAE5;--red-600:#DC2626;--red-100:#FEE2E2;--amber-600:#D97706;--amber-100:#FEF3C7;--blue-600:#2563EB;--blue-100:#DBEAFE;--radius:10px}
 
-const app = express();
-app.set('trust proxy', 1);
+    body{background:var(--slate-50);color:var(--slate-900)}
 
-const PORT = process.env.PORT || 3000;
+    /* ─── Hero ─────────────────────────────── */
+    .msg-hero{background:var(--gradient);padding:2rem 2rem 1.6rem;color:#fff;position:relative;overflow:hidden}
+    .msg-hero::before{content:'';position:absolute;top:-40%;right:-10%;width:300px;height:300px;background:rgba(255,255,255,.06);border-radius:50%}
+    .msg-hero-title{font-size:1.4rem;font-weight:700;margin:0 0 .25rem}
+    .msg-hero-sub{font-size:.82rem;opacity:.85;margin:0}
 
-// ═══════════════════════════════════════════════════════
-// GLOBAL MIDDLEWARE
-// ═══════════════════════════════════════════════════════
+    /* ─── Tabs ─────────────────────────────── */
+    .msg-tabs{display:flex;gap:.5rem;padding:1.2rem 2rem 0;background:#fff;border-bottom:1.5px solid var(--slate-200);flex-wrap:wrap}
+    .msg-tab{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem 1rem;font-size:.75rem;font-weight:600;color:var(--slate-500);background:none;border:none;border-bottom:2.5px solid transparent;cursor:pointer;transition:all .2s;margin-bottom:-1.5px}
+    .msg-tab:hover{color:var(--primary)}
+    .msg-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+    .msg-tab svg{width:15px;height:15px}
+    .msg-tab .tab-badge{background:var(--red-600);color:#fff;font-size:.6rem;padding:1px 6px;border-radius:10px;margin-left:2px}
 
-app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '10mb' }));          // ← V3.5: raised from default for PDF upload
-app.use(cookieParser());
-app.use(requestIdMiddleware); // Attach unique request ID to every request
+    /* ─── Content ──────────────────────────── */
+    .msg-wrap{max-width:1200px;margin:0 auto;padding:1.5rem 2rem 3rem}
+    .tab-panel{display:none}
+    .tab-panel.active{display:block}
 
-// Static files
-app.use(express.static(path.join(__dirname, '../frontend')));
+    /* ─── Filter pills ─────────────────────── */
+    .filter-row{display:flex;gap:.4rem;margin-bottom:1.2rem;flex-wrap:wrap;align-items:center}
+    .filter-pill{padding:.35rem .85rem;font-size:.68rem;font-weight:600;border:1.5px solid var(--slate-200);border-radius:8px;background:#fff;color:var(--slate-500);cursor:pointer;transition:all .15s}
+    .filter-pill:hover{border-color:var(--primary);color:var(--primary)}
+    .filter-pill.active{border-color:var(--primary);background:var(--primary-light);color:var(--primary)}
+    .filter-count{font-size:.6rem;color:var(--slate-400);margin-left:.15rem}
+    .mark-all-btn{margin-left:auto;font-size:.68rem;font-weight:600;color:var(--primary);background:none;border:none;cursor:pointer;padding:.35rem .6rem;border-radius:6px;transition:background .15s}
+    .mark-all-btn:hover{background:var(--primary-light)}
 
-// ═══════════════════════════════════════════════════════
-// INIT ADDITIONAL TABLES (V3.5)
-// ═══════════════════════════════════════════════════════
+    /* ─── Message card ─────────────────────── */
+    .msg-card{background:#fff;border:1.5px solid var(--slate-200);border-radius:var(--radius);padding:1rem 1.2rem;margin-bottom:.75rem;transition:all .2s;cursor:pointer;position:relative}
+    .msg-card:hover{border-color:var(--slate-400);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .msg-card.unread{border-left:3.5px solid var(--primary);background:var(--primary-light)}
+    .msg-card.unread .msg-title{font-weight:700}
+    .msg-card.type-urgent{border-left-color:var(--red-600)}
+    .msg-card.type-urgent.unread{background:var(--red-100)}
+    .msg-card.type-maintenance{border-left-color:var(--amber-600)}
+    .msg-card.type-maintenance.unread{background:var(--amber-100)}
 
-require('./database-messages');                      // ← V3.5: messages & invoices tables
+    .msg-top{display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem}
+    .msg-type-badge{font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:2px 8px;border-radius:6px}
+    .msg-type-badge.info{background:var(--blue-100);color:var(--blue-600)}
+    .msg-type-badge.maintenance{background:var(--amber-100);color:var(--amber-600)}
+    .msg-type-badge.urgent{background:var(--red-100);color:var(--red-600)}
+    .msg-date{font-size:.68rem;color:var(--slate-400);margin-left:auto}
+    .msg-dot{width:7px;height:7px;border-radius:50%;background:var(--primary);flex-shrink:0}
 
-// ═══════════════════════════════════════════════════════
-// API ROUTES
-// ═══════════════════════════════════════════════════════
+    .msg-title{font-size:.85rem;font-weight:600;color:var(--slate-900);margin-bottom:.3rem}
+    .msg-body{font-size:.78rem;color:var(--slate-500);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+    .msg-body.expanded{display:block;-webkit-line-clamp:unset}
 
-// Staff auth
-app.use('/api/auth', require('./routes/auth'));
+    /* ─── Message detail (expanded) ────────── */
+    .msg-expanded .msg-body{display:block;-webkit-line-clamp:unset;white-space:pre-wrap}
 
-// Client management (credit, reward, lookup, list, etc.)
-app.use('/api/clients', require('./routes/clients'));
+    /* ─── Invoice table ────────────────────── */
+    .inv-table{width:100%;border-collapse:collapse;font-size:.78rem}
+    .inv-table thead{background:var(--slate-100)}
+    .inv-table th{text-align:left;padding:.65rem .85rem;font-weight:600;font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--slate-500);border-bottom:1.5px solid var(--slate-200)}
+    .inv-table td{padding:.7rem .85rem;border-bottom:1px solid var(--slate-100);color:var(--slate-700)}
+    .inv-table tbody tr:hover{background:var(--slate-50)}
+    .inv-status{display:inline-block;padding:2px 10px;border-radius:12px;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+    .inv-status.paid{background:var(--green-100);color:var(--green-600)}
+    .inv-status.pending{background:var(--amber-100);color:var(--amber-600)}
+    .inv-status.overdue{background:var(--red-100);color:var(--red-600)}
+    .inv-dl{display:inline-flex;align-items:center;gap:.3rem;color:var(--primary);font-weight:600;text-decoration:none;font-size:.72rem}
+    .inv-dl:hover{text-decoration:underline}
+    .inv-dl svg{width:14px;height:14px}
+    .inv-total{display:flex;gap:1.5rem;margin-bottom:1.2rem;flex-wrap:wrap}
+    .inv-stat{background:#fff;border:1.5px solid var(--slate-200);border-radius:var(--radius);padding:.85rem 1.2rem;min-width:140px}
+    .inv-stat-val{font-size:1.3rem;font-weight:700;color:var(--slate-900)}
+    .inv-stat-lbl{font-size:.62rem;text-transform:uppercase;letter-spacing:.5px;color:var(--slate-400);margin-top:.15rem}
 
-// QR code self-identification
-app.use('/api/qr', require('./routes/qr'));
+    /* ─── Status panel ─────────────────────── */
+    .sys-card{background:#fff;border:1.5px solid var(--slate-200);border-radius:var(--radius);padding:1.2rem 1.5rem;margin-bottom:1rem}
+    .sys-row{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--slate-100)}
+    .sys-row:last-child{border-bottom:none}
+    .sys-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .sys-dot.green{background:var(--green-600)}
+    .sys-dot.red{background:var(--red-600)}
+    .sys-dot.amber{background:var(--amber-600)}
+    .sys-label{font-size:.78rem;font-weight:600;color:var(--slate-700)}
+    .sys-value{font-size:.75rem;color:var(--slate-500);margin-left:auto}
+    .sys-refresh{font-size:.68rem;color:var(--primary);background:none;border:none;cursor:pointer;font-weight:600;padding:.3rem .6rem;border-radius:6px}
+    .sys-refresh:hover{background:var(--primary-light)}
 
-// Merchant preferences (theme, password, merchant-info, backup)
-app.use('/api/preferences', require('./routes/preferences'));
+    /* ─── Empty state ──────────────────────── */
+    .msg-empty{text-align:center;padding:3rem 1.5rem;color:var(--slate-400)}
+    .msg-empty svg{width:48px;height:48px;color:var(--slate-300);margin-bottom:.75rem}
+    .msg-empty p{font-size:.82rem}
 
-// Announcements (merchant-facing)
-app.use('/api/announcements', require('./routes/announcements'));
+    /* ─── Responsive ───────────────────────── */
+    @media(max-width:768px){
+      .msg-hero{padding:1.4rem 1.2rem 1.2rem}
+      .msg-tabs{padding:1rem 1.2rem 0}
+      .msg-wrap{padding:1.2rem 1.2rem 2rem}
+      .inv-table{font-size:.72rem}
+      .inv-table th,.inv-table td{padding:.5rem .6rem}
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
 
-// Dashboard (stats + activity feed)
-app.use('/api/dashboard', require('./routes/dashboard'));
+  <!-- Hero -->
+  <div class="msg-hero">
+    <div class="msg-hero-title">Centre de messages</div>
+    <div class="msg-hero-sub">Annonces, factures et statut de la plateforme</div>
+  </div>
 
-// Messages (merchant-side: read messages, download invoices)  ← V3.5
-app.use('/api/messages', require('./routes/messages'));
+  <!-- Tabs -->
+  <div class="msg-tabs">
+    <button class="msg-tab active" onclick="switchTab('messages',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      Messages <span class="tab-badge" id="unread-badge" style="display:none">0</span>
+    </button>
+    <button class="msg-tab" onclick="switchTab('invoices',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      Factures
+    </button>
+    <button class="msg-tab" onclick="switchTab('status',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+      Statut
+    </button>
+  </div>
 
-// Super admin
-app.use('/api/admin/auth', require('./routes/admin/auth'));
-app.use('/api/admin/merchants', require('./routes/admin/merchants'));
-app.use('/api/admin/backups', require('./routes/admin/backups'));
-app.use('/api/admin/announcements', require('./routes/admin/announcements'));
-app.use('/api/admin/messages', require('./routes/admin/messages'));  // ← V3.5
+  <div class="msg-wrap">
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '3.5.0', timestamp: new Date().toISOString() });
-});
-
-// ═══════════════════════════════════════════════════════
-// HTML PAGES
-// ═══════════════════════════════════════════════════════
-
-// Merchant pages
-app.get('/',            (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
-app.get('/dashboard',   (req, res) => res.sendFile(path.join(__dirname, '../frontend/dashboard.html')));
-app.get('/clients',     (req, res) => res.sendFile(path.join(__dirname, '../frontend/clients.html')));
-app.get('/credit',      (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
-app.get('/staff',       (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
-app.get('/preferences', (req, res) => res.sendFile(path.join(__dirname, '../frontend/preferences.html')));
-app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/messages.html')));  // ← V3.5
-
-// QR client-facing form
-app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
-
-// Super admin pages
-app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
-app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html')));
-app.get('/admin/messages',  (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/messages.html')));  // ← V3.5
-
-// Email validation
-app.get('/validate', (req, res) => {
-  const { token } = req.query;
-  if (!token) {
-    return res.status(400).send('<h1 style="color:#EF4444;">Token manquant</h1>');
-  }
-
-  const { endUserQueries } = require('./database');
-  const result = endUserQueries.validateEmail.run(token);
-
-  if (result.changes === 0) {
-    return res.status(400).send('<h1 style="color:#F59E0B;">Token invalide ou déjà utilisé</h1>');
-  }
-
-  res.send(`
-    <div style="font-family: Arial; text-align: center; margin-top: 100px;">
-      <h1 style="color: #10B981;">✅ Email validé avec succès !</h1>
-      <p>Vous recevrez désormais vos notifications de points par email.</p>
+    <!-- ═══ TAB: MESSAGES ═══ -->
+    <div class="tab-panel active" id="panel-messages">
+      <div class="filter-row">
+        <button class="filter-pill active" onclick="filterMessages('all',this)">Tous</button>
+        <button class="filter-pill" onclick="filterMessages('info',this)">Info</button>
+        <button class="filter-pill" onclick="filterMessages('maintenance',this)">Maintenance</button>
+        <button class="filter-pill" onclick="filterMessages('urgent',this)">Urgent</button>
+        <button class="mark-all-btn" id="mark-all-btn" onclick="markAllRead()" style="display:none">Tout marquer lu</button>
+      </div>
+      <div id="messages-list"></div>
     </div>
-  `);
-});
 
-// ═══════════════════════════════════════════════════════
-// START
-// ═══════════════════════════════════════════════════════
+    <!-- ═══ TAB: INVOICES ═══ -->
+    <div class="tab-panel" id="panel-invoices">
+      <div class="inv-total" id="invoice-stats"></div>
+      <div id="invoices-list"></div>
+    </div>
 
-// Start backup scheduler
-const { startScheduler } = require('./services/backup-db');
-startScheduler();
+    <!-- ═══ TAB: STATUS ═══ -->
+    <div class="tab-panel" id="panel-status">
+      <div class="sys-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem">
+          <span style="font-size:.82rem;font-weight:700;color:var(--slate-900)">Statut de la plateforme</span>
+          <button class="sys-refresh" onclick="checkHealth()">Actualiser</button>
+        </div>
+        <div id="health-rows">
+          <div class="sys-row">
+            <div class="sys-dot" id="health-dot"></div>
+            <span class="sys-label">API FIDDO</span>
+            <span class="sys-value" id="health-status">Vérification...</span>
+          </div>
+          <div class="sys-row">
+            <div class="sys-dot" id="health-db-dot"></div>
+            <span class="sys-label">Base de données</span>
+            <span class="sys-value" id="health-db-status">—</span>
+          </div>
+          <div class="sys-row">
+            <div class="sys-dot amber" id="health-version-dot"></div>
+            <span class="sys-label">Version</span>
+            <span class="sys-value" id="health-version">—</span>
+          </div>
+        </div>
+      </div>
 
-app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V3.5 Multi-Tenant — Port ${PORT}`);
-});
+      <div class="sys-card">
+        <span style="font-size:.82rem;font-weight:700;color:var(--slate-900);display:block;margin-bottom:.75rem">Dernières maintenances</span>
+        <div id="maintenance-list">
+          <p style="font-size:.78rem;color:var(--slate-400)">Aucune maintenance récente.</p>
+        </div>
+      </div>
+    </div>
 
-module.exports = app;
+  </div>
+
+  <!-- Message detail modal -->
+  <div id="msg-modal" class="modal">
+    <div class="modal-content" style="max-width:600px">
+      <div class="modal-header">
+        <h2 id="msg-modal-title" style="font-size:1rem;font-weight:700">Message</h2>
+        <button class="close-modal" onclick="closeMessageModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="msg-modal-body" style="font-size:.82rem;line-height:1.65;color:var(--slate-700)"></div>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireAuth()) throw 'Not authenticated';
+
+    const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
+    let currentFilter = 'all';
+    let allMessages = [];
+
+    // ─── Tab switch ───
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.msg-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('panel-' + tab).classList.add('active');
+      if (tab === 'invoices') loadInvoices();
+      if (tab === 'status') checkHealth();
+    }
+
+    // ═══════════════════════════════════════════
+    //  MESSAGES
+    // ═══════════════════════════════════════════
+
+    async function loadMessages(type) {
+      const container = document.getElementById('messages-list');
+      try {
+        const qs = type && type !== 'all' ? `?type=${type}` : '';
+        const data = await API.call(`/messages${qs}`);
+        allMessages = data.messages;
+        renderMessages(allMessages);
+        updateBadge(data.unread);
+      } catch (err) {
+        container.innerHTML = `<div class="msg-empty"><p>Erreur de chargement</p></div>`;
+      }
+    }
+
+    function renderMessages(messages) {
+      const container = document.getElementById('messages-list');
+      const markBtn = document.getElementById('mark-all-btn');
+      const hasUnread = messages.some(m => !m.is_read);
+      markBtn.style.display = hasUnread ? 'block' : 'none';
+
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div class="msg-empty">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            <p>Aucun message pour le moment</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = messages.map(m => {
+        const unread = !m.is_read;
+        const typeClass = m.msg_type !== 'info' ? ` type-${m.msg_type}` : '';
+        const date = new Date(m.created_at + 'Z');
+        const dateStr = date.toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' });
+
+        const typeLabels = { info:'Info', maintenance:'Maintenance', urgent:'Urgent' };
+
+        return `
+          <div class="msg-card${unread ? ' unread' : ''}${typeClass}" onclick="openMessage(${m.id})" data-id="${m.id}">
+            <div class="msg-top">
+              ${unread ? '<div class="msg-dot"></div>' : ''}
+              <span class="msg-type-badge ${m.msg_type}">${typeLabels[m.msg_type] || m.msg_type}</span>
+              <span class="msg-date">${dateStr}</span>
+            </div>
+            <div class="msg-title">${esc(m.title)}</div>
+            <div class="msg-body">${esc(m.body)}</div>
+          </div>`;
+      }).join('');
+    }
+
+    function filterMessages(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      loadMessages(type);
+    }
+
+    async function openMessage(id) {
+      const msg = allMessages.find(m => m.id === id);
+      if (!msg) return;
+
+      document.getElementById('msg-modal-title').textContent = msg.title;
+
+      const typeLabels = { info:'Information', maintenance:'Maintenance', urgent:'Urgent' };
+      const date = new Date(msg.created_at + 'Z');
+      const dateStr = date.toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+
+      document.getElementById('msg-modal-body').innerHTML = `
+        <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:1rem">
+          <span class="msg-type-badge ${msg.msg_type}">${typeLabels[msg.msg_type]}</span>
+          <span style="font-size:.72rem;color:var(--slate-400)">${dateStr}</span>
+        </div>
+        <div style="white-space:pre-wrap;line-height:1.7">${esc(msg.body)}</div>
+      `;
+
+      document.getElementById('msg-modal').classList.add('active');
+
+      // Mark as read
+      if (!msg.is_read) {
+        try {
+          await API.call(`/messages/${id}/read`, { method: 'POST' });
+          msg.is_read = 1;
+          msg.read_at = new Date().toISOString();
+
+          // Update UI
+          const card = document.querySelector(`.msg-card[data-id="${id}"]`);
+          if (card) {
+            card.classList.remove('unread');
+            const dot = card.querySelector('.msg-dot');
+            if (dot) dot.remove();
+          }
+
+          // Update badge
+          const unread = allMessages.filter(m => !m.is_read).length;
+          updateBadge(unread);
+        } catch (e) { /* silent */ }
+      }
+    }
+
+    function closeMessageModal() {
+      document.getElementById('msg-modal').classList.remove('active');
+    }
+    document.getElementById('msg-modal').addEventListener('click', e => {
+      if (e.target.id === 'msg-modal') closeMessageModal();
+    });
+
+    async function markAllRead() {
+      try {
+        await API.call('/messages/read-all', { method: 'POST' });
+        allMessages.forEach(m => { m.is_read = 1; });
+        renderMessages(allMessages);
+        updateBadge(0);
+      } catch (e) { /* silent */ }
+    }
+
+    function updateBadge(count) {
+      const badge = document.getElementById('unread-badge');
+      if (count > 0) {
+        badge.textContent = count;
+        badge.style.display = 'inline';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    //  INVOICES
+    // ═══════════════════════════════════════════
+
+    async function loadInvoices() {
+      const container = document.getElementById('invoices-list');
+      const statsContainer = document.getElementById('invoice-stats');
+
+      try {
+        const data = await API.call('/messages/invoices');
+        const invoices = data.invoices;
+
+        // Stats
+        const totalPaid = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
+        const totalPending = invoices.filter(i => i.status === 'pending').reduce((s, i) => s + i.amount, 0);
+        const totalOverdue = invoices.filter(i => i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
+
+        statsContainer.innerHTML = `
+          <div class="inv-stat">
+            <div class="inv-stat-val">${invoices.length}</div>
+            <div class="inv-stat-lbl">Factures</div>
+          </div>
+          <div class="inv-stat">
+            <div class="inv-stat-val" style="color:var(--green-600)">${Format.currency(totalPaid)}</div>
+            <div class="inv-stat-lbl">Payées</div>
+          </div>
+          ${totalPending > 0 ? `<div class="inv-stat">
+            <div class="inv-stat-val" style="color:var(--amber-600)">${Format.currency(totalPending)}</div>
+            <div class="inv-stat-lbl">En attente</div>
+          </div>` : ''}
+          ${totalOverdue > 0 ? `<div class="inv-stat">
+            <div class="inv-stat-val" style="color:var(--red-600)">${Format.currency(totalOverdue)}</div>
+            <div class="inv-stat-lbl">En retard</div>
+          </div>` : ''}
+        `;
+
+        if (invoices.length === 0) {
+          container.innerHTML = `
+            <div class="msg-empty">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <p>Aucune facture pour le moment</p>
+            </div>`;
+          return;
+        }
+
+        const statusLabels = { paid:'Payée', pending:'En attente', overdue:'En retard' };
+
+        let html = `
+          <div style="background:#fff;border:1.5px solid var(--slate-200);border-radius:var(--radius);overflow:hidden">
+          <table class="inv-table">
+            <thead><tr>
+              <th>Mois</th>
+              <th>Libellé</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Document</th>
+            </tr></thead>
+            <tbody>`;
+
+        invoices.forEach(inv => {
+          html += `<tr>
+            <td style="font-weight:600">${esc(inv.month)}</td>
+            <td>${esc(inv.label)}${inv.notes ? `<br><span style="font-size:.65rem;color:var(--slate-400)">${esc(inv.notes)}</span>` : ''}</td>
+            <td style="font-weight:600">${Format.currency(inv.amount)}</td>
+            <td><span class="inv-status ${inv.status}">${statusLabels[inv.status]}</span></td>
+            <td>${inv.file_name
+              ? `<a class="inv-dl" href="${API_BASE_URL}/messages/invoices/${inv.id}/download" target="_blank">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  PDF
+                </a>`
+              : '<span style="color:var(--slate-400);font-size:.68rem">—</span>'
+            }</td>
+          </tr>`;
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<div class="msg-empty"><p>Erreur de chargement</p></div>`;
+      }
+    }
+
+    // ═══════════════════════════════════════════
+    //  SYSTEM STATUS
+    // ═══════════════════════════════════════════
+
+    async function checkHealth() {
+      const dot = document.getElementById('health-dot');
+      const status = document.getElementById('health-status');
+      const dbDot = document.getElementById('health-db-dot');
+      const dbStatus = document.getElementById('health-db-status');
+      const versionEl = document.getElementById('health-version');
+
+      dot.className = 'sys-dot';
+      status.textContent = 'Vérification...';
+
+      try {
+        const resp = await fetch(API_BASE_URL + '/health');
+        const data = await resp.json();
+
+        if (data.status === 'ok') {
+          dot.className = 'sys-dot green';
+          status.textContent = 'Opérationnel';
+          dbDot.className = 'sys-dot green';
+          dbStatus.textContent = 'Connectée';
+          versionEl.textContent = 'v' + (data.version || '?');
+          document.getElementById('health-version-dot').className = 'sys-dot green';
+        } else {
+          dot.className = 'sys-dot red';
+          status.textContent = 'Problème détecté';
+        }
+      } catch (e) {
+        dot.className = 'sys-dot red';
+        status.textContent = 'Injoignable';
+        dbDot.className = 'sys-dot red';
+        dbStatus.textContent = 'Inconnue';
+      }
+
+      // Load recent maintenance messages for the status tab
+      loadMaintenanceHistory();
+    }
+
+    async function loadMaintenanceHistory() {
+      try {
+        const data = await API.call('/messages?type=maintenance');
+        const container = document.getElementById('maintenance-list');
+        const msgs = data.messages.slice(0, 5);
+
+        if (msgs.length === 0) {
+          container.innerHTML = '<p style="font-size:.78rem;color:var(--slate-400)">Aucune maintenance récente.</p>';
+          return;
+        }
+
+        container.innerHTML = msgs.map(m => {
+          const d = new Date(m.created_at + 'Z');
+          return `
+            <div class="sys-row" style="cursor:pointer" onclick="openMessage(${m.id})">
+              <div class="sys-dot amber"></div>
+              <span class="sys-label">${esc(m.title)}</span>
+              <span class="sys-value">${d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'})}</span>
+            </div>`;
+        }).join('');
+      } catch (e) { /* silent */ }
+    }
+
+    // ─── Utility ───
+    function esc(str) {
+      if (!str) return '';
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // ─── Init ───
+    loadMessages();
+    checkHealth();
+  </script>
+</body>
+</html>
