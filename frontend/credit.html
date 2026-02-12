@@ -827,6 +827,13 @@
         el.innerHTML = '<div style="text-align:center;padding:0.5rem;color:#94A3B8;font-size:0.75rem;">En attente de clients…</div>';
         return;
       }
+
+      // Auto-select if only one client
+      if (clients.length === 1) {
+        consumeIdent(clients[0].identId);
+        return;
+      }
+
       let html = '';
       clients.forEach(c => {
         const label = c.name || c.email || c.phone || 'Client';
