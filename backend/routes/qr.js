@@ -118,10 +118,15 @@ router.post('/submit/:token', (req, res) => {
       return res.status(409).json({ error: 'Informations déjà envoyées' });
     }
 
-    const { email, phone, name } = req.body;
+    const { email, phone, name, pin } = req.body;
 
     if (!email && !phone) {
       return res.status(400).json({ error: 'Email ou téléphone requis' });
+    }
+
+    // Validate PIN format (4 digits)
+    if (pin && !/^\d{4}$/.test(pin)) {
+      return res.status(400).json({ error: 'Le code PIN doit contenir exactement 4 chiffres' });
     }
 
     // Basic sanitization
@@ -129,6 +134,7 @@ router.post('/submit/:token', (req, res) => {
       email: email ? String(email).trim().substring(0, 200) : null,
       phone: phone ? String(phone).trim().substring(0, 30) : null,
       name: name ? String(name).trim().substring(0, 100) : null,
+      pin: pin || null,
       submittedAt: Date.now(),
     };
 
@@ -182,6 +188,7 @@ router.get('/poll/:token', authenticateStaff, (req, res) => {
       email: data.email,
       phone: data.phone,
       name: data.name,
+      pin: data.pin || null,
     });
   } catch (error) {
     console.error('QR poll error:', error);
