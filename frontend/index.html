@@ -102,26 +102,15 @@
 
     /* Logo */
     .brand-logo {
-      display: flex;
-      align-items: center;
-      gap: 3px;
       margin-bottom: 3.5rem;
     }
 
     .brand-logo .wordmark {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #FFFFFF;
-      letter-spacing: 4px;
-    }
-
-    .brand-logo .dot {
-      width: 7px; height: 7px;
-      background: var(--brand-glow);
-      border-radius: 50%;
-      margin-top: 6px;
-      box-shadow: 0 0 12px rgba(14,211,255,0.5);
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--brand);
+      letter-spacing: -0.5px;
     }
 
     /* Headline */
@@ -184,14 +173,31 @@
       left: 3.5rem;
       right: 3.5rem;
       display: flex;
-      gap: 1.5rem;
+      justify-content: space-between;
+      align-items: center;
       z-index: 2;
+    }
+
+    .brand-footer-left {
+      display: flex;
+      gap: 1.5rem;
     }
 
     .brand-footer span {
       font-size: 0.7rem;
       color: rgba(255,255,255,0.2);
       letter-spacing: 0.5px;
+    }
+
+    .brand-footer .powered-by {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0.3px;
+    }
+
+    .brand-footer .powered-by strong {
+      color: rgba(255,255,255,0.3);
+      font-weight: 700;
     }
 
     /* ═══ RIGHT PANEL ═══ */
@@ -445,19 +451,11 @@
         margin-bottom: 2.5rem;
       }
       .mobile-brand .wordmark {
-        font-family: 'Playfair Display', Georgia, serif;
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         font-size: 1.75rem;
-        font-weight: 700;
-        color: var(--text-primary);
-        letter-spacing: 3px;
-      }
-      .mobile-brand .dot {
-        display: inline-block;
-        width: 6px; height: 6px;
-        background: var(--brand);
-        border-radius: 50%;
-        margin-left: 1px;
-        vertical-align: middle;
+        font-weight: 800;
+        color: var(--brand);
+        letter-spacing: -0.5px;
       }
       .mobile-brand p {
         color: var(--text-secondary);
@@ -484,7 +482,6 @@
       <div class="brand-inner">
         <div class="brand-logo">
           <span class="wordmark">FIDDO</span>
-          <span class="dot"></span>
         </div>
 
         <h2 class="brand-headline">
@@ -513,8 +510,11 @@
       </div>
 
       <div class="brand-footer">
-        <span>FIDDO V3.5</span>
-        <span>Bruxelles, Belgique</span>
+        <div class="brand-footer-left">
+          <span>FIDDO V3.5</span>
+          <span>Bruxelles, Belgique</span>
+        </div>
+        <span class="powered-by">Powered by <strong>H3001</strong></span>
       </div>
     </div>
 
@@ -523,7 +523,7 @@
       <div class="form-wrapper">
 
         <div class="mobile-brand">
-          <div class="wordmark">FIDDO<span class="dot"></span></div>
+          <div class="wordmark">FIDDO</div>
           <p>Programme de fidélité pour restaurateurs</p>
         </div>
 
