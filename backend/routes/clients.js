@@ -587,4 +587,44 @@ router.post('/:id/unblock', requireRole('owner', 'manager'), (req, res) => {
     res.json({ message: 'Client débloqué' }); } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
 
+// ═══════════════════════════════════════════════════════
+// POST /api/clients/:id/pin — Set or update client PIN (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/pin', requireRole('owner', 'manager'), async (req, res) => {
+  try {
+    const mcId = parseInt(req.params.id);
+    const merchantId = req.staff.merchant_id;
+    const { pin } = req.body;
+
+    if (!pin || !/^\d{4}$/.test(pin)) {
+      return res.status(400).json({ error: 'Le code PIN doit contenir exactement 4 chiffres' });
+    }
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const eu = endUserQueries.findById.get(mc.end_user_id);
+    if (!eu) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const pinHash = await bcrypt.hash(pin, 10);
+    endUserQueries.setPin.run(pinHash, eu.id);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'staff',
+      actorId: req.staff.id,
+      merchantId,
+      action: eu.pin_hash ? 'pin_updated' : 'pin_set',
+      targetType: 'end_user',
+      targetId: eu.id,
+    });
+
+    res.json({ message: 'Code PIN mis à jour', has_pin: true });
+  } catch (error) {
+    console.error('Erreur set PIN:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
