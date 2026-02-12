@@ -389,6 +389,12 @@
             <input type="text" id="cf-name" placeholder="Pierre" autocomplete="given-name">
           </div>
 
+          <div class="field">
+            <label data-i18n="label_pin">Code PIN (4 chiffres)</label>
+            <input type="tel" id="cf-pin" placeholder="1234" inputmode="numeric" pattern="\d{4}" maxlength="4" autocomplete="off" style="text-align:center; font-size:1.4rem; letter-spacing:0.5rem; font-weight:700;">
+            <div class="hint" data-i18n="pin_hint">Ce code vous sera demandé pour utiliser votre récompense</div>
+          </div>
+
           <button type="submit" class="btn-submit" id="submit-btn" data-i18n="submit">Envoyer ✓</button>
         </form>
       </div>
@@ -432,6 +438,8 @@
         optional: '(optionnel)',
         or: 'ou',
         phone_hint: 'Avec indicatif pays (+32, +33…)',
+        label_pin: 'Code PIN (4 chiffres)',
+        pin_hint: 'Ce code vous sera demandé pour utiliser votre récompense',
         submit: 'Envoyer ✓',
         success_title: 'Merci !',
         success_msg: 'Vos informations ont été transmises. Vous pouvez fermer cette page.',
@@ -452,6 +460,8 @@
         optional: '(optional)',
         or: 'or',
         phone_hint: 'With country code (+32, +33…)',
+        label_pin: 'PIN code (4 digits)',
+        pin_hint: 'This code will be required to claim your reward',
         submit: 'Send ✓',
         success_title: 'Thank you!',
         success_msg: 'Your information has been sent. You can close this page.',
@@ -472,6 +482,8 @@
         optional: '(optioneel)',
         or: 'of',
         phone_hint: 'Met landcode (+32, +33…)',
+        label_pin: 'Pincode (4 cijfers)',
+        pin_hint: 'Deze code is nodig om uw beloning te gebruiken',
         submit: 'Verzenden ✓',
         success_title: 'Bedankt!',
         success_msg: 'Uw gegevens zijn verzonden. U kunt deze pagina sluiten.',
@@ -492,6 +504,8 @@
         optional: '(isteğe bağlı)',
         or: 'veya',
         phone_hint: 'Ülke kodu ile (+32, +33…)',
+        label_pin: 'PIN kodu (4 rakam)',
+        pin_hint: 'Ödülünüzü almak için bu kod gerekecektir',
         submit: 'Gönder ✓',
         success_title: 'Teşekkürler!',
         success_msg: 'Bilgileriniz iletildi. Bu sayfayı kapatabilirsiniz.',
@@ -512,6 +526,8 @@
         optional: '（可选）',
         or: '或',
         phone_hint: '请加国际区号（+32、+33…）',
+        label_pin: 'PIN码（4位数字）',
+        pin_hint: '领取奖励时需要此密码',
         submit: '提交 ✓',
         success_title: '谢谢！',
         success_msg: '您的信息已发送，您可以关闭此页面。',
@@ -532,6 +548,8 @@
         optional: '(اختياري)',
         or: 'أو',
         phone_hint: 'مع رمز الدولة (+32، +33…)',
+        label_pin: 'رمز PIN (4 أرقام)',
+        pin_hint: 'ستحتاج هذا الرمز للحصول على مكافأتك',
         submit: 'إرسال ✓',
         success_title: '!شكراً',
         success_msg: '.تم إرسال معلوماتك. يمكنك إغلاق هذه الصفحة',
@@ -630,11 +648,20 @@
       const email = document.getElementById('cf-email').value.trim();
       const phone = document.getElementById('cf-phone').value.trim();
       const name = document.getElementById('cf-name').value.trim();
+      const pin = document.getElementById('cf-pin').value.trim();
       const t = T[currentLang] || T.fr;
 
       if (!email && !phone) {
         const el = document.getElementById('error-msg');
         el.textContent = t.error_required;
+        el.style.display = 'block';
+        return;
+      }
+
+      // Validate PIN format if provided
+      if (pin && !/^\d{4}$/.test(pin)) {
+        const el = document.getElementById('error-msg');
+        el.textContent = t.error_pin || 'PIN: 4 chiffres requis';
         el.style.display = 'block';
         return;
       }
@@ -651,6 +678,7 @@
             email: email || null,
             phone: phone || null,
             name: name || null,
+            pin: pin || null,
           }),
         });
 
