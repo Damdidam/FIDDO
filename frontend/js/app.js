@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════════════
-// FIDDO V3.1 — Frontend Core
+// FIDDO V3.5 — Frontend Core
 // ═══════════════════════════════════════════════════════
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -99,6 +99,18 @@ const API = {
     },
     validateBackup: (data) => API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) }),
     importBackup: (data) => API.call('/preferences/backup/import', { method: 'POST', body: JSON.stringify({ data, confirmReplace: true }) }),
+  },
+
+  // ← V3.5: Messages & Invoices
+  messages: {
+    getAll: (type) => {
+      const qs = type && type !== 'all' ? `?type=${type}` : '';
+      return API.call(`/messages${qs}`);
+    },
+    getUnreadCount: () => API.call('/messages/unread-count'),
+    markRead: (id) => API.call(`/messages/${id}/read`, { method: 'POST' }),
+    markAllRead: () => API.call('/messages/read-all', { method: 'POST' }),
+    getInvoices: () => API.call('/messages/invoices'),
   },
 };
 
@@ -229,8 +241,11 @@ function setupNavbar() {
     links.push({ href: '/preferences', label: 'Préférences', icon: '⚙️' });
   }
 
+  // V3.5: All staff can see messages
+  links.push({ href: '/messages', label: 'Messages', icon: '✉️', id: 'nav-messages' });
+
   menu.innerHTML = links.map(l =>
-    `<a href="${l.href}" class="navbar-link${path === l.href ? ' active' : ''}">${l.label}</a>`
+    `<a href="${l.href}" class="navbar-link${path === l.href ? ' active' : ''}"${l.id ? ` id="${l.id}"` : ''}>${l.label}</a>`
   ).join('');
 
   // User info + logout
@@ -241,6 +256,33 @@ function setupNavbar() {
     <button class="btn btn-outline btn-sm" onclick="Auth.logout()">Déconnexion</button>
   `;
   menu.appendChild(userInfo);
+
+  // V3.5: Fetch unread badge
+  loadUnreadBadge();
+}
+
+
+// ─── Unread Messages Badge (V3.5) ───────────────────
+
+/**
+ * Fetch unread message count and show red badge on Messages nav link.
+ * Silent on error — badge is non-critical UI.
+ */
+async function loadUnreadBadge() {
+  try {
+    const data = await API.messages.getUnreadCount();
+    if (data.unread > 0) {
+      const navLink = document.getElementById('nav-messages');
+      if (navLink) {
+        navLink.innerHTML = `Messages <span style="
+          background:#EF4444;color:#fff;font-size:.55rem;font-weight:700;
+          padding:1px 5px;border-radius:8px;margin-left:3px;vertical-align:top;
+        ">${data.unread}</span>`;
+      }
+    }
+  } catch (e) {
+    // Silent — badge is non-critical
+  }
 }
 
 
