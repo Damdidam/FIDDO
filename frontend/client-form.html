@@ -335,7 +335,71 @@
       </div>
     </div>
 
-    <!-- ═══ AUTH ═══ -->
+    <!-- ═══ WELCOME (choice) ═══ -->
+    <div id="screen-welcome" class="screen">
+      <div class="card" style="text-align:center; padding:1.5rem;">
+        <div style="font-size:2.5rem; margin-bottom:0.5rem;">🐕</div>
+        <h2 style="font-size:1.1rem; font-weight:700; margin-bottom:0.3rem;">Bienvenue !</h2>
+        <p style="font-size:0.85rem; color:#64748B; margin-bottom:1.25rem;" id="welcome-sub">Programme de fidélité</p>
+
+        <button class="btn btn-primary" onclick="showScreen('screen-auth')" style="margin-bottom:0.65rem;">
+          🔑 J'ai déjà un compte
+        </button>
+        <button class="btn btn-outline" onclick="showScreen('screen-register')" style="border-color:var(--accent); color:var(--accent);">
+          ✨ Première visite
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══ REGISTER (new client) ═══ -->
+    <div id="screen-register" class="screen">
+      <div class="card">
+        <h2 style="font-size:1rem; font-weight:700; margin-bottom:0.25rem; text-align:center;">Première visite</h2>
+        <p style="font-size:0.8rem; color:#64748B; text-align:center; margin-bottom:1rem;">Enregistrez-vous pour gagner des points fidélité</p>
+
+        <div id="reg-alert"></div>
+
+        <div class="form-group">
+          <label class="form-label">Votre nom / prénom</label>
+          <input type="text" id="reg-name" class="form-control" placeholder="Pierre" autocomplete="name">
+        </div>
+
+        <div class="seg">
+          <button type="button" id="seg-reg-email" class="active" onclick="setRegMode('email')">@ Email</button>
+          <button type="button" id="seg-reg-phone" onclick="setRegMode('phone')"># Téléphone</button>
+        </div>
+
+        <div class="form-group" id="reg-email-group">
+          <label class="form-label">Adresse email</label>
+          <input type="email" id="reg-email" class="form-control" placeholder="votre@email.com" autocomplete="email" inputmode="email">
+        </div>
+
+        <div class="form-group" id="reg-phone-group" style="display:none;">
+          <label class="form-label">Numéro de téléphone</label>
+          <input type="tel" id="reg-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="tel" inputmode="tel">
+        </div>
+
+        <button class="btn btn-primary" id="btn-register" onclick="doRegister()">M'enregistrer</button>
+
+        <button class="btn btn-outline" onclick="showScreen('screen-welcome')" style="margin-top:0.5rem;">← Retour</button>
+      </div>
+    </div>
+
+    <!-- ═══ REGISTERED (confirmation) ═══ -->
+    <div id="screen-registered" class="screen">
+      <div class="card" style="text-align:center; padding:1.5rem;">
+        <div class="identified">
+          <div class="icon">🎉</div>
+          <h3 style="font-size:1.1rem;">Bienvenue dans le club !</h3>
+          <p>Vous êtes enregistré. Le commerce va créditer vos premiers points.</p>
+          <p style="margin-top:0.75rem; font-size:0.8rem; color:var(--accent-dark);">
+            Vous recevrez un <strong>code PIN</strong> pour vos prochaines visites.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ AUTH (existing client) ═══ -->
     <div id="screen-auth" class="screen">
       <div class="card">
         <h2 style="font-size:1rem; font-weight:700; margin-bottom:1rem; text-align:center;">Identifiez-vous</h2>
@@ -369,6 +433,7 @@
         </div>
 
         <button class="btn btn-primary" id="btn-login" onclick="doLogin()">Se connecter</button>
+        <button class="btn btn-outline" onclick="showScreen('screen-welcome')" style="margin-top:0.5rem;">← Retour</button>
       </div>
     </div>
 
@@ -481,6 +546,7 @@
         // Apply theme
         document.body.setAttribute('data-theme', merchantInfo.theme || 'teal');
         document.getElementById('merchant-name').textContent = merchantInfo.merchantName;
+        document.getElementById('welcome-sub').textContent = 'Programme de fidélité — ' + merchantInfo.merchantName;
         document.title = `${merchantInfo.merchantName} — Fidélité`;
 
         // Update theme-color meta
@@ -514,8 +580,8 @@
         }
       }
 
-      // Show auth
-      showScreen('screen-auth');
+      // Show welcome (choice between login / register)
+      showScreen('screen-welcome');
     })();
 
     // ═══════════════════════════════════════════════════════
@@ -646,6 +712,73 @@
 
       btn.disabled = false;
       btn.textContent = 'Se connecter';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // REGISTER (first visit)
+    // ═══════════════════════════════════════════════════════
+
+    let regMode = 'email';
+
+    function setRegMode(mode) {
+      regMode = mode;
+      document.getElementById('seg-reg-email').classList.toggle('active', mode === 'email');
+      document.getElementById('seg-reg-phone').classList.toggle('active', mode === 'phone');
+      document.getElementById('reg-email-group').style.display = mode === 'email' ? '' : 'none';
+      document.getElementById('reg-phone-group').style.display = mode === 'phone' ? '' : 'none';
+    }
+
+    function showRegAlert(msg, type) {
+      document.getElementById('reg-alert').innerHTML = `<div class="alert alert-${type}">${msg}</div>`;
+    }
+
+    async function doRegister() {
+      document.getElementById('reg-alert').innerHTML = '';
+
+      const name = document.getElementById('reg-name').value.trim();
+      const email = regMode === 'email' ? document.getElementById('reg-email').value.trim() : null;
+      const phone = regMode === 'phone' ? document.getElementById('reg-phone').value.trim() : null;
+
+      if (!email && !phone) {
+        showRegAlert(regMode === 'email' ? 'Saisissez votre email' : 'Saisissez votre téléphone', 'error');
+        return;
+      }
+
+      const btn = document.getElementById('btn-register');
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement…';
+
+      try {
+        const resp = await fetch(`${API_BASE}/qr/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ qrToken, email, phone, name }),
+        });
+
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          if (resp.status === 409) {
+            // Account exists → redirect to login
+            showRegAlert(data.error, 'info');
+            setTimeout(() => showScreen('screen-auth'), 2000);
+          } else {
+            showRegAlert(data.error || 'Erreur', 'error');
+          }
+          btn.disabled = false;
+          btn.textContent = 'M\'enregistrer';
+          return;
+        }
+
+        // Success → show confirmation
+        showScreen('screen-registered');
+
+      } catch (e) {
+        showRegAlert('Erreur réseau. Réessayez.', 'error');
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'M\'enregistrer';
     }
 
     // ═══════════════════════════════════════════════════════
