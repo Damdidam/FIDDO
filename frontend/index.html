@@ -6,14 +6,14 @@
   <title>FIDDO — Connexion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --brand: #0891B2;
       --brand-dark: #065A73;
-      --brand-light: #B2F0FF;
+      --brand-glow: #0ED3FF;
       --surface: #FAFBFC;
       --card: #FFFFFF;
       --text-primary: #0F1419;
@@ -27,11 +27,8 @@
       --success: #0A8754;
       --success-bg: #F0FFF7;
       --info-bg: #F0FAFF;
-      --panel-bg: #0B1B26;
-      --panel-text: #C7D5DD;
-      --panel-accent: #0ED3FF;
-      --radius: 8px;
-      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --radius: 10px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     body {
@@ -43,204 +40,211 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ═══ SPLIT LAYOUT ═══ */
+    /* ═══ LAYOUT ═══ */
     .auth-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
     }
 
-    /* ═══ LEFT PANEL — BRAND ═══ */
+    /* ═══ LEFT PANEL ═══ */
     .brand-panel {
-      background: var(--panel-bg);
+      background: #0A1A24;
       position: relative;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
-      padding: 3rem;
+      justify-content: center;
+      padding: 4rem 3.5rem;
       overflow: hidden;
     }
 
+    /* Animated gradient orbs */
     .brand-panel::before {
       content: '';
       position: absolute;
-      top: -40%; right: -30%;
-      width: 80%; height: 120%;
-      background: radial-gradient(ellipse, rgba(8,145,178,0.12) 0%, transparent 70%);
+      top: -15%; right: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(8,145,178,0.18) 0%, transparent 65%);
+      animation: orbFloat 12s ease-in-out infinite;
       pointer-events: none;
     }
 
     .brand-panel::after {
       content: '';
       position: absolute;
-      bottom: -20%; left: -20%;
-      width: 60%; height: 60%;
-      background: radial-gradient(ellipse, rgba(14,211,255,0.06) 0%, transparent 70%);
+      bottom: -10%; left: -15%;
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(14,211,255,0.08) 0%, transparent 60%);
+      animation: orbFloat 15s ease-in-out infinite reverse;
       pointer-events: none;
     }
 
-    .brand-grid {
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(25px, -15px) scale(1.05); }
+      66% { transform: translate(-15px, 20px) scale(0.95); }
+    }
+
+    /* Subtle dot pattern */
+    .brand-dots {
       position: absolute;
       inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 60px 60px;
+      background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
       pointer-events: none;
     }
 
-    .brand-logo { position: relative; z-index: 1; }
+    .brand-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 460px;
+    }
+
+    /* Logo */
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      margin-bottom: 3.5rem;
+    }
 
     .brand-logo .wordmark {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 2rem;
+      font-size: 1.6rem;
       font-weight: 700;
       color: #FFFFFF;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
     }
 
     .brand-logo .dot {
-      display: inline-block;
-      width: 8px; height: 8px;
-      background: var(--panel-accent);
+      width: 7px; height: 7px;
+      background: var(--brand-glow);
       border-radius: 50%;
-      margin-left: 2px;
-      vertical-align: middle;
+      margin-top: 6px;
+      box-shadow: 0 0 12px rgba(14,211,255,0.5);
     }
 
-    .brand-content {
-      position: relative;
-      z-index: 1;
-      max-width: 420px;
-    }
-
+    /* Headline */
     .brand-headline {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 2.75rem;
+      font-size: 3rem;
       font-weight: 600;
-      line-height: 1.2;
+      line-height: 1.15;
       color: #FFFFFF;
-      margin-bottom: 1.5rem;
+      margin-bottom: 1.25rem;
       letter-spacing: -0.5px;
     }
 
     .brand-headline em {
       font-style: italic;
-      color: var(--panel-accent);
+      color: var(--brand-glow);
+      font-weight: 500;
     }
 
-    .brand-description {
-      font-size: 1.05rem;
+    .brand-desc {
+      font-size: 1rem;
       line-height: 1.75;
-      color: var(--panel-text);
-      margin-bottom: 2.5rem;
+      color: #8A9BAA;
+      margin-bottom: 3rem;
     }
 
-    .brand-features {
+    /* Stats row */
+    .brand-stats {
       display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
+      gap: 2.5rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
     }
 
-    .brand-feature {
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    .feature-icon {
-      flex-shrink: 0;
-      width: 40px; height: 40px;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.04);
-    }
-
-    .feature-icon svg {
-      width: 18px; height: 18px;
-      stroke: var(--panel-accent);
-      stroke-width: 1.5;
-      fill: none;
-    }
-
-    .feature-text {
-      font-size: 0.9rem;
-      color: var(--panel-text);
-      line-height: 1.5;
-    }
-
-    .feature-text strong {
-      display: block;
-      color: #FFFFFF;
+    .brand-stat-value {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.6rem;
       font-weight: 600;
-      margin-bottom: 2px;
+      color: #FFFFFF;
+      line-height: 1;
     }
 
+    .brand-stat-value span {
+      color: var(--brand-glow);
+      font-size: 1rem;
+    }
+
+    .brand-stat-label {
+      font-size: 0.72rem;
+      color: #5C7080;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 0.4rem;
+    }
+
+    /* Bottom line */
     .brand-footer {
-      position: relative;
-      z-index: 1;
+      position: absolute;
+      bottom: 2.5rem;
+      left: 3.5rem;
+      right: 3.5rem;
       display: flex;
-      align-items: center;
       gap: 1.5rem;
-      padding-top: 2rem;
-      border-top: 1px solid rgba(255,255,255,0.06);
+      z-index: 2;
     }
 
     .brand-footer span {
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.3);
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.2);
       letter-spacing: 0.5px;
     }
 
-    /* ═══ RIGHT PANEL — FORMS ═══ */
+    /* ═══ RIGHT PANEL ═══ */
     .form-panel {
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 2rem;
       overflow-y: auto;
+      background: var(--surface);
     }
 
     .form-wrapper {
       width: 100%;
-      max-width: 440px;
+      max-width: 420px;
       padding: 2rem 0;
     }
 
-    .form-header { margin-bottom: 2rem; }
+    /* Mobile brand (hidden on desktop) */
+    .mobile-brand { display: none; }
+
+    /* Header */
+    .form-header { margin-bottom: 2.25rem; }
 
     .form-header h1 {
       font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.75rem;
+      font-size: 1.85rem;
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.4rem;
     }
 
     .form-header p {
       color: var(--text-secondary);
-      font-size: 0.95rem;
+      font-size: 0.92rem;
     }
 
-    /* ─── Fields ─── */
-    .field { margin-bottom: 1.25rem; }
+    /* Fields */
+    .field { margin-bottom: 1.35rem; }
 
     .field-label {
       display: block;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 0.4rem;
-      letter-spacing: 0.3px;
+      color: var(--text-secondary);
+      margin-bottom: 0.45rem;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
     }
 
     .field-input {
       width: 100%;
-      padding: 0.75rem 1rem;
+      padding: 0.8rem 1rem;
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
       font-family: 'DM Sans', sans-serif;
@@ -252,16 +256,19 @@
     }
 
     .field-input::placeholder { color: var(--text-hint); }
-    .field-input:focus { border-color: var(--border-focus); box-shadow: 0 0 0 3px rgba(8,145,178,0.1); }
+
+    .field-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
+    }
 
     .field-input.has-error { border-color: var(--error-border); background: var(--error-bg); }
-    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(198,40,40,0.08); }
+    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(198,40,40,0.06); }
 
     .field-error {
       font-size: 0.78rem;
       color: var(--error);
       margin-top: 0.35rem;
-      line-height: 1.4;
       display: none;
     }
     .field-error.visible { display: block; }
@@ -270,7 +277,6 @@
       font-size: 0.78rem;
       color: var(--text-hint);
       margin-top: 0.35rem;
-      line-height: 1.4;
     }
 
     .field-row {
@@ -279,12 +285,12 @@
       gap: 1rem;
     }
 
-    /* ─── Sections ─── */
+    /* Section divider */
     .section-divider {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      margin: 2rem 0 1.25rem;
+      margin: 2.25rem 0 1.5rem;
     }
 
     .section-divider::before,
@@ -296,15 +302,15 @@
     }
 
     .section-divider span {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
+      letter-spacing: 1.8px;
       color: var(--text-hint);
       white-space: nowrap;
     }
 
-    /* ─── Reward preview ─── */
+    /* Reward preview */
     .reward-preview {
       display: none;
       background: linear-gradient(135deg, var(--brand), var(--brand-dark));
@@ -317,10 +323,10 @@
     }
     .reward-preview strong { font-weight: 600; }
 
-    /* ─── Buttons ─── */
+    /* Button */
     .btn-submit {
       width: 100%;
-      padding: 0.85rem 1.5rem;
+      padding: 0.9rem 1.5rem;
       border: none;
       border-radius: var(--radius);
       font-family: 'DM Sans', sans-serif;
@@ -331,6 +337,7 @@
       letter-spacing: 0.3px;
       position: relative;
       overflow: hidden;
+      margin-top: 0.5rem;
     }
 
     .btn-submit:active:not(:disabled) { transform: scale(0.985); }
@@ -338,16 +345,16 @@
     .btn-primary-action {
       background: var(--brand);
       color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(8,145,178,0.25);
+      box-shadow: 0 2px 8px rgba(8,145,178,0.2);
     }
 
     .btn-primary-action:hover:not(:disabled) {
       background: var(--brand-dark);
-      box-shadow: 0 4px 16px rgba(8,145,178,0.35);
+      box-shadow: 0 4px 20px rgba(8,145,178,0.3);
+      transform: translateY(-1px);
     }
 
     .btn-submit:disabled { opacity: 0.7; cursor: wait; }
-
     .btn-submit .btn-text { transition: opacity 0.15s; }
     .btn-submit .btn-loader {
       position: absolute;
@@ -376,7 +383,7 @@
       40% { opacity: 1; transform: scale(1); }
     }
 
-    /* ─── Toggle ─── */
+    /* Toggle */
     .form-toggle {
       text-align: center;
       margin-top: 2rem;
@@ -395,7 +402,7 @@
     }
     .form-toggle a:hover { color: var(--brand-dark); text-decoration: underline; }
 
-    /* ─── Page-level alerts ─── */
+    /* Alerts */
     .page-alert {
       padding: 0.85rem 1rem;
       border-radius: var(--radius);
@@ -406,7 +413,6 @@
       animation: alertIn 0.25s ease-out;
     }
     .page-alert.visible { display: block; }
-
     .page-alert.error  { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
     .page-alert.success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
     .page-alert.info   { background: var(--info-bg); color: var(--brand-dark); border-left: 3px solid var(--brand); }
@@ -418,14 +424,14 @@
 
     #register-form { display: none; }
 
+    /* Entry animations */
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(16px); }
+      from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
     .form-wrapper { animation: fadeUp 0.5s ease-out; }
-    .brand-content { animation: fadeUp 0.6s ease-out 0.1s both; }
-    .brand-features { animation: fadeUp 0.6s ease-out 0.25s both; }
+    .brand-inner { animation: fadeUp 0.6s ease-out 0.1s both; }
 
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 960px) {
@@ -433,16 +439,36 @@
       .brand-panel { display: none; }
       .form-panel { min-height: 100vh; padding: 1.5rem; }
       .form-wrapper { max-width: 480px; }
-      .mobile-brand { display: block; text-align: center; margin-bottom: 2rem; }
-      .mobile-brand .wordmark { font-family: 'Playfair Display', Georgia, serif; font-size: 1.75rem; font-weight: 700; color: var(--text-primary); letter-spacing: 2px; }
-      .mobile-brand .dot { display: inline-block; width: 6px; height: 6px; background: var(--brand); border-radius: 50%; margin-left: 1px; vertical-align: middle; }
-      .mobile-brand p { color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.35rem; }
+      .mobile-brand {
+        display: block;
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      .mobile-brand .wordmark {
+        font-family: 'Playfair Display', Georgia, serif;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        letter-spacing: 3px;
+      }
+      .mobile-brand .dot {
+        display: inline-block;
+        width: 6px; height: 6px;
+        background: var(--brand);
+        border-radius: 50%;
+        margin-left: 1px;
+        vertical-align: middle;
+      }
+      .mobile-brand p {
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        margin-top: 0.4rem;
+      }
     }
 
-    @media (min-width: 961px) { .mobile-brand { display: none; } }
     @media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
 
-    .form-panel::-webkit-scrollbar { width: 6px; }
+    .form-panel::-webkit-scrollbar { width: 5px; }
     .form-panel::-webkit-scrollbar-track { background: transparent; }
     .form-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
   </style>
@@ -451,59 +477,48 @@
 
   <div class="auth-layout">
 
-    <!-- ═══ LEFT — BRANDING ═══ -->
+    <!-- ═══ LEFT ═══ -->
     <div class="brand-panel">
-      <div class="brand-grid"></div>
+      <div class="brand-dots"></div>
 
-      <div class="brand-logo">
-        <span class="wordmark">FIDDO<span class="dot"></span></span>
-      </div>
+      <div class="brand-inner">
+        <div class="brand-logo">
+          <span class="wordmark">FIDDO</span>
+          <span class="dot"></span>
+        </div>
 
-      <div class="brand-content">
-        <h2 class="brand-headline">Fidélisez vos clients.<br><em>Simplement.</em></h2>
-        <p class="brand-description">
+        <h2 class="brand-headline">
+          Fidélisez vos clients.<br><em>Simplement.</em>
+        </h2>
+
+        <p class="brand-desc">
           La plateforme de fidélité conçue pour les restaurateurs belges.
-          Gestion complète, multi-équipe, sans engagement.
+          Gestion multi-équipe, QR code intégré, zéro engagement.
         </p>
 
-        <div class="brand-features">
-          <div class="brand-feature">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-            </div>
-            <div class="feature-text">
-              <strong>Multi-tenant</strong>
-              Chaque commerce a son propre espace isolé, ses équipes et ses clients.
-            </div>
+        <div class="brand-stats">
+          <div>
+            <div class="brand-stat-value">6<span> langues</span></div>
+            <div class="brand-stat-label">QR client</div>
           </div>
-          <div class="brand-feature">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-            </div>
-            <div class="feature-text">
-              <strong>QR Code intégré</strong>
-              Vos clients s'identifient en un scan. 6 langues supportées.
-            </div>
+          <div>
+            <div class="brand-stat-value">3<span> rôles</span></div>
+            <div class="brand-stat-label">Équipe</div>
           </div>
-          <div class="brand-feature">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
-            <div class="feature-text">
-              <strong>Sécurisé et conforme</strong>
-              Hébergement européen, RGPD, chiffrement des données sensibles.
-            </div>
+          <div>
+            <div class="brand-stat-value">100<span>%</span></div>
+            <div class="brand-stat-label">RGPD</div>
           </div>
         </div>
       </div>
 
       <div class="brand-footer">
-        <span>FIDDO V3.4</span>
+        <span>FIDDO V3.5</span>
         <span>Bruxelles, Belgique</span>
       </div>
     </div>
 
-    <!-- ═══ RIGHT — FORMS ═══ -->
+    <!-- ═══ RIGHT ═══ -->
     <div class="form-panel">
       <div class="form-wrapper">
 
@@ -602,7 +617,7 @@
 
           <div class="field">
             <label class="field-label" for="reg-reward-desc">Description de la récompense *</label>
-            <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage" value="">
+            <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage">
             <div class="field-hint">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</div>
             <div class="field-error" id="reg-reward-desc-error"></div>
           </div>
@@ -658,45 +673,44 @@
     // ═══════════════════════════════════════════════════════
 
     function showPageAlert(id, message, type) {
-      const el = document.getElementById(id);
+      var el = document.getElementById(id);
       el.className = 'page-alert visible ' + type;
       el.innerHTML = message;
       el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function clearPageAlert(id) {
-      const el = document.getElementById(id);
+      var el = document.getElementById(id);
       el.className = 'page-alert';
       el.innerHTML = '';
     }
 
     function setFieldError(inputId, message) {
-      const input = document.getElementById(inputId);
-      const error = document.getElementById(inputId + '-error');
+      var input = document.getElementById(inputId);
+      var error = document.getElementById(inputId + '-error');
       if (input) input.classList.add('has-error');
       if (error) { error.textContent = message; error.classList.add('visible'); }
     }
 
     function clearFieldError(inputId) {
-      const input = document.getElementById(inputId);
-      const error = document.getElementById(inputId + '-error');
+      var input = document.getElementById(inputId);
+      var error = document.getElementById(inputId + '-error');
       if (input) input.classList.remove('has-error');
       if (error) { error.textContent = ''; error.classList.remove('visible'); }
     }
 
     function clearAllFieldErrors(formId) {
-      document.querySelectorAll('#' + formId + ' .field-input').forEach(el => el.classList.remove('has-error'));
-      document.querySelectorAll('#' + formId + ' .field-error').forEach(el => { el.textContent = ''; el.classList.remove('visible'); });
+      document.querySelectorAll('#' + formId + ' .field-input').forEach(function(el) { el.classList.remove('has-error'); });
+      document.querySelectorAll('#' + formId + ' .field-error').forEach(function(el) { el.textContent = ''; el.classList.remove('visible'); });
     }
 
     function setLoading(btnId, loading) {
-      const btn = document.getElementById(btnId);
+      var btn = document.getElementById(btnId);
       if (loading) { btn.classList.add('loading'); btn.disabled = true; }
       else { btn.classList.remove('loading'); btn.disabled = false; }
     }
 
-    // Clear individual field error on typing
-    document.querySelectorAll('.field-input').forEach(input => {
+    document.querySelectorAll('.field-input').forEach(function(input) {
       input.addEventListener('input', function() { clearFieldError(this.id); });
     });
 
@@ -704,18 +718,9 @@
     // VALIDATORS
     // ═══════════════════════════════════════════════════════
 
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
-    }
-
-    function isValidPhone(phone) {
-      var digits = phone.replace(/[\s\-.()+]/g, '');
-      return digits.length >= 9 && digits.length <= 15;
-    }
-
-    function isValidVAT(vat) {
-      return /^BE0\d{9}$/i.test(vat.replace(/[\s.]/g, ''));
-    }
+    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()); }
+    function isValidPhone(phone) { var d = phone.replace(/[\s\-.()+]/g, ''); return d.length >= 9 && d.length <= 15; }
+    function isValidVAT(vat) { return /^BE0\d{9}$/i.test(vat.replace(/[\s.]/g, '')); }
 
     // ═══════════════════════════════════════════════════════
     // NAVIGATION
@@ -750,22 +755,16 @@
       var pfr = parseInt(document.getElementById('reg-pfr').value) || 100;
       var desc = document.getElementById('reg-reward-desc').value.trim();
       var preview = document.getElementById('reward-preview');
-
       if (!desc) { preview.style.display = 'none'; return; }
-
       var eurosNeeded = pfr / ppe;
       preview.style.display = 'block';
-      preview.innerHTML =
-        '<strong>Aperçu pour vos clients :</strong><br>' +
-        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total ' +
-        '— accumulez <strong>' + pfr + ' points</strong> ' +
-        '— <strong>' + desc + '</strong>';
+      preview.innerHTML = '<strong>Aperçu pour vos clients :</strong><br>' +
+        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total — accumulez <strong>' + pfr + ' points</strong> — <strong>' + desc + '</strong>';
     }
 
     document.getElementById('reg-ppe').addEventListener('input', updateRewardPreview);
     document.getElementById('reg-pfr').addEventListener('input', updateRewardPreview);
     document.getElementById('reg-reward-desc').addEventListener('input', updateRewardPreview);
-
 
     // ═══════════════════════════════════════════════════════
     // LOGIN
@@ -778,26 +777,13 @@
 
       var email = document.getElementById('login-email').value.trim();
       var password = document.getElementById('login-password').value;
-
-      // Client-side checks
       var hasError = false;
 
-      if (!email) {
-        setFieldError('login-email', 'Veuillez saisir votre adresse email.');
-        hasError = true;
-      } else if (!isValidEmail(email)) {
-        setFieldError('login-email', 'Cette adresse email ne semble pas valide.');
-        hasError = true;
-      }
-
-      if (!password) {
-        setFieldError('login-password', 'Veuillez saisir votre mot de passe.');
-        hasError = true;
-      }
-
+      if (!email) { setFieldError('login-email', 'Veuillez saisir votre adresse email.'); hasError = true; }
+      else if (!isValidEmail(email)) { setFieldError('login-email', 'Cette adresse email ne semble pas valide.'); hasError = true; }
+      if (!password) { setFieldError('login-password', 'Veuillez saisir votre mot de passe.'); hasError = true; }
       if (hasError) return;
 
-      // Call API
       setLoading('login-btn', true);
 
       try {
@@ -809,37 +795,25 @@
         }, 400);
       } catch (err) {
         setLoading('login-btn', false);
-
         var msg = err.message || '';
         var displayMsg;
 
-        if (msg.indexOf('incorrect') !== -1) {
-          displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
-        } else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) {
-          displayMsg = msg;
-        } else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) {
-          displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
-        } else if (msg.indexOf('suspendu') !== -1) {
-          displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
-        } else if (msg.indexOf('refusée') !== -1) {
-          displayMsg = msg;
-        } else if (msg.indexOf('résilié') !== -1) {
-          displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
-        } else if (msg.indexOf('pas actif') !== -1) {
-          displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
-        } else if (msg.indexOf('désactivé') !== -1) {
-          displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
-        } else {
-          displayMsg = 'Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants.';
-        }
+        if (msg.indexOf('incorrect') !== -1) displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
+        else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) displayMsg = msg;
+        else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
+        else if (msg.indexOf('suspendu') !== -1) displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
+        else if (msg.indexOf('refusée') !== -1) displayMsg = msg;
+        else if (msg.indexOf('résilié') !== -1) displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
+        else if (msg.indexOf('pas actif') !== -1) displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
+        else if (msg.indexOf('désactivé') !== -1) displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
+        else displayMsg = 'Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants.';
 
         showPageAlert('login-alert', displayMsg, 'error');
       }
     });
 
-
     // ═══════════════════════════════════════════════════════
-    // REGISTER — full validation
+    // REGISTER
     // ═══════════════════════════════════════════════════════
 
     document.getElementById('register-form').addEventListener('submit', async function(e) {
@@ -864,98 +838,60 @@
 
       var errorCount = 0;
 
-      // Commerce
       if (!f.business) { setFieldError('reg-business', 'Le nom de votre commerce est requis.'); errorCount++; }
-
       if (!f.address) { setFieldError('reg-address', 'L\'adresse est requise.'); errorCount++; }
-      else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète. Indiquez la rue, le numéro et la ville.'); errorCount++; }
-
+      else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète.'); errorCount++; }
       if (!f.vat) { setFieldError('reg-vat', 'Le numéro de TVA est requis.'); errorCount++; }
-      else if (!isValidVAT(f.vat)) { setFieldError('reg-vat', 'Format attendu : BE0 suivi de 9 chiffres (ex : BE0123456789).'); errorCount++; }
-
+      else if (!isValidVAT(f.vat)) { setFieldError('reg-vat', 'Format attendu : BE0 suivi de 9 chiffres.'); errorCount++; }
       if (!f.phone) { setFieldError('reg-phone', 'Le téléphone du commerce est requis.'); errorCount++; }
-      else if (!isValidPhone(f.phone)) { setFieldError('reg-phone', 'Numéro invalide. Exemple : +32 2 123 45 67'); errorCount++; }
-
+      else if (!isValidPhone(f.phone)) { setFieldError('reg-phone', 'Numéro invalide.'); errorCount++; }
       if (!f.bizEmail) { setFieldError('reg-biz-email', 'L\'email du commerce est requis.'); errorCount++; }
-      else if (!isValidEmail(f.bizEmail)) { setFieldError('reg-biz-email', 'Cette adresse email ne semble pas valide.'); errorCount++; }
-
-      // Récompense
-      if (!f.rewardDesc) { setFieldError('reg-reward-desc', 'Décrivez la récompense que recevront vos clients fidèles.'); errorCount++; }
-
-      // Responsable
+      else if (!isValidEmail(f.bizEmail)) { setFieldError('reg-biz-email', 'Email invalide.'); errorCount++; }
+      if (!f.rewardDesc) { setFieldError('reg-reward-desc', 'Décrivez la récompense que recevront vos clients.'); errorCount++; }
       if (!f.ownerName) { setFieldError('reg-owner-name', 'Votre nom complet est requis.'); errorCount++; }
-
-      if (!f.ownerPhone) { setFieldError('reg-owner-phone', 'Votre numéro personnel est requis.'); errorCount++; }
-      else if (!isValidPhone(f.ownerPhone)) { setFieldError('reg-owner-phone', 'Numéro invalide. Exemple : +32 497 12 34 56'); errorCount++; }
-
+      if (!f.ownerPhone) { setFieldError('reg-owner-phone', 'Votre numéro est requis.'); errorCount++; }
+      else if (!isValidPhone(f.ownerPhone)) { setFieldError('reg-owner-phone', 'Numéro invalide.'); errorCount++; }
       if (!f.ownerEmail) { setFieldError('reg-owner-email', 'Votre email de connexion est requis.'); errorCount++; }
-      else if (!isValidEmail(f.ownerEmail)) { setFieldError('reg-owner-email', 'Cette adresse email ne semble pas valide.'); errorCount++; }
-
+      else if (!isValidEmail(f.ownerEmail)) { setFieldError('reg-owner-email', 'Email invalide.'); errorCount++; }
       if (!f.password) { setFieldError('reg-password', 'Choisissez un mot de passe.'); errorCount++; }
       else if (f.password.length < 6) { setFieldError('reg-password', 'Minimum 6 caractères.'); errorCount++; }
 
       if (errorCount > 0) {
-        showPageAlert('register-alert',
-          errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger. Vérifiez les indications en rouge ci-dessous.',
-          'error'
-        );
+        showPageAlert('register-alert', errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger.', 'error');
         var firstErr = document.querySelector('#register-form .field-input.has-error');
         if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
 
-      // Call API
       setLoading('register-btn', true);
 
       try {
         await API.auth.register({
-          businessName: f.business,
-          address: f.address,
-          vatNumber: f.vat,
-          email: f.bizEmail,
-          phone: f.phone,
-          ownerPhone: f.ownerPhone,
-          ownerEmail: f.ownerEmail,
-          ownerPassword: f.password,
-          ownerName: f.ownerName,
-          pointsPerEuro: parseFloat(f.ppe) || 1,
-          pointsForReward: parseInt(f.pfr) || 100,
+          businessName: f.business, address: f.address, vatNumber: f.vat,
+          email: f.bizEmail, phone: f.phone, ownerPhone: f.ownerPhone,
+          ownerEmail: f.ownerEmail, ownerPassword: f.password, ownerName: f.ownerName,
+          pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || 100,
           rewardDescription: f.rewardDesc,
         });
 
         showPageAlert('register-alert',
           '<strong>Demande envoyée avec succès.</strong><br>' +
-          'Votre inscription est en cours d\'examen par notre équipe. ' +
-          'Vous recevrez un email de confirmation à l\'adresse <strong>' + f.ownerEmail + '</strong> dès que votre commerce sera validé.',
+          'Vous recevrez un email de confirmation à <strong>' + f.ownerEmail + '</strong> dès que votre commerce sera validé.',
           'success'
         );
-
-        // Disable form after success
         document.querySelectorAll('#register-form .field-input').forEach(function(el) { el.disabled = true; });
         document.getElementById('register-btn').style.display = 'none';
-
       } catch (err) {
         setLoading('register-btn', false);
-
         var msg = err.message || '';
         var displayMsg;
 
-        if (msg.indexOf('TVA') !== -1 && msg.indexOf('déjà') !== -1) {
-          displayMsg = 'Ce numéro de TVA est déjà enregistré. Si c\'est votre commerce, connectez-vous avec votre compte existant.';
-        } else if (msg.indexOf('email') !== -1 && msg.indexOf('déjà') !== -1) {
-          displayMsg = 'Cet email est déjà associé à un compte existant. Essayez de vous connecter, ou utilisez un autre email.';
-        } else if (msg.indexOf('TVA invalide') !== -1) {
-          displayMsg = 'Le format du numéro de TVA est incorrect. Il doit commencer par BE0 suivi de 9 chiffres.';
-          setFieldError('reg-vat', 'Format incorrect.');
-        } else if (msg.indexOf('Email') !== -1 && msg.indexOf('invalide') !== -1) {
-          displayMsg = 'L\'adresse email du responsable n\'est pas valide. Vérifiez-la et réessayez.';
-          setFieldError('reg-owner-email', 'Email invalide.');
-        } else if (msg.indexOf('mot de passe') !== -1) {
-          displayMsg = 'Le mot de passe est trop court. Il doit contenir au minimum 6 caractères.';
-          setFieldError('reg-password', 'Trop court.');
-        } else {
-          displayMsg = 'Une erreur est survenue lors de l\'inscription. Vérifiez vos informations et réessayez.';
-        }
+        if (msg.indexOf('TVA') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Ce numéro de TVA est déjà enregistré.';
+        else if (msg.indexOf('email') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Cet email est déjà associé à un compte existant.';
+        else if (msg.indexOf('TVA invalide') !== -1) { displayMsg = 'Format de TVA incorrect.'; setFieldError('reg-vat', 'Format incorrect.'); }
+        else if (msg.indexOf('Email') !== -1 && msg.indexOf('invalide') !== -1) { displayMsg = 'Email du responsable invalide.'; setFieldError('reg-owner-email', 'Email invalide.'); }
+        else if (msg.indexOf('mot de passe') !== -1) { displayMsg = 'Mot de passe trop court.'; setFieldError('reg-password', 'Trop court.'); }
+        else displayMsg = 'Erreur lors de l\'inscription. Vérifiez vos informations.';
 
         showPageAlert('register-alert', displayMsg, 'error');
       }
