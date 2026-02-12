@@ -6,18 +6,41 @@
   <title>Équipe — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <style>
-    .staff-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-    .staff-actions .btn { padding: 4px 10px; font-size: 0.75rem; }
+    /* ── Staff-specific overrides (minimal) ── */
     .role-select {
-      padding: 4px 8px; border: 2px solid var(--border); border-radius: 4px;
-      font-size: 0.8rem; font-weight: 600; cursor: pointer; background: white;
+      padding: 4px 8px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+      cursor: pointer;
+      background: white;
+      font-family: inherit;
+      transition: border-color 0.2s;
     }
     .role-select:focus { border-color: var(--primary); outline: none; }
-    .owner-tag {
-      display: inline-block; padding: 3px 10px; border-radius: 20px;
-      font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.5px; background: #FEF3C7; color: #92400E;
+    .role-select:hover { border-color: #bbb; }
+
+    .action-btns { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    .action-btn {
+      padding: 4px 10px;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      background: white;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--text-light);
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
+    .action-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+    .action-btn.danger:hover { border-color: var(--danger); color: var(--danger-dark); }
+    .action-btn svg { width: 13px; height: 13px; }
   </style>
 </head>
 <body>
@@ -33,14 +56,31 @@
     </div>
 
     <div class="alert alert-info">
-      ℹ️ Les <strong>managers</strong> peuvent créditer, voir les clients et l'historique.
+      ℹ️ Les membres de votre équipe peuvent créditer des points aux clients.
+      Les <strong>managers</strong> peuvent aussi voir les clients et l'historique.
       Les <strong>caissiers</strong> ont un accès limité (crédit uniquement, max 200€).
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" id="staff-stats" style="display: none;">
+      <div class="stat-card">
+        <div class="stat-value" id="st-total">0</div>
+        <div class="stat-label">Membres</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="st-active">0</div>
+        <div class="stat-label">Actifs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="st-inactive">0</div>
+        <div class="stat-label">Inactifs</div>
+      </div>
     </div>
 
     <div id="staff-list"></div>
   </div>
 
-  <!-- ═══ Add Staff Modal ═══ -->
+  <!-- Add Staff Modal -->
   <div id="add-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -57,18 +97,17 @@
           <div class="form-group">
             <label class="form-label">Email de connexion *</label>
             <input type="email" id="add-email" class="form-control" placeholder="marie@email.com" required>
-            <small class="form-help">Un seul compte par email, même entre différents commerces</small>
+            <small class="form-help">Un seul compte par email (même entre différents commerces)</small>
           </div>
           <div class="form-group">
-            <label class="form-label">Mot de passe *</label>
-            <input type="text" id="add-password" class="form-control" placeholder="Minimum 6 caractères" required minlength="6">
-            <small class="form-help">Communiquez-le au membre, il pourra se connecter immédiatement</small>
+            <label class="form-label">Mot de passe temporaire *</label>
+            <input type="text" id="add-password" class="form-control" placeholder="Minimum 6 caractères" minlength="6" required>
           </div>
           <div class="form-group">
             <label class="form-label">Rôle *</label>
             <select id="add-role" class="form-control">
-              <option value="cashier">Caissier — Créditer uniquement (max 200€)</option>
-              <option value="manager">Manager — Créditer + voir clients + historique</option>
+              <option value="cashier">Caissier — Créditer uniquement</option>
+              <option value="manager">Manager — Créditer + voir clients</option>
             </select>
           </div>
           <button type="submit" class="btn btn-primary btn-block" id="add-btn">Ajouter le membre</button>
@@ -77,7 +116,7 @@
     </div>
   </div>
 
-  <!-- ═══ Reset Password Modal ═══ -->
+  <!-- Password Reset Modal -->
   <div id="pw-modal" class="modal">
     <div class="modal-content">
       <div class="modal-header">
@@ -88,10 +127,10 @@
         <div id="pw-alert"></div>
         <p class="text-muted text-sm mb-2" id="pw-target"></p>
         <div class="form-group">
-          <label class="form-label">Nouveau mot de passe *</label>
+          <label class="form-label">Nouveau mot de passe</label>
           <input type="text" id="pw-value" class="form-control" placeholder="Minimum 6 caractères" minlength="6">
         </div>
-        <button class="btn btn-primary btn-block" onclick="submitPasswordReset()">Confirmer</button>
+        <button class="btn btn-primary btn-block" onclick="submitPasswordReset()">Réinitialiser</button>
       </div>
     </div>
   </div>
@@ -110,21 +149,34 @@
         UI.showLoading('staff-list');
         const data = await API.staff.list();
         staffMembers = data.staff;
+        updateStats();
         renderStaff();
       } catch (err) {
         UI.showError('staff-list', err.message);
       }
     }
 
+    function updateStats() {
+      const total = staffMembers.length;
+      const active = staffMembers.filter(m => m.is_active).length;
+      document.getElementById('st-total').textContent = total;
+      document.getElementById('st-active').textContent = active;
+      document.getElementById('st-inactive').textContent = total - active;
+      document.getElementById('staff-stats').style.display = 'grid';
+    }
+
     function renderStaff() {
       const container = document.getElementById('staff-list');
       if (staffMembers.length === 0) {
-        UI.showEmptyState('staff-list', '👥', 'Aucun membre');
+        UI.showEmptyState('staff-list', '👥', 'Aucun membre dans l\'équipe');
         return;
       }
 
       let html = `<div class="card" style="padding: 0; overflow: hidden;">
-        <table class="table" style="margin: 0; box-shadow: none;">
+        <div class="card-header" style="padding: 1rem 1.25rem; margin-bottom: 0;">
+          Membres (${staffMembers.length})
+        </div>
+        <table class="table" style="box-shadow: none; border-radius: 0;">
           <thead><tr>
             <th>Nom</th><th>Email</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th>Actions</th>
           </tr></thead><tbody>`;
@@ -136,7 +188,7 @@
         // Role cell
         let roleCell;
         if (isOwner) {
-          roleCell = `<span class="owner-tag">👑 Propriétaire</span>`;
+          roleCell = '<span class="badge badge-warning">Propriétaire</span>';
         } else {
           roleCell = `<select class="role-select" onchange="changeRole(${m.id}, this.value)" ${isSelf ? 'disabled' : ''}>
             <option value="manager" ${m.role === 'manager' ? 'selected' : ''}>Manager</option>
@@ -150,25 +202,36 @@
           : '<span class="badge badge-danger">Inactif</span>';
 
         // Last login
-        const lastLogin = m.last_login ? Format.timeSince(m.last_login) : 'Jamais';
+        const lastLogin = m.last_login
+          ? Format.timeSince(m.last_login)
+          : '<span class="text-muted">Jamais</span>';
 
         // Actions
-        let actions = '<div class="staff-actions">';
-        if (!isSelf && !isOwner) {
-          actions += m.is_active
-            ? `<button class="btn btn-outline btn-sm" onclick="toggleMember(${m.id}, '${m.display_name}')" title="Désactiver">⏸️</button>`
-            : `<button class="btn btn-success btn-sm" onclick="toggleMember(${m.id}, '${m.display_name}')" title="Activer">▶️</button>`;
-          actions += `<button class="btn btn-outline btn-sm" onclick="showPwModal(${m.id}, '${m.display_name}')" title="Reset mot de passe">🔑</button>`;
-          actions += `<button class="btn btn-danger btn-sm" onclick="deleteMember(${m.id}, '${m.display_name}')" title="Supprimer">🗑️</button>`;
-        }
+        let actions = '<div class="action-btns">';
         if (isSelf) {
-          actions += '<span class="text-muted text-sm">C\'est vous</span>';
+          actions += '<span class="badge badge-info">Vous</span>';
+        } else if (!isOwner) {
+          if (m.is_active) {
+            actions += `<button class="action-btn" onclick="toggleMember(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Désactiver">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </button>`;
+          } else {
+            actions += `<button class="action-btn" onclick="toggleMember(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Activer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+            </button>`;
+          }
+          actions += `<button class="action-btn" onclick="showPwModal(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Mot de passe">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          </button>`;
+          actions += `<button class="action-btn danger" onclick="deleteMember(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Supprimer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"/></svg>
+          </button>`;
         }
         actions += '</div>';
 
         html += `<tr>
           <td><strong>${m.display_name}</strong></td>
-          <td>${m.email}</td>
+          <td><span class="text-muted">${m.email}</span></td>
           <td>${roleCell}</td>
           <td>${statusBadge}</td>
           <td class="text-muted">${lastLogin}</td>
@@ -218,7 +281,7 @@
         loadStaff();
       } catch (err) {
         alert('Erreur : ' + err.message);
-        loadStaff(); // Reset select to actual value
+        loadStaff();
       }
     }
 
@@ -227,7 +290,7 @@
       const member = staffMembers.find(m => m.id === id);
       if (!member) return;
       const action = member.is_active ? 'désactiver' : 'activer';
-      if (!confirm(`${member.is_active ? '⏸️' : '▶️'} ${action} ${name} ?`)) return;
+      if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name} ?`)) return;
 
       try {
         await API.staff.toggle(id);
@@ -265,7 +328,7 @@
 
     // ─── Delete ───
     async function deleteMember(id, name) {
-      if (!confirm(`🗑️ Supprimer définitivement ${name} ? Cette action est irréversible.`)) return;
+      if (!confirm(`Supprimer définitivement ${name} ? Cette action est irréversible.`)) return;
       try {
         await API.staff.delete(id);
         loadStaff();
