@@ -1,16 +1,15 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO V3.3 — Stylesheet
-   Theme system + Preferences
+   FIDDO V3.5 — Stylesheet
+   Palette: Teal #0891B2 / Dark #1F2937
    ═══════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ─── Default Theme: Teal ───────────────────────────── */
-
-:root, [data-theme="teal"] {
+:root {
   --primary: #0891B2;
   --primary-dark: #0E7490;
-  --primary-light: #CFFAFE;
   --secondary: #1F2937;
   --success: #10B981;
   --danger: #EF4444;
@@ -20,67 +19,6 @@
   --border: #ddd;
   --text: #333;
   --text-light: #666;
-  --gradient: linear-gradient(135deg, #0891B2, #0E7490);
-}
-
-/* ─── Theme: Navy ───────────────────────────────────── */
-
-[data-theme="navy"] {
-  --primary: #1E40AF;
-  --primary-dark: #1E3A8A;
-  --primary-light: #DBEAFE;
-  --secondary: #1E293B;
-  --gradient: linear-gradient(135deg, #1E40AF, #1E3A8A);
-}
-
-/* ─── Theme: Violet ─────────────────────────────────── */
-
-[data-theme="violet"] {
-  --primary: #7C3AED;
-  --primary-dark: #6D28D9;
-  --primary-light: #EDE9FE;
-  --secondary: #1E1B4B;
-  --gradient: linear-gradient(135deg, #7C3AED, #6D28D9);
-}
-
-/* ─── Theme: Forest ─────────────────────────────────── */
-
-[data-theme="forest"] {
-  --primary: #059669;
-  --primary-dark: #047857;
-  --primary-light: #D1FAE5;
-  --secondary: #1A2E1A;
-  --gradient: linear-gradient(135deg, #059669, #047857);
-}
-
-/* ─── Theme: Brick ──────────────────────────────────── */
-
-[data-theme="brick"] {
-  --primary: #DC2626;
-  --primary-dark: #B91C1C;
-  --primary-light: #FEE2E2;
-  --secondary: #2D1B1B;
-  --gradient: linear-gradient(135deg, #DC2626, #B91C1C);
-}
-
-/* ─── Theme: Amber ──────────────────────────────────── */
-
-[data-theme="amber"] {
-  --primary: #D97706;
-  --primary-dark: #B45309;
-  --primary-light: #FEF3C7;
-  --secondary: #2D2415;
-  --gradient: linear-gradient(135deg, #D97706, #B45309);
-}
-
-/* ─── Theme: Slate ──────────────────────────────────── */
-
-[data-theme="slate"] {
-  --primary: #475569;
-  --primary-dark: #334155;
-  --primary-light: #F1F5F9;
-  --secondary: #0F172A;
-  --gradient: linear-gradient(135deg, #475569, #334155);
 }
 
 body {
@@ -98,71 +36,134 @@ body {
   padding: 20px;
 }
 
-/* ─── Navbar ────────────────────────────────────────── */
+/* ─── Navbar (Concept B — Pill Navigation) ──────────── */
 
 .navbar {
-  background: var(--secondary);
-  color: white;
-  padding: 0.75rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: #111827;
+  padding: 0.5rem 1.5rem;
   position: sticky;
   top: 0;
   z-index: 100;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+
+.navbar-inner {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: 44px;
 }
 
 .navbar-brand {
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: var(--primary);
-  text-decoration: none;
-  white-space: nowrap;
   display: flex;
   align-items: center;
-}
-.navbar-brand span {
-  color: white;
-  font-weight: 400;
-  font-size: 0.9rem;
-  line-height: 1;
-  margin-left: 0.75rem;
-  padding-left: 0.75rem;
-  border-left: 1px solid rgba(255,255,255,0.3);
+  gap: 0.6rem;
+  text-decoration: none;
+  flex-shrink: 0;
 }
 
+.brand-mark {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+.brand-mark .brand-dot { color: var(--primary); }
+
+.brand-sep {
+  width: 4px;
+  height: 4px;
+  background: rgba(8,145,178,0.5);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.brand-merchant {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.4);
+  font-weight: 400;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Pill links */
 .navbar-menu {
   display: flex;
-  gap: 1rem;
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
   align-items: center;
-  flex-wrap: wrap;
 }
 
 .navbar-link {
-  color: rgba(255,255,255,0.8);
+  color: rgba(255,255,255,0.45);
   text-decoration: none;
+  font-size: 0.78rem;
   font-weight: 500;
-  font-size: 0.95rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 5px;
+  padding: 0.3rem 0.65rem;
+  border-radius: 6px;
   transition: all 0.2s;
+  white-space: nowrap;
 }
-.navbar-link:hover { color: white; background: rgba(255,255,255,0.1); }
-.navbar-link.active { color: var(--primary); background: rgba(8,145,178,0.15); }
+.navbar-link:hover {
+  color: rgba(255,255,255,0.85);
+  background: rgba(255,255,255,0.04);
+}
+.navbar-link.active {
+  background: rgba(8,145,178,0.18);
+  color: #22d3ee;
+}
 
+.navbar-badge {
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.5rem;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 6px;
+  margin-left: 4px;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+/* Right side: user */
 .navbar-user {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-left: 1rem;
-  padding-left: 1rem;
-  border-left: 1px solid rgba(255,255,255,0.2);
+  gap: 0.6rem;
+  flex-shrink: 0;
 }
 
-.navbar-role {
-  font-size: 0.8rem;
-  color: rgba(255,255,255,0.6);
+.navbar-user-name {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+}
+
+.navbar-avatar {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #0891B2, #06b6d4);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.navbar-avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(8,145,178,0.35);
 }
 
 /* ─── Buttons ───────────────────────────────────────── */
@@ -268,10 +269,9 @@ select.form-control { appearance: auto; }
 
 /* ─── Table ─────────────────────────────────────────── */
 
-.table { width: 100%; border-collapse: collapse; border-spacing: 0; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
-.table thead tr { background: var(--secondary); }
-.table th { padding: 0.75rem 1rem; text-align: left; color: white; background: var(--secondary); border: none; font-weight: 600; }
-.table td { padding: 0.75rem 1rem; text-align: left; }
+.table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+.table thead { background: var(--secondary); color: white; }
+.table th, .table td { padding: 0.75rem 1rem; text-align: left; }
 .table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.2s; }
 .table tbody tr:hover { background: var(--light); }
 .table tbody tr:last-child { border-bottom: none; }
@@ -414,7 +414,7 @@ select.form-control { appearance: auto; }
 /* ─── Credit Preview ────────────────────────────────── */
 
 .credit-preview {
-  background: var(--gradient);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: white;
   padding: 2rem;
   border-radius: 10px;
@@ -430,7 +430,7 @@ select.form-control { appearance: auto; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--gradient);
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
 }
 .auth-box {
   background: white;
@@ -488,10 +488,29 @@ select.form-control { appearance: auto; }
 /* ─── Responsive ────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .navbar { flex-direction: column; gap: 0.5rem; padding: 0.5rem 1rem; }
-  .navbar-menu { width: 100%; justify-content: center; flex-wrap: wrap; gap: 0.5rem; }
-  .navbar-user { margin-left: 0; padding-left: 0; border-left: none; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); width: 100%; justify-content: center; }
-  .navbar-link { padding: 0.4rem 0.6rem; font-size: 0.85rem; }
+  .navbar { padding: 0.4rem 0.75rem; }
+  .navbar-inner {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 0.4rem;
+    justify-content: center;
+  }
+  .navbar-brand { justify-content: center; }
+  .brand-merchant { max-width: 110px; font-size: 0.72rem; }
+  .navbar-menu {
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1px;
+    padding: 2px;
+  }
+  .navbar-link { padding: 0.25rem 0.5rem; font-size: 0.72rem; }
+  .navbar-user {
+    width: 100%;
+    justify-content: center;
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+  }
 
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
@@ -522,127 +541,3 @@ select.form-control { appearance: auto; }
 .flex-between { display: flex; justify-content: space-between; align-items: center; }
 .gap-1 { gap: 0.5rem; }
 .gap-2 { gap: 1rem; }
-
-/* ─── Theme Picker ──────────────────────────────────── */
-
-.theme-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 1rem;
-}
-
-.theme-card {
-  border: 3px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  text-align: center;
-  background: white;
-}
-.theme-card:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-.theme-card.active { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary); }
-
-.theme-swatch {
-  width: 100%;
-  height: 48px;
-  border-radius: 8px;
-  margin-bottom: 0.5rem;
-}
-.theme-name { font-weight: 600; font-size: 0.85rem; }
-
-/* ─── Preferences Sections ──────────────────────────── */
-
-.pref-section {
-  background: white;
-  border-radius: 12px;
-  padding: 1.75rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  margin-bottom: 1.5rem;
-}
-.pref-section-title {
-  font-size: 1.15rem;
-  font-weight: 700;
-  margin-bottom: 1.25rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-/* ─── Toggle Switch ─────────────────────────────────── */
-
-.toggle-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 0;
-  border-bottom: 1px solid var(--border);
-}
-.toggle-row:last-child { border-bottom: none; }
-.toggle-label { font-weight: 500; }
-.toggle-desc { font-size: 0.8rem; color: var(--text-light); margin-top: 0.15rem; }
-
-.toggle-switch {
-  position: relative;
-  width: 48px;
-  height: 26px;
-  flex-shrink: 0;
-}
-.toggle-switch input { opacity: 0; width: 0; height: 0; }
-.toggle-slider {
-  position: absolute;
-  cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: #ccc;
-  transition: 0.3s;
-  border-radius: 26px;
-}
-.toggle-slider:before {
-  content: '';
-  position: absolute;
-  height: 20px; width: 20px;
-  left: 3px; bottom: 3px;
-  background: white;
-  transition: 0.3s;
-  border-radius: 50%;
-}
-.toggle-switch input:checked + .toggle-slider { background: var(--primary); }
-.toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
-
-/* ─── Backup Zone ───────────────────────────────────── */
-
-.backup-zone {
-  border: 2px dashed var(--border);
-  border-radius: 12px;
-  padding: 2rem;
-  text-align: center;
-  transition: all 0.2s;
-  cursor: pointer;
-}
-.backup-zone:hover { border-color: var(--primary); background: var(--primary-light); }
-.backup-zone.dragover { border-color: var(--primary); background: var(--primary-light); }
-.backup-zone-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-
-/* ─── Backup Preview ────────────────────────────────── */
-
-.backup-preview {
-  background: var(--light);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 1.25rem;
-  margin-top: 1rem;
-}
-.backup-preview-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.75rem;
-  margin-top: 0.75rem;
-}
-.backup-preview-item {
-  text-align: center;
-  padding: 0.5rem;
-  background: white;
-  border-radius: 8px;
-}
-.backup-preview-value { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
-.backup-preview-label { font-size: 0.75rem; color: var(--text-light); }
