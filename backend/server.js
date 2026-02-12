@@ -15,9 +15,9 @@ const PORT = process.env.PORT || 3000;
 // ═══════════════════════════════════════════════════════
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '10mb' }));          // ← V3.5: raised from default for PDF upload
+app.use(express.json({ limit: '10mb' }));          // raised for PDF upload
 app.use(cookieParser());
-app.use(requestIdMiddleware); // Attach unique request ID to every request
+app.use(requestIdMiddleware);
 
 // Static files
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -26,7 +26,7 @@ app.use(express.static(path.join(__dirname, '../frontend')));
 // INIT ADDITIONAL TABLES (V3.5)
 // ═══════════════════════════════════════════════════════
 
-require('./database-messages');                      // ← V3.5: messages & invoices tables
+require('./database-messages');                      // messages & invoices tables
 
 // ═══════════════════════════════════════════════════════
 // API ROUTES
@@ -41,7 +41,7 @@ app.use('/api/clients', require('./routes/clients'));
 // QR code self-identification
 app.use('/api/qr', require('./routes/qr'));
 
-// Merchant preferences (theme, password, merchant-info, backup)
+// Merchant preferences (theme, password, merchant-info, backup)   ← FIX thème
 app.use('/api/preferences', require('./routes/preferences'));
 
 // Announcements (merchant-facing)
@@ -50,7 +50,7 @@ app.use('/api/announcements', require('./routes/announcements'));
 // Dashboard (stats + activity feed)
 app.use('/api/dashboard', require('./routes/dashboard'));
 
-// Messages (merchant-side: read messages, download invoices)  ← V3.5
+// Messages (merchant-side: read messages, download invoices)      ← FIX messages
 app.use('/api/messages', require('./routes/messages'));
 
 // Super admin
@@ -58,7 +58,7 @@ app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
 app.use('/api/admin/backups', require('./routes/admin/backups'));
 app.use('/api/admin/announcements', require('./routes/admin/announcements'));
-app.use('/api/admin/messages', require('./routes/admin/messages'));  // ← V3.5
+app.use('/api/admin/messages', require('./routes/admin/messages'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -76,7 +76,7 @@ app.get('/clients',     (req, res) => res.sendFile(path.join(__dirname, '../fron
 app.get('/credit',      (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
 app.get('/staff',       (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
 app.get('/preferences', (req, res) => res.sendFile(path.join(__dirname, '../frontend/preferences.html')));
-app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/messages.html')));  // ← V3.5
+app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/messages.html')));
 
 // QR client-facing form
 app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
@@ -84,7 +84,7 @@ app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../fron
 // Super admin pages
 app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html')));
-app.get('/admin/messages',  (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/messages.html')));  // ← V3.5
+app.get('/admin/messages',  (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/messages.html')));
 
 // Email validation
 app.get('/validate', (req, res) => {
