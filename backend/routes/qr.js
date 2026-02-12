@@ -352,6 +352,86 @@ router.post('/client-auth', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// POST /api/qr/register — PUBLIC: new client first visit (no PIN)
+// Adds to pending queue so staff can see them + credit + assign PIN
+// ═══════════════════════════════════════════════════════
+
+router.post('/register', (req, res) => {
+  try {
+    const { qrToken, email, phone, name } = req.body;
+
+    // Validate merchant
+    if (!qrToken) return res.status(400).json({ error: 'Token QR requis' });
+    const merchant = merchantQueries.findByQrToken.get(qrToken);
+    if (!merchant || merchant.status !== 'active') {
+      return res.status(404).json({ error: 'Commerce non trouvé' });
+    }
+
+    // Validate input
+    if (!email && !phone) {
+      return res.status(400).json({ error: 'Email ou téléphone requis' });
+    }
+
+    const emailLower = normalizeEmail(email);
+    const phoneE164 = normalizePhone(phone);
+
+    // Check if already exists with a PIN → should use login instead
+    const existing = findEndUser(emailLower, phoneE164);
+    if (existing && existing.pin_hash) {
+      return res.status(409).json({ error: 'Ce compte existe déjà. Utilisez votre code PIN pour vous connecter.' });
+    }
+
+    // Simple rate limit: max 10 registrations per IP per hour
+    const ip = getClientIP(req);
+    const regKey = 'reg:' + ip;
+    const regData = pinAttempts.get(regKey) || { count: 0, lastAttempt: 0 };
+    if (regData.count >= 10 && Date.now() - regData.lastAttempt < 3600000) {
+      return res.status(429).json({ error: 'Trop d\'inscriptions. Réessayez plus tard.' });
+    }
+    regData.count++;
+    regData.lastAttempt = Date.now();
+    pinAttempts.set(regKey, regData);
+
+    // Add to pending identifications queue
+    const identId = crypto.randomBytes(8).toString('hex');
+
+    if (!pendingIdents.has(merchant.id)) {
+      pendingIdents.set(merchant.id, new Map());
+    }
+
+    const merchantQueue = pendingIdents.get(merchant.id);
+
+    // Prevent duplicate from same email/phone
+    for (const [id, ident] of merchantQueue) {
+      const sameEmail = emailLower && ident.emailLower === emailLower;
+      const samePhone = phoneE164 && ident.phoneE164 === phoneE164;
+      if (sameEmail || samePhone) {
+        merchantQueue.delete(id);
+      }
+    }
+
+    merchantQueue.set(identId, {
+      endUserId: existing?.id || null,
+      name: name || null,
+      email: email || null,
+      phone: phone || null,
+      emailLower,
+      phoneE164,
+      pointsBalance: 0,
+      visitCount: 0,
+      isNew: true,
+      createdAt: Date.now(),
+    });
+
+    res.json({ ok: true, identId });
+  } catch (error) {
+    console.error('Register error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // POST /api/qr/identify — Client says "I'm here" (client JWT)
 // Pushes an identification to the merchant's pending queue
 // ═══════════════════════════════════════════════════════
