@@ -19,6 +19,7 @@
   --border: #ddd;
   --text: #333;
   --text-light: #666;
+  --gradient: linear-gradient(135deg, #0891B2, #0E7490);
 }
 
 body {
