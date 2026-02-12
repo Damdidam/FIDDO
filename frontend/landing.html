@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIDDO — Programme de fidélité pour restaurants belges</title>
+  <meta name="description" content="FIDDO digitalise la fidélité de vos clients. Simple, efficace, conçu pour les restaurateurs belges. Essai gratuit 30 jours.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,700;1,500&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --teal: #2A6B7C;
+      --teal-deep: #1B4D5A;
+      --teal-light: #E8F4F7;
+      --teal-50: #F0F8FA;
+      --peach: #E8A87C;
+      --peach-light: #FDF0E8;
+      --peach-dark: #D4926A;
+      --cream: #FBF8F4;
+      --green: #4DAA7D;
+      --green-light: #E3F5EC;
+      --dark: #1A2332;
+      --gray-800: #2D3748;
+      --gray-600: #4A5568;
+      --gray-400: #A0AEC0;
+      --gray-200: #E2E8F0;
+      --gray-50: #F7FAFC;
+      --white: #FFFFFF;
+      --radius: 12px;
+      --font-display: 'Playfair Display', Georgia, serif;
+      --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-body);
+      color: var(--dark); line-height: 1.7;
+      background: var(--white); overflow-x: hidden;
+    }
+
+    /* ═══ NAV ═══ */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: 1.1rem 2rem; transition: all 0.4s ease;
+    }
+    .nav.scrolled {
+      background: rgba(255,255,255,0.97); backdrop-filter: blur(16px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.06); padding: 0.7rem 2rem;
+    }
+    .nav-inner {
+      max-width: 1140px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo img { height: 40px; display: block; }
+    .nav.scrolled .nav-logo img { height: 34px; }
+    .nav-links { display: flex; gap: 2.5rem; align-items: center; }
+    .nav-link {
+      text-decoration: none; color: var(--gray-600);
+      font-weight: 500; font-size: 0.9rem; transition: color 0.2s;
+    }
+    .nav-link:hover { color: var(--teal); }
+    .nav-cta {
+      background: var(--teal); color: white;
+      padding: 10px 28px; border-radius: 8px;
+      text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: all 0.3s;
+    }
+    .nav-cta:hover { background: var(--teal-deep); transform: translateY(-1px); }
+    .nav-login { color: var(--teal); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+    .nav-login:hover { color: var(--teal-deep); }
+    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
+    .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--dark); margin: 5px 0; border-radius: 2px; }
+
+    /* ═══ HERO ═══ */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 7rem 2rem 5rem; background: var(--cream);
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ''; position: absolute; top: -200px; right: -150px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(232,168,124,0.12) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .hero::after {
+      content: ''; position: absolute; bottom: -100px; left: -100px;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(42,107,124,0.06) 0%, transparent 65%);
+      border-radius: 50%;
+    }
+    .hero-inner {
+      max-width: 1140px; margin: 0 auto; width: 100%;
+      display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 5rem;
+      align-items: center; position: relative; z-index: 1;
+    }
+    .hero-tag {
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      color: var(--teal); font-weight: 600; font-size: 0.85rem;
+      margin-bottom: 1.5rem; letter-spacing: 0.03em;
+    }
+    .hero-tag::before {
+      content: ''; display: inline-block;
+      width: 28px; height: 2px; background: var(--peach); border-radius: 1px;
+    }
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.6rem, 4.8vw, 3.6rem);
+      line-height: 1.18; color: var(--dark);
+      margin-bottom: 1.5rem; font-weight: 700;
+    }
+    .hero h1 em { font-style: italic; color: var(--teal); font-weight: 500; }
+    .hero-sub {
+      font-size: 1.15rem; color: var(--gray-600);
+      margin-bottom: 2.5rem; max-width: 460px; line-height: 1.85;
+    }
+    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+    .btn-main {
+      background: var(--teal); color: white;
+      padding: 16px 36px; border-radius: 10px;
+      text-decoration: none; font-weight: 700; font-size: 1rem;
+      transition: all 0.3s;
+      box-shadow: 0 4px 16px rgba(42,107,124,0.25);
+      display: inline-flex; align-items: center; gap: 0.5rem;
+      border: none; cursor: pointer;
+    }
+    .btn-main:hover { background: var(--teal-deep); transform: translateY(-2px); box-shadow: 0 8px 28px rgba(42,107,124,0.3); }
+    .btn-ghost {
+      color: var(--gray-600); text-decoration: none;
+      font-weight: 600; font-size: 0.95rem; padding: 16px 12px; transition: color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--teal); }
+    .hero-stats { display: flex; gap: 3rem; margin-top: 3.5rem; }
+    .hero-stat-value { font-family: var(--font-display); font-size: 1.5rem; color: var(--dark); font-weight: 700; }
+    .hero-stat-label { font-size: 0.8rem; color: var(--gray-400); margin-top: 0.15rem; }
+
+    /* Hero card */
+    .hero-visual { position: relative; display: flex; justify-content: center; }
+    .mock-card {
+      background: white; border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.04);
+      padding: 2rem; width: 360px; border: 1px solid rgba(0,0,0,0.04);
+    }
+    .mock-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1.25rem; padding-bottom: 1rem; border-bottom: 1px solid var(--gray-200);
+    }
+    .mock-name { font-weight: 700; font-size: 1rem; }
+    .mock-badge {
+      background: var(--green-light); color: var(--green);
+      padding: 4px 12px; border-radius: 6px;
+      font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .mock-pts {
+      background: linear-gradient(135deg, var(--teal), var(--teal-deep));
+      border-radius: 12px; color: white; text-align: center;
+      padding: 1.75rem 1rem; margin-bottom: 1.5rem;
+    }
+    .mock-pts-num { font-family: var(--font-display); font-size: 3.2rem; font-weight: 700; line-height: 1; }
+    .mock-pts-label { font-size: 0.85rem; opacity: 0.85; margin-top: 0.35rem; }
+    .mock-bar { margin-bottom: 1.25rem; }
+    .mock-bar-track { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; }
+    .mock-bar-fill {
+      height: 100%; width: 72%;
+      background: linear-gradient(90deg, var(--peach), var(--peach-dark));
+      border-radius: 4px; animation: growBar 2s ease-out 0.6s both;
+    }
+    @keyframes growBar { from { width: 0; } }
+    .mock-bar-meta { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--gray-400); margin-top: 0.4rem; }
+    .mock-tx {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.6rem 0; border-top: 1px solid var(--gray-200);
+      font-size: 0.85rem; color: var(--gray-600);
+    }
+    .mock-tx-pts { color: var(--teal); font-weight: 700; }
+    .float-pill {
+      position: absolute; background: white; border-radius: 10px;
+      padding: 0.65rem 1.1rem; box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+      font-size: 0.82rem; font-weight: 600; border: 1px solid rgba(0,0,0,0.04);
+      animation: slideIn 0.7s ease-out both; white-space: nowrap;
+    }
+    .fp1 { top: 5%; right: -16px; animation-delay: 1.2s; color: var(--green); }
+    .fp2 { bottom: 12%; left: -24px; animation-delay: 1.8s; color: var(--peach-dark); }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ═══ SECTIONS SHARED ═══ */
+    section { padding: 6rem 2rem; }
+    .si { max-width: 1040px; margin: 0 auto; }
+    .stag {
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 2.5px; color: var(--peach-dark); margin-bottom: 0.75rem; display: block;
+    }
+    .sh {
+      font-family: var(--font-display);
+      font-size: clamp(1.9rem, 3.2vw, 2.6rem);
+      color: var(--dark); margin-bottom: 0.75rem; line-height: 1.25; font-weight: 700;
+    }
+    .ss {
+      font-size: 1.05rem; color: var(--gray-600);
+      max-width: 520px; margin-bottom: 3rem; line-height: 1.8;
+    }
+
+    /* ═══ PROBLEM ═══ */
+    .problem { background: var(--white); }
+    .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .pcard {
+      padding: 2rem; border-radius: var(--radius);
+      border: 1px solid var(--gray-200); transition: all 0.3s;
+    }
+    .pcard:hover { border-color: var(--peach); box-shadow: 0 8px 30px rgba(232,168,124,0.12); transform: translateY(-3px); }
+    .picon {
+      width: 48px; height: 48px; background: var(--peach-light); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; margin-bottom: 1.25rem;
+    }
+    .ptitle { font-weight: 700; margin-bottom: 0.4rem; font-size: 1.05rem; }
+    .ptext { color: var(--gray-600); font-size: 0.9rem; line-height: 1.65; }
+
+    /* ═══ HOW ═══ */
+    .how { background: var(--cream); }
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; position: relative; }
+    .steps::before {
+      content: ''; position: absolute; top: 32px;
+      left: calc(16.66% + 24px); right: calc(16.66% + 24px);
+      height: 2px; background: var(--gray-200);
+    }
+    .step { text-align: center; position: relative; }
+    .step-n {
+      width: 52px; height: 52px; background: var(--teal); color: white;
+      border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--font-display); font-size: 1.2rem; font-weight: 700;
+      margin-bottom: 1.25rem; position: relative; z-index: 2;
+      box-shadow: 0 4px 16px rgba(42,107,124,0.2);
+    }
+    .step-t { font-weight: 700; margin-bottom: 0.4rem; font-size: 1.05rem; }
+    .step-d { color: var(--gray-600); font-size: 0.9rem; max-width: 260px; margin: 0 auto; line-height: 1.65; }
+
+    /* ═══ FEATURES ═══ */
+    .features { background: var(--white); }
+    .fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .feat {
+      padding: 1.75rem; border-radius: var(--radius);
+      background: var(--gray-50); transition: all 0.3s; border: 1px solid transparent;
+    }
+    .feat:hover { background: white; border-color: var(--gray-200); box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+    .feat-i {
+      width: 42px; height: 42px; background: var(--teal-light); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem; margin-bottom: 1rem;
+    }
+    .feat-t { font-weight: 700; margin-bottom: 0.3rem; font-size: 0.95rem; }
+    .feat-d { color: var(--gray-600); font-size: 0.85rem; line-height: 1.65; }
+
+    /* ═══ PROOF ═══ */
+    .proof { background: var(--teal-deep); color: white; text-align: center; padding: 5rem 2rem; }
+    .proof-q {
+      font-family: var(--font-display);
+      font-size: clamp(1.3rem, 2.2vw, 1.7rem);
+      max-width: 640px; margin: 0 auto 1.75rem; line-height: 1.55;
+      font-weight: 500; font-style: italic; opacity: 0.95;
+    }
+    .proof-a { opacity: 0.7; font-size: 0.95rem; }
+    .proof-a strong { opacity: 1; font-weight: 600; }
+
+    /* ═══ PRICING ═══ */
+    .pricing { background: var(--cream); }
+    .prgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; max-width: 780px; margin: 0 auto; }
+    .prcard {
+      background: white; border-radius: 16px; padding: 2.5rem;
+      position: relative; border: 2px solid transparent;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04); transition: all 0.3s;
+    }
+    .prcard:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.08); }
+    .prcard.pop { border-color: var(--teal); }
+    .prtag {
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--peach); color: white;
+      padding: 4px 18px; border-radius: 6px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .prname { font-family: var(--font-display); font-size: 1.4rem; font-weight: 700; margin-bottom: 0.35rem; }
+    .prdesc { color: var(--gray-400); font-size: 0.88rem; margin-bottom: 1.5rem; }
+    .prprice { display: flex; align-items: baseline; gap: 0.2rem; margin-bottom: 0.2rem; }
+    .pramt { font-family: var(--font-display); font-size: 2.8rem; color: var(--dark); font-weight: 700; line-height: 1; }
+    .prper { color: var(--gray-400); font-size: 0.88rem; }
+    .prnote { color: var(--gray-400); font-size: 0.78rem; margin-bottom: 1.75rem; }
+    .prlist { list-style: none; margin-bottom: 2rem; }
+    .prlist li {
+      padding: 0.5rem 0; font-size: 0.92rem; color: var(--gray-800);
+      display: flex; align-items: center; gap: 0.65rem;
+    }
+    .prlist li + li { border-top: 1px solid var(--gray-200); }
+    .chk { color: var(--green); font-size: 0.9rem; flex-shrink: 0; }
+    .prbtn {
+      display: block; width: 100%; padding: 14px; border-radius: 10px;
+      text-align: center; font-weight: 700; font-size: 0.95rem;
+      text-decoration: none; transition: all 0.3s; cursor: pointer; border: none;
+    }
+    .prbtn-f { background: var(--teal); color: white; box-shadow: 0 4px 16px rgba(42,107,124,0.2); }
+    .prbtn-f:hover { background: var(--teal-deep); transform: translateY(-1px); }
+    .prbtn-o { background: white; color: var(--teal); border: 2px solid var(--teal); }
+    .prbtn-o:hover { background: var(--teal-50); }
+
+    /* ═══ CTA ═══ */
+    .cta { text-align: center; background: white; padding: 6rem 2rem; }
+    .cta .sh { max-width: 550px; margin: 0 auto 0.75rem; }
+    .cta .ss { margin: 0 auto 2.5rem; text-align: center; }
+    .cta-trust { display: flex; justify-content: center; gap: 2rem; margin-top: 2rem; flex-wrap: wrap; }
+    .cta-trust span { color: var(--gray-400); font-size: 0.85rem; }
+
+    /* ═══ FOOTER ═══ */
+    .footer { background: var(--dark); color: rgba(255,255,255,0.5); padding: 2.5rem 2rem; }
+    .footer-in {
+      max-width: 1040px; margin: 0 auto;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+    }
+    .footer-b { font-family: var(--font-display); font-size: 1.2rem; color: rgba(255,255,255,0.8); font-weight: 700; }
+    .footer-l { display: flex; gap: 2rem; }
+    .footer-a { color: rgba(255,255,255,0.4); text-decoration: none; font-size: 0.85rem; transition: color 0.2s; }
+    .footer-a:hover { color: rgba(255,255,255,0.8); }
+    .footer-c {
+      font-size: 0.78rem; width: 100%; text-align: center;
+      margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 900px) {
+      .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 3rem; }
+      .hero-sub { margin-left: auto; margin-right: auto; }
+      .hero-actions { justify-content: center; }
+      .hero-stats { justify-content: center; }
+      .hero-visual { display: none; }
+      .pgrid, .fgrid { grid-template-columns: 1fr; }
+      .steps { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .prgrid { grid-template-columns: 1fr; max-width: 400px; }
+    }
+    @media (max-width: 640px) {
+      .nav-links { display: none; }
+      .nav-links.open {
+        display: flex; flex-direction: column;
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: white; padding: 1.5rem 2rem; gap: 1rem;
+        box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+      }
+      .nav-toggle { display: block; }
+      .hero { padding-top: 6rem; min-height: auto; }
+      section { padding: 4rem 1.25rem; }
+    }
+
+    /* ═══ REVEAL ═══ */
+    .rv { opacity: 0; transform: translateY(24px); transition: all 0.65s cubic-bezier(0.16, 1, 0.3, 1); }
+    .rv.vis { opacity: 1; transform: translateY(0); }
+    .rd1 { transition-delay: 0.1s; }
+    .rd2 { transition-delay: 0.2s; }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo"><img src="/img/logo-fiddo.png" alt="FIDDO"></a>
+      <button class="nav-toggle" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="nav-links">
+        <a href="#features" class="nav-link">Fonctionnalités</a>
+        <a href="#pricing" class="nav-link">Tarifs</a>
+        <a href="#how" class="nav-link">Comment ça marche</a>
+        <a href="/login" class="nav-login">Se connecter</a>
+        <a href="/login#register" class="nav-cta">Essai gratuit</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-inner">
+      <div>
+        <div class="hero-tag">Conçu pour les restaurateurs belges</div>
+        <h1>Vos clients reviennent.<br><em>Vous savez pourquoi.</em></h1>
+        <p class="hero-sub">FIDDO remplace les cartes tampons oubliées par un programme de fidélité digital. Vos clients cumulent des points, reçoivent leurs récompenses, et reviennent plus souvent.</p>
+        <div class="hero-actions">
+          <a href="/login#register" class="btn-main">Essai gratuit — 30 jours →</a>
+          <a href="#how" class="btn-ghost">Comment ça marche</a>
+        </div>
+        <div class="hero-stats">
+          <div><div class="hero-stat-value">30 jours</div><div class="hero-stat-label">d'essai gratuit</div></div>
+          <div><div class="hero-stat-value">2 min</div><div class="hero-stat-label">pour s'inscrire</div></div>
+          <div><div class="hero-stat-value">0 €</div><div class="hero-stat-label">de commission</div></div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="mock-card">
+          <div class="mock-header"><span class="mock-name">Sophie M.</span><span class="mock-badge">Fidèle</span></div>
+          <div class="mock-pts"><div class="mock-pts-num">72</div><div class="mock-pts-label">points cumulés</div></div>
+          <div class="mock-bar">
+            <div class="mock-bar-track"><div class="mock-bar-fill"></div></div>
+            <div class="mock-bar-meta"><span>72 / 100 points</span><span>🎁 Dessert offert</span></div>
+          </div>
+          <div class="mock-tx"><span>Aujourd'hui — Menu midi</span><span class="mock-tx-pts">+15 pts</span></div>
+          <div class="mock-tx"><span>Lundi — Dîner</span><span class="mock-tx-pts">+32 pts</span></div>
+        </div>
+        <div class="float-pill fp1">✓ +15 points crédités</div>
+        <div class="float-pill fp2">🎁 Récompense dans 28 pts</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="problem">
+    <div class="si">
+      <span class="stag">Le constat</span>
+      <h2 class="sh">Les cartes tampons, c'est fini.</h2>
+      <p class="ss">Vos clients les perdent, et vous n'avez aucune donnée sur qui revient réellement.</p>
+      <div class="pgrid">
+        <div class="pcard rv"><div class="picon">🗑️</div><div class="ptitle">Cartes perdues</div><div class="ptext">73% des cartes de fidélité physiques finissent oubliées ou jetées. Chaque carte perdue, c'est un client perdu.</div></div>
+        <div class="pcard rv rd1"><div class="picon">🤷</div><div class="ptitle">Zéro visibilité</div><div class="ptext">Impossible de savoir qui sont vos habitués, combien ils dépensent, ou quand ils arrêtent de venir.</div></div>
+        <div class="pcard rv rd2"><div class="picon">💸</div><div class="ptitle">Solutions trop chères</div><div class="ptext">Les apps existantes prennent des commissions ou demandent du matériel. Pas adapté à un resto indépendant.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW -->
+  <section id="how" class="how">
+    <div class="si" style="text-align: center;">
+      <span class="stag">Comment ça marche</span>
+      <h2 class="sh">Prêt en 3 étapes</h2>
+      <p class="ss" style="margin: 0 auto 3rem;">Pas de matériel à acheter, pas d'app à télécharger pour vos clients.</p>
+      <div class="steps">
+        <div class="step rv"><div class="step-n">1</div><div class="step-t">Inscrivez-vous</div><div class="step-d">Créez votre compte en 2 minutes. Définissez vos règles : points par euro, récompense à offrir.</div></div>
+        <div class="step rv rd1"><div class="step-n">2</div><div class="step-t">Créditez les points</div><div class="step-d">Votre caissier entre l'email ou le téléphone du client et le montant. Les points sont ajoutés automatiquement.</div></div>
+        <div class="step rv rd2"><div class="step-n">3</div><div class="step-t">Le client revient</div><div class="step-d">Il reçoit un email avec son solde. Quand la récompense est atteinte, vous l'appliquez en un clic.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section id="features" class="features">
+    <div class="si">
+      <span class="stag">Fonctionnalités</span>
+      <h2 class="sh">Tout ce qu'il faut. Rien de superflu.</h2>
+      <p class="ss">Conçu par et pour des restaurateurs. Pas de gadgets, juste ce qui marche.</p>
+      <div class="fgrid">
+        <div class="feat rv"><div class="feat-i">📊</div><div class="feat-t">Tableau de bord</div><div class="feat-d">Clients actifs, fréquence de visite, top clients. Tout en un coup d'œil.</div></div>
+        <div class="feat rv rd1"><div class="feat-i">👥</div><div class="feat-t">Gestion d'équipe</div><div class="feat-d">Ajoutez caissiers et managers. Chacun a les bons accès, vous gardez le contrôle.</div></div>
+        <div class="feat rv rd2"><div class="feat-i">🎁</div><div class="feat-t">Récompenses flexibles</div><div class="feat-d">Dessert offert, café gratuit, -10%… Vous décidez ce qui motive vos clients.</div></div>
+        <div class="feat rv"><div class="feat-i">📱</div><div class="feat-t">QR code client</div><div class="feat-d">Vos clients s'identifient eux-mêmes via QR code. Zéro friction au comptoir.</div></div>
+        <div class="feat rv rd1"><div class="feat-i">🔒</div><div class="feat-t">Sécurisé et RGPD</div><div class="feat-d">Données isolées par commerce, hébergées en Europe. Conforme au RGPD.</div></div>
+        <div class="feat rv rd2"><div class="feat-i">📥</div><div class="feat-t">Export CSV</div><div class="feat-d">Exportez votre base clients quand vous voulez. Vos données vous appartiennent.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROOF -->
+  <section class="proof">
+    <div class="si rv">
+      <p class="proof-q">« Depuis qu'on utilise FIDDO, on voit clairement quels clients reviennent. Le mois dernier, 34 récompenses réclamées — c'est 34 clients revenus grâce au programme. »</p>
+      <div class="proof-a"><strong>Marco D.</strong> — Restaurateur à Bruxelles</div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" class="pricing">
+    <div class="si" style="text-align: center;">
+      <span class="stag">Tarifs</span>
+      <h2 class="sh">Simple et transparent</h2>
+      <p class="ss" style="margin: 0 auto 3rem;">Pas de commission, pas de frais cachés. FIDDO se rembourse dès le premier client qui revient.</p>
+      <div class="prgrid">
+        <div class="prcard rv">
+          <div class="prname">Essentiel</div>
+          <div class="prdesc">Tout pour fidéliser vos clients</div>
+          <div class="prprice"><span class="pramt">29€</span><span class="prper">/ mois</span></div>
+          <div class="prnote">HTVA · Sans engagement</div>
+          <ul class="prlist">
+            <li><span class="chk">✓</span> Programme de fidélité complet</li>
+            <li><span class="chk">✓</span> Gestion d'équipe illimitée</li>
+            <li><span class="chk">✓</span> Tableau de bord</li>
+            <li><span class="chk">✓</span> QR code clients</li>
+            <li><span class="chk">✓</span> Export CSV</li>
+            <li><span class="chk">✓</span> Support par email</li>
+          </ul>
+          <a href="/login#register" class="prbtn prbtn-o">Commencer gratuitement</a>
+        </div>
+        <div class="prcard pop rv rd1">
+          <div class="prtag">Recommandé</div>
+          <div class="prname">Pro</div>
+          <div class="prdesc">Fidélité + communication clients</div>
+          <div class="prprice"><span class="pramt">49€</span><span class="prper">/ mois</span></div>
+          <div class="prnote">HTVA · Sans engagement</div>
+          <ul class="prlist">
+            <li><span class="chk">✓</span> Tout le plan Essentiel</li>
+            <li><span class="chk">✓</span> Emails automatiques</li>
+            <li><span class="chk">✓</span> Campagnes SMS</li>
+            <li><span class="chk">✓</span> Statistiques avancées</li>
+            <li><span class="chk">✓</span> Personnalisation visuelle</li>
+            <li><span class="chk">✓</span> Support prioritaire</li>
+          </ul>
+          <a href="/login#register" class="prbtn prbtn-f">Commencer gratuitement</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta">
+    <div class="si rv">
+      <span class="stag">Prêt ?</span>
+      <h2 class="sh">Votre programme de fidélité en 2 minutes.</h2>
+      <p class="ss" style="margin: 0 auto 2.5rem; text-align: center;">30 jours d'essai gratuit. Pas de carte de crédit. Annulez quand vous voulez.</p>
+      <a href="/login#register" class="btn-main">Créer mon compte gratuitement →</a>
+      <div class="cta-trust">
+        <span>🔒 Conforme RGPD</span>
+        <span>🇪🇺 Hébergé en Europe</span>
+        <span>📄 Sans engagement</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-in">
+      <div class="footer-b">FIDDO</div>
+      <div class="footer-l">
+        <a href="#features" class="footer-a">Fonctionnalités</a>
+        <a href="#pricing" class="footer-a">Tarifs</a>
+        <a href="mailto:support@fiddo.be" class="footer-a">Contact</a>
+      </div>
+      <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour restaurateurs belges · support@fiddo.be</div>
+    </div>
+  </footer>
+
+  <script>
+    const nav = document.getElementById('nav');
+    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 50), { passive: true });
+    const obs = new IntersectionObserver(es => { es.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }); }, { threshold: 0.12 });
+    document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => { const t = document.querySelector(a.getAttribute('href')); if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth' }); document.querySelector('.nav-links')?.classList.remove('open'); } });
+    });
+  </script>
+</body>
+</html>
