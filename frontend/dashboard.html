@@ -5,484 +5,663 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tableau de bord — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    /* ── Dashboard layout ─────────────────────────── */
-    .dash-wrap {
-      max-width: 1320px;
-      margin: 0 auto;
-      padding: 1.25rem 1.5rem 3rem;
+    :root {
+      --primary-light: #CFFAFE;
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
     }
 
-    .dash-header {
-      display: flex;
+    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .dash * { box-sizing: border-box; }
+    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
+
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.3rem 0 0.6rem; letter-spacing: -0.3px;
+    }
+
+    /* ═══ TOOLBAR ═══ */
+
+    .toolbar {
+      display: flex; align-items: center; gap: 0.35rem;
+      margin-bottom: 0.9rem; flex-wrap: wrap;
+    }
+    .period-pill {
+      padding: 0.3rem 0.7rem; border: 1.5px solid #E2E8F0;
+      border-radius: 16px; background: white; font-family: inherit;
+      font-size: 0.75rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .period-pill.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .period-pill:hover:not(.active) { border-color: #CBD5E1; }
+    .toolbar-spacer { flex: 1; }
+    .csv-btn {
+      padding: 0.3rem 0.65rem; border: 1.5px solid #E2E8F0;
+      border-radius: 16px; background: white; font-family: inherit;
+      font-size: 0.72rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .csv-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
+
+    .period-dates {
+      display: none; align-items: center; gap: 0.4rem; margin-left: 0.35rem;
+    }
+    .period-dates.show { display: flex; }
+    .period-dates input[type="date"] {
+      padding: 0.22rem 0.4rem; border: 1.5px solid #E2E8F0;
+      border-radius: 5px; font-family: inherit; font-size: 0.72rem;
+      color: #475569; background: white;
+    }
+    .period-dates input[type="date"]:focus { outline: none; border-color: var(--primary); }
+    .period-dates .sep { color: #94A3B8; font-size: 0.72rem; }
+
+    /* ═══ STAT CARDS ═══ */
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(5, 1fr);
+      gap: 0.6rem; margin-bottom: 1rem;
+    }
+    .st {
+      background: white; border-radius: 10px; padding: 0.7rem 0.6rem;
+      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .st-val {
+      font-size: 1.5rem; font-weight: 700; color: var(--primary);
+      line-height: 1.15; letter-spacing: -0.5px;
+    }
+    .st-val.green { color: #059669; }
+    .st-val.amber { color: #D97706; }
+    .st-lbl {
+      font-size: 0.62rem; color: #94A3B8; text-transform: uppercase;
+      letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600;
+    }
+
+    /* ═══ ACTIVITY FEED ═══ */
+
+    .feed-card {
+      background: white; border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden;
+    }
+    .feed-hdr {
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid #F1F5F9;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .feed-title { font-weight: 600; font-size: 0.88rem; color: #1E293B; }
+
+    /* ── Type tabs ── */
+    .feed-tabs {
+      display: flex; gap: 0; background: #F8FAFC;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .feed-tab {
+      padding: 0.4rem 0.75rem; border: none; background: transparent;
+      font-family: inherit; font-size: 0.72rem; font-weight: 500;
+      color: #64748B; cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.12s; white-space: nowrap;
+    }
+    .feed-tab.active {
+      color: var(--primary-dark); border-bottom-color: var(--primary); font-weight: 600;
+    }
+    .feed-tab:hover:not(.active) { color: #475569; }
+    .feed-tab .cnt {
+      display: inline-block; background: #E2E8F0;
+      padding: 0 5px; border-radius: 8px; font-size: 0.62rem;
+      margin-left: 3px; font-weight: 600; min-width: 16px; text-align: center;
+    }
+    .feed-tab.active .cnt {
+      background: color-mix(in srgb, var(--primary-light) 55%, white);
+      color: var(--primary-dark);
+    }
+
+    /* ── Column headers (sortable) ── */
+    .col-hdr {
+      display: grid;
+      grid-template-columns: 72px 1fr 80px 80px 80px;
+      gap: 0.3rem;
+      padding: 0.35rem 0.85rem;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
+    }
+    .col-th {
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: #94A3B8; cursor: pointer;
+      user-select: none; display: flex; align-items: center; gap: 3px;
+      transition: color 0.12s; white-space: nowrap;
+    }
+    .col-th:hover { color: #475569; }
+    .col-th.active { color: var(--primary-dark); }
+    .col-th .arrow {
+      font-size: 0.55rem; opacity: 0; transition: opacity 0.12s;
+    }
+    .col-th.active .arrow { opacity: 1; }
+    .col-th-right { justify-content: flex-end; }
+
+    /* ── Date separator ── */
+    .date-sep {
+      padding: 0.25rem 0.85rem; background: #F8FAFC;
+      font-size: 0.62rem; font-weight: 600; color: #94A3B8;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1px solid #F1F5F9;
+    }
+
+    /* ── Transaction rows ── */
+    .feed-body { max-height: 560px; overflow-y: auto; }
+
+    .tx-row {
+      display: grid;
+      grid-template-columns: 72px 1fr 80px 80px 80px;
+      gap: 0.3rem;
+      padding: 0.45rem 0.85rem;
+      border-bottom: 1px solid #F8FAFC;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1.25rem;
+      font-size: 0.82rem;
     }
-    .dash-header h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      color: var(--secondary);
-      margin: 0;
+    .tx-row:last-child { border-bottom: none; }
+    .tx-row:hover { background: #FAFBFC; }
+
+    .tx-time { font-size: 0.72rem; color: #64748B; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .tx-date-sub { font-size: 0.6rem; color: #CBD5E1; }
+
+    .tx-info { min-width: 0; }
+    .tx-client {
+      font-weight: 600; color: #1E293B; font-size: 0.82rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .dash-header-right {
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
+    .tx-meta {
+      font-size: 0.66rem; color: #94A3B8; margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* ── Toolbar ───────────────────────────────────── */
-    .dash-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
+    .tx-badge {
+      display: inline-block; padding: 2px 7px; border-radius: 8px;
+      font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.2px; text-align: center;
     }
-    .filter-chip {
-      padding: 0.35rem 0.75rem;
-      border-radius: 20px;
-      border: 1.5px solid var(--border);
-      background: #fff;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      color: var(--text-light);
-      transition: all 0.15s;
-      font-family: inherit;
+    .tx-badge.credit { background: color-mix(in srgb, var(--primary-light) 50%, white); color: var(--primary-dark); }
+    .tx-badge.reward { background: #D1FAE5; color: #047857; }
+    .tx-badge.adjustment { background: #FEF3C7; color: #92400E; }
+    .tx-badge.merge { background: #EDE9FE; color: #6D28D9; }
+
+    .tx-pts { font-weight: 700; font-size: 0.85rem; text-align: right; white-space: nowrap; }
+    .tx-pts.credit { color: var(--primary); }
+    .tx-pts.reward { color: #059669; }
+    .tx-pts.adjustment { color: #D97706; }
+    .tx-pts.merge { color: #7C3AED; }
+
+    .tx-amount { font-size: 0.78rem; color: #64748B; text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* ── Empty / Loading / More ── */
+    .feed-empty { padding: 2.5rem 1rem; text-align: center; color: #94A3B8; font-size: 0.85rem; }
+    .feed-empty-icon { font-size: 2rem; margin-bottom: 0.4rem; }
+    .feed-loading { padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.78rem; }
+    .feed-more { padding: 0.5rem; text-align: center; border-top: 1px solid #F1F5F9; }
+    .feed-more button {
+      padding: 0.3rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 14px;
+      background: white; font-family: inherit; font-size: 0.72rem;
+      color: #64748B; cursor: pointer; font-weight: 500;
     }
-    .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
-    .filter-chip.active {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
+    .feed-more button:hover { border-color: var(--primary); color: var(--primary); }
+
+    /* ═══ SETTINGS (owner, below feed) ═══ */
+
+    .settings-card {
+      background: white; border-radius: 10px; padding: 0.85rem 1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-top: 1rem;
+      max-width: 420px;
     }
-    .dash-search {
-      margin-left: auto;
-      position: relative;
+    .settings-hdr { font-size: 0.78rem; font-weight: 600; color: #1E293B; margin-bottom: 0.6rem; }
+    .set-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.6rem; margin-bottom: 0.5rem; }
+    .set-label {
+      font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.3px; color: #64748B; margin-bottom: 0.15rem;
     }
-    .dash-search input {
-      width: 240px;
-      padding: 0.4rem 0.7rem 0.4rem 2rem;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 0.85rem;
-      font-family: inherit;
-      transition: border-color 0.15s;
-      background: #fff;
+    .set-input {
+      width: 100%; padding: 0.32rem 0.45rem; border: 1.5px solid #E2E8F0;
+      border-radius: 5px; font-family: inherit; font-size: 0.8rem;
+      color: #1E293B; background: #FAFBFC;
     }
-    .dash-search input:focus { outline: none; border-color: var(--primary); }
-    .dash-search .ico {
-      position: absolute;
-      left: 0.6rem;
-      top: 50%;
-      transform: translateY(-50%);
-      font-size: 0.8rem;
-      color: var(--text-light);
-      pointer-events: none;
+    .set-input:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 12%, transparent);
+    }
+    .set-footer { display: flex; align-items: center; gap: 0.6rem; }
+    .set-btn {
+      padding: 0.35rem 1rem; border: none; border-radius: 6px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer;
+    }
+    .set-btn:hover { opacity: 0.92; }
+    .set-saved {
+      display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+      background: #D1FAE5; color: #047857; font-size: 0.7rem; font-weight: 600;
+    }
+    .set-error {
+      display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px;
+      background: #FEE2E2; color: #B91C1C; font-size: 0.7rem; font-weight: 600;
     }
 
-    /* ── Table card ────────────────────────────────── */
-    .table-card {
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      overflow: hidden;
-    }
-    .table-card table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .table-card thead { background: var(--secondary); }
-    .table-card th {
-      padding: 0.6rem 0.75rem;
-      text-align: left;
-      font-size: 0.72rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: rgba(255,255,255,0.85);
-      white-space: nowrap;
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.15s;
-    }
-    .table-card th:hover { color: #fff; }
-    .table-card th .arrow {
-      margin-left: 3px;
-      font-size: 0.6rem;
-      opacity: 0.4;
-    }
-    .table-card th.sorted .arrow { opacity: 1; }
-    .table-card th.sorted { color: #fff; }
+    /* ═══ RESPONSIVE ═══ */
 
-    .table-card td {
-      padding: 0.55rem 0.75rem;
-      font-size: 0.85rem;
-      color: var(--text);
-      border-bottom: 1px solid #f0f1f3;
-      vertical-align: middle;
+    @media (max-width: 768px) {
+      .dash-wrap { padding: 0.5rem; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); }
+      .feed-body { max-height: 420px; }
+      .st-val { font-size: 1.3rem; }
+      .col-hdr, .tx-row {
+        grid-template-columns: 52px 1fr 60px 60px;
+        gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem;
+      }
+      .col-th-amount, .tx-amount-cell { display: none; }
+      .toolbar { gap: 0.25rem; }
+      .set-row { grid-template-columns: 1fr 1fr; }
+      .settings-card { max-width: 100%; }
     }
-    .table-card tbody tr { transition: background 0.1s; }
-    .table-card tbody tr:hover { background: #f7fafa; }
-    .table-card tbody tr:last-child td { border-bottom: none; }
-
-    /* ── Type badges ───────────────────────────────── */
-    .tx-type {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 10px;
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-    .tx-credit { background: var(--primary-light, #CFFAFE); color: var(--primary); }
-    .tx-reward { background: #fef3c7; color: #b45309; }
-    .tx-adjustment { background: #ede9fe; color: #7c3aed; }
-    .tx-merge { background: #f3e8ff; color: #9333ea; }
-
-    /* ── Points ────────────────────────────────────── */
-    .pts-pos { color: var(--primary); font-weight: 700; }
-    .pts-neg { color: var(--danger); font-weight: 700; }
-
-    /* ── Client cell ──────────────────────────────── */
-    .client-cell {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .client-star { color: #f59e0b; font-size: 0.9rem; flex-shrink: 0; }
-    .client-name { font-weight: 500; }
-    .client-sub { font-size: 0.75rem; color: var(--text-light); }
-
-    /* ── Other cells ──────────────────────────────── */
-    .staff-cell { font-size: 0.8rem; color: var(--text-light); }
-    .staff-cell strong { color: var(--text); }
-    .amount-cell { font-variant-numeric: tabular-nums; }
-    .notes-cell {
-      font-size: 0.8rem;
-      color: var(--text-light);
-      min-width: 180px;
-      white-space: normal;
-      word-break: break-word;
-    }
-    .date-cell .day { font-weight: 500; font-size: 0.82rem; }
-    .date-cell .time { font-size: 0.72rem; color: var(--text-light); }
-    .balance-cell { font-size: 0.8rem; color: var(--text-light); font-variant-numeric: tabular-nums; }
-
-    /* ── Pagination ────────────────────────────────── */
-    .dash-pagination {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.65rem 0.75rem;
-      border-top: 1px solid #f0f1f3;
-      font-size: 0.8rem;
-      color: var(--text-light);
-    }
-    .dash-pagination button {
-      padding: 0.3rem 0.65rem;
-      border: 1.5px solid var(--border);
-      border-radius: 6px;
-      background: #fff;
-      font-size: 0.78rem;
-      font-family: inherit;
-      cursor: pointer;
-      transition: all 0.15s;
-    }
-    .dash-pagination button:hover:not(:disabled) {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-    .dash-pagination button:disabled { opacity: 0.35; cursor: not-allowed; }
-    .page-btns { display: flex; gap: 0.35rem; }
-
-    /* ── Empty state ──────────────────────────────── */
-    .dash-empty {
-      text-align: center;
-      padding: 3rem 2rem;
-      color: var(--text-light);
-    }
-    .dash-empty .e-ico { font-size: 2.5rem; margin-bottom: 0.5rem; }
-
-    /* ── Responsive ────────────────────────────────── */
-    @media (max-width: 900px) {
-      .dash-toolbar { flex-direction: column; align-items: stretch; }
-      .dash-search { margin-left: 0; }
-      .dash-search input { width: 100%; }
-      .table-card { overflow-x: auto; }
-      .hide-mobile { display: none; }
-    }
-    @media (max-width: 600px) {
-      .dash-wrap { padding: 1rem; }
-      .dash-header h1 { font-size: 1.15rem; }
-      .table-card td, .table-card th { padding: 0.4rem 0.5rem; font-size: 0.78rem; }
-      .filter-chip { font-size: 0.72rem; padding: 0.3rem 0.6rem; }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.45rem; }
+      .st { padding: 0.55rem 0.4rem; }
+      .st-val { font-size: 1.15rem; }
+      .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.68rem; }
+      .set-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
-<body>
+<body class="dash">
   <nav class="navbar">
     <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
     <div class="navbar-menu"></div>
   </nav>
 
   <div class="dash-wrap">
+    <h1 class="pg-title">Tableau de bord</h1>
 
-    <!-- Header -->
-    <div class="dash-header">
-      <h1>Tableau de bord</h1>
-      <div class="dash-header-right">
-        <a href="/credit" class="btn btn-primary btn-sm">➕ Créditer</a>
-        <button onclick="refreshAll()" class="btn btn-outline btn-sm" title="Rafraîchir">↻</button>
+    <!-- ════════ TOOLBAR ════════ -->
+    <div class="toolbar">
+      <button class="period-pill active" onclick="setPeriod('today',this)">Aujourd'hui</button>
+      <button class="period-pill" onclick="setPeriod('7d',this)">7 jours</button>
+      <button class="period-pill" onclick="setPeriod('30d',this)">30 jours</button>
+      <button class="period-pill" onclick="setPeriod('all',this)">Tout</button>
+      <button class="period-pill" onclick="setPeriod('custom',this)">📅 Période</button>
+      <div class="period-dates" id="custom-dates">
+        <input type="date" id="date-from">
+        <span class="sep">→</span>
+        <input type="date" id="date-to">
       </div>
+      <span class="toolbar-spacer"></span>
+      <button class="csv-btn" onclick="API.clients.exportCSV()">📥 CSV</button>
     </div>
 
-    <!-- Filters -->
-    <div class="dash-toolbar">
-      <button class="filter-chip active" data-filter="all">Tout</button>
-      <button class="filter-chip" data-filter="credit">Crédits</button>
-      <button class="filter-chip" data-filter="reward">Récompenses</button>
-      <button class="filter-chip" data-filter="adjustment">Ajustements</button>
-      <div class="dash-search">
-        <span class="ico">🔍</span>
-        <input type="text" id="dash-search" placeholder="Rechercher…">
-      </div>
+    <!-- ════════ STATS ════════ -->
+    <div class="stats-row">
+      <div class="st"><div class="st-val" id="s-visits">–</div><div class="st-lbl">Passages</div></div>
+      <div class="st"><div class="st-val" id="s-pts-out">–</div><div class="st-lbl">Points distribués</div></div>
+      <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
+      <div class="st"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
+      <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
     </div>
 
-    <!-- Table -->
-    <div class="table-card">
-      <table id="activity-table">
-        <thead>
-          <tr>
-            <th data-col="date" class="sorted">Date <span class="arrow">▼</span></th>
-            <th data-col="type">Type <span class="arrow">▼</span></th>
-            <th data-col="client">Client <span class="arrow">▼</span></th>
-            <th data-col="amount">Montant <span class="arrow">▼</span></th>
-            <th data-col="points">Points <span class="arrow">▼</span></th>
-            <th data-col="balance" class="hide-mobile">Solde <span class="arrow">▼</span></th>
-            <th data-col="staff">Staff <span class="arrow">▼</span></th>
-            <th data-col="notes" class="hide-mobile">Notes <span class="arrow">▼</span></th>
-          </tr>
-        </thead>
-        <tbody id="activity-body">
-          <tr><td colspan="8"><div class="dash-empty"><div class="e-ico">⏳</div><p>Chargement…</p></div></td></tr>
-        </tbody>
-      </table>
-      <div class="dash-pagination" id="pagination" style="display:none;">
-        <span id="page-info"></span>
-        <div class="page-btns">
-          <button id="btn-prev" onclick="changePage(-1)">← Préc.</button>
-          <button id="btn-next" onclick="changePage(1)">Suiv. →</button>
+    <!-- ════════ ACTIVITY FEED ════════ -->
+    <div class="feed-card">
+      <div class="feed-hdr">
+        <span class="feed-title">Activité</span>
+        <span id="feed-total" style="font-size:0.68rem;color:#94A3B8;"></span>
+      </div>
+
+      <!-- Type filter tabs -->
+      <div class="feed-tabs">
+        <button class="feed-tab active" onclick="setType('',this)">Tous <span class="cnt" id="cnt-all"></span></button>
+        <button class="feed-tab" onclick="setType('credit',this)">Crédits <span class="cnt" id="cnt-credit"></span></button>
+        <button class="feed-tab" onclick="setType('reward',this)">Récompenses <span class="cnt" id="cnt-reward"></span></button>
+        <button class="feed-tab" onclick="setType('adjustment',this)">Ajustements <span class="cnt" id="cnt-adj"></span></button>
+      </div>
+
+      <!-- Sortable column headers -->
+      <div class="col-hdr">
+        <div class="col-th active" onclick="sortBy('time',this)" data-col="time">
+          Heure <span class="arrow">▼</span>
+        </div>
+        <div class="col-th" onclick="sortBy('client',this)" data-col="client">
+          Client <span class="arrow">▼</span>
+        </div>
+        <div class="col-th" onclick="sortBy('type',this)" data-col="type">
+          Type <span class="arrow">▼</span>
+        </div>
+        <div class="col-th col-th-right" onclick="sortBy('points',this)" data-col="points">
+          Points <span class="arrow">▼</span>
+        </div>
+        <div class="col-th col-th-right col-th-amount" onclick="sortBy('amount',this)" data-col="amount">
+          Montant <span class="arrow">▼</span>
         </div>
       </div>
+
+      <div class="feed-body" id="feed-body"></div>
+
+      <div class="feed-more" id="feed-more" style="display:none;">
+        <button onclick="loadMore()">Charger plus</button>
+      </div>
     </div>
 
+    <!-- ════════ SETTINGS (owner only) ════════ -->
+    <div class="settings-card" id="settings-card" style="display:none;">
+      <div class="settings-hdr">⚙️ Paramètres fidélité</div>
+      <form id="settings-form">
+        <div class="set-row">
+          <div class="set-group">
+            <div class="set-label">Points par euro</div>
+            <input type="number" id="set-ppe" class="set-input" step="0.1" min="0.1">
+          </div>
+          <div class="set-group">
+            <div class="set-label">Points pour récompense</div>
+            <input type="number" id="set-pfr" class="set-input" min="1">
+          </div>
+          <div class="set-group">
+            <div class="set-label">Description récompense</div>
+            <input type="text" id="set-desc" class="set-input" placeholder="Boisson offerte">
+          </div>
+        </div>
+        <div class="set-footer">
+          <button type="submit" class="set-btn">Enregistrer</button>
+          <span id="settings-alert"></span>
+        </div>
+      </form>
+    </div>
   </div>
 
   <script src="/js/app.js"></script>
   <script>
     if (!requireManager()) throw 'Not authorized';
 
+    const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
 
-    // ── State ─────────────────────────────────────
-    let allRows = [];
-    let filteredRows = [];
-    let sortCol = 'date';
-    let sortAsc = false;
-    let currentFilter = 'all';
-    let searchTerm = '';
-    const PAGE_SIZE = 30;
-    let currentPage = 0;
+    let currentPeriod = 'today';
+    let currentType = '';
+    let currentOffset = 0;
+    let allTransactions = [];
+    let sortCol = 'time';
+    let sortAsc = false; // default: newest first
 
-    const TYPE_LABELS = { credit: 'Crédit', reward: 'Récomp.', adjustment: 'Ajust.', merge: 'Fusion' };
+    // ═══ SETTINGS (owner only) ═══
 
-    // ── Load ──────────────────────────────────────
-    async function loadActivity() {
+    if (staff.role === 'owner') {
+      document.getElementById('settings-card').style.display = '';
+      document.getElementById('set-ppe').value = merchant.points_per_euro;
+      document.getElementById('set-pfr').value = merchant.points_for_reward;
+      document.getElementById('set-desc').value = merchant.reward_description;
+    }
+
+    document.getElementById('settings-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertEl = document.getElementById('settings-alert');
       try {
-        const data = await API.call('/clients/recent-activity?limit=300');
-        allRows = data.transactions.map(t => ({
-          id: t.id,
-          date: t.created_at,
-          dateObj: new Date(t.created_at),
-          type: t.transaction_type,
-          clientName: t.client_name || '',
-          clientEmail: t.client_email || '',
-          clientPhone: t.client_phone || '',
-          clientDisplay: t.client_name || t.client_email || t.client_phone || '—',
-          canRedeem: t.can_redeem || false,
-          hasCustomReward: t.has_custom_reward || false,
-          customReward: t.custom_reward || null,
-          amount: t.amount,
-          points: t.points_delta,
-          balance: t.current_balance,
-          staff: t.staff_name || 'Système',
-          staffRole: t.staff_role || '',
-          notes: t.notes || '',
-          mcId: t.merchant_client_id,
-        }));
-        applyFilters();
+        const settings = {
+          pointsPerEuro: parseFloat(document.getElementById('set-ppe').value),
+          pointsForReward: parseInt(document.getElementById('set-pfr').value),
+          rewardDescription: document.getElementById('set-desc').value,
+        };
+        await API.auth.updateSettings(settings);
+        merchant.points_per_euro = settings.pointsPerEuro;
+        merchant.points_for_reward = settings.pointsForReward;
+        merchant.reward_description = settings.rewardDescription;
+        Auth.setSession(staff, merchant);
+        alertEl.innerHTML = '<span class="set-saved">✓ Enregistré</span>';
+        setTimeout(() => alertEl.innerHTML = '', 3000);
       } catch (err) {
-        console.error('Activity load error:', err);
-        document.getElementById('activity-body').innerHTML =
-          `<tr><td colspan="8"><div class="dash-empty"><div class="e-ico">⚠️</div><p>${escHtml(err.message)}</p></div></td></tr>`;
+        alertEl.innerHTML = '<span class="set-error">⚠ ' + err.message + '</span>';
+      }
+    });
+
+    // ═══ DATE HELPERS ═══
+
+    function periodDates(period) {
+      const now = new Date();
+      let from, to;
+      if (period === 'today') {
+        from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      } else if (period === '7d') {
+        from = new Date(now); from.setDate(from.getDate() - 7); from.setHours(0,0,0,0);
+        to = now;
+      } else if (period === '30d') {
+        from = new Date(now); from.setDate(from.getDate() - 30); from.setHours(0,0,0,0);
+        to = now;
+      } else if (period === 'custom') {
+        const f = document.getElementById('date-from').value;
+        const t = document.getElementById('date-to').value;
+        if (f) from = new Date(f + 'T00:00:00');
+        if (t) to = new Date(t + 'T23:59:59');
+      } else {
+        return {};
+      }
+      const r = {};
+      if (from) r.from = from.toISOString().replace('T', ' ').substring(0, 19);
+      if (to) r.to = to.toISOString().replace('T', ' ').substring(0, 19);
+      return r;
+    }
+
+    // ═══ PERIOD ═══
+
+    function setPeriod(period, btn) {
+      currentPeriod = period;
+      document.querySelectorAll('.period-pill').forEach(p => p.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const custom = document.getElementById('custom-dates');
+      if (period === 'custom') {
+        custom.classList.add('show');
+        if (document.getElementById('date-from').value && document.getElementById('date-to').value) reload();
+        return;
+      }
+      custom.classList.remove('show');
+      reload();
+    }
+
+    document.getElementById('date-from').addEventListener('change', () => { if (currentPeriod === 'custom') reload(); });
+    document.getElementById('date-to').addEventListener('change', () => { if (currentPeriod === 'custom') reload(); });
+
+    // ═══ TYPE FILTER ═══
+
+    function setType(type, btn) {
+      currentType = type;
+      document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      currentOffset = 0;
+      allTransactions = [];
+      loadActivity();
+    }
+
+    // ═══ COLUMN SORT ═══
+
+    function sortBy(col, el) {
+      if (sortCol === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = col;
+        sortAsc = col === 'client' || col === 'type'; // alpha = asc by default, rest = desc
+      }
+
+      // Update header UI
+      document.querySelectorAll('.col-th').forEach(th => th.classList.remove('active'));
+      el.classList.add('active');
+      el.querySelector('.arrow').textContent = sortAsc ? '▲' : '▼';
+
+      renderFeed(allTransactions);
+    }
+
+    function getSortedTxs(txs) {
+      const sorted = [...txs];
+      const dir = sortAsc ? 1 : -1;
+
+      sorted.sort((a, b) => {
+        switch (sortCol) {
+          case 'time':
+            return dir * (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0);
+          case 'client': {
+            const ca = (a.client_name || a.client_email || a.client_phone || '').toLowerCase();
+            const cb = (b.client_name || b.client_email || b.client_phone || '').toLowerCase();
+            return dir * ca.localeCompare(cb);
+          }
+          case 'type':
+            return dir * a.transaction_type.localeCompare(b.transaction_type);
+          case 'points':
+            return dir * (a.points_delta - b.points_delta);
+          case 'amount':
+            return dir * ((a.amount || 0) - (b.amount || 0));
+          default:
+            return 0;
+        }
+      });
+      return sorted;
+    }
+
+    // ═══ LOAD STATS ═══
+
+    async function loadStats() {
+      try {
+        const dates = periodDates(currentPeriod);
+        const qs = new URLSearchParams();
+        if (dates.from) qs.set('from', dates.from);
+        if (dates.to) qs.set('to', dates.to);
+        const s = await API.call('/dashboard/stats?' + qs.toString());
+        document.getElementById('s-visits').textContent = fmtNum(s.visits);
+        document.getElementById('s-pts-out').textContent = fmtNum(s.pointsOut);
+        document.getElementById('s-rewards').textContent = fmtNum(s.rewards);
+        document.getElementById('s-new').textContent = fmtNum(s.newClients);
+        document.getElementById('s-active').textContent = fmtNum(s.activeClients);
+      } catch (e) {
+        console.error('Stats error:', e);
       }
     }
 
-    function refreshAll() { loadActivity(); }
-
-    // ── Filter + sort ─────────────────────────────
-    function applyFilters() {
-      filteredRows = allRows.filter(r => {
-        if (currentFilter !== 'all' && r.type !== currentFilter) return false;
-        if (searchTerm) {
-          const s = searchTerm.toLowerCase();
-          const hay = (r.clientDisplay + ' ' + r.clientEmail + ' ' + r.clientPhone + ' ' + r.staff + ' ' + r.notes).toLowerCase();
-          if (!hay.includes(s)) return false;
-        }
-        return true;
-      });
-      applySort();
+    function fmtNum(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      return n.toString();
     }
 
-    function applySort() {
-      filteredRows.sort((a, b) => {
-        let va, vb;
-        switch (sortCol) {
-          case 'date':    va = a.dateObj; vb = b.dateObj; break;
-          case 'type':    va = a.type; vb = b.type; break;
-          case 'client':  va = a.clientDisplay.toLowerCase(); vb = b.clientDisplay.toLowerCase(); break;
-          case 'amount':  va = a.amount || 0; vb = b.amount || 0; break;
-          case 'points':  va = a.points; vb = b.points; break;
-          case 'balance': va = a.balance || 0; vb = b.balance || 0; break;
-          case 'staff':   va = a.staff.toLowerCase(); vb = b.staff.toLowerCase(); break;
-          case 'notes':   va = a.notes.toLowerCase(); vb = b.notes.toLowerCase(); break;
-          default:        va = a.dateObj; vb = b.dateObj;
-        }
-        if (va < vb) return sortAsc ? -1 : 1;
-        if (va > vb) return sortAsc ? 1 : -1;
-        return 0;
-      });
-      currentPage = 0;
-      render();
+    // ═══ LOAD ACTIVITY ═══
+
+    async function loadActivity() {
+      const body = document.getElementById('feed-body');
+      if (currentOffset === 0) {
+        body.innerHTML = '<div class="feed-loading">Chargement…</div>';
+        allTransactions = [];
+      }
+      try {
+        const dates = periodDates(currentPeriod);
+        const qs = new URLSearchParams();
+        if (dates.from) qs.set('from', dates.from);
+        if (dates.to) qs.set('to', dates.to);
+        if (currentType) qs.set('type', currentType);
+        qs.set('limit', '50');
+        qs.set('offset', currentOffset.toString());
+
+        const data = await API.call('/dashboard/activity?' + qs.toString());
+        allTransactions = allTransactions.concat(data.transactions);
+        renderFeed(allTransactions);
+        document.getElementById('feed-total').textContent = data.total + ' transaction(s)';
+        document.getElementById('feed-more').style.display = data.hasMore ? '' : 'none';
+        if (currentOffset === 0) updateCounts();
+      } catch (e) {
+        body.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div>Erreur de chargement</div>';
+        console.error('Activity error:', e);
+      }
     }
 
-    // ── Render ─────────────────────────────────────
-    function render() {
-      const tbody = document.getElementById('activity-body');
-      const start = currentPage * PAGE_SIZE;
-      const page = filteredRows.slice(start, start + PAGE_SIZE);
+    function loadMore() { currentOffset += 50; loadActivity(); }
 
-      if (filteredRows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8"><div class="dash-empty"><div class="e-ico">📋</div><p>Aucune activité trouvée</p></div></td></tr>`;
-        document.getElementById('pagination').style.display = 'none';
+    // ═══ TAB COUNTS ═══
+
+    async function updateCounts() {
+      try {
+        const dates = periodDates(currentPeriod);
+        const qs = new URLSearchParams();
+        if (dates.from) qs.set('from', dates.from);
+        if (dates.to) qs.set('to', dates.to);
+        const all = await API.call('/dashboard/activity?' + qs.toString() + '&limit=0');
+        document.getElementById('cnt-all').textContent = all.total;
+        for (const t of ['credit', 'reward', 'adjustment']) {
+          const r = await API.call('/dashboard/activity?' + qs.toString() + '&type=' + t + '&limit=0');
+          document.getElementById(t === 'adjustment' ? 'cnt-adj' : 'cnt-' + t).textContent = r.total;
+        }
+      } catch (e) {}
+    }
+
+    // ═══ RENDER FEED ═══
+
+    function renderFeed(txs) {
+      const body = document.getElementById('feed-body');
+      if (txs.length === 0) {
+        body.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">📭</div>Aucune activité sur cette période</div>';
         return;
       }
 
-      let html = '';
-      page.forEach(r => {
-        const sign = r.points >= 0 ? '+' : '';
-        const ptsCls = r.points >= 0 ? 'pts-pos' : 'pts-neg';
-        const typeLabel = TYPE_LABELS[r.type] || r.type;
+      const sorted = getSortedTxs(txs);
+      const showDateSeps = sortCol === 'time'; // date separators only make sense when sorted by time
 
-        // Star: ⭐ if custom reward, 🎁 if can redeem (default reward)
-        let starHtml = '';
-        if (r.hasCustomReward) {
-          starHtml = `<span class="client-star" title="Récompense perso: ${escAttr(r.customReward)}">⭐</span>`;
-        } else if (r.canRedeem) {
-          starHtml = `<span class="client-star" title="Récompense disponible">🎁</span>`;
+      let html = '';
+      let lastDateStr = '';
+
+      sorted.forEach(tx => {
+        const dt = new Date(tx.created_at + 'Z');
+        const dateStr = dt.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' });
+        const timeStr = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const type = tx.transaction_type;
+
+        // Date separator
+        if (showDateSeps && dateStr !== lastDateStr) {
+          html += '<div class="date-sep">' + dateStr + '</div>';
+          lastDateStr = dateStr;
         }
 
-        html += `<tr>
-          <td class="date-cell"><span class="day">${fmtDate(r.dateObj)}</span><br><span class="time">${fmtTime(r.dateObj)}</span></td>
-          <td><span class="tx-type tx-${r.type}">${typeLabel}</span></td>
-          <td>
-            <div class="client-cell">
-              ${starHtml}
-              <div>
-                <div class="client-name">${escHtml(r.clientDisplay)}</div>
-                ${r.clientEmail && r.clientDisplay !== r.clientEmail ? `<div class="client-sub">${escHtml(r.clientEmail)}</div>` : ''}
-              </div>
-            </div>
-          </td>
-          <td class="amount-cell">${r.amount != null ? Format.currency(r.amount) : '—'}</td>
-          <td><span class="${ptsCls}">${sign}${r.points}</span></td>
-          <td class="balance-cell hide-mobile">${r.balance != null ? r.balance + ' pts' : '—'}</td>
-          <td class="staff-cell"><strong>${escHtml(r.staff)}</strong></td>
-          <td class="notes-cell hide-mobile">${escHtml(r.notes) || '—'}</td>
-        </tr>`;
-      });
-      tbody.innerHTML = html;
+        const clientLabel = tx.client_name || tx.client_email || tx.client_phone || 'Client';
+        const sign = tx.points_delta >= 0 ? '+' : '';
+        const metaParts = [tx.staff_name, tx.notes ? truncate(tx.notes, 30) : ''].filter(Boolean).join(' · ');
 
-      // Pagination
-      const totalPages = Math.ceil(filteredRows.length / PAGE_SIZE);
-      const pag = document.getElementById('pagination');
-      pag.style.display = 'flex';
-      document.getElementById('page-info').textContent =
-        `${start + 1}–${Math.min(start + PAGE_SIZE, filteredRows.length)} sur ${filteredRows.length}`;
-      document.getElementById('btn-prev').disabled = currentPage === 0;
-      document.getElementById('btn-next').disabled = currentPage >= totalPages - 1;
+        const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion' };
+        const amountStr = tx.amount ? Format.currency(tx.amount) : '–';
+
+        html += '<div class="tx-row">';
+
+        // Col 1: Time
+        html += '<div>';
+        html += '<div class="tx-time">' + timeStr + '</div>';
+        if (!showDateSeps) html += '<div class="tx-date-sub">' + dateStr + '</div>';
+        html += '</div>';
+
+        // Col 2: Client + meta
+        html += '<div class="tx-info">';
+        html += '<div class="tx-client">' + esc(clientLabel) + '</div>';
+        if (metaParts) html += '<div class="tx-meta">' + esc(metaParts) + '</div>';
+        html += '</div>';
+
+        // Col 3: Type badge
+        html += '<div><span class="tx-badge ' + type + '">' + (badges[type] || type) + '</span></div>';
+
+        // Col 4: Points
+        html += '<div class="tx-pts ' + type + '" style="text-align:right;">' + sign + tx.points_delta + '</div>';
+
+        // Col 5: Amount
+        html += '<div class="tx-amount tx-amount-cell">' + amountStr + '</div>';
+
+        html += '</div>';
+      });
+
+      body.innerHTML = html;
     }
 
-    function changePage(dir) {
-      currentPage += dir;
-      render();
-      document.querySelector('.table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    function truncate(s, n) { return s.length > n ? s.substring(0, n) + '…' : s; }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
-    // ── Column sort click ─────────────────────────
-    document.querySelectorAll('#activity-table th[data-col]').forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.dataset.col;
-        if (sortCol === col) { sortAsc = !sortAsc; }
-        else { sortCol = col; sortAsc = (col === 'client' || col === 'staff'); }
-        document.querySelectorAll('#activity-table th').forEach(h => {
-          h.classList.remove('sorted');
-          h.querySelector('.arrow').textContent = '▼';
-        });
-        th.classList.add('sorted');
-        th.querySelector('.arrow').textContent = sortAsc ? '▲' : '▼';
-        applySort();
-      });
-    });
+    // ═══ INIT ═══
 
-    // ── Filter chips ──────────────────────────────
-    document.querySelectorAll('.filter-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-        chip.classList.add('active');
-        currentFilter = chip.dataset.filter;
-        applyFilters();
-      });
-    });
+    function reload() { currentOffset = 0; allTransactions = []; loadStats(); loadActivity(); }
 
-    // ── Search ────────────────────────────────────
-    let searchTimeout;
-    document.getElementById('dash-search').addEventListener('input', (e) => {
-      clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        searchTerm = e.target.value.trim();
-        applyFilters();
-      }, 200);
-    });
-
-    // ── Helpers ────────────────────────────────────
-    function escHtml(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-    function escAttr(s) { if (!s) return ''; return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-    function fmtDate(dt) {
-      const now = new Date();
-      const diff = Math.floor((now - dt) / 86400000);
-      if (diff === 0) return "Auj.";
-      if (diff === 1) return "Hier";
-      if (diff < 7) return dt.toLocaleDateString('fr-FR', { weekday: 'short' });
-      return dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
-    }
-    function fmtTime(dt) { return dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }); }
-
-    // ── Init ──────────────────────────────────────
-    loadActivity();
+    const today = new Date().toISOString().substring(0, 10);
+    document.getElementById('date-from').value = today;
+    document.getElementById('date-to').value = today;
+    reload();
   </script>
 </body>
 </html>
