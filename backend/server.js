@@ -88,6 +88,9 @@ app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../fron
 // QR client-facing form
 app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
 
+// QR static deep link — /q/ABC123 → client portal
+app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
+
 // Super admin pages
 app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
 app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html')));
