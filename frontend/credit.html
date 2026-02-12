@@ -702,7 +702,6 @@
           qrVerified: qrVerifiedFlag || undefined,
         });
         UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
-        qrVerifiedFlag = false; // reset after use
         triggerLookup();
       } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
     }
