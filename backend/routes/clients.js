@@ -243,9 +243,10 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
       if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Ce téléphone est déjà utilisé par un autre client' });
     }
 
-    const newName = name !== undefined ? (name.trim() || null) : endUser.name;
-    const newEmail = email !== undefined ? (email.trim() || null) : endUser.email;
-    const newPhone = phone !== undefined ? (phone.trim() || null) : endUser.phone;
+    // ── FIX: null-safe trim ──
+    const newName = name !== undefined ? ((name || '').trim() || null) : endUser.name;
+    const newEmail = email !== undefined ? ((email || '').trim() || null) : endUser.email;
+    const newPhone = phone !== undefined ? ((phone || '').trim() || null) : endUser.phone;
 
     // Reset email_validated if email actually changed
     const emailChanged = newEmailLower && newEmailLower !== endUser.email_lower;
@@ -478,7 +479,6 @@ router.get('/search', requireRole('owner', 'manager'), (req, res) => {
 
 // ═══════════════════════════════════════════════════════
 // GET /api/clients/search-global?q=... — Cross-merchant user search (all staff)
-// Searches end_users globally, enriches with local merchant_client if exists
 // ═══════════════════════════════════════════════════════
 
 router.get('/search-global', (req, res) => {
