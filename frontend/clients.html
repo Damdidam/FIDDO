@@ -233,6 +233,9 @@
       .col-hdr, .cl-row { grid-template-columns: 1fr 55px 72px; gap: 0.15rem; }
       .col-th-visits, .cl-visits-cell { display: none; }
     }
+    .pin-section { background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 0.75rem; }
+    .pin-hdr { display: flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem; }
+    .pin-row { display: flex; align-items: center; }
   </style>
 </head>
 <body class="dash">
@@ -546,6 +549,22 @@
           h += '</div></div>';
         }
 
+        // PIN SECTION (always visible for manager+)
+        if (isManager) {
+          h += '<div class="pin-section">';
+          h += '<div class="pin-hdr"><span>🔒 Code PIN récompense</span>';
+          if (c.has_pin) h += '<span class="hero-badge validated" style="font-size:0.6rem">Défini</span>';
+          else h += '<span class="hero-badge blocked" style="font-size:0.6rem">Non défini</span>';
+          h += '</div>';
+          if (!c.has_pin) h += '<div style="font-size:0.7rem;color:#EF4444;margin-bottom:0.5rem">⚠️ Ce client n\'a pas de PIN — impossible de valider une récompense</div>';
+          h += '<div class="pin-row">';
+          h += '<input type="tel" id="pin-input" maxlength="4" pattern="\\d{4}" inputmode="numeric" placeholder="4 chiffres" style="width:80px;text-align:center;letter-spacing:6px;font-size:1.1rem;font-weight:700;padding:0.4rem 0.5rem;border:2px solid var(--border);border-radius:8px">';
+          h += '<button class="notes-save" onclick="savePin()" style="margin-left:0.5rem">' + (c.has_pin ? 'Modifier' : 'Définir') + '</button>';
+          h += '</div>';
+          h += '<div style="font-size:0.6rem;color:#94A3B8;margin-top:4px">Code requis pour valider les récompenses</div>';
+          h += '</div>';
+        }
+
         // TRANSACTIONS (expandable, open)
         h += '<div class="exp open" onclick="this.classList.toggle(\'open\')">';
         h += '<div class="exp-hdr"><span>📜 Historique <span style="font-size:0.64rem;color:#94A3B8;font-weight:400;margin-left:4px">' + txs.length + ' transaction' + (txs.length !== 1 ? 's' : '') + '</span></span><span class="exp-arrow">▶</span></div>';
@@ -629,6 +648,15 @@
         await API.clients.setCustomReward(currentClientId, value || null);
         showDetail(currentClientId);
       } catch (err) { UI.showAlert('reward-alert', err.message, 'error'); }
+    }
+
+    async function savePin() {
+      const pin = document.getElementById('pin-input').value.trim();
+      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); return; }
+      try {
+        await API.clients.setPin(currentClientId, pin);
+        showDetail(currentClientId);
+      } catch (err) { alert(err.message); }
     }
 
     // ════════════════════════════════════════
