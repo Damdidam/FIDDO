@@ -41,6 +41,9 @@ app.use('/api/preferences', require('./routes/preferences'));
 // Announcements (merchant-facing)
 app.use('/api/announcements', require('./routes/announcements'));
 
+// Dashboard (stats + activity feed)
+app.use('/api/dashboard', require('./routes/dashboard'));
+
 // Super admin
 app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
