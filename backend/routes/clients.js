@@ -4,7 +4,7 @@ const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQ
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendValidationEmail, sendPointsCreditedEmail } = require('../services/email');
+const { sendValidationEmail, sendPointsCreditedEmail, sendPinChangedEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 
 const router = express.Router();
@@ -607,6 +607,7 @@ router.post('/:id/pin', requireRole('owner', 'manager'), async (req, res) => {
     const eu = endUserQueries.findById.get(mc.end_user_id);
     if (!eu) return res.status(404).json({ error: 'Client non trouvé' });
 
+    const hadPin = !!eu.pin_hash;
     const pinHash = await bcrypt.hash(pin, 10);
     endUserQueries.setPin.run(pinHash, eu.id);
 
@@ -615,10 +616,16 @@ router.post('/:id/pin', requireRole('owner', 'manager'), async (req, res) => {
       actorType: 'staff',
       actorId: req.staff.id,
       merchantId,
-      action: eu.pin_hash ? 'pin_updated' : 'pin_set',
+      action: hadPin ? 'pin_updated' : 'pin_set',
       targetType: 'end_user',
       targetId: eu.id,
     });
+
+    // Fire-and-forget: notify client by email if validated
+    if (eu.email && eu.email_validated) {
+      const merchant = merchantQueries.findById.get(merchantId);
+      sendPinChangedEmail(eu.email, merchant.business_name);
+    }
 
     res.json({ message: 'Code PIN mis à jour', has_pin: true });
   } catch (error) {
