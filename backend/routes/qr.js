@@ -586,6 +586,41 @@ router.post('/identify', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// GET /api/qr/client-lookup/:token — Staff scans client QR
+// Looks up end_user by qr_token, returns client info for credit form
+// ═══════════════════════════════════════════════════════
+
+router.get('/client-lookup/:token', authenticateStaff, (req, res) => {
+  try {
+    const { token } = req.params;
+    const merchantId = req.staff.merchant_id;
+
+    const endUser = endUserQueries.findByQrToken.get(token);
+    if (!endUser) {
+      return res.status(404).json({ error: 'Client non trouvé' });
+    }
+
+    // Check merchant_client relationship
+    const mc = merchantClientQueries.find.get(merchantId, endUser.id);
+
+    res.json({
+      endUserId: endUser.id,
+      name: endUser.name,
+      email: endUser.email,
+      phone: endUser.phone,
+      pointsBalance: mc?.points_balance || 0,
+      visitCount: mc?.visit_count || 0,
+      isNew: !mc,
+      qrVerified: true,  // flag: identified by QR scan → can bypass PIN for redeem
+    });
+  } catch (error) {
+    console.error('Client lookup error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // GET /api/qr/pending — Staff: get pending identifications
 // ═══════════════════════════════════════════════════════
 
