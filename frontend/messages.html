@@ -305,10 +305,13 @@
 
       document.getElementById('msg-modal').classList.add('active');
 
-      // Mark as read
+      // Mark as read (route to correct endpoint based on source)
       if (!msg.is_read) {
         try {
-          await API.call(`/messages/${id}/read`, { method: 'POST' });
+          const endpoint = msg.source === 'announcement'
+            ? `/announcements/${id}/read`
+            : `/messages/${id}/read`;
+          await API.call(endpoint, { method: 'POST' });
           msg.is_read = 1;
           msg.read_at = new Date().toISOString();
 
