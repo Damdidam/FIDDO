@@ -373,10 +373,10 @@
           <!-- Scanner (camera) -->
           <div id="field-scan" style="display:none;">
             <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;">
-              <div id="scan-reader" style="width:100%;"></div>
-              <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
-                Scannez le QR du client
-              </div>
+              <div id="scan-reader" style="width:100%;min-height:250px;"></div>
+            </div>
+            <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
+              Scannez le QR du client
             </div>
             <div class="lookup-strip" id="lookup-scan"></div>
           </div>
@@ -909,33 +909,65 @@
 
     let html5QrScanner = null;
     let qrVerifiedFlag = false;  // true if client was identified by QR scan
+    let scannerBusy = false;     // debounce scan results
 
     function startScanner() {
       document.getElementById('scan-status').textContent = 'Démarrage de la caméra…';
       document.getElementById('scan-status').style.color = '#64748B';
+      scannerBusy = false;
 
-      html5QrScanner = new Html5Qrcode('scan-reader');
-      html5QrScanner.start(
-        { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 200, height: 200 } },
-        onScanSuccess,
-        () => {} // ignore scan failures
-      ).catch(err => {
-        console.error('Scanner error:', err);
-        document.getElementById('scan-status').textContent = '⚠️ Impossible d\'accéder à la caméra';
-        document.getElementById('scan-status').style.color = '#DC2626';
-      });
+      // Small delay to let the container become visible and get dimensions
+      setTimeout(() => {
+        try {
+          html5QrScanner = new Html5Qrcode('scan-reader');
+          html5QrScanner.start(
+            { facingMode: 'environment' },
+            {
+              fps: 10,
+              qrbox: function(vw, vh) {
+                const s = Math.min(vw, vh) * 0.7;
+                return { width: Math.floor(s), height: Math.floor(s) };
+              },
+              aspectRatio: 1.0,
+            },
+            onScanSuccess,
+            () => {} // ignore scan failures
+          ).then(() => {
+            document.getElementById('scan-status').textContent = 'Scannez le QR du client';
+            document.getElementById('scan-status').style.color = '#64748B';
+          }).catch(err => {
+            console.error('Scanner start error:', err);
+            document.getElementById('scan-status').innerHTML =
+              '⚠️ Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
+            document.getElementById('scan-status').style.color = '#DC2626';
+          });
+        } catch (err) {
+          console.error('Scanner init error:', err);
+          document.getElementById('scan-status').textContent = '⚠️ Erreur d\'initialisation du scanner';
+          document.getElementById('scan-status').style.color = '#DC2626';
+        }
+      }, 300);
     }
 
     function stopScanner() {
       if (html5QrScanner) {
-        html5QrScanner.stop().catch(() => {});
-        html5QrScanner.clear();
-        html5QrScanner = null;
+        try {
+          html5QrScanner.stop().then(() => {
+            html5QrScanner.clear();
+            html5QrScanner = null;
+          }).catch(() => {
+            html5QrScanner = null;
+          });
+        } catch (e) {
+          html5QrScanner = null;
+        }
       }
     }
 
     async function onScanSuccess(decodedText) {
+      if (scannerBusy) return;  // debounce
+      scannerBusy = true;
+
       // Extract client token from URL: fiddo.be/c/TOKEN
       let clientQrToken = null;
       try {
@@ -954,6 +986,7 @@
       if (!clientQrToken) {
         document.getElementById('scan-status').textContent = '⚠️ QR non reconnu';
         document.getElementById('scan-status').style.color = '#D97706';
+        setTimeout(() => { scannerBusy = false; }, 2000);
         return;
       }
 
@@ -995,6 +1028,7 @@
       } catch (e) {
         document.getElementById('scan-status').textContent = '⚠️ Client non trouvé';
         document.getElementById('scan-status').style.color = '#DC2626';
+        scannerBusy = false;
         setTimeout(() => switchMode('scan'), 2000); // restart scanner
       }
     }
