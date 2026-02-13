@@ -6,6 +6,7 @@ const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
 const { sendValidationEmail, sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
+const { resolvePinToken } = require('./qr');
 
 const router = express.Router();
 router.use(authenticateStaff);
@@ -143,14 +144,20 @@ router.post('/credit', async (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const staffId = req.staff.id;
-    const { email, phone, name, amount, notes, idempotencyKey, pin, pinHash: pinHashDirect } = req.body;
+    const { email, phone, name, amount, notes, idempotencyKey, pin, pinToken } = req.body;
 
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
     if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
     if (req.staff.role === 'cashier' && parseFloat(amount) > 200) return res.status(403).json({ error: 'Max 200€ pour un caissier' });
 
-    // Hash PIN if provided (only stored for new clients)
-    const pinHash = pinHashDirect || (pin ? await bcrypt.hash(pin, 10) : null);
+    // Input length limits
+    if (email && email.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
+    if (phone && phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
+    if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
+    if (notes && notes.length > 500) return res.status(400).json({ error: 'Notes trop longues (max 500)' });
+
+    // Resolve pinToken server-side (from QR registration) or hash PIN from manual input
+    const pinHash = resolvePinToken(pinToken) || (pin ? await bcrypt.hash(pin, 10) : null);
 
     const result = creditPoints({
       merchantId, staffId, email: email || null, phone: phone || null, name: name || null,
@@ -234,6 +241,19 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
+    // Input length limits
+    if (email && email.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
+    if (phone && phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
+    if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
+
+    // ── Email/phone edits: owner only (global impact on all merchants) ──
+    const emailChanging = email !== undefined && normalizeEmail(email) !== endUser.email_lower;
+    const phoneChanging = phone !== undefined && normalizePhone(phone) !== endUser.phone_e164;
+
+    if ((emailChanging || phoneChanging) && req.staff.role !== 'owner') {
+      return res.status(403).json({ error: 'Seul le propriétaire peut modifier l\'email ou le téléphone (impact multi-commerce)' });
+    }
+
     const newEmailLower = email ? normalizeEmail(email) : endUser.email_lower;
     const newPhoneE164 = phone ? normalizePhone(phone) : endUser.phone_e164;
 
@@ -260,10 +280,20 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, endUser.id);
     if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
 
-    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id, details: { name: newName, email: newEmail, phone: newPhone } });
+    // ── Audit with cross-merchant impact tracking ──
+    const otherMerchantCount = db.prepare(
+      'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
+    ).get(mc.end_user_id, merchantId).count;
+
+    logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id,
+      details: { name: newName, email: newEmail, phone: newPhone, emailChanged, phoneChanged: phoneChanging, otherMerchantsAffected: otherMerchantCount } });
 
     const updated = endUserQueries.findById.get(endUser.id);
-    res.json({ message: 'Client mis à jour', client: { name: updated.name, email: updated.email, phone: updated.phone } });
+    const warning = otherMerchantCount > 0 && (emailChanged || phoneChanging)
+      ? ` ⚠️ Ce client est inscrit chez ${otherMerchantCount} autre(s) commerce(s) — la modification s'applique partout.`
+      : '';
+
+    res.json({ message: 'Client mis à jour' + warning, client: { name: updated.name, email: updated.email, phone: updated.phone }, crossMerchantImpact: otherMerchantCount });
   } catch (error) {
     console.error('Erreur edit:', error);
     res.status(500).json({ error: error.message || 'Erreur lors de la mise à jour' });
@@ -454,7 +484,7 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
 // GET /api/clients/near-duplicates — Fuzzy phone/email duplicate detection
 // ═══════════════════════════════════════════════════════
 
-router.get('/near-duplicates', (req, res) => {
+router.get('/near-duplicates', requireRole('owner', 'manager'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const { email, phone } = req.query;
@@ -566,7 +596,7 @@ router.get('/search', requireRole('owner', 'manager'), (req, res) => {
 // GET /api/clients/search-global?q=... — Cross-merchant user search (all staff)
 // ═══════════════════════════════════════════════════════
 
-router.get('/search-global', (req, res) => {
+router.get('/search-global', requireRole('owner', 'manager'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const { q } = req.query;
@@ -598,8 +628,19 @@ router.post('/export/csv', requireRole('owner'), async (req, res) => {
   try {
     const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id);
     const merchant = merchantQueries.findById.get(req.staff.merchant_id);
+
+    // CSV injection protection: prefix dangerous first chars, escape double quotes
+    const csvSafe = (val) => {
+      if (!val) return '';
+      let s = String(val).replace(/"/g, '""');
+      if (/^[=+\-@\t\r]/.test(s)) s = "'" + s;
+      return s;
+    };
+
     let csv = 'Email,Téléphone,Nom,Points,Total dépensé,Visites,Première visite,Dernière visite,Email validé,Bloqué,Récompense perso\n';
-    clients.forEach(c => { csv += `"${c.email||''}","${c.phone||''}","${c.name||''}",${c.points_balance},${c.total_spent},${c.visit_count},"${c.first_visit}","${c.last_visit}",${c.email_validated?'Oui':'Non'},${c.is_blocked?'Oui':'Non'},"${c.custom_reward||''}"\n`; });
+    clients.forEach(c => {
+      csv += `"${csvSafe(c.email)}","${csvSafe(c.phone)}","${csvSafe(c.name)}",${c.points_balance},${c.total_spent},${c.visit_count},"${csvSafe(c.first_visit)}","${csvSafe(c.last_visit)}",${c.email_validated?'Oui':'Non'},${c.is_blocked?'Oui':'Non'},"${csvSafe(c.custom_reward)}"\n`;
+    });
 
     const date = new Date().toISOString().slice(0, 10);
     const filename = `clients-${merchant.business_name.replace(/[^a-zA-Z0-9]/g, '-')}-${date}.csv`;
@@ -650,7 +691,7 @@ router.put('/:id/custom-reward', requireRole('owner', 'manager'), (req, res) => 
     const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
     if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
 
-    const value = (customReward && customReward.trim()) ? customReward.trim() : null;
+    const value = (customReward && customReward.trim()) ? customReward.trim().substring(0, 200) : null;
 
     merchantClientQueries.setCustomReward.run(value, mcId);
 
