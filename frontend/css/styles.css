@@ -487,40 +487,156 @@ select.form-control { appearance: auto; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 
+/* ─── Bottom Navigation (mobile) ─────────────────────── */
+
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: linear-gradient(135deg, #111827 0%, #1a2236 50%, #0f172a 100%);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding: 0;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.25);
+}
+
+.bottom-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.bnav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  min-height: 56px;
+  padding: 6px 4px 4px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.35);
+  font-size: 0.58rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: color 0.15s;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.bnav-item svg {
+  width: 22px;
+  height: 22px;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+.bnav-item.active {
+  color: #22d3ee;
+}
+.bnav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  background: #22d3ee;
+  border-radius: 0 0 2px 2px;
+}
+.bnav-badge {
+  position: absolute;
+  top: 4px;
+  right: 50%;
+  transform: translateX(14px);
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.5rem;
+  font-weight: 700;
+  min-width: 15px;
+  height: 15px;
+  line-height: 15px;
+  text-align: center;
+  border-radius: 8px;
+  padding: 0 4px;
+}
+
+/* "Plus" sheet */
+.bnav-sheet {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 199;
+  background: rgba(0,0,0,0.5);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.bnav-sheet.open { display: block; }
+.bnav-sheet-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: #1a2236;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px 16px 0 0;
+  padding: 0.6rem 0 0;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+}
+.bnav-sheet-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 24px;
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.bnav-sheet-item:active { background: rgba(255,255,255,0.05); }
+.bnav-sheet-item svg { width: 20px; height: 20px; flex-shrink: 0; }
+.bnav-sheet-item.danger { color: #f87171; }
+.bnav-sheet-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.15);
+  border-radius: 2px;
+  margin: 0 auto 0.4rem;
+}
+
 /* ─── Responsive ────────────────────────────────────── */
 
 @media (max-width: 768px) {
-  .navbar { padding: 0.4rem 0.75rem; }
-  .navbar-inner {
-    flex-wrap: wrap;
-    height: auto;
-    gap: 0.4rem;
-    justify-content: center;
-  }
-  .navbar-brand { justify-content: center; }
-  .brand-merchant { max-width: 110px; font-size: 0.62rem; letter-spacing: 1px; }
-  .brand-mark { font-size: 1.15rem; }
-  .navbar-menu {
-    width: 100%;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 1px;
-    padding: 2px;
-  }
-  .navbar-link { padding: 0.25rem 0.5rem; font-size: 0.72rem; }
-  .navbar-user {
-    width: 100%;
-    justify-content: center;
-    padding-top: 0.4rem;
-    border-top: 1px solid rgba(255,255,255,0.06);
-  }
+  /* Show bottom nav, hide desktop menu */
+  .bottom-nav { display: block; }
+  .navbar-menu { display: none !important; }
+  .navbar-user-name { display: none; }
 
+  /* Slim top header */
+  .navbar { padding: 0.35rem 0.75rem; }
+  .navbar-inner {
+    height: 36px;
+    gap: 0;
+  }
+  .brand-mark { font-size: 1.1rem; }
+  .brand-divider { height: 16px; }
+  .brand-merchant { max-width: 140px; font-size: 0.6rem; letter-spacing: 1px; }
+  .navbar-avatar { width: 28px; height: 28px; font-size: 0.62rem; }
+
+  /* Body padding for bottom nav — only when class is set by JS */
+  body.has-bnav { padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+
+  /* General mobile fixes */
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
   .stats-grid { grid-template-columns: repeat(2, 1fr); }
-
   .table { font-size: 0.85rem; }
   .table th, .table td { padding: 0.5rem 0.75rem; }
-
   .auth-box { padding: 1.5rem; }
   .modal-content { width: 95%; }
 }
