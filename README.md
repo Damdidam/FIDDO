@@ -1,8 +1,8 @@
 # FIDDO
 
-**Programme de fidélité multi-tenant pour restaurateurs belges**
+**Programme de fidélité multi-tenant pour commerces belges**
 
-FIDDO permet aux restaurants, cafés et commerces de proximité de gérer un programme de fidélité par points — sans app à installer côté client, sans matériel spécifique. Une interface web simple, pensée pour un usage en caisse.
+FIDDO permet aux commerces de proximité (restaurants, boulangeries, coiffeurs, pharmacies…) de gérer un programme de fidélité par points — sans app à installer côté client, sans matériel spécifique. Une interface web simple, pensée pour un usage en caisse.
 
 **[fiddo.be](https://www.fiddo.be)**
 
@@ -10,7 +10,7 @@ FIDDO permet aux restaurants, cafés et commerces de proximité de gérer un pro
 
 ## Concept
 
-Le restaurateur crédite des points à chaque passage client. Quand le seuil est atteint, le client bénéficie d'une récompense (boisson offerte, réduction, dessert…). Tout se fait depuis le navigateur, sur téléphone ou tablette en caisse.
+Le commerçant crédite des points à chaque passage client. Quand le seuil est atteint, le client bénéficie d'une récompense (réduction, cadeau, service offert…). Tout se fait depuis le navigateur, sur téléphone ou tablette en caisse.
 
 ---
 
@@ -21,7 +21,7 @@ Le restaurateur crédite des points à chaque passage client. Quand le seuil est
 - **Crédit automatique** : saisie du montant dépensé, calcul automatique des points selon le ratio configuré (ex : 1 pt/€)
 - **Récompense** : déduction automatique quand le seuil est atteint, avec animation de célébration
 - **Récompense depuis le crédit** : après un crédit qui atteint le seuil, un bouton récompense apparaît directement dans l'overlay de succès (avec prompt PIN si identification par email/téléphone)
-- **Récompense personnalisée** : possibilité de définir une récompense custom par client (ex : "Café offert" pour un habitué)
+- **Récompense personnalisée** : possibilité de définir une récompense custom par client (ex : "Cadeau offert" pour un habitué)
 - **Ajustement manuel** : correction de points par le manager/propriétaire avec raison obligatoire
 - **Idempotence** : protection contre les double-crédits via clé d'idempotence unique par transaction
 
@@ -442,7 +442,7 @@ PORT=3000
 
 ## Marché cible
 
-Restaurants, cafés, boulangeries et commerces de proximité en **Belgique** — validation TVA belge, téléphone +32 par défaut, interface française. Pensé pour des équipes non-techniques qui veulent fidéliser leur clientèle sans investissement matériel ni app à télécharger.
+Restaurants, cafés, boulangeries, coiffeurs, pharmacies et tout commerce de proximité en **Belgique** — validation TVA belge, téléphone +32 par défaut, interface française. Pensé pour des équipes non-techniques qui veulent fidéliser leur clientèle sans investissement matériel ni app à télécharger.
 
 ---
 
