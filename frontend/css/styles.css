@@ -22,8 +22,9 @@
   --gradient: linear-gradient(135deg, #0891B2, #0E7490);
 }
 
-html, body {
+html {
   overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -31,6 +32,10 @@ body {
   background: var(--light);
   color: var(--text);
   line-height: 1.6;
+  overflow-x: hidden;
+  position: relative;
+  max-width: 100vw;
+  overscroll-behavior-x: none;
 }
 
 /* ─── Container ─────────────────────────────────────── */
@@ -39,6 +44,7 @@ body {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  overflow-x: hidden;
 }
 
 /* ─── Navbar (Concept B — Pill Navigation) ──────────── */
@@ -507,6 +513,7 @@ select.form-control { appearance: auto; }
   padding: 0;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   box-shadow: 0 -2px 12px rgba(0,0,0,0.25);
+  overflow: hidden;
 }
 
 .bottom-nav-inner {
