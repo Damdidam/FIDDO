@@ -554,7 +554,7 @@
       if (data.isNew) {
         lookupIsNew = true;
         el.className = 'lookup-strip show new-client';
-        el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + c.name : '');
+        el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + esc(c.name) : '');
         if (c.name && !document.getElementById('client-name').value) {
           document.getElementById('client-name').value = c.name;
           document.getElementById('client-name').classList.add('has-value');
@@ -568,13 +568,13 @@
       el.className = 'lookup-strip show found';
       const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
       let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
-        '<span class="l-name">' + (c.name || c.email || c.phone) + '</span>' +
+        '<span class="l-name">' + esc(c.name || c.email || c.phone) + '</span>' +
         (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
         '<div class="l-meta">' + c.visit_count + ' visite(s) · ' + c.points_balance + '/' + c.reward_threshold + '</div>' +
         '<div class="l-prog"><div class="l-prog-fill" style="width:' + pct + '%"></div></div>';
       if (c.can_redeem) {
         h += '<div class="l-reward" onclick="redeemReward(' + c.id + ')">' +
-          (c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
+          esc(c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
       }
       el.innerHTML = h;
 
@@ -694,7 +694,7 @@
       const fix = TYPOS[parts[1].toLowerCase()];
       if (fix) {
         const corrected = parts[0] + '@' + fix;
-        c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + corrected + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + corrected + '\')">Corriger</button></div>';
+        c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + esc(corrected) + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + esc(corrected) + '\')">Corriger</button></div>';
       }
     }
     function applyTypo(v) {
@@ -720,10 +720,10 @@
             const d = await API.clients.searchGlobal(v);
             if (!d.clients || !d.clients.length) { list.classList.remove('show'); return; }
             list.innerHTML = d.clients.slice(0, 6).map(c =>
-              '<div class="ac-item" data-email="' + (c.email || '') + '" data-phone="' + (c.phone || '') + '" data-name="' + (c.name || '') + '">' +
+              '<div class="ac-item" data-email="' + esc(c.email || '') + '" data-phone="' + esc(c.phone || '') + '" data-name="' + esc(c.name || '') + '">' +
               '<span class="ac-pts">' + (c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>') + '</span>' +
-              '<div class="ac-name">' + (c.name || c.email || c.phone || '?') + '</div>' +
-              '<div class="ac-meta">' + (c.email || '') + (c.email && c.phone ? ' · ' : '') + (c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
+              '<div class="ac-name">' + esc(c.name || c.email || c.phone || '?') + '</div>' +
+              '<div class="ac-meta">' + esc(c.email || '') + (c.email && c.phone ? ' · ' : '') + esc(c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
             ).join('');
             list.classList.add('show');
             list.querySelectorAll('.ac-item').forEach(item => {
@@ -833,10 +833,10 @@
         const n = r.client.name || r.client.email || r.client.phone || 'Client';
         document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
 
-        let info = '<strong>' + n + '</strong>';
+        let info = '<strong>' + esc(n) + '</strong>';
         info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
-        if (r.client.email) info += '<br><span class="s-detail">' + r.client.email + '</span>';
-        if (r.client.phone) info += '<br><span class="s-detail">' + r.client.phone + '</span>';
+        if (r.client.email) info += '<br><span class="s-detail">' + esc(r.client.email) + '</span>';
+        if (r.client.phone) info += '<br><span class="s-detail">' + esc(r.client.phone) + '</span>';
         if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
 
         document.getElementById('s-info').innerHTML = info;
@@ -1005,12 +1005,12 @@
 
       let html = '';
       clients.forEach(c => {
-        const label = c.name || c.email || c.phone || 'Client';
+        const label = esc(c.name || c.email || c.phone || 'Client');
         const badge = c.isNew
           ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
           : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
         const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + c.identId + '\')">' +
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
           '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
           '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
           '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
@@ -1074,15 +1074,14 @@
           '</div>';
 
         data.matches.forEach(m => {
-          const identifier = m.email || m.phone || '';
-          const useEmail = m.email || '';
-          const usePhone = m.phone || '';
+          const identifier = esc(m.email || m.phone || '');
+          const useEmail = (m.email || '').replace(/'/g, "\\'");
+          const usePhone = (m.phone || '').replace(/'/g, "\\'");
+          const useName = (m.name || '').replace(/'/g, "\\'");
           html += '<div class="dup-match" onclick="useDuplicate(\'' +
-            useEmail.replace(/'/g, "\\'") + "', '" +
-            usePhone.replace(/'/g, "\\'") + "', '" +
-            (m.name || '').replace(/'/g, "\\'") + '\')">' +
+            useEmail + "', '" + usePhone + "', '" + useName + '\')">' +
             '<div class="dup-match-info">' +
-              '<span class="dup-match-name">' + (m.name || 'Sans nom') + '</span> ' +
+              '<span class="dup-match-name">' + esc(m.name || 'Sans nom') + '</span> ' +
               '<span class="dup-match-id">' + identifier + '</span>' +
               (m.pointsBalance > 0 ? ' · ' + m.pointsBalance + ' pts' : '') +
             '</div>' +
