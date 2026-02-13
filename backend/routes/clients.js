@@ -6,7 +6,7 @@ const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
 const { sendValidationEmail, sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
-const { resolvePinToken } = require('./qr');
+const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
 const router = express.Router();
 router.use(authenticateStaff);
@@ -25,21 +25,26 @@ router.get('/quick-search', (req, res) => {
     const termLike = `%${q.toLowerCase()}%`;
     let endUsers;
 
+    // Scoped to merchant's own clients only (privacy: no cross-merchant data)
     if (mode === 'phone') {
       const digits = q.replace(/[^\d]/g, '');
       if (digits.length < 3) return res.json({ results: [] });
       endUsers = db.prepare(`
-        SELECT id, email, phone, phone_e164, name FROM end_users
-        WHERE deleted_at IS NULL
-          AND (REPLACE(REPLACE(REPLACE(REPLACE(phone_e164,'+',''),' ',''),'-',''),'.','') LIKE ? OR name LIKE ?)
-        ORDER BY updated_at DESC LIMIT 10
-      `).all(`%${digits}%`, termLike);
+        SELECT eu.id, eu.email, eu.phone, eu.phone_e164, eu.name
+        FROM end_users eu
+        JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = ?
+        WHERE eu.deleted_at IS NULL
+          AND (REPLACE(REPLACE(REPLACE(REPLACE(eu.phone_e164,'+',''),' ',''),'-',''),'.','') LIKE ? OR eu.name LIKE ?)
+        ORDER BY eu.updated_at DESC LIMIT 10
+      `).all(merchantId, `%${digits}%`, termLike);
     } else {
       endUsers = db.prepare(`
-        SELECT id, email, phone, phone_e164, name FROM end_users
-        WHERE deleted_at IS NULL AND (email_lower LIKE ? OR name LIKE ?)
-        ORDER BY updated_at DESC LIMIT 10
-      `).all(termLike, termLike);
+        SELECT eu.id, eu.email, eu.phone, eu.phone_e164, eu.name
+        FROM end_users eu
+        JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = ?
+        WHERE eu.deleted_at IS NULL AND (eu.email_lower LIKE ? OR eu.name LIKE ?)
+        ORDER BY eu.updated_at DESC LIMIT 10
+      `).all(merchantId, termLike, termLike);
     }
 
     const results = endUsers.map(eu => {
@@ -200,10 +205,14 @@ router.post('/credit', async (req, res) => {
 router.post('/reward', (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const { merchantClientId, notes, idempotencyKey, pin, qrVerified } = req.body;
+    const { merchantClientId, notes, idempotencyKey, pin, qrVerifyToken } = req.body;
     if (!merchantClientId) return res.status(400).json({ error: 'ID client requis' });
-    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null, qrVerified: !!qrVerified });
-    if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta } });
+
+    // Resolve QR verify token server-side (never trust a boolean from client)
+    const qrVerified = resolveQrVerifyToken(qrVerifyToken);
+
+    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null, qrVerified });
+    if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta, qrVerified } });
     res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction, rewardLabel: result.rewardLabel || null });
   } catch (error) {
     console.error('Erreur reward:', error);
@@ -218,6 +227,7 @@ router.post('/adjust', requireRole('owner', 'manager'), (req, res) => {
     const merchantId = req.staff.merchant_id;
     const { merchantClientId, pointsDelta, reason } = req.body;
     if (!merchantClientId || pointsDelta === undefined) return res.status(400).json({ error: 'ID client et ajustement requis' });
+    if (reason && reason.length > 500) return res.status(400).json({ error: 'Raison trop longue (max 500)' });
     const result = adjustPoints({ merchantId, merchantClientId: parseInt(merchantClientId), pointsDelta: parseInt(pointsDelta), staffId: req.staff.id, reason: reason || '' });
     logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'points_adjusted', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: parseInt(pointsDelta), reason } });
     res.json({ message: 'Ajustement effectué', client: result.merchantClient, transaction: result.transaction });
