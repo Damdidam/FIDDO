@@ -61,6 +61,7 @@ app.use('/api/messages', require('./routes/messages'));
 // Super admin
 app.use('/api/admin/auth', require('./routes/admin/auth'));
 app.use('/api/admin/merchants', require('./routes/admin/merchants'));
+app.use('/api/admin/users', require('./routes/admin/users'));
 app.use('/api/admin/backups', require('./routes/admin/backups'));
 app.use('/api/admin/announcements', require('./routes/admin/announcements'));
 app.use('/api/admin/messages', require('./routes/admin/messages'));
