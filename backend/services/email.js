@@ -229,42 +229,25 @@ function sendPasswordChangedEmail(staffEmail, displayName) {
  * Email de notification de changement de code PIN fidélité.
  */
 function sendPinChangedEmail(clientEmail, businessName, newPin) {
-  const pinSection = newPin
-    ? `
-      <div style="text-align: center; margin: 20px 0;">
-        <div style="display: inline-block; background: #F0F9FF; border: 2px solid #0891B2; border-radius: 12px; padding: 15px 30px;">
-          <p style="margin: 0 0 5px; font-size: 13px; color: #64748B;">Votre nouveau code PIN</p>
-          <p style="margin: 0; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #0891B2;">${newPin}</p>
-        </div>
-      </div>
-      <p style="font-size: 13px; color: #666; text-align: center;">
-        Mémorisez ce code et ne le partagez avec personne.
-      </p>
-    `
-    : '';
-
-  sendMail({
+  return sendMail({
     to: clientEmail,
-    subject: `${businessName} — Votre code PIN fidélité a été modifié 🔒`,
+    subject: `Votre code PIN a été modifié — ${businessName}`,
     html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">Code PIN modifié 🔒</h2>
-        <p>Votre code PIN de fidélité chez <strong>${businessName}</strong> a été modifié par le commerce.</p>
-        ${pinSection}
-        <div style="background-color: #FEF3C7; border-left: 4px solid #F59E0B; padding: 15px; border-radius: 5px; margin: 20px 0;">
-          <p style="margin: 0; color: #92400E;">
-            <strong>⚠️ Vous n'êtes pas à l'origine de ce changement ?</strong><br>
-            Rendez-vous en personne chez <strong>${businessName}</strong> pour faire corriger votre code PIN.
-          </p>
+      <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
+        <h2 style="color: #0891B2;">🔒 Code PIN modifié</h2>
+        <p>Bonjour,</p>
+        <p>Votre code PIN pour <strong>${businessName}</strong> a été mis à jour.</p>
+        <div style="background: #FEF3C7; border-left: 3px solid #F59E0B; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 0.9rem;">⚠️ Si vous n'êtes pas à l'origine de ce changement, veuillez contacter le commerce immédiatement.</p>
         </div>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
-        <p style="font-size: 12px; color: #666; text-align: center;">
-          ${businessName} | Programme de fidélité
-        </p>
+        <p style="color: #6b7280; font-size: 0.85rem;">Ce code est utilisé pour réclamer vos récompenses. Ne le partagez avec personne.</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+        <p style="font-size: 0.75rem; color: #94a3b8;">FIDDO — Programme de fidélité</p>
       </div>
     `,
   });
 }
+
 
 function sendMagicLinkEmail(clientEmail, magicUrl) {
   sendMail({
