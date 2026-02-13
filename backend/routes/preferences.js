@@ -347,6 +347,14 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
       return res.status(400).json({ error: 'Tous les champs sont requis' });
     }
 
+    // Input length limits (same as registration)
+    if (businessName.length > 150) return res.status(400).json({ error: 'Nom du commerce trop long (max 150)' });
+    if (address.length > 300) return res.status(400).json({ error: 'Adresse trop longue (max 300)' });
+    if (email.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
+    if (phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
+    if (ownerPhone.length > 20) return res.status(400).json({ error: 'Téléphone responsable trop long (max 20)' });
+    if (ownerName && ownerName.length > 100) return res.status(400).json({ error: 'Nom du responsable trop long (max 100)' });
+
     // Normalize & validate VAT
     const normalizedVat = normalizeVAT(vatNumber);
     if (!normalizedVat) {
@@ -452,6 +460,9 @@ router.put('/password', async (req, res) => {
     }
     if (newPassword.length < 6) {
       return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
+    }
+    if (newPassword.length > 72) {
+      return res.status(400).json({ error: 'Le mot de passe ne doit pas dépasser 72 caractères' });
     }
 
     const staff = staffQueries.findById.get(req.staff.id);
