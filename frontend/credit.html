@@ -47,11 +47,12 @@
 
     /* ── Segmented control ── */
     .seg {
-      display: grid; grid-template-columns: 1fr 1fr 1fr 1fr;
+      display: flex;
       background: #F1F5F9; border-radius: 7px; padding: 3px;
       margin-bottom: 0.9rem;
     }
     .seg button {
+      flex: 1;
       padding: 0.4rem; border: none; background: transparent;
       border-radius: 5px; font-family: inherit; font-weight: 600;
       font-size: 0.75rem; color: #64748B; cursor: pointer;
