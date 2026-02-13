@@ -457,6 +457,25 @@
 
       <div id="cards-list"></div>
 
+      <!-- PIN Management -->
+      <div class="card" style="margin-top:1rem; padding:1rem 1.25rem;">
+        <div style="font-weight:600; font-size:0.85rem; margin-bottom:0.5rem;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Code PIN
+        </div>
+        <div id="pin-status" style="font-size:0.78rem; color:var(--muted); margin-bottom:0.75rem;"></div>
+        <div id="pin-form">
+          <div id="pin-current-group" style="display:none; margin-bottom:0.5rem;">
+            <input type="tel" id="pin-current" class="form-input" placeholder="PIN actuel" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.1rem; letter-spacing:0.4rem; font-weight:700;">
+          </div>
+          <div style="margin-bottom:0.5rem;">
+            <input type="tel" id="pin-new" class="form-input" placeholder="Nouveau PIN (4 chiffres)" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.1rem; letter-spacing:0.4rem; font-weight:700;">
+          </div>
+          <div id="pin-alert" style="font-size:0.75rem; margin-bottom:0.5rem;"></div>
+          <button class="btn btn-accent" onclick="savePin()" style="width:100%; padding:0.5rem;" id="pin-save-btn">Enregistrer</button>
+        </div>
+      </div>
+
       <button class="btn btn-ghost" onclick="doLogout()" style="margin-top:1rem;">Déconnexion</button>
     </div>
 
@@ -647,8 +666,66 @@
         : n === 1 ? '1 carte de fidélité'
         : n + ' cartes de fidélité';
 
+      // PIN status
+      if (c.hasPin) {
+        document.getElementById('pin-status').textContent = 'Votre code PIN est actif. Vous pouvez le modifier ci-dessous.';
+        document.getElementById('pin-current-group').style.display = '';
+        document.getElementById('pin-new').placeholder = 'Nouveau PIN (4 chiffres)';
+      } else {
+        document.getElementById('pin-status').innerHTML = '<span style="color:#F59E0B;">⚠ Aucun code PIN défini.</span> Créez-en un pour protéger vos récompenses.';
+        document.getElementById('pin-current-group').style.display = 'none';
+        document.getElementById('pin-new').placeholder = 'Choisissez un PIN (4 chiffres)';
+      }
+
       renderCards();
       showScreen('screen-dashboard');
+    }
+
+    async function savePin() {
+      const btn = document.getElementById('pin-save-btn');
+      const alert = document.getElementById('pin-alert');
+      const currentPin = document.getElementById('pin-current').value.trim();
+      const newPin = document.getElementById('pin-new').value.trim();
+
+      alert.innerHTML = '';
+
+      if (!/^\d{4}$/.test(newPin)) {
+        alert.innerHTML = '<span style="color:#EF4444;">Le PIN doit contenir 4 chiffres</span>';
+        return;
+      }
+
+      if (clientData.client.hasPin && !currentPin) {
+        alert.innerHTML = '<span style="color:#EF4444;">Saisissez votre PIN actuel</span>';
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement…';
+
+      try {
+        const resp = await fetch(`${API}/pin`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + clientToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ currentPin: currentPin || undefined, newPin }),
+        });
+        const data = await resp.json();
+
+        if (!resp.ok) {
+          alert.innerHTML = '<span style="color:#EF4444;">' + data.error + '</span>';
+          return;
+        }
+
+        alert.innerHTML = '<span style="color:#10B981;">✓ Code PIN mis à jour</span>';
+        clientData.client.hasPin = true;
+        document.getElementById('pin-current-group').style.display = '';
+        document.getElementById('pin-current').value = '';
+        document.getElementById('pin-new').value = '';
+      } catch (e) {
+        alert.innerHTML = '<span style="color:#EF4444;">Erreur réseau</span>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Enregistrer';
+      }
     }
 
     function renderCards() {
