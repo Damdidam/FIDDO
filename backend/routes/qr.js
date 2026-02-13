@@ -420,7 +420,7 @@ router.get('/status/:identId', (req, res) => {
 
 router.post('/register', (req, res) => {
   try {
-    const { qrToken, email, phone, name } = req.body;
+    const { qrToken, email, phone, name, pin } = req.body;
 
     // Validate merchant
     if (!qrToken) return res.status(400).json({ error: 'Token QR requis' });
@@ -432,6 +432,9 @@ router.post('/register', (req, res) => {
     // Validate input
     if (!email && !phone) {
       return res.status(400).json({ error: 'Email ou téléphone requis' });
+    }
+    if (pin && !/^\d{4}$/.test(pin)) {
+      return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
     }
 
     const emailLower = normalizeEmail(email);
@@ -468,6 +471,16 @@ router.post('/register', (req, res) => {
     const mc = existing ? merchantClientQueries.find.get(merchant.id, existing.id) : null;
     const isNew = !existing;
 
+    // Hash PIN if provided
+    let pinHash = null;
+    if (pin && /^\d{4}$/.test(pin)) {
+      pinHash = bcrypt.hashSync(pin, 10);
+      // For existing users without PIN, set it directly
+      if (existing && !existing.pin_hash) {
+        endUserQueries.setPin.run(pinHash, existing.id);
+      }
+    }
+
     // Add to pending identifications queue
     const identId = crypto.randomBytes(8).toString('hex');
 
@@ -496,6 +509,7 @@ router.post('/register', (req, res) => {
       pointsBalance: mc?.points_balance || 0,
       visitCount: mc?.visit_count || 0,
       isNew,
+      pinHash: isNew ? pinHash : null,
       createdAt: Date.now(),
     });
 
@@ -710,6 +724,7 @@ router.post('/consume/:identId', authenticateStaff, (req, res) => {
       name: ident.name,
       pointsBalance: ident.pointsBalance,
       isNew: ident.isNew,
+      pinHash: ident.pinHash || null,
     });
   } catch (error) {
     console.error('Consume error:', error);
