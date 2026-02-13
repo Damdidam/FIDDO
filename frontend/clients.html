@@ -580,7 +580,7 @@
           h += '<div class="exp ' + (hasNotes ? 'open' : '') + '" onclick="this.classList.toggle(\'open\')" id="notes-section">';
           h += '<div class="exp-hdr"><span>📝 Notes privées' + (hasNotes ? '' : ' <span style="font-size:0.64rem;color:#94A3B8;font-weight:400;margin-left:4px">Aucune</span>') + '</span><span class="exp-arrow">▶</span></div>';
           h += '<div class="exp-body" onclick="event.stopPropagation()">';
-          h += '<textarea class="notes-area" id="notes-area" placeholder="VIP, allergique noix, couple table 12…" maxlength="500">' + esc(c.notes_private || '') + '</textarea>';
+          h += '<textarea class="notes-area" id="notes-area" placeholder="VIP, client fidèle, préfère le matin…" maxlength="500">' + esc(c.notes_private || '') + '</textarea>';
           h += '<div class="notes-meta"><span id="notes-count">' + (c.notes_private || '').length + '</span>/500 <button class="notes-save" onclick="saveNotes()">Sauver</button></div>';
           h += '</div></div>';
         }
