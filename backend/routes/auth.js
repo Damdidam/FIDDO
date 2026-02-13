@@ -246,9 +246,26 @@ router.get('/verify', authenticateStaff, (req, res) => {
     return res.status(404).json({ error: 'Compte non trouvé' });
   }
 
+  // Re-check account status (may have been deactivated after JWT issued)
+  if (!staff.is_active) {
+    res.clearCookie('staff_token');
+    return res.status(403).json({ error: 'Votre compte a été désactivé.' });
+  }
+
   const merchant = merchantQueries.findById.get(staff.merchant_id);
   if (!merchant) {
     return res.status(404).json({ error: 'Commerce non trouvé' });
+  }
+
+  // Re-check merchant status (may have been suspended after JWT issued)
+  if (merchant.status !== 'active') {
+    res.clearCookie('staff_token');
+    const statusMessages = {
+      suspended: 'Votre commerce a été suspendu. Contactez le support.',
+      cancelled: 'Ce commerce a été résilié.',
+      pending: 'Votre commerce est en attente de validation.',
+    };
+    return res.status(403).json({ error: statusMessages[merchant.status] || 'Commerce non actif.' });
   }
 
   const { password: _, ...staffData } = staff;
