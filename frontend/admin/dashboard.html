@@ -881,10 +881,10 @@
         merchants.forEach(m => {
           const statusClass = m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : m.status === 'suspended' ? 'danger' : 'neutral';
           html += `<tr class="merchant-row" onclick="showMerchant(${m.id})">
-            <td><strong>${m.business_name}</strong><br><small class="text-muted-dark">${m.email}</small></td>
-            <td>${m.owner_name || '-'}<br><small class="text-muted-dark">${m.owner_email || '-'}</small></td>
-            <td style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${m.vat_number}</td>
-            <td><span class="badge badge-dark-${statusClass}">${m.status}</span></td>
+            <td><strong>${esc(m.business_name)}</strong><br><small class="text-muted-dark">${esc(m.email)}</small></td>
+            <td>${esc(m.owner_name) || '-'}<br><small class="text-muted-dark">${esc(m.owner_email) || '-'}</small></td>
+            <td style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${esc(m.vat_number)}</td>
+            <td><span class="badge badge-dark-${statusClass}">${esc(m.status)}</span></td>
             <td>${m.client_count}</td>
             <td style="color: rgba(255,255,255,0.4);">${Format.date(m.created_at)}</td>
           </tr>`;
@@ -919,16 +919,16 @@
 
           <h3 class="mb-1">Informations</h3>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-            <div><strong>Adresse :</strong> ${m.address}</div>
-            <div><strong>TVA :</strong> ${m.vat_number}</div>
-            <div><strong>Email :</strong> ${m.email}</div>
-            <div><strong>Tél :</strong> ${m.phone}</div>
-            <div><strong>Status :</strong> <span class="badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : 'danger'}">${m.status}</span></div>
+            <div><strong>Adresse :</strong> ${esc(m.address)}</div>
+            <div><strong>TVA :</strong> ${esc(m.vat_number)}</div>
+            <div><strong>Email :</strong> ${esc(m.email)}</div>
+            <div><strong>Tél :</strong> ${esc(m.phone)}</div>
+            <div><strong>Status :</strong> <span class="badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : 'danger'}">${esc(m.status)}</span></div>
             <div><strong>Inscrit :</strong> ${Format.datetime(m.created_at)}</div>
             <div><strong>Points/€ :</strong> ${m.points_per_euro}</div>
             <div><strong>Récompense :</strong> ${m.points_for_reward} pts</div>
           </div>
-          ${m.rejection_reason ? `<div class="alert alert-warning">Raison de refus : ${m.rejection_reason}</div>` : ''}
+          ${m.rejection_reason ? `<div class="alert alert-warning">Raison de refus : ${esc(m.rejection_reason)}</div>` : ''}
 
           <h3 class="mb-1">Équipe (${staffList.length})</h3>
         `;
@@ -937,9 +937,9 @@
           html += '<table class="table" style="margin-bottom: 0;"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actif</th></tr></thead><tbody>';
           staffList.forEach(s => {
             html += `<tr>
-              <td>${s.display_name}</td>
-              <td>${s.email}</td>
-              <td><span class="badge badge-info">${s.role}</span></td>
+              <td>${esc(s.display_name)}</td>
+              <td>${esc(s.email)}</td>
+              <td><span class="badge badge-info">${esc(s.role)}</span></td>
               <td>${s.is_active ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-danger">Non</span>'}</td>
             </tr>`;
           });
@@ -1052,9 +1052,9 @@
           if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
 
           html += `<tr class="merchant-row" onclick="showUser(${u.id})">
-            <td><strong>${u.name || '<em style=\"opacity:0.4\">—</em>'}</strong></td>
-            <td style="font-size: 0.85rem;">${u.email || '<em style="opacity:0.3">—</em>'}</td>
-            <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone || '—'}</td>
+            <td><strong>${u.name ? esc(u.name) : '<em style=\"opacity:0.4\">—</em>'}</strong></td>
+            <td style="font-size: 0.85rem;">${u.email ? esc(u.email) : '<em style="opacity:0.3">—</em>'}</td>
+            <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone ? esc(u.phone) : '—'}</td>
             <td style="text-align: center;"><strong>${u.merchant_count}</strong></td>
             <td>${badges || '<span style="opacity:0.2">—</span>'}</td>
             <td style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
@@ -1088,8 +1088,8 @@
 
         let html = `
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-            <div><strong>Email :</strong> ${u.email || '—'} ${u.email_validated ? '<span class="badge badge-success">validé</span>' : ''}</div>
-            <div><strong>Téléphone :</strong> ${u.phone || '—'}</div>
+            <div><strong>Email :</strong> ${esc(u.email) || '—'} ${u.email_validated ? '<span class="badge badge-success">validé</span>' : ''}</div>
+            <div><strong>Téléphone :</strong> ${esc(u.phone) || '—'}</div>
             <div><strong>PIN :</strong> ${u.has_pin ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Non défini</span>'}</div>
             <div><strong>QR :</strong> ${u.has_qr ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-warning">Non</span>'}</div>
             <div><strong>Bloqué :</strong> ${u.is_blocked ? '<span class="badge badge-danger">Oui</span>' : 'Non'}</div>
@@ -1102,7 +1102,7 @@
           html += '<h3 class="mb-1">Aliases (post-fusion)</h3>';
           html += '<div style="margin-bottom: 1.5rem; font-size: 0.85rem;">';
           aliases.forEach(a => {
-            html += `<span class="badge badge-info" style="margin-right: 0.4rem; margin-bottom: 0.3rem;">${a.alias_type}: ${a.alias_value}</span>`;
+            html += `<span class="badge badge-info" style="margin-right: 0.4rem; margin-bottom: 0.3rem;">${esc(a.alias_type)}: ${esc(a.alias_value)}</span>`;
           });
           html += '</div>';
         }
@@ -1117,13 +1117,13 @@
           cards.forEach(c => {
             const statusBadge = c.merchant_status === 'active'
               ? '<span class="badge badge-success" style="font-size:0.65rem;">actif</span>'
-              : `<span class="badge badge-warning" style="font-size:0.65rem;">${c.merchant_status}</span>`;
+              : `<span class="badge badge-warning" style="font-size:0.65rem;">${esc(c.merchant_status)}</span>`;
 
             html += `
               <div class="user-card-row">
                 <div>
-                  <div class="user-card-biz">${c.business_name} ${statusBadge}</div>
-                  <div style="font-size:0.75rem; color: var(--text-muted);">${c.merchant_email}</div>
+                  <div class="user-card-biz">${esc(c.business_name)} ${statusBadge}</div>
+                  <div style="font-size:0.75rem; color: var(--text-muted);">${esc(c.merchant_email)}</div>
                 </div>
                 <div class="user-card-stats">
                   <div><strong>${c.points_balance}</strong> pts</div>
@@ -1139,10 +1139,15 @@
 
         document.getElementById('um-body').innerHTML = html;
 
-        // Footer with merge button
+        // Footer with merge + block buttons
+        const blockBtn = u.is_blocked
+          ? `<button class="btn btn-success btn-sm" onclick="globalUnblockUser(${u.id})">🔓 Débloquer</button>`
+          : `<button class="btn btn-danger btn-sm" onclick="globalBlockUser(${u.id})">🔒 Bloquer globalement</button>`;
+
         document.getElementById('um-footer').innerHTML = `
           <div class="action-btns">
             <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${(u.name || u.email || u.phone || '').replace(/'/g, "\\'")}')">🔀 Fusionner avec…</button>
+            ${blockBtn}
           </div>
         `;
 
@@ -1154,6 +1159,26 @@
 
     function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
     document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
+
+    async function globalBlockUser(id) {
+      if (!confirm('🔒 Bloquer cet utilisateur globalement ?\n\nIl ne pourra plus être crédité ni utiliser son QR/PIN chez aucun commerce.')) return;
+      try {
+        await adminCall(`/users/${id}/block`, { method: 'POST' });
+        closeUserModal();
+        loadUsers();
+        alert('✅ Utilisateur bloqué globalement');
+      } catch (e) { alert(e.message); }
+    }
+
+    async function globalUnblockUser(id) {
+      if (!confirm('🔓 Débloquer cet utilisateur ?')) return;
+      try {
+        await adminCall(`/users/${id}/unblock`, { method: 'POST' });
+        closeUserModal();
+        loadUsers();
+        alert('✅ Utilisateur débloqué');
+      } catch (e) { alert(e.message); }
+    }
 
     // ─── Merge Flow ───
 
@@ -1194,8 +1219,8 @@
           }
           container.innerHTML = users.slice(0, 8).map(u => `
             <div class="merge-result-search ${mergeSourceId === u.id ? 'selected' : ''}" onclick="selectMergeSource(${u.id})">
-              <strong>${u.name || '<em>Sans nom</em>'}</strong>
-              <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">${u.email || ''} ${u.phone || ''}</span>
+              <strong>${u.name ? esc(u.name) : '<em>Sans nom</em>'}</strong>
+              <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">${esc(u.email) || ''} ${esc(u.phone) || ''}</span>
               <span style="float:right; font-size:0.75rem; color:var(--text-muted);">${u.merchant_count} commerce${u.merchant_count > 1 ? 's' : ''}</span>
             </div>
           `).join('');
@@ -1222,14 +1247,14 @@
         html += `<div style="display:flex; gap:1rem; margin-bottom:1rem; font-size:0.85rem;">
           <div style="flex:1; padding:0.6rem; border-radius:8px; background:#fef2f2; border:1px solid #fecaca;">
             <strong>Source (supprimé)</strong><br>
-            ${preview.source.name || '—'}<br>
-            <span style="color:#6b7280;">${preview.source.email || ''} ${preview.source.phone || ''}</span>
+            ${esc(preview.source.name) || '—'}<br>
+            <span style="color:#6b7280;">${esc(preview.source.email) || ''} ${esc(preview.source.phone) || ''}</span>
           </div>
           <div style="display:flex; align-items:center; font-size:1.3rem;">→</div>
           <div style="flex:1; padding:0.6rem; border-radius:8px; background:#f0fdf4; border:1px solid #bbf7d0;">
             <strong>Cible (conservé)</strong><br>
-            ${preview.target.name || '—'}<br>
-            <span style="color:#6b7280;">${preview.target.email || ''} ${preview.target.phone || ''}</span>
+            ${esc(preview.target.name) || '—'}<br>
+            <span style="color:#6b7280;">${esc(preview.target.email) || ''} ${esc(preview.target.phone) || ''}</span>
           </div>
         </div>`;
 
@@ -1250,7 +1275,7 @@
 
             html += `<div class="merge-action">
               <div>
-                <div class="merge-label">${a.business_name} ${tag}</div>
+                <div class="merge-label">${esc(a.business_name)} ${tag}</div>
                 <div class="merge-detail">${detail}</div>
               </div>
             </div>`;
@@ -1259,7 +1284,7 @@
 
         if (preview.newAliases.length > 0) {
           html += `<div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);">
-            <strong>Aliases créés :</strong> ${preview.newAliases.map(a => a.value).join(', ')}
+            <strong>Aliases créés :</strong> ${preview.newAliases.map(a => esc(a.value)).join(', ')}
           </div>`;
         }
 
@@ -1324,7 +1349,7 @@
             <div class="ann-card priority-${a.priority}" ${isExpired ? 'style="opacity: 0.4;"' : ''}>
               <div class="ann-header">
                 <div>
-                  <span class="ann-title">${prioIcons[a.priority]} ${a.title}</span>
+                  <span class="ann-title">${prioIcons[a.priority]} ${esc(a.title)}</span>
                   ${isExpired ? '<span class="badge badge-dark-neutral" style="margin-left: 0.5rem;">Expirée</span>' : ''}
                 </div>
                 <div class="ann-actions">
@@ -1333,15 +1358,15 @@
                 </div>
               </div>
               <div class="ann-meta">
-                ${Format.datetime(a.created_at)} — par ${a.author_name}
+                ${Format.datetime(a.created_at)} — par ${esc(a.author_name)}
                 · <strong>${a.read_count}</strong> lecture(s)
                 · ${a.target_type === 'all' ? '📢 Tous' : `🎯 ${a.targets.length} commerce(s)`}
                 ${a.expires_at ? ` · Expire le ${Format.datetime(a.expires_at)}` : ''}
               </div>
-              <div class="ann-content">${a.content}</div>
+              <div class="ann-content">${esc(a.content)}</div>
               ${a.target_type === 'selected' && a.targets.length > 0 ? `
                 <div class="ann-targets">
-                  ${a.targets.map(t => `<span class="ann-target-chip">${t.business_name}</span>`).join('')}
+                  ${a.targets.map(t => `<span class="ann-target-chip">${esc(t.business_name)}</span>`).join('')}
                 </div>
               ` : ''}
             </div>
@@ -1376,7 +1401,7 @@
         container.innerHTML = activeMerchants.map(m => `
           <div class="merchant-check-item">
             <input type="checkbox" id="mc-${m.id}" value="${m.id}" class="merchant-cb">
-            <label for="mc-${m.id}">${m.business_name}</label>
+            <label for="mc-${m.id}">${esc(m.business_name)}</label>
           </div>
         `).join('');
       } catch (e) {
