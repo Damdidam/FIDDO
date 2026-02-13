@@ -216,22 +216,39 @@
 
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 768px) {
-      .dash-wrap { padding: 0.5rem; }
-      .stats-row { gap: 0.45rem; }
+      .dash-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.95rem; }
+      .stats-row { gap: 0.4rem; }
       .st-val { font-size: 1.3rem; }
+
+      /* Search — prevent iOS zoom */
+      .search-wrap input { font-size: 1rem; padding: 0.5rem 0.6rem 0.5rem 2rem; }
+
+      /* Client rows — bigger tap targets */
       .col-hdr, .cl-row { grid-template-columns: 1fr 60px 45px 75px; gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem; }
+      .cl-row { min-height: 52px; padding-top: 0.55rem; padding-bottom: 0.55rem; }
       .col-th-prog, .cl-prog-cell { display: none; }
-      .modal-box { width: 95%; max-height: 92vh; }
+
+      /* Export & toolbar buttons */
+      .csv-btn { min-height: 36px; display: inline-flex; align-items: center; padding: 0.35rem 0.75rem; }
+
+      /* Modal */
+      .modal-box { width: 97%; max-height: 94vh; border-radius: 12px 12px 0 0; }
       .edit-grid { grid-template-columns: 1fr; }
       .hero { padding: 1rem; border-radius: 0; }
       .hero-name { font-size: 1rem; }
-      .float-stats { margin: -14px 0.6rem 0; }
+      .hero-close { width: 36px; height: 36px; font-size: 1.2rem; }
+      .float-stats { margin: -14px 0.5rem 0; }
       .float-st-val { font-size: 1rem; }
-      .act-btn { padding: 4px 6px; font-size: 0.62rem; }
+
+      /* Action buttons — bigger */
+      .act-btn { padding: 6px 10px; font-size: 0.68rem; min-height: 34px; }
     }
     @media (max-width: 480px) {
       .col-hdr, .cl-row { grid-template-columns: 1fr 55px 72px; gap: 0.15rem; }
       .col-th-visits, .cl-visits-cell { display: none; }
+      .cl-name { font-size: 0.85rem; }
+      .cl-sub { font-size: 0.68rem; }
     }
     .pin-section { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 1rem 1.15rem; margin-top: 0.6rem; margin-bottom: 0.75rem; }
     .pin-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
