@@ -1,472 +1,1297 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const { db, merchantQueries, staffQueries } = require('../database');
-const { authenticateStaff, requireRole } = require('../middleware/auth');
-const { logAudit, auditCtx } = require('../middleware/audit');
-const { exportMerchantData, validateBackup, importMerchantData } = require('../services/backup');
-const { sendMerchantInfoChangedEmail, sendPasswordChangedEmail } = require('../services/email');
-const { normalizeEmail, normalizeVAT } = require('../services/normalizer');
-
-const router = express.Router();
-
-// All routes require authentication
-router.use(authenticateStaff);
-
-// ─── Theme defaults ──────────────────────────────────
-
-const VALID_THEMES = ['teal', 'navy', 'violet', 'forest', 'brick', 'amber', 'slate'];
-const VALID_LANGUAGES = ['fr', 'nl', 'en'];
-const VALID_BACKUP_FREQ = ['manual', 'daily', 'twice', 'thrice'];
-
-const DEFAULT_PREFS = {
-  theme: 'teal',
-  language: 'fr',
-  timezone: 'Europe/Brussels',
-  reward_message: 'Félicitations ! Vous avez gagné votre récompense ! 🎁',
-  notify_new_client: 1,
-  notify_reward_ready: 1,
-  notify_weekly_report: 0,
-  logo_url: null,
-  backup_frequency: 'manual',
-  last_backup_at: null,
-  credit_methods: '{"email":true,"phone":true,"qr":true,"scan":true}',
-};
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/preferences — Get current preferences
-// ═══════════════════════════════════════════════════════
-
-router.get('/', (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const prefs = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId);
-
-    res.json({
-      preferences: prefs || { merchant_id: merchantId, ...DEFAULT_PREFS },
-    });
-  } catch (error) {
-    console.error('Erreur get preferences:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/preferences — Update all preferences (owner only)
-// ═══════════════════════════════════════════════════════
-
-router.put('/', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const {
-      theme, language, timezone, reward_message,
-      notify_new_client, notify_reward_ready, notify_weekly_report,
-      logo_url, backup_frequency, credit_methods,
-    } = req.body;
-
-    // Validate
-    if (theme && !VALID_THEMES.includes(theme)) {
-      return res.status(400).json({ error: `Thème invalide. Choix : ${VALID_THEMES.join(', ')}` });
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FIDDO">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0891B2">
+  <title>Préférences — FIDDO</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary-light: #CFFAFE;
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
     }
-    if (language && !VALID_LANGUAGES.includes(language)) {
-      return res.status(400).json({ error: `Langue invalide. Choix : ${VALID_LANGUAGES.join(', ')}` });
+    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .dash * { box-sizing: border-box; }
+    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
+
+    /* ═══ HEADER ═══ */
+    .pg-title { font-size: 1.05rem; font-weight: 700; color: #1E293B; letter-spacing: -0.3px; margin: 0.3rem 0 0.8rem; }
+
+    /* ═══ TABS ═══ */
+    .pref-tabs { display: flex; gap: 0.3rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .pref-tab {
+      padding: 0.32rem 0.72rem; border: 1.5px solid #E2E8F0;
+      border-radius: 16px; background: white; font-family: inherit;
+      font-size: 0.72rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px;
     }
-    if (backup_frequency && !VALID_BACKUP_FREQ.includes(backup_frequency)) {
-      return res.status(400).json({ error: 'Fréquence de backup invalide' });
+    .pref-tab.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .pref-tab:hover:not(.active) { border-color: #CBD5E1; }
+    .pref-tab svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+    .pref-section { display: none; }
+    .pref-section.active { display: block; }
+
+    /* ═══ CARDS ═══ */
+    .pref-card {
+      background: white; border-radius: 10px; padding: 1rem 1.1rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); margin-bottom: 0.8rem;
+    }
+    .pref-card-title {
+      font-size: 0.82rem; font-weight: 700; color: #1E293B;
+      margin-bottom: 0.8rem; letter-spacing: -0.2px;
+    }
+    .pref-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+
+    /* ═══ FORM FIELDS ═══ */
+    .fg { margin-bottom: 0.7rem; }
+    .fg:last-child { margin-bottom: 0; }
+    .fg label { display: block; font-size: 0.68rem; font-weight: 600; color: #475569; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.3px; }
+    .fg input, .fg select, .fg textarea {
+      width: 100%; padding: 0.42rem 0.55rem; border: 1.5px solid #E2E8F0;
+      border-radius: 6px; font-family: inherit; font-size: 0.78rem;
+      color: #334155; background: white; transition: border-color 0.12s;
+    }
+    .fg input:focus, .fg select:focus, .fg textarea:focus { outline: none; border-color: var(--primary); }
+    .fg textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+    .fg .help { font-size: 0.62rem; color: #94A3B8; margin-top: 2px; }
+    .fg .error-text { font-size: 0.62rem; color: #DC2626; margin-top: 2px; }
+
+    /* ═══ SAVE BUTTON ═══ */
+    .save-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 0.4rem 1rem; border: none; border-radius: 8px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.75rem; font-weight: 600; cursor: pointer;
+      transition: opacity 0.12s, transform 0.12s;
+      box-shadow: 0 2px 8px rgba(8,145,178,0.2);
+    }
+    .save-btn:hover { opacity: 0.92; transform: translateY(-1px); }
+    .save-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+    .save-btn-block { width: 100%; justify-content: center; }
+    .save-row { display: flex; justify-content: flex-end; margin-top: 0.8rem; }
+
+    /* ═══ ALERTS ═══ */
+    .pref-alert {
+      padding: 0.5rem 0.7rem; border-radius: 6px; font-size: 0.72rem;
+      margin-bottom: 0.7rem; border-left: 3px solid; line-height: 1.5;
+    }
+    .pref-alert-success { background: #F0FDF4; color: #166534; border-color: #10B981; }
+    .pref-alert-error { background: #FEF2F2; color: #991B1B; border-color: #EF4444; }
+    .pref-alert-info { background: #F0F9FF; color: #0C4A6E; border-color: var(--primary); }
+    .pref-alert-warning { background: #FFFBEB; color: #92400E; border-color: #F59E0B; }
+
+    /* ═══ THEME GRID ═══ */
+    .theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 0.6rem; }
+    .theme-opt {
+      border: 2px solid #E2E8F0; border-radius: 10px; padding: 0.6rem 0.5rem;
+      cursor: pointer; transition: all 0.15s; text-align: center; position: relative;
+    }
+    .theme-opt:hover { transform: translateY(-2px); box-shadow: 0 3px 10px rgba(0,0,0,0.08); }
+    .theme-opt.selected { border-color: #10B981; box-shadow: 0 0 0 1.5px #10B981; }
+    .theme-swatch { width: 100%; height: 36px; border-radius: 6px; margin-bottom: 0.35rem; }
+    .theme-name { font-weight: 600; font-size: 0.68rem; color: #475569; }
+    .theme-check {
+      display: none; position: absolute; top: 5px; right: 5px;
+      background: #10B981; color: white; width: 16px; height: 16px;
+      border-radius: 50%; font-size: 0.55rem; line-height: 16px; text-align: center;
+    }
+    .theme-opt.selected .theme-check { display: block; }
+
+    /* ═══ PREVIEW CARD ═══ */
+    .reward-preview {
+      border-radius: 10px; padding: 1rem 1.1rem; color: white; line-height: 1.6; font-size: 0.78rem;
+    }
+    .reward-preview strong { font-size: 0.82rem; }
+    .reward-preview .preview-box {
+      background: rgba(255,255,255,0.15); border-radius: 8px;
+      padding: 0.7rem 0.8rem; margin-top: 0.6rem; font-size: 0.75rem;
     }
 
-    // Validate credit_methods if provided
-    const VALID_CREDIT_KEYS = ['email', 'phone', 'qr', 'scan'];
-    if (credit_methods) {
-      const cm = typeof credit_methods === 'string' ? JSON.parse(credit_methods) : credit_methods;
-      const keys = Object.keys(cm);
-      if (!keys.every(k => VALID_CREDIT_KEYS.includes(k))) {
-        return res.status(400).json({ error: 'Méthodes de crédit invalides' });
+    /* ═══ INFO SIDE CARD ═══ */
+    .info-side {
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px;
+      padding: 0.85rem 0.9rem; font-size: 0.72rem; color: #64748B; line-height: 1.6;
+    }
+    .info-side strong { color: #475569; font-weight: 600; }
+    .info-side-title { font-size: 0.68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.4rem; }
+
+    /* ═══ TOGGLES ═══ */
+    .toggle-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.55rem 0; border-bottom: 1px solid #F1F5F9;
+    }
+    .toggle-row:last-child { border-bottom: none; }
+    .toggle-label { font-size: 0.78rem; color: #334155; font-weight: 500; }
+    .toggle-desc { font-size: 0.62rem; color: #94A3B8; margin-top: 1px; }
+    .toggle-warn { font-size: 0.62rem; color: #DC2626; margin-top: 3px; font-weight: 500; }
+    .toggle-switch {
+      position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-track {
+      position: absolute; inset: 0; background: #CBD5E1; border-radius: 10px;
+      transition: background 0.2s;
+    }
+    .toggle-track::after {
+      content: ''; position: absolute; left: 2px; top: 2px;
+      width: 16px; height: 16px; background: white; border-radius: 50%;
+      transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+    }
+    .toggle-switch input:checked + .toggle-track { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
+
+    /* ═══ LANGUAGE PILLS ═══ */
+    .lang-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .lang-pill {
+      padding: 0.35rem 0.7rem; border: 1.5px solid #E2E8F0; border-radius: 8px;
+      background: white; font-family: inherit; font-size: 0.72rem; font-weight: 500;
+      color: #64748B; cursor: pointer; transition: all 0.12s;
+    }
+    .lang-pill.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .lang-pill:hover:not(.active) { border-color: #CBD5E1; }
+
+    /* ═══ PASSWORD STRENGTH ═══ */
+    .pw-bar { height: 3px; border-radius: 2px; background: #E2E8F0; margin-top: 0.4rem; overflow: hidden; }
+    .pw-bar-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
+    .pw-bar-text { font-size: 0.62rem; margin-top: 2px; }
+
+    /* ═══ BACKUP ═══ */
+    .backup-drop {
+      border: 2px dashed #CBD5E1; border-radius: 10px; padding: 1.5rem 1rem;
+      text-align: center; cursor: pointer; transition: all 0.15s; margin-bottom: 0.8rem;
+    }
+    .backup-drop:hover, .backup-drop.dragover {
+      border-color: var(--primary); background: rgba(8,145,178,0.03);
+    }
+    .backup-drop-icon { margin-bottom: 0.4rem; }
+    .backup-drop-icon svg { width: 32px; height: 32px; color: #94A3B8; }
+    .backup-drop p { font-size: 0.78rem; color: #475569; font-weight: 500; margin: 0 0 3px; }
+    .backup-drop small { font-size: 0.62rem; color: #94A3B8; }
+
+    .backup-preview {
+      background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 8px;
+      padding: 0.8rem 0.9rem; margin: 0.8rem 0; font-size: 0.75rem; color: #475569; line-height: 1.6;
+    }
+    .btn-danger-full {
+      width: 100%; padding: 0.4rem 1rem; border: none; border-radius: 8px;
+      background: #EF4444; color: white; font-family: inherit; font-size: 0.75rem;
+      font-weight: 600; cursor: pointer; transition: all 0.12s;
+    }
+    .btn-danger-full:hover { background: #DC2626; }
+    .btn-danger-full:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-outline-full {
+      width: 100%; padding: 0.4rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 8px;
+      background: white; color: #64748B; font-family: inherit; font-size: 0.75rem;
+      font-weight: 500; cursor: pointer; transition: all 0.12s; margin-top: 0.4rem;
+    }
+    .btn-outline-full:hover { border-color: #CBD5E1; color: #334155; }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 768px) {
+      .dash-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.95rem; }
+      .pref-grid { grid-template-columns: 1fr; }
+      .theme-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
+
+      /* Tabs — horizontal scroll, no wrap */
+      .pref-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.3rem;
+        padding-bottom: 4px;
       }
-      // At least one method must be enabled
-      if (!Object.values(cm).some(v => v === true)) {
-        return res.status(400).json({ error: 'Au moins une méthode de crédit doit être activée' });
+      .pref-tabs::-webkit-scrollbar { display: none; }
+      .pref-tab { min-height: 36px; font-size: 0.72rem; padding: 0.35rem 0.7rem; flex-shrink: 0; }
+
+      /* Form inputs — prevent iOS zoom */
+      .fg input, .fg select, .fg textarea { font-size: 1rem; }
+
+      /* Save button — bigger */
+      .save-btn { min-height: 40px; padding: 0.45rem 1.2rem; }
+
+      /* Toggle rows — bigger targets */
+      .toggle-row { padding: 0.7rem 0; min-height: 52px; }
+      .toggle-switch { width: 44px; height: 24px; }
+      .toggle-track::after { width: 20px; height: 20px; }
+      .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
+
+      /* QR download buttons */
+      .pref-card .save-btn { min-height: 44px; }
+    }
+  </style>
+</head>
+<body class="dash">
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
+
+  <div class="dash-wrap">
+    <h1 class="pg-title">Préférences</h1>
+
+    <!-- ═══ TABS ═══ -->
+    <div class="pref-tabs">
+      <button class="pref-tab active" onclick="switchTab('reward', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5v7M5.5 8.5L8 11l2.5-2.5"/></svg>
+        Récompenses
+      </button>
+      <button class="pref-tab" onclick="switchTab('theme', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="2"/></svg>
+        Thème
+      </button>
+      <button class="pref-tab" onclick="switchTab('notif', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6a4 4 0 018 0c0 2 1 3.5 1.5 4.5H2.5C3 9.5 4 8 4 6z"/><path d="M6.5 12a1.5 1.5 0 003 0"/></svg>
+        Notifications
+      </button>
+      <button class="pref-tab" onclick="switchTab('info', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="12" height="12" rx="1.5"/><path d="M5 5.5h6M5 8h4M5 10.5h5"/></svg>
+        Mon commerce
+      </button>
+      <button class="pref-tab" onclick="switchTab('password', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+        Mot de passe
+      </button>
+      <button class="pref-tab" onclick="switchTab('backup', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 11l3 3 3-3"/><path d="M5 14V6"/><path d="M14 5l-3-3-3 3"/><path d="M11 2v8"/></svg>
+        Sauvegarde
+      </button>
+      <button class="pref-tab" onclick="switchTab('qrcode', this)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="5" height="5"/><rect x="9" y="2" width="5" height="5"/><rect x="2" y="9" width="5" height="5"/><rect x="10" y="10" width="3" height="3"/></svg>
+        QR Code
+      </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 1: RÉCOMPENSES
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-reward" class="pref-section active">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Système de points</div>
+            <div id="reward-alert"></div>
+
+            <form id="reward-form">
+              <div class="fg">
+                <label>Points par euro dépensé</label>
+                <input type="number" id="set-ppe" step="0.1" min="0.1">
+                <div class="help">Nombre de points gagnés pour chaque euro</div>
+              </div>
+              <div class="fg">
+                <label>Points pour la récompense</label>
+                <input type="number" id="set-pfr" min="1">
+                <div class="help">Seuil à atteindre pour débloquer la récompense</div>
+              </div>
+              <div class="fg">
+                <label>Description de la récompense</label>
+                <input type="text" id="set-desc" maxlength="200" placeholder="Ex : Boisson offerte, 10% de réduction...">
+                <div class="help">Texte affiché au client et dans les emails (max 200 car.)</div>
+              </div>
+              <div class="fg">
+                <label>Message personnalisé de récompense</label>
+                <textarea id="set-reward-msg" maxlength="300" placeholder="Ex : Félicitations ! Vous avez gagné votre récompense !"></textarea>
+                <div class="help">Message affiché au client lorsqu'il atteint le seuil (max 300 car.)</div>
+              </div>
+
+              <div class="save-row">
+                <button type="submit" class="save-btn">Enregistrer</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Language default -->
+          <div class="pref-card">
+            <div class="pref-card-title">Langue par défaut (formulaire client)</div>
+            <div id="lang-alert"></div>
+            <div class="help" style="margin-bottom: 0.5rem;">Langue affichée par défaut sur le formulaire QR code client</div>
+            <div class="lang-grid" id="lang-grid"></div>
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveLang()">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="reward-preview" id="reward-preview" style="background: var(--gradient);"></div>
+
+          <div class="info-side" style="margin-top: 0.8rem;">
+            <div class="info-side-title">Comment ça marche</div>
+            Chaque passage client — les points sont calculés automatiquement.<br><br>
+            Une fois le seuil atteint, la récompense s'affiche sur l'écran du caissier.<br><br>
+            <strong>Note :</strong> modifier ces paramètres n'affecte que les futurs crédits. Les soldes existants ne sont pas recalculés.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 2: THÈME
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-theme" class="pref-section">
+      <div class="pref-card">
+        <div class="pref-card-title">Thème couleur</div>
+        <div id="theme-alert"></div>
+        <div class="help" style="margin-bottom: 0.6rem;">Le thème s'applique à toutes les pages de votre espace FIDDO et au formulaire client.</div>
+        <div class="theme-grid" id="theme-grid"></div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 3: NOTIFICATIONS
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-notif" class="pref-section">
+      <div class="pref-grid" style="align-items: start;">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Notifications par email</div>
+            <div id="notif-alert"></div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Nouveau client</div>
+                <div class="toggle-desc">Recevoir un email lorsqu'un nouveau client s'inscrit</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-new-client">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Récompense disponible</div>
+                <div class="toggle-desc">Notification quand un client atteint le seuil de récompense</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-reward-ready">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Rapport hebdomadaire</div>
+                <div class="toggle-desc">Résumé de l'activité de la semaine chaque lundi</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="notif-weekly">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveNotif()">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">À propos des notifications</div>
+            Les emails sont envoyés à l'adresse de connexion du propriétaire.<br><br>
+            <strong>Nouveau client :</strong> envoyé dès la première visite d'un client inconnu.<br><br>
+            <strong>Récompense :</strong> envoyé quand un client peut réclamer sa récompense.<br><br>
+            <strong>Rapport :</strong> résumé avec nombre de visites, points distribués et nouveaux clients de la semaine.
+          </div>
+        </div>
+
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Méthodes d'identification (page Créditer)</div>
+            <div id="credit-methods-alert"></div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Email</div>
+                <div class="toggle-desc">Identifier le client par adresse email</div>
+                <div class="toggle-warn" id="warn-email" style="display:none;">Les clients enregistrés uniquement par email ne pourront plus être retrouvés en caisse.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-email" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Téléphone</div>
+                <div class="toggle-desc">Identifier le client par numéro de téléphone</div>
+                <div class="toggle-warn" id="warn-phone" style="display:none;">Les clients enregistrés uniquement par téléphone ne pourront plus être retrouvés en caisse.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-phone" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">QR Code (attente)</div>
+                <div class="toggle-desc">Le client scanne votre QR et vous le voyez apparaître</div>
+                <div class="toggle-warn" id="warn-qr" style="display:none;">Pensez à retirer votre QR du comptoir si vous désactivez cette méthode, sinon les clients scanneront pour rien.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-qr" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Scan carte</div>
+                <div class="toggle-desc">Scanner le QR personnel du client avec la caméra</div>
+                <div class="toggle-warn" id="warn-scan" style="display:none;">Les clients ayant un QR personnel ne pourront plus être scannés en caisse.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-scan" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveCreditMethods()">Enregistrer</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Méthodes d'identification</div>
+            Choisissez quelles méthodes apparaissent sur la page Créditer. Au moins une doit rester active.<br><br>
+            <strong>Email / Tél :</strong> le caissier saisit manuellement l'identifiant du client.<br><br>
+            <strong>QR Code :</strong> le client scanne votre QR au comptoir et apparaît automatiquement.<br><br>
+            <strong>Scan :</strong> le caissier scanne le QR personnel du client.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 4: MON COMMERCE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-info" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Informations du commerce</div>
+            <div id="info-alert"></div>
+
+            <form id="info-form">
+              <div class="fg">
+                <label>Nom du commerce *</label>
+                <input type="text" id="info-business" required>
+              </div>
+              <div class="fg">
+                <label>Adresse *</label>
+                <input type="text" id="info-address" required>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="fg">
+                  <label>N° TVA *</label>
+                  <input type="text" id="info-vat" required>
+                  <div class="help">Format : BE0123456789</div>
+                </div>
+                <div class="fg">
+                  <label>Email commerce *</label>
+                  <input type="email" id="info-email" required>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="fg">
+                  <label>Téléphone commerce *</label>
+                  <input type="tel" id="info-phone" required>
+                </div>
+                <div class="fg">
+                  <label>Téléphone propriétaire *</label>
+                  <input type="tel" id="info-owner-phone" required>
+                </div>
+              </div>
+              <div class="fg">
+                <label>Nom du propriétaire</label>
+                <input type="text" id="info-owner-name">
+              </div>
+
+              <div class="save-row">
+                <button type="submit" class="save-btn">Enregistrer les modifications</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Informations</div>
+            Toute modification sera <strong>notifiée à l'administrateur FIDDO</strong> par email pour des raisons de sécurité.<br><br>
+            Le numéro de TVA doit être au format belge (BE0 suivi de 9 chiffres).<br><br>
+            Votre email de connexion ne peut pas être modifié ici. Contactez le support si nécessaire.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 5: MOT DE PASSE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-password" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Modifier le mot de passe</div>
+            <div id="pw-alert"></div>
+
+            <form id="pw-form">
+              <div class="fg">
+                <label>Mot de passe actuel *</label>
+                <input type="password" id="pw-current" required>
+              </div>
+              <div class="fg">
+                <label>Nouveau mot de passe *</label>
+                <input type="password" id="pw-new" minlength="6" required>
+                <div class="pw-bar"><div class="pw-bar-fill" id="pw-bar-fill"></div></div>
+                <div class="pw-bar-text" id="pw-bar-text"></div>
+                <div class="help">Minimum 6 caractères</div>
+              </div>
+              <div class="fg">
+                <label>Confirmer le nouveau mot de passe *</label>
+                <input type="password" id="pw-confirm" minlength="6" required>
+              </div>
+
+              <div class="save-row">
+                <button type="submit" class="save-btn">Modifier le mot de passe</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Sécurité</div>
+            Un <strong>email de confirmation</strong> sera envoyé à votre adresse après le changement.<br><br>
+            Si vous n'êtes pas à l'origine de ce changement, contactez immédiatement le support.<br><br>
+            Après 5 tentatives échouées, votre compte sera temporairement verrouillé pendant 15 minutes.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 6: SAUVEGARDE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-backup" class="pref-section">
+      <div class="pref-grid">
+        <!-- Export -->
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Exporter mes données</div>
+            <div id="export-alert"></div>
+            <p style="font-size: 0.75rem; color: #64748B; margin-bottom: 0.8rem; line-height: 1.6;">
+              Téléchargez un fichier JSON contenant toutes vos données : paramètres, clients, historique de transactions, préférences.
+            </p>
+            <button class="save-btn save-btn-block" onclick="exportBackup()">
+              Télécharger le backup
+            </button>
+          </div>
+        </div>
+
+        <!-- Import -->
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">Restaurer des données</div>
+            <div id="import-alert"></div>
+
+            <div class="backup-drop" id="backup-drop" onclick="document.getElementById('backup-file').click();">
+              <div class="backup-drop-icon">
+                <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="20" height="24" rx="2"/><path d="M12 4v6h8V4"/><path d="M12 20h8M12 24h5"/></svg>
+              </div>
+              <p><strong>Cliquez ici</strong> ou glissez votre fichier</p>
+              <small>Fichier .json généré par FIDDO uniquement</small>
+            </div>
+            <input type="file" id="backup-file" accept=".json" style="display:none;">
+
+            <div id="backup-preview-container" style="display: none;">
+              <div class="backup-preview" id="backup-preview"></div>
+              <div class="pref-alert pref-alert-warning">
+                <strong>Attention :</strong> la restauration remplacera TOUTES vos données actuelles (clients, transactions, paramètres). Cette action est irréversible.
+              </div>
+              <button class="btn-danger-full" id="import-btn" onclick="importBackup()">
+                Restaurer ces données
+              </button>
+              <button class="btn-outline-full" onclick="cancelImport()">Annuler</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAB 7: QR CODE
+         ═══════════════════════════════════════════════════════ -->
+    <div id="tab-qrcode" class="pref-section">
+      <div class="pref-grid">
+        <div>
+          <div class="pref-card">
+            <div class="pref-card-title">QR Code de votre commerce</div>
+            <div id="qrcode-alert"></div>
+            <p style="font-size: 0.75rem; color: #64748B; margin-bottom: 1rem; line-height: 1.6;">
+              Affichez ce QR Code à votre comptoir. Vos clients le scannent pour s'identifier et accumuler leurs points fidélité.
+            </p>
+
+            <div style="text-align:center; padding: 1.2rem; background: #F8FAFC; border: 1.5px solid #E2E8F0; border-radius: 10px;">
+              <div id="pref-qr-canvas" style="display:inline-block; padding: 12px; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);"></div>
+              <div style="margin-top: 0.6rem; font-size: 0.72rem; color: #64748B;" id="pref-qr-url"></div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+              <button class="save-btn" style="flex:1; justify-content:center;" onclick="downloadQRPdf()">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M2 11v2.5A1.5 1.5 0 003.5 15h9a1.5 1.5 0 001.5-1.5V11"/><path d="M8 2v9"/><path d="M5 8l3 3 3-3"/></svg>
+                Télécharger PDF
+              </button>
+              <button class="save-btn" style="flex:1; justify-content:center; background: white; color: #334155; border: 1.5px solid #E2E8F0; box-shadow: none;" onclick="printQR()">
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><path d="M4 5V1h8v4"/><rect x="2" y="5" width="12" height="7" rx="1"/><rect x="4" y="10" width="8" height="5"/><circle cx="11" cy="7.5" r="0.5" fill="currentColor"/></svg>
+                Imprimer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="info-side">
+            <div class="info-side-title">Conseils d'affichage</div>
+            Imprimez le QR et placez-le sur votre <strong>comptoir</strong>, près de la caisse ou sur les <strong>tables</strong>.<br><br>
+            Le client scanne le QR avec son téléphone, entre son email, et ses points sont crédités automatiquement lors du passage.<br><br>
+            <strong>Format recommandé :</strong> A6 (10.5 x 14.8 cm) ou plus grand pour une visibilité optimale.<br><br>
+            Le QR code est <strong>permanent</strong> et unique à votre commerce. Il ne change jamais.
+          </div>
+
+          <!-- Preview mini card -->
+          <div style="margin-top: 0.8rem; border: 1.5px solid #E2E8F0; border-radius: 10px; overflow: hidden;">
+            <div style="padding: 0.7rem 0.9rem; background: white;">
+              <div style="font-size: 0.68rem; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 0.4rem;">Apercu impression</div>
+              <div id="pref-qr-preview-mini" style="text-align:center; padding:0.6rem; border:1px dashed #E2E8F0; border-radius:8px; background:#FAFBFC;">
+                <div style="font-weight:700; font-size:0.9rem; color:#1E293B; margin-bottom:2px;" id="preview-merchant-name"></div>
+                <div style="font-size:0.62rem; color:#94A3B8; margin-bottom:0.5rem;">Scannez pour gagner vos points fidélité</div>
+                <div id="pref-qr-mini" style="display:inline-block;"></div>
+                <div style="font-size:0.58rem; color:#CBD5E1; margin-top:0.4rem;">Propulsé par FIDDO</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    if (!requireOwner()) throw 'Not authorized';
+
+    const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
+
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // ═══ ALERT HELPER ═══
+    function showAlert(id, msg, type) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '<div class="pref-alert pref-alert-' + type + '">' + msg + '</div>';
+    }
+    function clearAlert(id) {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = '';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TAB SWITCHING
+    // ═══════════════════════════════════════════════════════
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll('.pref-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.pref-section').forEach(s => s.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + tab).classList.add('active');
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 1: REWARDS
+    // ═══════════════════════════════════════════════════════
+
+    document.getElementById('set-ppe').value = merchant.points_per_euro;
+    document.getElementById('set-pfr').value = merchant.points_for_reward;
+    document.getElementById('set-desc').value = merchant.reward_description;
+
+    // Load reward message from prefs
+    let currentPrefs = {};
+
+    (async () => {
+      try {
+        const data = await API.preferences.get();
+        currentPrefs = data.preferences || {};
+        document.getElementById('set-reward-msg').value = currentPrefs.reward_message || '';
+
+        // Notifications
+        document.getElementById('notif-new-client').checked = !!currentPrefs.notify_new_client;
+        document.getElementById('notif-reward-ready').checked = !!currentPrefs.notify_reward_ready;
+        document.getElementById('notif-weekly').checked = !!currentPrefs.notify_weekly_report;
+
+        // Credit methods
+        const cm = currentPrefs.credit_methods
+          ? (typeof currentPrefs.credit_methods === 'string' ? JSON.parse(currentPrefs.credit_methods) : currentPrefs.credit_methods)
+          : { email: true, phone: true, qr: true, scan: true };
+        document.getElementById('cm-email').checked = cm.email !== false;
+        document.getElementById('cm-phone').checked = cm.phone !== false;
+        document.getElementById('cm-qr').checked = cm.qr !== false;
+        document.getElementById('cm-scan').checked = cm.scan !== false;
+        toggleCmWarn();
+
+        // Theme
+        if (currentPrefs.theme) {
+          currentTheme = currentPrefs.theme;
+          applyTheme(currentTheme); // ← persists in sessionStorage + sets CSS vars
+          const t = THEMES.find(x => x.id === currentTheme);
+          if (t) {
+            document.getElementById('reward-preview').style.background =
+              'linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ')';
+          }
+        }
+
+        // Language
+        if (currentPrefs.language) currentLang = currentPrefs.language;
+
+        renderThemes();
+        renderLangs();
+      } catch (e) {
+        renderThemes();
+        renderLangs();
+      }
+    })();
+
+    function updateRewardPreview() {
+      const ppe = parseFloat(document.getElementById('set-ppe').value) || 1;
+      const pfr = parseInt(document.getElementById('set-pfr').value) || 100;
+      const desc = document.getElementById('set-desc').value.trim() || 'Récompense offerte';
+      const eurosNeeded = Math.ceil(pfr / ppe);
+
+      document.getElementById('reward-preview').innerHTML =
+        '<strong>Aperçu du programme</strong>' +
+        '<div class="preview-box">' +
+          '<strong>1 €</strong> dépensé = <strong>' + ppe + ' point' + (ppe > 1 ? 's' : '') + '</strong><br>' +
+          'Seuil : <strong>' + pfr + ' points</strong> (≈ <strong>' + eurosNeeded + ' €</strong>)<br><br>' +
+          '→ <strong>' + esc(desc) + '</strong>' +
+        '</div>';
+    }
+
+    document.getElementById('set-ppe').addEventListener('input', updateRewardPreview);
+    document.getElementById('set-pfr').addEventListener('input', updateRewardPreview);
+    document.getElementById('set-desc').addEventListener('input', updateRewardPreview);
+    updateRewardPreview();
+
+    document.getElementById('reward-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const ppe = parseFloat(document.getElementById('set-ppe').value);
+      const pfr = parseInt(document.getElementById('set-pfr').value);
+      const desc = document.getElementById('set-desc').value.trim();
+      const rewardMsg = document.getElementById('set-reward-msg').value.trim();
+
+      if (!ppe || ppe <= 0) return showAlert('reward-alert', 'Points par euro doit être supérieur à 0', 'error');
+      if (!pfr || pfr <= 0) return showAlert('reward-alert', 'Points pour récompense doit être supérieur à 0', 'error');
+      if (!desc) return showAlert('reward-alert', 'Description requise', 'error');
+
+      try {
+        // Save reward settings
+        await API.auth.updateSettings({ pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: desc });
+        merchant.points_per_euro = ppe;
+        merchant.points_for_reward = pfr;
+        merchant.reward_description = desc;
+        Auth.setSession(staff, merchant);
+
+        // Save reward message in preferences
+        if (rewardMsg !== (currentPrefs.reward_message || '')) {
+          await API.preferences.update({ reward_message: rewardMsg });
+          currentPrefs.reward_message = rewardMsg;
+        }
+
+        showAlert('reward-alert', 'Paramètres de récompense enregistrés', 'success');
+        setTimeout(() => clearAlert('reward-alert'), 4000);
+      } catch (err) {
+        showAlert('reward-alert', err.message, 'error');
+      }
+    });
+
+    // ═══ LANGUAGE ═══
+
+    const LANGS = [
+      { id: 'fr', label: 'Français' },
+      { id: 'en', label: 'English' },
+      { id: 'nl', label: 'Nederlands' },
+      { id: 'tr', label: 'Türkçe' },
+      { id: 'zh', label: '中文' },
+      { id: 'ar', label: 'العربية' },
+    ];
+    let currentLang = 'fr';
+
+    function renderLangs() {
+      const grid = document.getElementById('lang-grid');
+      grid.innerHTML = LANGS.map(l =>
+        '<button type="button" class="lang-pill' + (l.id === currentLang ? ' active' : '') + '" onclick="pickLang(\'' + l.id + '\')">' + l.label + '</button>'
+      ).join('');
+    }
+
+    function pickLang(id) {
+      currentLang = id;
+      renderLangs();
+    }
+
+    async function saveLang() {
+      try {
+        await API.preferences.update({ language: currentLang });
+        currentPrefs.language = currentLang;
+        showAlert('lang-alert', 'Langue par défaut enregistrée', 'success');
+        setTimeout(() => clearAlert('lang-alert'), 3000);
+      } catch (err) {
+        showAlert('lang-alert', err.message, 'error');
       }
     }
 
-    // Get current or defaults
-    const current = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId) || DEFAULT_PREFS;
+    // ═══════════════════════════════════════════════════════
+    // TAB 2: THEME
+    // ═══════════════════════════════════════════════════════
 
-    // Upsert
-    db.prepare(`
-      INSERT INTO merchant_preferences
-        (merchant_id, theme, language, timezone, reward_message,
-         notify_new_client, notify_reward_ready, notify_weekly_report,
-         logo_url, backup_frequency, credit_methods, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-      ON CONFLICT(merchant_id) DO UPDATE SET
-        theme = excluded.theme,
-        language = excluded.language,
-        timezone = excluded.timezone,
-        reward_message = excluded.reward_message,
-        notify_new_client = excluded.notify_new_client,
-        notify_reward_ready = excluded.notify_reward_ready,
-        notify_weekly_report = excluded.notify_weekly_report,
-        logo_url = excluded.logo_url,
-        backup_frequency = excluded.backup_frequency,
-        credit_methods = excluded.credit_methods,
-        updated_at = datetime('now')
-    `).run(
-      merchantId,
-      theme || current.theme,
-      language || current.language,
-      timezone || current.timezone,
-      reward_message !== undefined ? reward_message : current.reward_message,
-      notify_new_client !== undefined ? (notify_new_client ? 1 : 0) : current.notify_new_client,
-      notify_reward_ready !== undefined ? (notify_reward_ready ? 1 : 0) : current.notify_reward_ready,
-      notify_weekly_report !== undefined ? (notify_weekly_report ? 1 : 0) : current.notify_weekly_report,
-      logo_url !== undefined ? logo_url : current.logo_url,
-      backup_frequency || current.backup_frequency,
-      credit_methods ? (typeof credit_methods === 'string' ? credit_methods : JSON.stringify(credit_methods)) : (current.credit_methods || '{"email":true,"phone":true,"qr":true,"scan":true}'),
-    );
+    const THEMES = [
+      { id: 'teal',   name: 'Teal',    colors: ['#0891B2', '#0E7490'] },
+      { id: 'navy',   name: 'Navy',    colors: ['#2563EB', '#1D4ED8'] },
+      { id: 'violet', name: 'Violet',  colors: ['#7C3AED', '#6D28D9'] },
+      { id: 'forest', name: 'Forest',  colors: ['#059669', '#047857'] },
+      { id: 'brick',  name: 'Brick',   colors: ['#DC2626', '#B91C1C'] },
+      { id: 'amber',  name: 'Amber',   colors: ['#D97706', '#B45309'] },
+      { id: 'slate',  name: 'Slate',   colors: ['#475569', '#334155'] },
+    ];
 
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'preferences_updated',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: { theme, language, backup_frequency },
-    });
+    let currentTheme = 'teal';
 
-    // Return updated
-    const updated = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId);
-    res.json({ message: 'Préférences mises à jour', preferences: updated });
-  } catch (error) {
-    console.error('Erreur update preferences:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PATCH /api/preferences/theme — Quick theme switch (any staff)
-// ═══════════════════════════════════════════════════════
-
-router.patch('/theme', (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { theme } = req.body;
-
-    if (!theme || !VALID_THEMES.includes(theme)) {
-      return res.status(400).json({ error: `Thème invalide. Choix : ${VALID_THEMES.join(', ')}` });
+    function renderThemes() {
+      const grid = document.getElementById('theme-grid');
+      grid.innerHTML = THEMES.map(t =>
+        '<div class="theme-opt' + (t.id === currentTheme ? ' selected' : '') + '" onclick="selectTheme(\'' + t.id + '\')" id="theme-' + t.id + '">' +
+          '<div class="theme-check">✓</div>' +
+          '<div class="theme-swatch" style="background: linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ');"></div>' +
+          '<div class="theme-name">' + t.name + '</div>' +
+        '</div>'
+      ).join('');
     }
 
-    db.prepare(`
-      INSERT INTO merchant_preferences (merchant_id, theme, updated_at)
-      VALUES (?, ?, datetime('now'))
-      ON CONFLICT(merchant_id) DO UPDATE SET theme = excluded.theme, updated_at = datetime('now')
-    `).run(merchantId, theme);
+    async function selectTheme(themeId) {
+      try {
+        await API.preferences.setTheme(themeId);
+        currentTheme = themeId;
+        applyTheme(themeId); // ← persists in sessionStorage + sets CSS vars
+        renderThemes();
 
-    res.json({ message: 'Thème mis à jour', theme });
-  } catch (error) {
-    console.error('Erreur theme:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
+        const t = THEMES.find(x => x.id === themeId);
+        if (t) {
+          document.getElementById('reward-preview').style.background =
+            'linear-gradient(135deg, ' + t.colors[0] + ', ' + t.colors[1] + ')';
+        }
 
-
-// ═══════════════════════════════════════════════════════
-// GET /api/preferences/backup/export — Download full backup (owner only)
-// ═══════════════════════════════════════════════════════
-
-router.get('/backup/export', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const backup = exportMerchantData(merchantId);
-
-    // Mark backup time
-    db.prepare(`
-      INSERT INTO merchant_preferences (merchant_id, last_backup_at, updated_at)
-      VALUES (?, datetime('now'), datetime('now'))
-      ON CONFLICT(merchant_id) DO UPDATE SET last_backup_at = datetime('now'), updated_at = datetime('now')
-    `).run(merchantId);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'backup_exported',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: backup._stats,
-    });
-
-    // Send as downloadable JSON
-    const filename = `fiddo-backup-${backup._meta.business_name.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.json`;
-
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(JSON.stringify(backup, null, 2));
-  } catch (error) {
-    console.error('Erreur export backup:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/preferences/backup/validate — Preview backup before import
-// ═══════════════════════════════════════════════════════
-
-router.post('/backup/validate', requireRole('owner'), (req, res) => {
-  try {
-    const data = req.body;
-
-    if (!data || typeof data !== 'object') {
-      return res.status(400).json({ error: 'Aucune donnée reçue' });
-    }
-
-    const result = validateBackup(data);
-    res.json(result);
-  } catch (error) {
-    console.error('Erreur validate backup:', error);
-    res.status(500).json({ error: 'Erreur lors de la validation' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/preferences/backup/import — Restore from backup (owner only)
-// ⚠️ DESTRUCTIVE: replaces all client/transaction data
-// ═══════════════════════════════════════════════════════
-
-router.post('/backup/import', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { data, confirmReplace } = req.body;
-
-    if (!data || typeof data !== 'object') {
-      return res.status(400).json({ error: 'Aucune donnée reçue' });
-    }
-
-    if (!confirmReplace) {
-      return res.status(400).json({ error: 'Confirmation requise (confirmReplace: true)' });
-    }
-
-    // Extra safety: validate first
-    const validation = validateBackup(data);
-    if (!validation.valid) {
-      return res.status(400).json({ error: 'Backup invalide', errors: validation.errors });
-    }
-
-    const result = importMerchantData(merchantId, data);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'backup_imported',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: {
-        ...result,
-        source_business: data._meta.business_name,
-        source_date: data._meta.exported_at,
-      },
-    });
-
-    res.json({
-      message: 'Données restaurées avec succès',
-      result,
-    });
-  } catch (error) {
-    console.error('Erreur import backup:', error);
-    res.status(500).json({ error: error.message || 'Erreur lors de l\'import' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/preferences/merchant-info — Get merchant business info
-// ═══════════════════════════════════════════════════════
-
-router.get('/merchant-info', requireRole('owner'), (req, res) => {
-  try {
-    const merchant = merchantQueries.findById.get(req.staff.merchant_id);
-    if (!merchant) return res.status(404).json({ error: 'Commerce non trouvé' });
-
-    const staff = staffQueries.findById.get(req.staff.id);
-
-    res.json({
-      businessName: merchant.business_name,
-      address: merchant.address,
-      vatNumber: merchant.vat_number,
-      email: merchant.email,
-      phone: merchant.phone,
-      ownerPhone: merchant.owner_phone,
-      ownerName: staff?.display_name || '',
-      ownerEmail: staff?.email || '',
-    });
-  } catch (error) {
-    console.error('Erreur get merchant-info:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/preferences/merchant-info — Update merchant business info (owner only)
-// Sends notification email to super admin
-// ═══════════════════════════════════════════════════════
-
-router.put('/merchant-info', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { businessName, address, vatNumber, email, phone, ownerPhone, ownerName } = req.body;
-
-    // Validate required fields
-    if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
-      return res.status(400).json({ error: 'Tous les champs sont requis' });
-    }
-
-    // Normalize & validate VAT
-    const normalizedVat = normalizeVAT(vatNumber);
-    if (!normalizedVat) {
-      return res.status(400).json({ error: 'Numéro de TVA invalide (format: BE0123456789)' });
-    }
-
-    // Check VAT uniqueness (if changed)
-    const current = merchantQueries.findById.get(merchantId);
-    if (!current) return res.status(404).json({ error: 'Commerce non trouvé' });
-
-    if (normalizedVat !== current.vat_number) {
-      const existing = db.prepare('SELECT id FROM merchants WHERE vat_number = ? AND id != ?').get(normalizedVat, merchantId);
-      if (existing) {
-        return res.status(400).json({ error: 'Ce numéro de TVA est déjà utilisé par un autre commerce' });
+        showAlert('theme-alert', 'Thème « ' + t.name + ' » appliqué', 'success');
+        setTimeout(() => clearAlert('theme-alert'), 3000);
+      } catch (err) {
+        showAlert('theme-alert', err.message, 'error');
       }
     }
 
-    // Build change log for admin notification
-    const changes = [];
-    if (businessName.trim() !== current.business_name) changes.push({ field: 'Nom du commerce', old: current.business_name, new: businessName.trim() });
-    if (address.trim() !== current.address) changes.push({ field: 'Adresse', old: current.address, new: address.trim() });
-    if (normalizedVat !== current.vat_number) changes.push({ field: 'N° TVA', old: current.vat_number, new: normalizedVat });
-    if (email.trim().toLowerCase() !== current.email) changes.push({ field: 'Email commerce', old: current.email, new: email.trim().toLowerCase() });
-    if (phone.trim() !== current.phone) changes.push({ field: 'Téléphone', old: current.phone, new: phone.trim() });
-    if (ownerPhone.trim() !== current.owner_phone) changes.push({ field: 'Tél. propriétaire', old: current.owner_phone, new: ownerPhone.trim() });
+    // ═══════════════════════════════════════════════════════
+    // TAB 3: NOTIFICATIONS
+    // ═══════════════════════════════════════════════════════
 
-    if (changes.length === 0 && (!ownerName || ownerName.trim() === (staffQueries.findById.get(req.staff.id)?.display_name || ''))) {
-      return res.json({ message: 'Aucune modification détectée', changes: [] });
-    }
+    async function saveNotif() {
+      try {
+        await API.preferences.update({
+          notify_new_client: document.getElementById('notif-new-client').checked,
+          notify_reward_ready: document.getElementById('notif-reward-ready').checked,
+          notify_weekly_report: document.getElementById('notif-weekly').checked,
+        });
+        currentPrefs.notify_new_client = document.getElementById('notif-new-client').checked ? 1 : 0;
+        currentPrefs.notify_reward_ready = document.getElementById('notif-reward-ready').checked ? 1 : 0;
+        currentPrefs.notify_weekly_report = document.getElementById('notif-weekly').checked ? 1 : 0;
 
-    // Update merchant
-    db.prepare(`
-      UPDATE merchants
-      SET business_name = ?, address = ?, vat_number = ?,
-          email = ?, phone = ?, owner_phone = ?
-      WHERE id = ?
-    `).run(
-      businessName.trim(), address.trim(), normalizedVat,
-      email.trim().toLowerCase(), phone.trim(), ownerPhone.trim(),
-      merchantId
-    );
-
-    // Update owner display name if provided
-    if (ownerName && ownerName.trim()) {
-      const currentStaff = staffQueries.findById.get(req.staff.id);
-      if (currentStaff && ownerName.trim() !== currentStaff.display_name) {
-        changes.push({ field: 'Nom propriétaire', old: currentStaff.display_name, new: ownerName.trim() });
-        db.prepare('UPDATE staff_accounts SET display_name = ? WHERE id = ?').run(ownerName.trim(), req.staff.id);
+        showAlert('notif-alert', 'Préférences de notification enregistrées', 'success');
+        setTimeout(() => clearAlert('notif-alert'), 3000);
+      } catch (err) {
+        showAlert('notif-alert', err.message, 'error');
       }
     }
 
-    // Audit
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'merchant_info_updated',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: { changes },
-    });
+    async function saveCreditMethods() {
+      const cm = {
+        email: document.getElementById('cm-email').checked,
+        phone: document.getElementById('cm-phone').checked,
+        qr: document.getElementById('cm-qr').checked,
+        scan: document.getElementById('cm-scan').checked,
+      };
+      if (!Object.values(cm).some(v => v)) {
+        showAlert('credit-methods-alert', 'Au moins une méthode doit rester active', 'error');
+        setTimeout(() => clearAlert('credit-methods-alert'), 3000);
+        return;
+      }
+      try {
+        await API.preferences.update({ credit_methods: cm });
+        currentPrefs.credit_methods = JSON.stringify(cm);
+        showAlert('credit-methods-alert', 'Méthodes d\'identification enregistrées', 'success');
+        setTimeout(() => clearAlert('credit-methods-alert'), 3000);
+      } catch (err) {
+        showAlert('credit-methods-alert', err.message, 'error');
+      }
+    }
 
-    // 🔥 Notify Super Sayan God (all super admins)
-    if (changes.length > 0) {
-      const admins = db.prepare('SELECT email FROM super_admins').all();
-      admins.forEach(admin => {
-        sendMerchantInfoChangedEmail(
-          admin.email,
-          current.business_name,
-          businessName.trim(),
-          req.staff.email,
-          changes
-        );
+    function toggleCmWarn() {
+      ['email', 'phone', 'qr', 'scan'].forEach(m => {
+        const checked = document.getElementById('cm-' + m).checked;
+        document.getElementById('warn-' + m).style.display = checked ? 'none' : '';
       });
     }
 
-    // Update session data
-    const updated = merchantQueries.findById.get(merchantId);
+    // ═══════════════════════════════════════════════════════
+    // TAB 4: MERCHANT INFO
+    // ═══════════════════════════════════════════════════════
 
-    res.json({
-      message: 'Informations mises à jour',
-      merchant: updated,
-      changes,
+    async function loadMerchantInfo() {
+      try {
+        const data = await API.preferences.getMerchantInfo();
+        document.getElementById('info-business').value = data.businessName || '';
+        document.getElementById('info-address').value = data.address || '';
+        document.getElementById('info-vat').value = data.vatNumber || '';
+        document.getElementById('info-email').value = data.email || '';
+        document.getElementById('info-phone').value = data.phone || '';
+        document.getElementById('info-owner-phone').value = data.ownerPhone || '';
+        document.getElementById('info-owner-name').value = data.ownerName || '';
+      } catch (err) {
+        showAlert('info-alert', 'Impossible de charger les informations', 'error');
+      }
+    }
+    loadMerchantInfo();
+
+    document.getElementById('info-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const payload = {
+        businessName:  document.getElementById('info-business').value.trim(),
+        address:       document.getElementById('info-address').value.trim(),
+        vatNumber:     document.getElementById('info-vat').value.trim(),
+        email:         document.getElementById('info-email').value.trim(),
+        phone:         document.getElementById('info-phone').value.trim(),
+        ownerPhone:    document.getElementById('info-owner-phone').value.trim(),
+        ownerName:     document.getElementById('info-owner-name').value.trim(),
+      };
+
+      if (!payload.businessName || !payload.address || !payload.vatNumber || !payload.email || !payload.phone || !payload.ownerPhone) {
+        return showAlert('info-alert', 'Tous les champs marqués * sont requis', 'error');
+      }
+
+      try {
+        const result = await API.preferences.updateMerchantInfo(payload);
+
+        if (result.changes && result.changes.length > 0) {
+          if (result.merchant) Auth.setSession(staff, result.merchant);
+          const changeList = result.changes.map(c => '<strong>' + esc(c.field) + '</strong> : ' + esc(c.old) + ' → ' + esc(c.new)).join('<br>');
+          showAlert('info-alert',
+            'Informations mises à jour<br><small>' + changeList + '</small><br><small style="color:#94A3B8;">L\'administrateur a été notifié par email.</small>',
+            'success'
+          );
+        } else {
+          showAlert('info-alert', 'Aucune modification détectée', 'info');
+        }
+        setTimeout(() => clearAlert('info-alert'), 6000);
+      } catch (err) {
+        showAlert('info-alert', err.message, 'error');
+      }
     });
-  } catch (error) {
-    console.error('Erreur update merchant-info:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
 
+    // ═══════════════════════════════════════════════════════
+    // TAB 5: PASSWORD
+    // ═══════════════════════════════════════════════════════
 
-// ═══════════════════════════════════════════════════════
-// PUT /api/preferences/password — Change own password
-// ═══════════════════════════════════════════════════════
+    document.getElementById('pw-new').addEventListener('input', (e) => {
+      const pw = e.target.value;
+      let score = 0;
+      if (pw.length >= 6) score++;
+      if (pw.length >= 10) score++;
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+      if (/\d/.test(pw)) score++;
+      if (/[^A-Za-z0-9]/.test(pw)) score++;
 
-router.put('/password', async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Mot de passe actuel et nouveau requis' });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
-    }
-
-    const staff = staffQueries.findById.get(req.staff.id);
-    if (!staff) return res.status(404).json({ error: 'Compte non trouvé' });
-
-    const valid = await bcrypt.compare(currentPassword, staff.password);
-    if (!valid) {
-      return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
-    }
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    staffQueries.updatePassword.run(hashed, req.staff.id);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId: req.staff.merchant_id,
-      action: 'password_changed',
-      targetType: 'staff',
-      targetId: req.staff.id,
+      const fill = document.getElementById('pw-bar-fill');
+      const text = document.getElementById('pw-bar-text');
+      const levels = [
+        { w: '0%', c: '#E2E8F0', t: '' },
+        { w: '20%', c: '#EF4444', t: 'Très faible' },
+        { w: '40%', c: '#F59E0B', t: 'Faible' },
+        { w: '60%', c: '#F59E0B', t: 'Moyen' },
+        { w: '80%', c: '#10B981', t: 'Fort' },
+        { w: '100%', c: '#059669', t: 'Très fort' },
+      ];
+      const lvl = levels[Math.min(score, 5)];
+      fill.style.width = lvl.w;
+      fill.style.background = lvl.c;
+      text.textContent = lvl.t;
+      text.style.color = lvl.c;
     });
 
-    // Fire-and-forget confirmation email
-    sendPasswordChangedEmail(staff.email, staff.display_name);
+    document.getElementById('pw-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const current = document.getElementById('pw-current').value;
+      const newPw = document.getElementById('pw-new').value;
+      const confirmPw = document.getElementById('pw-confirm').value;
 
-    res.json({ message: 'Mot de passe modifié avec succès' });
-  } catch (error) {
-    console.error('Erreur changement mot de passe:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+      if (!current || !newPw || !confirmPw) {
+        return showAlert('pw-alert', 'Tous les champs sont requis', 'error');
+      }
+      if (newPw.length < 6) {
+        return showAlert('pw-alert', 'Le nouveau mot de passe doit contenir au moins 6 caractères', 'error');
+      }
+      if (newPw !== confirmPw) {
+        return showAlert('pw-alert', 'Les deux mots de passe ne correspondent pas', 'error');
+      }
+      if (current === newPw) {
+        return showAlert('pw-alert', 'Le nouveau mot de passe doit être différent de l\'actuel', 'error');
+      }
+
+      try {
+        await API.preferences.changePassword({ currentPassword: current, newPassword: newPw });
+        showAlert('pw-alert', 'Mot de passe modifié avec succès. Un email de confirmation a été envoyé.', 'success');
+        document.getElementById('pw-form').reset();
+        document.getElementById('pw-bar-fill').style.width = '0';
+        document.getElementById('pw-bar-text').textContent = '';
+      } catch (err) {
+        showAlert('pw-alert', err.message, 'error');
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 6: BACKUP
+    // ═══════════════════════════════════════════════════════
+
+    let pendingBackupData = null;
+
+    function exportBackup() {
+      showAlert('export-alert', 'Préparation du backup...', 'info');
+      API.preferences.exportBackup();
+      setTimeout(() => {
+        showAlert('export-alert', 'Backup téléchargé', 'success');
+        setTimeout(() => clearAlert('export-alert'), 3000);
+      }, 1500);
+    }
+
+    // Drag & drop
+    const dropZone = document.getElementById('backup-drop');
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('dragover'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file) handleBackupFile(file);
+    });
+
+    document.getElementById('backup-file').addEventListener('change', (e) => {
+      if (e.target.files[0]) handleBackupFile(e.target.files[0]);
+    });
+
+    async function handleBackupFile(file) {
+      if (!file.name.endsWith('.json')) {
+        return showAlert('import-alert', 'Seuls les fichiers .json sont acceptés', 'error');
+      }
+
+      try {
+        showAlert('import-alert', 'Validation du fichier...', 'info');
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        const result = await API.preferences.validateBackup(data);
+
+        if (!result.valid) {
+          showAlert('import-alert', 'Fichier invalide : ' + result.errors.join(', '), 'error');
+          return;
+        }
+
+        pendingBackupData = data;
+        const p = result.preview;
+        document.getElementById('backup-preview').innerHTML =
+          '<strong>Aperçu du backup</strong><br><br>' +
+          '<strong>Commerce :</strong> ' + esc(p.business_name) + '<br>' +
+          '<strong>Date d\'export :</strong> ' + Format.datetime(p.exported_at) + '<br>' +
+          '<strong>Version :</strong> ' + esc(p.version) + '<br><br>' +
+          '<strong>' + p.clients + '</strong> clients · <strong>' + p.transactions + '</strong> transactions<br>' +
+          '<strong>' + Format.currency(p.total_spent) + '</strong> de CA · <strong>' + p.total_points + '</strong> points';
+
+        document.getElementById('backup-preview-container').style.display = 'block';
+        dropZone.style.display = 'none';
+        clearAlert('import-alert');
+
+      } catch (err) {
+        if (err instanceof SyntaxError) {
+          showAlert('import-alert', 'Le fichier n\'est pas un JSON valide', 'error');
+        } else {
+          showAlert('import-alert', err.message, 'error');
+        }
+      }
+    }
+
+    async function importBackup() {
+      if (!pendingBackupData) return;
+
+      if (!confirm('ATTENTION :\n\nToutes vos données actuelles (clients, transactions) seront REMPLACÉES par celles du backup.\n\nCette action est IRRÉVERSIBLE.\n\nConfirmer la restauration ?')) {
+        return;
+      }
+
+      try {
+        document.getElementById('import-btn').disabled = true;
+        showAlert('import-alert', 'Restauration en cours...', 'info');
+
+        const result = await API.preferences.importBackup(pendingBackupData);
+        showAlert('import-alert',
+          'Restauration réussie — ' +
+          result.result.clients_restored + ' clients · ' +
+          result.result.transactions_restored + ' transactions restaurées',
+          'success'
+        );
+        cancelImport();
+
+        const verifyData = await API.auth.verify();
+        Auth.setSession(verifyData.staff, verifyData.merchant);
+      } catch (err) {
+        showAlert('import-alert', err.message, 'error');
+      } finally {
+        document.getElementById('import-btn').disabled = false;
+      }
+    }
+
+    function cancelImport() {
+      pendingBackupData = null;
+      document.getElementById('backup-preview-container').style.display = 'none';
+      document.getElementById('backup-drop').style.display = 'block';
+      document.getElementById('backup-file').value = '';
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // TAB 7: QR CODE
+    // ═══════════════════════════════════════════════════════
+
+    let merchantQrUrl = '';
+
+    async function loadMerchantQR() {
+      try {
+        // Fetch or auto-generate QR token
+        const data = await API.call('/qr/token');
+        const baseUrl = window.location.origin;
+        merchantQrUrl = baseUrl + '/q/' + data.token;
+
+        // Main QR
+        const canvas = document.getElementById('pref-qr-canvas');
+        canvas.innerHTML = '';
+        new QRCode(canvas, {
+          text: merchantQrUrl,
+          width: 200,
+          height: 200,
+          colorDark: '#1E293B',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+
+        // URL display
+        document.getElementById('pref-qr-url').textContent = merchantQrUrl;
+
+        // Mini preview
+        document.getElementById('preview-merchant-name').textContent = merchant.business_name;
+        const mini = document.getElementById('pref-qr-mini');
+        mini.innerHTML = '';
+        new QRCode(mini, {
+          text: merchantQrUrl,
+          width: 80,
+          height: 80,
+          colorDark: '#1E293B',
+          colorLight: '#FFFFFF',
+          correctLevel: QRCode.CorrectLevel.M,
+        });
+      } catch (e) {
+        showAlert('qrcode-alert', 'Impossible de charger le QR Code : ' + e.message, 'error');
+      }
+    }
+
+    // Lazy-load when tab is opened
+    let qrLoaded = false;
+    const origSwitchTab = switchTab;
+    switchTab = function(tab, btn) {
+      origSwitchTab(tab, btn);
+      if (tab === 'qrcode' && !qrLoaded) {
+        qrLoaded = true;
+        loadMerchantQR();
+      }
+    };
+
+    function downloadQRPdf() {
+      if (!merchantQrUrl) return;
+
+      // Get QR as data URL from canvas
+      const qrCanvas = document.getElementById('pref-qr-canvas').querySelector('canvas');
+      if (!qrCanvas) { showAlert('qrcode-alert', 'QR non chargé', 'error'); return; }
+      const qrDataUrl = qrCanvas.toDataURL('image/png');
+
+      // Build a printable HTML page, then trigger print-to-PDF
+      const name = merchant.business_name || 'FIDDO';
+      const printHtml = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+  @page { size: A6 landscape; margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 148mm; height: 105mm;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    text-align: center; background: white;
   }
-});
+  .name { font-size: 18pt; font-weight: 800; color: #1E293B; margin-bottom: 4mm; letter-spacing: -0.5px; }
+  .sub { font-size: 9pt; color: #64748B; margin-bottom: 6mm; }
+  .qr { padding: 4mm; border: 1px solid #E2E8F0; border-radius: 4mm; display: inline-block; }
+  .qr img { display: block; width: 45mm; height: 45mm; }
+  .url { font-size: 7pt; color: #94A3B8; margin-top: 4mm; word-break: break-all; }
+  .footer { font-size: 7pt; color: #CBD5E1; margin-top: 5mm; }
+</style></head><body>
+  <div class="name">${name.replace(/"/g, '&quot;')}</div>
+  <div class="sub">Scannez pour gagner vos points fidelit&eacute;</div>
+  <div class="qr"><img src="${qrDataUrl}"></div>
+  <div class="url">${merchantQrUrl}</div>
+  <div class="footer">Propuls&eacute; par FIDDO</div>
+</body></html>`;
 
+      const win = window.open('', '_blank');
+      win.document.write(printHtml);
+      win.document.close();
+      // Small delay for image to render
+      setTimeout(() => {
+        win.print();
+      }, 400);
+    }
 
-module.exports = router;
+    function printQR() {
+      downloadQRPdf(); // same flow — browser print dialog handles both print & save-as-PDF
+    }
+  </script>
+</body>
+</html>
