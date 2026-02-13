@@ -1,6 +1,12 @@
 const jwt = require('jsonwebtoken');
 
-const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || 'fiddo-admin-secret-change-me';
+const DEFAULT_ADMIN_SECRET = 'fiddo-admin-secret-change-me';
+const ADMIN_JWT_SECRET = process.env.ADMIN_JWT_SECRET || DEFAULT_ADMIN_SECRET;
+
+if (process.env.NODE_ENV === 'production' && ADMIN_JWT_SECRET === DEFAULT_ADMIN_SECRET) {
+  console.error('⛔ CRITICAL: ADMIN_JWT_SECRET is using the default value in production!');
+  process.exit(1);
+}
 
 /**
  * Middleware: authenticate super admin via HTTP-only cookie.
@@ -38,7 +44,7 @@ function generateAdminToken(admin) {
 const adminCookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
-  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  sameSite: 'lax',
   maxAge: 24 * 60 * 60 * 1000, // 24h
 };
 
