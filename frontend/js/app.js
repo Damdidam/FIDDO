@@ -235,7 +235,7 @@ function requireAuth() {
 function requireOwner() {
   if (!requireAuth()) return false;
   if (!Auth.hasRole('owner')) {
-    window.location.href = '/dashboard';
+    window.location.href = '/credit';
     return false;
   }
   return true;
@@ -309,7 +309,7 @@ function setupNavbar() {
 
   navbar.innerHTML = `
     <div class="navbar-inner">
-      <a href="/dashboard" class="navbar-brand">
+      <a href="/credit" class="navbar-brand">
         <span class="brand-mark">FIDDO</span>
         <span class="brand-divider"></span>
         <span class="brand-merchant">${merchant.business_name}</span>
@@ -360,17 +360,20 @@ function buildBottomNav(staff, path) {
     mainItems.push({ href: '/clients', label: 'Clients', icon: 'clients' });
   }
 
+  // Messages always visible in main bar (for badge visibility)
+  mainItems.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'bnav-messages' });
+
   if (staff.role === 'owner') {
-    // Owner: prefs in main bar, overflow equipe + messages + logout
-    mainItems.push({ href: '/preferences', label: 'Préfs', icon: 'preferences' });
+    // Owner: overflow préfs + equipe + logout
     mainItems.push({ href: '#more', label: 'Plus', icon: 'more', isMore: true });
 
+    sheetItems.push({ href: '/preferences', label: 'Préférences', icon: 'preferences' });
     sheetItems.push({ href: '/staff', label: 'Équipe', icon: 'staff' });
-    sheetItems.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'bnav-messages' });
     sheetItems.push({ href: '#logout', label: 'Déconnexion', icon: 'logout', isLogout: true, danger: true });
   } else {
-    // Manager/Cashier: messages in main bar
-    mainItems.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'bnav-messages' });
+    // Manager/Cashier: logout in sheet via "Plus"
+    mainItems.push({ href: '#more', label: 'Plus', icon: 'more', isMore: true });
+    sheetItems.push({ href: '#logout', label: 'Déconnexion', icon: 'logout', isLogout: true, danger: true });
   }
 
   // Build bottom nav HTML
