@@ -442,7 +442,7 @@ const endUserQueries = {
   updateIdentifiers: db.prepare(`
     UPDATE end_users
     SET email = ?, phone = ?, email_lower = ?, phone_e164 = ?,
-        email_validated = MAX(email_validated, ?),
+        email_validated = ?,
         updated_at = datetime('now')
     WHERE id = ?
   `),
