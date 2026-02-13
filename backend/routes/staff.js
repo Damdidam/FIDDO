@@ -42,6 +42,11 @@ router.post('/', async (req, res) => {
     if (password.length < 6) {
       return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
     }
+    if (password.length > 72) {
+      return res.status(400).json({ error: 'Le mot de passe ne doit pas dépasser 72 caractères' });
+    }
+    if (name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
+    if (email.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
 
     // Only manager or cashier — owner is set at registration
     if (!['manager', 'cashier'].includes(role)) {
@@ -209,6 +214,9 @@ router.put('/:id/password', async (req, res) => {
 
     if (!password || password.length < 6) {
       return res.status(400).json({ error: 'Mot de passe minimum 6 caractères' });
+    }
+    if (password.length > 72) {
+      return res.status(400).json({ error: 'Mot de passe maximum 72 caractères' });
     }
 
     const member = staffQueries.findByIdAndMerchant.get(staffId, req.staff.merchant_id);
