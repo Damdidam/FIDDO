@@ -491,6 +491,36 @@
     let lookupIsNew = false;  // true when current client is new (needs PIN)
 
     // ═══════════════════════════════════════════════════════
+    // CREDIT METHODS — filter based on merchant preferences
+    // ═══════════════════════════════════════════════════════
+
+    (async () => {
+      try {
+        const data = await API.preferences.get();
+        const prefs = data.preferences || {};
+        const cm = prefs.credit_methods
+          ? (typeof prefs.credit_methods === 'string' ? JSON.parse(prefs.credit_methods) : prefs.credit_methods)
+          : { email: true, phone: true, qr: true, scan: true };
+
+        const methods = ['email', 'phone', 'qr', 'scan'];
+        methods.forEach(m => {
+          if (cm[m] === false) {
+            const btn = document.getElementById('toggle-' + m);
+            if (btn) btn.style.display = 'none';
+          }
+        });
+
+        // Switch to first enabled method
+        const firstEnabled = methods.find(m => cm[m] !== false);
+        if (firstEnabled && firstEnabled !== 'email') {
+          switchMode(firstEnabled);
+        } else if (!cm.email) {
+          switchMode(firstEnabled || 'email');
+        }
+      } catch (_) { /* defaults — show all */ }
+    })();
+
+    // ═══════════════════════════════════════════════════════
     // LOOKUP — inline strip under the active field
     // ═══════════════════════════════════════════════════════
 
@@ -578,6 +608,19 @@
     // ═══════════════════════════════════════════════════════
     // MODE SWITCH
     // ═══════════════════════════════════════════════════════
+
+    function getFirstEnabledMode() {
+      const methods = ['email', 'phone', 'qr', 'scan'];
+      return methods.find(m => {
+        const btn = document.getElementById('toggle-' + m);
+        return btn && btn.style.display !== 'none';
+      }) || 'email';
+    }
+
+    function resetToDefaultMode() {
+      switchMode(getFirstEnabledMode());
+    }
+
     function switchMode(mode) {
       if (currentMode === 'qr' && mode !== 'qr') {
         stopPendingPoll();
@@ -817,8 +860,7 @@
         stopPendingPoll();
       }
 
-      switchMode('email');
-      document.getElementById('client-email').focus();
+      resetToDefaultMode();
     }
 
     // ═══════════════════════════════════════════════════════
