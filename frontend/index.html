@@ -740,8 +740,7 @@
     // ═══════════════════════════════════════════════════════
 
     if (Auth.isAuthenticated()) {
-      var s = Auth.getStaff();
-      window.location.href = (s.role === 'cashier') ? '/credit' : '/dashboard';
+      window.location.href = '/credit';
     }
 
     function showRegister() {
@@ -804,7 +803,7 @@
         Auth.setSession(data.staff, data.merchant);
         showPageAlert('login-alert', 'Connexion réussie, redirection en cours...', 'success');
         setTimeout(function() {
-          window.location.href = (data.staff.role === 'cashier') ? '/credit' : '/dashboard';
+          window.location.href = '/credit';
         }, 400);
       } catch (err) {
         setLoading('login-btn', false);
