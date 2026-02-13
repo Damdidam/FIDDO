@@ -302,7 +302,7 @@ function setupNavbar() {
     .substring(0, 2)
     .toUpperCase();
 
-  // Build complete navbar inner HTML
+  // Build complete navbar inner HTML (desktop menu)
   const linksHTML = links.map(l =>
     `<a href="${l.href}" class="navbar-link${path === l.href ? ' active' : ''}"${l.id ? ` id="${l.id}"` : ''}>${l.label}</a>`
   ).join('');
@@ -322,8 +322,100 @@ function setupNavbar() {
     </div>
   `;
 
+  // ── Bottom Navigation (mobile) ──
+  buildBottomNav(staff, path);
+
   // V3.5: Fetch unread badge
   loadUnreadBadge();
+}
+
+// ─── SVG Icons for bottom nav ────────────────────────
+
+const NAV_ICONS = {
+  credit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+  dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+  clients: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  preferences: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  messages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  staff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+};
+
+function buildBottomNav(staff, path) {
+  // Remove existing bottom nav if any
+  const existing = document.querySelector('.bottom-nav');
+  if (existing) existing.remove();
+  const existingSheet = document.querySelector('.bnav-sheet');
+  if (existingSheet) existingSheet.remove();
+
+  // Define nav items per role
+  const mainItems = [];
+  const sheetItems = [];
+
+  mainItems.push({ href: '/credit', label: 'Créditer', icon: 'credit' });
+
+  if (['owner', 'manager'].includes(staff.role)) {
+    mainItems.push({ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' });
+    mainItems.push({ href: '/clients', label: 'Clients', icon: 'clients' });
+  }
+
+  if (staff.role === 'owner') {
+    // Owner: prefs in main bar, overflow equipe + messages + logout
+    mainItems.push({ href: '/preferences', label: 'Préfs', icon: 'preferences' });
+    mainItems.push({ href: '#more', label: 'Plus', icon: 'more', isMore: true });
+
+    sheetItems.push({ href: '/staff', label: 'Équipe', icon: 'staff' });
+    sheetItems.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'bnav-messages' });
+    sheetItems.push({ href: '#logout', label: 'Déconnexion', icon: 'logout', isLogout: true, danger: true });
+  } else {
+    // Manager/Cashier: messages in main bar
+    mainItems.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'bnav-messages' });
+  }
+
+  // Build bottom nav HTML
+  const navHTML = mainItems.map(item => {
+    if (item.isMore) {
+      return `<a href="#" class="bnav-item" onclick="toggleBnavSheet(event)">${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+    }
+    const active = path === item.href ? ' active' : '';
+    const idAttr = item.id ? ` id="${item.id}"` : '';
+    return `<a href="${item.href}" class="bnav-item${active}"${idAttr}>${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+  }).join('');
+
+  const bottomNav = document.createElement('nav');
+  bottomNav.className = 'bottom-nav';
+  bottomNav.innerHTML = `<div class="bottom-nav-inner">${navHTML}</div>`;
+  document.body.appendChild(bottomNav);
+  document.body.classList.add('has-bnav');
+
+  // Build sheet if needed (owner)
+  if (sheetItems.length > 0) {
+    const sheetHTML = sheetItems.map(item => {
+      if (item.isLogout) {
+        return `<a href="#" class="bnav-sheet-item danger" onclick="event.preventDefault();Auth.logout();">${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+      }
+      const idAttr = item.id ? ` id="${item.id}"` : '';
+      return `<a href="${item.href}" class="bnav-sheet-item"${idAttr}>${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+    }).join('');
+
+    const sheet = document.createElement('div');
+    sheet.className = 'bnav-sheet';
+    sheet.id = 'bnav-sheet';
+    sheet.onclick = function(e) { if (e.target === this) closeBnavSheet(); };
+    sheet.innerHTML = `<div class="bnav-sheet-content"><div class="bnav-sheet-handle"></div>${sheetHTML}</div>`;
+    document.body.appendChild(sheet);
+  }
+}
+
+function toggleBnavSheet(e) {
+  e.preventDefault();
+  const sheet = document.getElementById('bnav-sheet');
+  if (sheet) sheet.classList.toggle('open');
+}
+function closeBnavSheet() {
+  const sheet = document.getElementById('bnav-sheet');
+  if (sheet) sheet.classList.remove('open');
 }
 
 
@@ -333,9 +425,21 @@ async function loadUnreadBadge() {
   try {
     const data = await API.messages.getUnreadCount();
     if (data.unread > 0) {
+      // Desktop navbar badge
       const navLink = document.getElementById('nav-messages');
       if (navLink) {
         navLink.innerHTML = `Messages <span class="navbar-badge">${data.unread}</span>`;
+      }
+      // Bottom nav badge
+      const bnavLink = document.getElementById('bnav-messages');
+      if (bnavLink) {
+        // Add badge to bottom nav item (check if not already there)
+        if (!bnavLink.querySelector('.bnav-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'bnav-badge';
+          badge.textContent = data.unread;
+          bnavLink.appendChild(badge);
+        }
       }
     }
   } catch (e) {
