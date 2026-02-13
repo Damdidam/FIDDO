@@ -1,6 +1,5 @@
 const express = require('express');
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 
 const router = express.Router();
@@ -8,14 +7,13 @@ const router = express.Router();
 const { db, endUserQueries, merchantClientQueries, merchantQueries } = require('../database');
 const { normalizeEmail } = require('../services/normalizer');
 const { sendMagicLinkEmail } = require('../services/email');
+const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
 
 // ═══════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════
 
-const CLIENT_JWT_SECRET = process.env.CLIENT_JWT_SECRET || 'fiddo-client-secret-change-me';
-const CLIENT_JWT_EXPIRY = '30d';
-const MAGIC_LINK_TTL_MS = 15 * 60 * 1000; // 15 min
+const MAGIC_LINK_TTL_MS = 5 * 60 * 1000; // 5 min (reduced from 15 for security)
 
 // Rate limiting: Map<ip, { count, lastAttempt }>
 const loginAttempts = new Map();
@@ -36,32 +34,6 @@ setInterval(() => {
 function getClientIP(req) {
   return req.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || req.socket?.remoteAddress || 'unknown';
-}
-
-function generateClientToken(endUserId) {
-  return jwt.sign(
-    { endUserId, type: 'client-portal' },
-    CLIENT_JWT_SECRET,
-    { expiresIn: CLIENT_JWT_EXPIRY }
-  );
-}
-
-function authenticateClient(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Token requis' });
-  }
-
-  try {
-    const decoded = jwt.verify(authHeader.substring(7), CLIENT_JWT_SECRET);
-    if (decoded.type !== 'client-portal') {
-      return res.status(401).json({ error: 'Token invalide' });
-    }
-    req.endUserId = decoded.endUserId;
-    next();
-  } catch (e) {
-    return res.status(401).json({ error: 'Session expirée' });
-  }
 }
 
 
