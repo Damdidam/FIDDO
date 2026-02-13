@@ -36,7 +36,6 @@ app.use(express.json({ limit: '1mb' }));
 app.use('/api/preferences/backup', express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(requestIdMiddleware);
-app.use('/api/staff', require('./routes/staff'));
 
 // Static files — index: false so that GET / hits our landing route, not index.html
 app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
