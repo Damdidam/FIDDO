@@ -553,10 +553,10 @@
           h += '<button class="act-btn" onclick="toggleEditForm()">✏️ Modifier</button>';
           h += '<button class="act-btn" onclick="openAdjust()">📏 Ajuster</button>';
           if (isOwner) h += '<button class="act-btn" onclick="openMerge()">🔀 Fusionner</button>';
+          h += '<button class="act-btn" onclick="promptPin()">🔑 PIN</button>';
           h += c.is_blocked
             ? '<button class="act-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>'
             : '<button class="act-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>';
-          h += '<button class="act-btn" onclick="promptPin()">🔑 PIN</button>';
           if (isOwner) h += '<button class="act-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>';
           h += '</div>';
         }
