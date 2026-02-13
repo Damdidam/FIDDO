@@ -27,6 +27,7 @@ body {
   background: var(--light);
   color: var(--text);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 /* ─── Container ─────────────────────────────────────── */
