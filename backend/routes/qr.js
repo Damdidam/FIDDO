@@ -1,11 +1,11 @@
 const express = require('express');
 const crypto = require('crypto');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
 const { authenticateStaff, requireRole } = require('../middleware/auth');
+const { generateClientToken, verifyClientToken } = require('../middleware/client-auth');
 const { db, merchantQueries, endUserQueries, merchantClientQueries, aliasQueries } = require('../database');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 const { logAudit, auditCtx } = require('../middleware/audit');
@@ -14,8 +14,6 @@ const { logAudit, auditCtx } = require('../middleware/audit');
 // CONFIG
 // ═══════════════════════════════════════════════════════
 
-const CLIENT_JWT_SECRET = process.env.CLIENT_JWT_SECRET || 'fiddo-client-secret-change-me';
-const CLIENT_JWT_EXPIRY = '30d';
 const IDENT_TTL_MS = 15 * 60 * 1000; // 15 min — pending identification lifetime
 const MAX_PIN_ATTEMPTS = 5;
 const PIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 min
@@ -23,6 +21,12 @@ const PIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 min
 // ═══════════════════════════════════════════════════════
 // IN-MEMORY: Pending identifications + Rate limiting
 // ═══════════════════════════════════════════════════════
+
+// ⚠️ KNOWN LIMITATION: All pending identification data is in-memory.
+// Server restart loses all pending QR identifications and rate-limit state.
+// Acceptable for paid tier (no cold starts). For free tier, clients may need
+// to re-identify after restart. Consider SQLite persistence if this becomes
+// an issue with 100+ merchants.
 
 // Map<merchantId, Map<identId, { endUserId, name, email, phone, points, createdAt }>>
 const pendingIdents = new Map();
@@ -33,6 +37,21 @@ const pinAttempts = new Map();
 // Cooldown for recent identifications: Map<"merchantId:identifier", { ts, identId, isNew, name, pointsBalance }>
 const identCooldowns = new Map();
 const IDENT_COOLDOWN_MS = 15 * 60 * 1000; // 15 min
+
+// Server-side PIN hash storage: consumed idents keep their pinHash here (never sent to frontend)
+// Map<pinToken, { pinHash, createdAt }>
+const consumedPinHashes = new Map();
+const PIN_TOKEN_TTL_MS = 5 * 60 * 1000; // 5 min
+
+/** Resolve a pinToken to its pinHash (one-time use) */
+function resolvePinToken(token) {
+  if (!token) return null;
+  const entry = consumedPinHashes.get(token);
+  if (!entry) return null;
+  consumedPinHashes.delete(token);
+  if (Date.now() - entry.createdAt > PIN_TOKEN_TTL_MS) return null;
+  return entry.pinHash;
+}
 
 // Cleanup every 2 minutes
 setInterval(() => {
@@ -61,6 +80,13 @@ setInterval(() => {
   for (const [key, data] of identCooldowns) {
     if (now - data.ts > IDENT_COOLDOWN_MS) {
       identCooldowns.delete(key);
+    }
+  }
+
+  // Clean expired consumed PIN hashes
+  for (const [key, data] of consumedPinHashes) {
+    if (now - data.createdAt > PIN_TOKEN_TTL_MS) {
+      consumedPinHashes.delete(key);
     }
   }
 }, 2 * 60 * 1000);
@@ -111,24 +137,6 @@ function recordPinFailure(req, identifier) {
 function clearPinFailures(req, identifier) {
   const key = getClientIP(req) + ':' + identifier;
   pinAttempts.delete(key);
-}
-
-function generateClientToken(endUserId, email, phone) {
-  return jwt.sign(
-    { endUserId, email: email || null, phone: phone || null, type: 'client' },
-    CLIENT_JWT_SECRET,
-    { expiresIn: CLIENT_JWT_EXPIRY }
-  );
-}
-
-function verifyClientToken(token) {
-  try {
-    const decoded = jwt.verify(token, CLIENT_JWT_SECRET);
-    if (decoded.type !== 'client') return null;
-    return decoded;
-  } catch {
-    return null;
-  }
 }
 
 /** 3-step end_user lookup (same as points.js, read-only) */
@@ -436,6 +444,10 @@ router.post('/register', (req, res) => {
     if (pin && !/^\d{4}$/.test(pin)) {
       return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
     }
+    // Input length limits
+    if (email && email.length > 254) return res.status(400).json({ error: 'Email trop long' });
+    if (phone && phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long' });
+    if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long' });
 
     const emailLower = normalizeEmail(email);
     const phoneE164 = normalizePhone(phone);
@@ -718,13 +730,20 @@ router.post('/consume/:identId', authenticateStaff, (req, res) => {
     // Remove from queue
     queue.delete(req.params.identId);
 
+    // Store pinHash server-side if present (never send to frontend)
+    let pinToken = null;
+    if (ident.pinHash) {
+      pinToken = crypto.randomBytes(16).toString('hex');
+      consumedPinHashes.set(pinToken, { pinHash: ident.pinHash, createdAt: Date.now() });
+    }
+
     res.json({
       email: ident.email,
       phone: ident.phone,
       name: ident.name,
       pointsBalance: ident.pointsBalance,
       isNew: ident.isNew,
-      pinHash: ident.pinHash || null,
+      pinToken,
     });
   } catch (error) {
     console.error('Consume error:', error);
@@ -785,3 +804,4 @@ router.get('/client-data', (req, res) => {
 
 
 module.exports = router;
+module.exports.resolvePinToken = resolvePinToken;
