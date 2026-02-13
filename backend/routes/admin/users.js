@@ -2,6 +2,7 @@ const express = require('express');
 const { db, endUserQueries, aliasQueries, merchantClientQueries, transactionQueries, mergeQueries } = require('../../database');
 const { authenticateAdmin } = require('../../middleware/admin-auth');
 const { logAudit, auditCtx } = require('../../middleware/audit');
+const { sendGlobalMergeNotificationEmail } = require('../../services/email');
 
 const router = express.Router();
 router.use(authenticateAdmin);
@@ -291,6 +292,10 @@ router.post('/:id/merge', (req, res) => {
           .run(targetId);
       }
 
+      // ── Collect affected merchants for notifications ──
+      const affectedMerchantIds = new Set(sourceCards.map(sc => sc.merchant_id));
+      results.affectedMerchants = [...affectedMerchantIds];
+
       // ── Record in end_user_merges ──
       mergeQueries.create.run(
         sourceId, targetId, req.admin.id, mergeNote,
@@ -298,12 +303,32 @@ router.post('/:id/merge', (req, res) => {
       );
 
       // ── Soft-delete source user ──
+      // Clean aliases pointing to source first
+      aliasQueries.deleteByUser.run(sourceId);
       endUserQueries.softDelete.run(sourceId);
 
       return results;
     });
 
     const results = run();
+
+    // ── Notify affected merchant owners (async, non-blocking) ──
+    const sourceName = source.name || source.email || source.phone || `#${sourceId}`;
+    if (results.affectedMerchants && results.affectedMerchants.length > 0) {
+      for (const mId of results.affectedMerchants) {
+        try {
+          const owner = db.prepare("SELECT email, display_name FROM staff_accounts WHERE merchant_id = ? AND role = 'owner' LIMIT 1").get(mId);
+          const merchant = db.prepare("SELECT business_name FROM merchants WHERE id = ?").get(mId);
+          if (owner && merchant) {
+            const action = results.merged.some(m => m.merchant === merchant.business_name) ? 'merge' : 'transfer';
+            sendGlobalMergeNotificationEmail(owner.email, merchant.business_name, action, sourceName, mergeNote)
+              .catch(err => console.error(`Email merge notif failed for merchant ${mId}:`, err));
+          }
+        } catch (e) {
+          console.error(`Notification merge merchant ${mId}:`, e);
+        }
+      }
+    }
 
     logAudit({
       ...auditCtx(req),
@@ -322,6 +347,56 @@ router.post('/:id/merge', (req, res) => {
   } catch (error) {
     console.error('Erreur merge global:', error);
     res.status(500).json({ error: error.message || 'Erreur lors de la fusion' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/admin/users/:id/block — Global block
+// POST /api/admin/users/:id/unblock — Global unblock
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/block', (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const user = endUserQueries.findById.get(userId);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    endUserQueries.block.run(userId);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'admin', actorId: req.admin.id, merchantId: null,
+      action: 'global_user_blocked',
+      targetType: 'end_user', targetId: userId,
+    });
+
+    res.json({ message: 'Utilisateur bloqué globalement' });
+  } catch (error) {
+    console.error('Erreur block user:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+router.post('/:id/unblock', (req, res) => {
+  try {
+    const userId = parseInt(req.params.id);
+    const user = endUserQueries.findById.get(userId);
+    if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    endUserQueries.unblock.run(userId);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'admin', actorId: req.admin.id, merchantId: null,
+      action: 'global_user_unblocked',
+      targetType: 'end_user', targetId: userId,
+    });
+
+    res.json({ message: 'Utilisateur débloqué' });
+  } catch (error) {
+    console.error('Erreur unblock user:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
   }
 });
 
