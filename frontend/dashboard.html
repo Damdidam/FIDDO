@@ -3,1516 +3,590 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — FIDDO</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FIDDO">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0891B2">
+  <title>Tableau de bord — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    body { background: #0f1117; }
-
-    /* ─── Admin Header Banner ─────────────────────── */
-    .admin-banner {
-      background: linear-gradient(135deg, #111827 0%, #1a2236 50%, #0f172a 100%);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding: 0;
-    }
-    .admin-banner-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.65rem 2rem;
-    }
-    .admin-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-decoration: none;
-    }
-    .admin-brand-logo {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #0891B2;
-      letter-spacing: -0.5px;
-    }
-    .admin-brand-divider {
-      width: 1px;
-      height: 22px;
-      background: rgba(255,255,255,0.12);
-    }
-    .admin-brand-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: rgba(255,255,255,0.4);
-      font-weight: 600;
-    }
-    .admin-banner-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .admin-env-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: rgba(16,185,129,0.12);
-      color: #34d399;
-      border: 1px solid rgba(16,185,129,0.2);
-    }
-    .admin-env-badge .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #34d399;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .btn-admin-logout {
-      padding: 5px 14px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.04);
-      color: rgba(255,255,255,0.5);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-admin-logout:hover {
-      background: rgba(239,68,68,0.1);
-      border-color: rgba(239,68,68,0.3);
-      color: #f87171;
+    :root {
+      --primary-light: #CFFAFE;
+      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
     }
 
-    /* ─── Welcome Hero ────────────────────────────── */
-    .admin-hero {
-      background: linear-gradient(135deg, #111827, #1e293b);
-      padding: 2rem 0 2.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .admin-hero-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-    .hero-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-    }
-    .hero-greeting h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      margin: 0 0 0.25rem;
-    }
-    .hero-greeting p {
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.35);
-      margin: 0;
-    }
-    .hero-date {
-      text-align: right;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.3);
-      line-height: 1.6;
-    }
-    .hero-date strong {
-      color: rgba(255,255,255,0.5);
+    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .dash * { box-sizing: border-box; }
+    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
+
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.3rem 0 0.6rem; letter-spacing: -0.3px;
     }
 
-    /* ─── Stats Row (in hero) ─────────────────────── */
-    .admin-stats-row {
+    /* ═══ TOOLBAR ═══ */
+
+    .toolbar {
+      display: flex; align-items: center; gap: 0.35rem;
+      margin-bottom: 0.9rem; flex-wrap: wrap;
+    }
+    .period-pill {
+      padding: 0.3rem 0.7rem; border: 1.5px solid #E2E8F0;
+      border-radius: 16px; background: white; font-family: inherit;
+      font-size: 0.75rem; font-weight: 500; color: #64748B;
+      cursor: pointer; transition: all 0.12s; white-space: nowrap;
+    }
+    .period-pill.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .period-pill:hover:not(.active) { border-color: #CBD5E1; }
+    .toolbar-spacer { flex: 1; }
+
+    .period-dates {
+      display: none; align-items: center; gap: 0.4rem; margin-left: 0.35rem;
+    }
+    .period-dates.show { display: flex; }
+    .period-dates input[type="date"] {
+      padding: 0.22rem 0.4rem; border: 1.5px solid #E2E8F0;
+      border-radius: 5px; font-family: inherit; font-size: 0.72rem;
+      color: #475569; background: white;
+    }
+    .period-dates input[type="date"]:focus { outline: none; border-color: var(--primary); }
+    .period-dates .sep { color: #94A3B8; font-size: 0.72rem; }
+
+    /* ═══ STAT CARDS ═══ */
+
+    .stats-row {
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem; margin-bottom: 1rem;
+    }
+    .st {
+      background: white; border-radius: 8px; padding: 0.45rem 0.4rem;
+      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+    }
+    .st-val {
+      font-size: 1.15rem; font-weight: 700; color: var(--primary);
+      line-height: 1.15; letter-spacing: -0.5px;
+    }
+    .st-val.green { color: #059669; }
+    .st-val.amber { color: #D97706; }
+    .st-lbl {
+      font-size: 0.55rem; color: #94A3B8; text-transform: uppercase;
+      letter-spacing: 0.3px; margin-top: 0.1rem; font-weight: 600;
+    }
+    .st.st-action {
+      cursor: pointer; transition: all 0.15s; border: 1.5px solid #E2E8F0;
+    }
+    .st.st-action:hover { border-color: var(--primary); }
+    .st.st-action .st-icon { color: #64748B; margin-bottom: 1px; }
+    .st.st-action .st-icon svg { width: 18px; height: 18px; }
+    .st.st-action:hover .st-icon { color: var(--primary); }
+
+    /* ═══ ACTIVITY FEED ═══ */
+
+    .feed-card {
+      background: white; border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden;
+    }
+    .feed-hdr {
+      padding: 0.6rem 0.85rem; border-bottom: 1px solid #F1F5F9;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .feed-title { font-weight: 600; font-size: 0.88rem; color: #1E293B; }
+
+    /* ── Type tabs ── */
+    .feed-tabs {
+      display: flex; gap: 0; background: #F8FAFC;
+      border-bottom: 1px solid #F1F5F9;
+    }
+    .feed-tab {
+      padding: 0.4rem 0.75rem; border: none; background: transparent;
+      font-family: inherit; font-size: 0.72rem; font-weight: 500;
+      color: #64748B; cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.12s; white-space: nowrap;
+    }
+    .feed-tab.active {
+      color: var(--primary-dark); border-bottom-color: var(--primary); font-weight: 600;
+    }
+    .feed-tab:hover:not(.active) { color: #475569; }
+    .feed-tab .cnt {
+      display: inline-block; background: #E2E8F0;
+      padding: 0 5px; border-radius: 8px; font-size: 0.62rem;
+      margin-left: 3px; font-weight: 600; min-width: 16px; text-align: center;
+    }
+    .feed-tab.active .cnt {
+      background: color-mix(in srgb, var(--primary-light) 55%, white);
+      color: var(--primary-dark);
+    }
+
+    /* ── Column headers (sortable) ── */
+    .col-hdr {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1rem;
+      grid-template-columns: 72px 1fr 80px 80px 80px;
+      gap: 0.3rem;
+      padding: 0.35rem 0.85rem;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E2E8F0;
     }
-    .admin-stat {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 1.1rem 1.25rem;
-      transition: all 0.25s;
+    .col-th {
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.4px; color: #94A3B8; cursor: pointer;
+      user-select: none; display: flex; align-items: center; gap: 3px;
+      transition: color 0.12s; white-space: nowrap;
     }
-    .admin-stat:hover {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(8,145,178,0.2);
-      transform: translateY(-2px);
+    .col-th:hover { color: #475569; }
+    .col-th.active { color: var(--primary-dark); }
+    .col-th .arrow {
+      font-size: 0.55rem; opacity: 0; transition: opacity 0.12s;
     }
-    .admin-stat-value {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #f1f5f9;
-      line-height: 1;
-      margin-bottom: 0.3rem;
-    }
-    .admin-stat-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: rgba(255,255,255,0.3);
-      font-weight: 600;
-    }
-    .admin-stat-value.accent { color: #0891B2; }
-    .admin-stat-value.warning { color: #f59e0b; }
-    .admin-stat-value.success { color: #10b981; }
+    .col-th.active .arrow { opacity: 1; }
+    .col-th-right { justify-content: flex-end; }
 
-    /* ─── System Health Panel ─────────────────────── */
-    .health-panel {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem 0;
+    /* ── Date separator ── */
+    .date-sep {
+      padding: 0.25rem 0.85rem; background: #F8FAFC;
+      font-size: 0.62rem; font-weight: 600; color: #94A3B8;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1px solid #F1F5F9;
     }
-    .health-grid {
+
+    /* ── Transaction rows ── */
+    .feed-body { max-height: 560px; overflow-y: auto; }
+
+    .tx-row {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.75rem;
-    }
-    .health-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 1rem 1.15rem;
-      display: flex;
+      grid-template-columns: 72px 1fr 80px 80px 80px;
+      gap: 0.3rem;
+      padding: 0.45rem 0.85rem;
+      border-bottom: 1px solid #F8FAFC;
       align-items: center;
-      gap: 0.85rem;
-      transition: all 0.2s;
+      font-size: 0.82rem;
     }
-    .health-card:hover {
-      background: rgba(255,255,255,0.05);
+    .tx-row:last-child { border-bottom: none; }
+    .tx-row:hover { background: #FAFBFC; }
+
+    .tx-time { font-size: 0.72rem; color: #64748B; font-weight: 500; font-variant-numeric: tabular-nums; }
+    .tx-date-sub { font-size: 0.6rem; color: #CBD5E1; }
+
+    .tx-info { min-width: 0; }
+    .tx-client {
+      font-weight: 600; color: #1E293B; font-size: 0.82rem;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .health-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
-    .health-icon.green  { background: rgba(16,185,129,0.12); }
-    .health-icon.blue   { background: rgba(8,145,178,0.12); }
-    .health-icon.orange  { background: rgba(245,158,11,0.12); }
-    .health-icon.red    { background: rgba(239,68,68,0.12); }
-    .health-icon.purple { background: rgba(139,92,246,0.12); }
-    .health-info { flex: 1; min-width: 0; }
-    .health-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: rgba(255,255,255,0.3);
-      font-weight: 600;
-      margin-bottom: 0.15rem;
-    }
-    .health-value {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .health-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .health-dot.ok    { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.4); }
-    .health-dot.warn  { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.4); }
-    .health-dot.error { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.4); }
-    .health-dot.off   { background: rgba(255,255,255,0.15); }
-    .health-sub {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.25);
-      margin-top: 0.1rem;
-    }
-    .health-section-title {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: rgba(255,255,255,0.2);
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+    .tx-meta {
+      font-size: 0.66rem; color: #94A3B8; margin-top: 1px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
-    /* ─── Main Content Area ───────────────────────── */
-    .admin-main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem 3rem;
+    .tx-badge {
+      display: inline-block; padding: 2px 7px; border-radius: 8px;
+      font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.2px; text-align: center;
     }
+    .tx-badge.credit { background: color-mix(in srgb, var(--primary-light) 50%, white); color: var(--primary-dark); }
+    .tx-badge.reward { background: #D1FAE5; color: #047857; }
+    .tx-badge.adjustment { background: #FEF3C7; color: #92400E; }
+    .tx-badge.merge { background: #EDE9FE; color: #6D28D9; }
 
-    /* Tabs override for dark theme */
-    .admin-tabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      margin-bottom: 1.5rem;
-    }
-    .admin-tab {
-      padding: 0.7rem 1.25rem;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.35);
-      transition: all 0.2s;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-    }
-    .admin-tab:hover { color: rgba(255,255,255,0.6); }
-    .admin-tab.active {
-      color: #0891B2;
-      border-bottom-color: #0891B2;
-    }
+    .tx-pts { font-weight: 700; font-size: 0.85rem; text-align: right; white-space: nowrap; }
+    .tx-pts.credit { color: var(--primary); }
+    .tx-pts.reward { color: #059669; }
+    .tx-pts.adjustment { color: #D97706; }
+    .tx-pts.merge { color: #7C3AED; }
 
-    /* Table dark override */
-    .admin-main .table { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); box-shadow: none; }
-    .admin-main .table thead { background: rgba(255,255,255,0.04); }
-    .admin-main .table thead th { color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .admin-main .table td { color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
-    .admin-main .table tbody tr:hover td { background: rgba(8,145,178,0.05); }
-    .admin-main .table tbody tr:last-child td { border-bottom: none; }
+    .tx-amount { font-size: 0.78rem; color: #64748B; text-align: right; font-variant-numeric: tabular-nums; }
 
-    .merchant-row { cursor: pointer; }
-    .text-muted-dark { color: rgba(255,255,255,0.3) !important; }
+    /* ── Empty / Loading / More ── */
+    .feed-empty { padding: 2.5rem 1rem; text-align: center; color: #94A3B8; font-size: 0.85rem; }
+    .feed-empty-icon { font-size: 2rem; margin-bottom: 0.4rem; }
+    .feed-loading { padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.78rem; }
+    .feed-more { padding: 0.5rem; text-align: center; border-top: 1px solid #F1F5F9; }
+    .feed-more button {
+      padding: 0.3rem 1rem; border: 1.5px solid #E2E8F0; border-radius: 14px;
+      background: white; font-family: inherit; font-size: 0.72rem;
+      color: #64748B; cursor: pointer; font-weight: 500;
+    }
+    .feed-more button:hover { border-color: var(--primary); color: var(--primary); }
 
-    /* Badge dark override */
-    .badge-dark-success { background: rgba(16,185,129,0.15); color: #34d399; }
-    .badge-dark-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
-    .badge-dark-danger  { background: rgba(239,68,68,0.15); color: #f87171; }
-    .badge-dark-neutral { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+    /* ═══ RESPONSIVE ═══ */
 
-    /* Empty state dark */
-    .admin-empty {
-      text-align: center;
-      padding: 3rem 2rem;
-      color: rgba(255,255,255,0.25);
-    }
-    .admin-empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
-
-    /* Loading dark */
-    .admin-loading {
-      text-align: center;
-      padding: 3rem;
-      color: rgba(255,255,255,0.3);
-    }
-    .admin-loading .spinner {
-      border-color: rgba(255,255,255,0.08);
-      border-top-color: #0891B2;
-    }
-
-    /* ─── Modals (keep light for readability) ─────── */
-    .modal-content { max-width: 750px; }
-    .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-
-    /* Announcements */
-    .ann-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 1.25rem;
-      margin-bottom: 0.75rem;
-      border-left: 3px solid #0891B2;
-      transition: all 0.2s;
-    }
-    .ann-card:hover { background: rgba(255,255,255,0.05); }
-    .ann-card.priority-warning { border-left-color: #f59e0b; }
-    .ann-card.priority-urgent  { border-left-color: #ef4444; }
-    .ann-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
-    .ann-title { font-weight: 700; font-size: 0.95rem; color: #e2e8f0; }
-    .ann-meta { font-size: 0.75rem; color: rgba(255,255,255,0.3); margin-bottom: 0.5rem; }
-    .ann-content { font-size: 0.85rem; line-height: 1.6; color: rgba(255,255,255,0.55); white-space: pre-wrap; }
-    .ann-actions { display: flex; gap: 0.4rem; }
-    .ann-targets { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.5rem; }
-    .ann-target-chip {
-      background: rgba(8,145,178,0.12);
-      color: #22d3ee;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 600;
-    }
-
-    /* Merchant checkbox list (in modal - light bg) */
-    .merchant-checklist {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      padding: 0.75rem;
-    }
-    .merchant-check-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.3rem 0;
-    }
-    .merchant-check-item label { cursor: pointer; font-size: 0.9rem; }
-
-    .tab-panels { min-height: 400px; }
-
-    /* Users search */
-    .users-search {
-      display: flex; align-items: center; gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-    .users-search input {
-      flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 0.9rem;
-    }
-    .users-search input::placeholder { color: rgba(255,255,255,0.25); }
-    .users-search input:focus { outline: none; border-color: #0891B2; background: rgba(255,255,255,0.06); }
-    .users-search .search-count { color: rgba(255,255,255,0.3); font-size: 0.8rem; white-space: nowrap; }
-
-    /* User cards in modal */
-    .user-cards-grid {
-      display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;
-    }
-    .user-card-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.65rem 0.85rem; border-radius: 8px;
-      background: var(--bg-card); border: 1px solid var(--border);
-    }
-    .user-card-biz { font-weight: 600; font-size: 0.9rem; }
-    .user-card-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); }
-    .user-card-stats strong { color: var(--text); }
-
-    /* Merge preview */
-    .merge-result { padding: 0.5rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; }
-    .merge-result-search {
-      padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer;
-      border: 1px solid var(--border); margin-bottom: 0.3rem;
-      transition: background 0.15s;
-    }
-    .merge-result-search:hover { background: var(--primary-bg); }
-    .merge-result-search.selected { border-color: var(--primary); background: var(--primary-bg); }
-    .merge-action {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.6rem 0.75rem; border-radius: 8px; margin-bottom: 0.4rem;
-      border: 1px solid var(--border); background: var(--bg-card);
-    }
-    .merge-action .merge-label { font-weight: 600; font-size: 0.9rem; }
-    .merge-action .merge-detail { font-size: 0.8rem; color: var(--text-muted); }
-    .merge-tag-merge { display: inline-block; background: #fef3c7; color: #92400e; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-    .merge-tag-transfer { display: inline-block; background: #dbeafe; color: #1e40af; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-
-    /* ─── Responsive ──────────────────────────────── */
     @media (max-width: 768px) {
-      .admin-banner-inner { padding: 0.65rem 1rem; }
-      .admin-hero-inner, .health-panel, .admin-main { padding-left: 1rem; padding-right: 1rem; }
-      .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
-      .admin-stats-row .admin-stat:last-child { grid-column: span 2; }
-      .health-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero-top-row { flex-direction: column; gap: 0.5rem; }
-      .hero-date { text-align: left; }
-      .admin-brand-label { display: none; }
+      .dash-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.95rem; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+      .st-val { font-size: 1.05rem; }
+      .feed-body { max-height: 420px; }
+
+      /* Period pills — bigger tap targets */
+      .period-pill { min-height: 36px; padding: 0.35rem 0.75rem; font-size: 0.75rem; }
+      .toolbar { gap: 0.3rem; flex-wrap: wrap; }
+
+      /* Transaction rows */
+      .col-hdr, .tx-row {
+        grid-template-columns: 52px 1fr 60px 60px;
+        gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem;
+      }
+      .tx-row { min-height: 44px; }
+      .col-th-amount, .tx-amount-cell { display: none; }
+
+      /* Feed tabs */
+      .feed-tab { min-height: 36px; padding: 0.4rem 0.65rem; }
     }
     @media (max-width: 480px) {
-      .admin-stats-row { grid-template-columns: 1fr 1fr; }
-      .health-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
+      .st { padding: 0.35rem 0.3rem; }
+      .st-val { font-size: 1rem; }
+      .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.7rem; }
     }
   </style>
 </head>
-<body>
+<body class="dash">
+  <nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+    <div class="navbar-menu"></div>
+  </nav>
 
-  <!-- ═══ HEADER BANNER ═══ -->
-  <header class="admin-banner">
-    <div class="admin-banner-inner">
-      <a href="/admin/dashboard" class="admin-brand">
-        <span class="admin-brand-logo">FIDDO</span>
-        <span class="admin-brand-divider"></span>
-        <span class="admin-brand-label">Super Admin</span>
-      </a>
-      <div class="admin-banner-right">
-        <span class="admin-env-badge" id="env-badge">
-          <span class="dot"></span>
-          <span id="env-label">production</span>
-        </span>
-        <button class="btn-admin-logout" onclick="adminLogout()">Déconnexion</button>
-      </div>
-    </div>
-  </header>
+  <div class="dash-wrap">
+    <h1 class="pg-title">Tableau de bord</h1>
 
-  <!-- ═══ HERO + STATS ═══ -->
-  <section class="admin-hero">
-    <div class="admin-hero-inner">
-      <div class="hero-top-row">
-        <div class="hero-greeting">
-          <h1>Tableau de bord</h1>
-          <p>Vue d'ensemble de la plateforme FIDDO</p>
-        </div>
-        <div class="hero-date" id="hero-date"></div>
+    <!-- ════════ TOOLBAR ════════ -->
+    <div class="toolbar">
+      <button class="period-pill active" onclick="setPeriod('today',this)">Aujourd'hui</button>
+      <button class="period-pill" onclick="setPeriod('7d',this)">7 jours</button>
+      <button class="period-pill" onclick="setPeriod('30d',this)">30 jours</button>
+      <button class="period-pill" onclick="setPeriod('all',this)">Tout</button>
+      <button class="period-pill" onclick="setPeriod('custom',this)">📅 Période</button>
+      <div class="period-dates" id="custom-dates">
+        <input type="date" id="date-from">
+        <span class="sep">→</span>
+        <input type="date" id="date-to">
       </div>
-
-      <div class="admin-stats-row">
-        <div class="admin-stat">
-          <div class="admin-stat-value" id="s-merchants">-</div>
-          <div class="admin-stat-label">Commerces</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value success" id="s-active">-</div>
-          <div class="admin-stat-label">Actifs</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value warning" id="s-pending">-</div>
-          <div class="admin-stat-label">En attente</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value" id="s-users">-</div>
-          <div class="admin-stat-label">Clients</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value accent" id="s-revenue">-</div>
-          <div class="admin-stat-label">CA total</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ SYSTEM HEALTH ═══ -->
-  <section class="health-panel">
-    <div class="health-section-title">Santé du système</div>
-    <div class="health-grid">
-      <div class="health-card">
-        <div class="health-icon green">🔌</div>
-        <div class="health-info">
-          <div class="health-label">API</div>
-          <div class="health-value"><span class="health-dot off" id="h-api-dot"></span> <span id="h-api-text">Vérification…</span></div>
-          <div class="health-sub" id="h-api-version"></div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon blue">☁️</div>
-        <div class="health-info">
-          <div class="health-label">Hébergement</div>
-          <div class="health-value"><span class="health-dot off" id="h-render-dot"></span> <span id="h-render-text">Render</span></div>
-          <div class="health-sub" id="h-render-sub">Vérification…</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon purple">📧</div>
-        <div class="health-info">
-          <div class="health-label">Emails envoyés</div>
-          <div class="health-value" id="h-emails">-</div>
-          <div class="health-sub" id="h-emails-sub">Brevo SMTP</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon orange">📱</div>
-        <div class="health-info">
-          <div class="health-label">SMS envoyés</div>
-          <div class="health-value" id="h-sms">-</div>
-          <div class="health-sub" id="h-sms-sub">Non configuré</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon green">💾</div>
-        <div class="health-info">
-          <div class="health-label">Dernier backup</div>
-          <div class="health-value"><span class="health-dot off" id="h-backup-dot"></span> <span id="h-backup-text">-</span></div>
-          <div class="health-sub" id="h-backup-sub">SQLite → JSON</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon blue">⏱️</div>
-        <div class="health-info">
-          <div class="health-label">Uptime</div>
-          <div class="health-value" id="h-uptime">-</div>
-          <div class="health-sub" id="h-uptime-sub"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ MAIN CONTENT ═══ -->
-  <main class="admin-main">
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchTab('pending')">⏳ En attente</button>
-      <button class="admin-tab" onclick="switchTab('active')">✅ Actifs</button>
-      <button class="admin-tab" onclick="switchTab('all')">📋 Tous</button>
-      <button class="admin-tab" onclick="switchTab('users')">👤 Utilisateurs</button>
-      <button class="admin-tab" onclick="switchTab('announcements')">📢 Annonces</button>
+      <span class="toolbar-spacer"></span>
     </div>
 
-    <div class="tab-panels">
-      <div id="merchants-container"></div>
-      <div id="users-container" style="display: none;"></div>
-      <div id="announcements-container" style="display: none;"></div>
-    </div>
-  </main>
-
-  <footer style="text-align: center; padding: 2rem 0 1.5rem; font-size: 0.65rem; color: rgba(255,255,255,0.15); letter-spacing: 0.3px;">
-    Powered by <strong style="color: rgba(255,255,255,0.25); font-weight: 700;">H3001</strong>
-  </footer>
-
-  <!-- ═══ MERCHANT DETAIL MODAL ═══ -->
-  <div id="merchant-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="mm-title">Commerce</h2>
-        <button class="close-modal" onclick="closeModal()">×</button>
-      </div>
-      <div class="modal-body" id="mm-body"></div>
-      <div class="modal-footer" id="mm-footer"></div>
-    </div>
-  </div>
-
-  <!-- ═══ REJECT MODAL ═══ -->
-  <div id="reject-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Refuser le commerce</h2>
-        <button class="close-modal" onclick="closeRejectModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="reject-alert"></div>
-        <div class="form-group">
-          <label class="form-label">Raison du refus</label>
-          <input type="text" id="reject-reason" class="form-control" placeholder="Documents manquants, TVA invalide...">
-        </div>
-        <button class="btn btn-danger" onclick="submitReject()">Confirmer le refus</button>
+    <!-- ════════ STATS ════════ -->
+    <div class="stats-row">
+      <div class="st"><div class="st-val" id="s-visits">–</div><div class="st-lbl">Passages</div></div>
+      <div class="st"><div class="st-val" id="s-pts-out">–</div><div class="st-lbl">Points distribués</div></div>
+      <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
+      <div class="st"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
+      <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
+      <div class="st st-action" onclick="API.clients.exportCSV()" title="Exporter les clients">
+        <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        <div class="st-lbl">Export CSV</div>
       </div>
     </div>
-  </div>
 
-  <!-- ═══ ANNOUNCEMENT MODAL ═══ -->
-  <div id="ann-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="ann-modal-title">Nouvelle annonce</h2>
-        <button class="close-modal" onclick="closeAnnModal()">×</button>
+    <!-- ════════ ACTIVITY FEED ════════ -->
+    <div class="feed-card">
+      <div class="feed-hdr">
+        <span class="feed-title">Activité</span>
+        <span id="feed-total" style="font-size:0.68rem;color:#94A3B8;"></span>
       </div>
-      <div class="modal-body">
-        <div id="ann-alert"></div>
-        <div class="form-group">
-          <label class="form-label">Titre *</label>
-          <input type="text" id="ann-title" class="form-control" placeholder="Ex: Maintenance prévue ce weekend">
+
+      <!-- Type filter tabs -->
+      <div class="feed-tabs">
+        <button class="feed-tab active" onclick="setType('',this)">Tous <span class="cnt" id="cnt-all"></span></button>
+        <button class="feed-tab" onclick="setType('credit',this)">Crédits <span class="cnt" id="cnt-credit"></span></button>
+        <button class="feed-tab" onclick="setType('reward',this)">Récompenses <span class="cnt" id="cnt-reward"></span></button>
+        <button class="feed-tab" onclick="setType('adjustment',this)">Ajustements <span class="cnt" id="cnt-adj"></span></button>
+      </div>
+
+      <!-- Sortable column headers -->
+      <div class="col-hdr">
+        <div class="col-th active" onclick="sortBy('time',this)" data-col="time">
+          Heure <span class="arrow">▼</span>
         </div>
-        <div class="form-group">
-          <label class="form-label">Contenu *</label>
-          <textarea id="ann-content" class="form-control" rows="4" placeholder="Détails de l'annonce..."></textarea>
+        <div class="col-th" onclick="sortBy('client',this)" data-col="client">
+          Client <span class="arrow">▼</span>
         </div>
-        <div class="form-group">
-          <label class="form-label">Priorité</label>
-          <select id="ann-priority" class="form-control">
-            <option value="info">ℹ️ Info</option>
-            <option value="warning">⚠️ Important</option>
-            <option value="urgent">🚨 Urgent</option>
-          </select>
+        <div class="col-th" onclick="sortBy('type',this)" data-col="type">
+          Type <span class="arrow">▼</span>
         </div>
-        <div class="form-group">
-          <label class="form-label">Destinataires</label>
-          <select id="ann-target" class="form-control" onchange="toggleMerchantList()">
-            <option value="all">📢 Tous les commerces</option>
-            <option value="selected">🎯 Commerces sélectionnés</option>
-          </select>
+        <div class="col-th col-th-right" onclick="sortBy('points',this)" data-col="points">
+          Points <span class="arrow">▼</span>
         </div>
-        <div class="form-group" id="merchant-list-group" style="display: none;">
-          <label class="form-label">Sélectionner les commerces</label>
-          <div class="merchant-checklist" id="merchant-checklist"></div>
+        <div class="col-th col-th-right col-th-amount" onclick="sortBy('amount',this)" data-col="amount">
+          Montant <span class="arrow">▼</span>
         </div>
-        <div class="form-group">
-          <label class="form-label">Date d'expiration (optionnel)</label>
-          <input type="datetime-local" id="ann-expires" class="form-control">
-          <small class="form-help">L'annonce disparaîtra automatiquement après cette date</small>
-        </div>
-        <button class="btn btn-primary btn-block" id="ann-submit-btn" onclick="submitAnnouncement()">Publier l'annonce</button>
+      </div>
+
+      <div class="feed-body" id="feed-body"></div>
+
+      <div class="feed-more" id="feed-more" style="display:none;">
+        <button onclick="loadMore()">Charger plus</button>
       </div>
     </div>
-  </div>
 
-  <!-- ═══ USER DETAIL MODAL ═══ -->
-  <div id="user-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="um-title">Utilisateur</h2>
-        <button class="close-modal" onclick="closeUserModal()">×</button>
-      </div>
-      <div class="modal-body" id="um-body"></div>
-      <div class="modal-footer" id="um-footer"></div>
-    </div>
-  </div>
 
-  <!-- ═══ USER MERGE MODAL ═══ -->
-  <div id="merge-modal" class="modal">
-    <div class="modal-content" style="max-width: 650px;">
-      <div class="modal-header">
-        <h2>🔀 Fusion globale</h2>
-        <button class="close-modal" onclick="closeMergeModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="merge-alert"></div>
-
-        <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border);">
-          <strong>Cible (conservé) :</strong> <span id="merge-target-label">—</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Rechercher l'utilisateur source (à absorber)</label>
-          <input type="text" id="merge-source-search" class="form-control" placeholder="Email, téléphone ou nom…" oninput="onMergeSearch(this.value)">
-        </div>
-        <div id="merge-source-results" style="max-height: 180px; overflow-y: auto; margin-bottom: 1rem;"></div>
-
-        <div id="merge-preview-section" style="display: none;">
-          <div id="merge-preview-content"></div>
-
-          <div class="form-group" style="margin-top: 1rem;">
-            <label class="form-label">Note (visible par les commerçants)</label>
-            <input type="text" id="merge-reason" class="form-control" placeholder="Ex : Fusion demandée par le client" value="Fusion demandée par le client">
-          </div>
-
-          <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="executeMerge()">⚠️ Confirmer la fusion (irréversible)</button>
-        </div>
-      </div>
-    </div>
   </div>
 
   <script src="/js/app.js"></script>
   <script>
-    const ADMIN_API = API_BASE_URL + '/admin';
-    let currentMerchantId = null;
-    let currentTab = 'pending';
-    let editingAnnouncementId = null;
-    let activeMerchants = [];
-    let healthStartTime = Date.now();
+    if (!requireManager()) throw 'Not authorized';
 
-    // ─── Date display ───
-    function updateHeroDate() {
+    const staff = Auth.getStaff();
+    const merchant = Auth.getMerchant();
+
+    let currentPeriod = 'today';
+    let currentType = '';
+    let currentOffset = 0;
+    let allTransactions = [];
+    let sortCol = 'time';
+    let sortAsc = false; // default: newest first
+
+    // ═══ DATE HELPERS ═══
+
+    function periodDates(period) {
       const now = new Date();
-      const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-      const dateStr = now.toLocaleDateString('fr-FR', opts);
-      const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('hero-date').innerHTML = `<strong>${dateStr}</strong><br>${timeStr}`;
-    }
-    updateHeroDate();
-    setInterval(updateHeroDate, 30000);
-
-    // ─── Admin API call ───
-    async function adminCall(endpoint, options = {}) {
-      const config = { headers: { 'Content-Type': 'application/json' }, credentials: 'include', ...options };
-      const resp = await fetch(`${ADMIN_API}${endpoint}`, config);
-      if (resp.status === 401 || resp.status === 403) { window.location.href = '/admin'; return; }
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Erreur');
-      return data;
-    }
-
-    function adminLogout() {
-      adminCall('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/admin');
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // SYSTEM HEALTH CHECKS
-    // ═══════════════════════════════════════════════════════
-
-    async function checkHealth() {
-      // ── API Health ──
-      try {
-        const start = performance.now();
-        const resp = await fetch(API_BASE_URL + '/health', { credentials: 'include' });
-        const ping = Math.round(performance.now() - start);
-        const data = await resp.json();
-
-        document.getElementById('h-api-dot').className = 'health-dot ok';
-        document.getElementById('h-api-text').textContent = `OK — ${ping}ms`;
-        document.getElementById('h-api-version').textContent = `v${data.version || '?'}`;
-
-        // Env badge
-        const isLocal = window.location.hostname === 'localhost';
-        document.getElementById('env-label').textContent = isLocal ? 'local' : 'production';
-        if (isLocal) {
-          const badge = document.getElementById('env-badge');
-          badge.style.background = 'rgba(245,158,11,0.12)';
-          badge.style.color = '#fbbf24';
-          badge.style.borderColor = 'rgba(245,158,11,0.2)';
-          badge.querySelector('.dot').style.background = '#fbbf24';
-        }
-      } catch (e) {
-        document.getElementById('h-api-dot').className = 'health-dot error';
-        document.getElementById('h-api-text').textContent = 'Erreur connexion';
-        document.getElementById('h-api-version').textContent = '';
-      }
-
-      // ── Render/Hosting ──
-      try {
-        const resp = await fetch(API_BASE_URL + '/health', { credentials: 'include' });
-        if (resp.ok) {
-          document.getElementById('h-render-dot').className = 'health-dot ok';
-          document.getElementById('h-render-text').textContent = 'Render';
-          document.getElementById('h-render-sub').textContent = 'Service actif';
-        }
-      } catch {
-        document.getElementById('h-render-dot').className = 'health-dot error';
-        document.getElementById('h-render-sub').textContent = 'Service injoignable';
-      }
-
-      // ── Emails / SMS / Backup — from admin stats endpoint ──
-      try {
-        const s = await adminCall('/merchants/stats/global');
-        // Emails: estimate from transactions (each credit with validated email = 1 email)
-        const emailCount = s.transactions || 0;
-        document.getElementById('h-emails').textContent = emailCount.toLocaleString('fr-FR');
-        document.getElementById('h-emails-sub').textContent = 'Brevo SMTP — estimé';
-
-        // SMS: not implemented yet
-        document.getElementById('h-sms').textContent = '0';
-        document.getElementById('h-sms-sub').textContent = 'Non configuré';
-
-      } catch {
-        document.getElementById('h-emails').textContent = '?';
-        document.getElementById('h-sms').textContent = '?';
-      }
-
-      // ── Backup status ──
-      try {
-        const resp = await fetch(API_BASE_URL + '/admin/backup/status', { credentials: 'include' });
-        if (resp.ok) {
-          const data = await resp.json();
-          document.getElementById('h-backup-dot').className = 'health-dot ok';
-          document.getElementById('h-backup-text').textContent = data.lastBackup ? Format.timeSince(data.lastBackup) : 'Disponible';
-          document.getElementById('h-backup-sub').textContent = data.size ? `${data.size}` : 'SQLite → JSON';
-        } else {
-          document.getElementById('h-backup-dot').className = 'health-dot warn';
-          document.getElementById('h-backup-text').textContent = 'Non configuré';
-        }
-      } catch {
-        document.getElementById('h-backup-dot').className = 'health-dot warn';
-        document.getElementById('h-backup-text').textContent = 'Endpoint absent';
-        document.getElementById('h-backup-sub').textContent = 'Ajouter /api/admin/backup/status';
-      }
-    }
-
-    // ── Uptime counter ──
-    function updateUptime() {
-      const diff = Date.now() - healthStartTime;
-      const s = Math.floor(diff / 1000);
-      const m = Math.floor(s / 60);
-      const h = Math.floor(m / 60);
-      if (h > 0) {
-        document.getElementById('h-uptime').textContent = `${h}h ${m % 60}m`;
+      let from, to;
+      if (period === 'today') {
+        from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        to = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+      } else if (period === '7d') {
+        from = new Date(now); from.setDate(from.getDate() - 7); from.setHours(0,0,0,0);
+        to = now;
+      } else if (period === '30d') {
+        from = new Date(now); from.setDate(from.getDate() - 30); from.setHours(0,0,0,0);
+        to = now;
+      } else if (period === 'custom') {
+        const f = document.getElementById('date-from').value;
+        const t = document.getElementById('date-to').value;
+        if (f) from = new Date(f + 'T00:00:00');
+        if (t) to = new Date(t + 'T23:59:59');
       } else {
-        document.getElementById('h-uptime').textContent = `${m}m ${s % 60}s`;
+        return {};
       }
-      document.getElementById('h-uptime-sub').textContent = 'Session admin active';
+      const r = {};
+      if (from) r.from = from.toISOString().replace('T', ' ').substring(0, 19);
+      if (to) r.to = to.toISOString().replace('T', ' ').substring(0, 19);
+      return r;
     }
-    setInterval(updateUptime, 1000);
-    updateUptime();
 
-    // ═══════════════════════════════════════════════════════
-    // STATS
-    // ═══════════════════════════════════════════════════════
+    // ═══ PERIOD ═══
+
+    function setPeriod(period, btn) {
+      currentPeriod = period;
+      document.querySelectorAll('.period-pill').forEach(p => p.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      const custom = document.getElementById('custom-dates');
+      if (period === 'custom') {
+        custom.classList.add('show');
+        if (document.getElementById('date-from').value && document.getElementById('date-to').value) reload();
+        return;
+      }
+      custom.classList.remove('show');
+      reload();
+    }
+
+    document.getElementById('date-from').addEventListener('change', () => { if (currentPeriod === 'custom') reload(); });
+    document.getElementById('date-to').addEventListener('change', () => { if (currentPeriod === 'custom') reload(); });
+
+    // ═══ TYPE FILTER ═══
+
+    function setType(type, btn) {
+      currentType = type;
+      document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      currentOffset = 0;
+      allTransactions = [];
+      loadActivity();
+    }
+
+    // ═══ COLUMN SORT ═══
+
+    function sortBy(col, el) {
+      if (sortCol === col) {
+        sortAsc = !sortAsc;
+      } else {
+        sortCol = col;
+        sortAsc = col === 'client' || col === 'type'; // alpha = asc by default, rest = desc
+      }
+
+      // Update header UI
+      document.querySelectorAll('.col-th').forEach(th => th.classList.remove('active'));
+      el.classList.add('active');
+      el.querySelector('.arrow').textContent = sortAsc ? '▲' : '▼';
+
+      renderFeed(allTransactions);
+    }
+
+    function getSortedTxs(txs) {
+      const sorted = [...txs];
+      const dir = sortAsc ? 1 : -1;
+
+      sorted.sort((a, b) => {
+        switch (sortCol) {
+          case 'time':
+            return dir * (a.created_at < b.created_at ? -1 : a.created_at > b.created_at ? 1 : 0);
+          case 'client': {
+            const ca = (a.client_name || a.client_email || a.client_phone || '').toLowerCase();
+            const cb = (b.client_name || b.client_email || b.client_phone || '').toLowerCase();
+            return dir * ca.localeCompare(cb);
+          }
+          case 'type':
+            return dir * a.transaction_type.localeCompare(b.transaction_type);
+          case 'points':
+            return dir * (a.points_delta - b.points_delta);
+          case 'amount':
+            return dir * ((a.amount || 0) - (b.amount || 0));
+          default:
+            return 0;
+        }
+      });
+      return sorted;
+    }
+
+    // ═══ LOAD STATS ═══
 
     async function loadStats() {
       try {
-        const s = await adminCall('/merchants/stats/global');
-        document.getElementById('s-merchants').textContent = s.merchants.total;
-        document.getElementById('s-active').textContent = s.merchants.active;
-        document.getElementById('s-pending').textContent = s.merchants.pending;
-        document.getElementById('s-users').textContent = s.endUsers;
-        document.getElementById('s-revenue').textContent = Format.currency(s.revenue);
-      } catch (e) { console.error(e); }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // TABS
-    // ═══════════════════════════════════════════════════════
-
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-
-      const merchantsEl = document.getElementById('merchants-container');
-      const usersEl = document.getElementById('users-container');
-      const annEl = document.getElementById('announcements-container');
-
-      merchantsEl.style.display = 'none';
-      usersEl.style.display = 'none';
-      annEl.style.display = 'none';
-
-      if (tab === 'announcements') {
-        annEl.style.display = 'block';
-        loadAnnouncements();
-      } else if (tab === 'users') {
-        usersEl.style.display = 'block';
-        loadUsers();
-      } else {
-        merchantsEl.style.display = 'block';
-        loadMerchants();
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // MERCHANTS
-    // ═══════════════════════════════════════════════════════
-
-    async function loadMerchants() {
-      const container = document.getElementById('merchants-container');
-      try {
-        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
-        const qs = currentTab === 'all' ? '' : `?status=${currentTab}`;
-        const data = await adminCall(`/merchants${qs}`);
-        const merchants = data.merchants;
-
-        if (merchants.length === 0) {
-          container.innerHTML = '<div class="admin-empty"><div class="admin-empty-icon">🏪</div><p>Aucun commerce</p></div>';
-          return;
-        }
-
-        let html = `<table class="table"><thead><tr>
-          <th>Commerce</th><th>Propriétaire</th><th>TVA</th><th>Status</th><th>Clients</th><th>Créé le</th>
-        </tr></thead><tbody>`;
-
-        merchants.forEach(m => {
-          const statusClass = m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : m.status === 'suspended' ? 'danger' : 'neutral';
-          html += `<tr class="merchant-row" onclick="showMerchant(${m.id})">
-            <td><strong>${m.business_name}</strong><br><small class="text-muted-dark">${m.email}</small></td>
-            <td>${m.owner_name || '-'}<br><small class="text-muted-dark">${m.owner_email || '-'}</small></td>
-            <td style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${m.vat_number}</td>
-            <td><span class="badge badge-dark-${statusClass}">${m.status}</span></td>
-            <td>${m.client_count}</td>
-            <td style="color: rgba(255,255,255,0.4);">${Format.date(m.created_at)}</td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
+        const dates = periodDates(currentPeriod);
+        const qs = new URLSearchParams();
+        if (dates.from) qs.set('from', dates.from);
+        if (dates.to) qs.set('to', dates.to);
+        const s = await API.call('/dashboard/stats?' + qs.toString());
+        document.getElementById('s-visits').textContent = fmtNum(s.visits);
+        document.getElementById('s-pts-out').textContent = fmtNum(s.pointsOut);
+        document.getElementById('s-rewards').textContent = fmtNum(s.rewards);
+        document.getElementById('s-new').textContent = fmtNum(s.newClients);
+        document.getElementById('s-active').textContent = fmtNum(s.activeClients);
       } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">⚠️ ${e.message}</div>`;
+        console.error('Stats error:', e);
       }
     }
 
-    // ═══════════════════════════════════════════════════════
-    // MERCHANT DETAIL MODAL
-    // ═══════════════════════════════════════════════════════
+    function fmtNum(n) {
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
+      return n.toString();
+    }
 
-    async function showMerchant(id) {
+    // ═══ LOAD ACTIVITY ═══
+
+    async function loadActivity() {
+      const body = document.getElementById('feed-body');
+      if (currentOffset === 0) {
+        body.innerHTML = '<div class="feed-loading">Chargement…</div>';
+        allTransactions = [];
+      }
       try {
-        currentMerchantId = id;
-        const data = await adminCall(`/merchants/${id}`);
-        const m = data.merchant;
-        const staffList = data.staff;
-        const stats = data.stats;
+        const dates = periodDates(currentPeriod);
+        const qs = new URLSearchParams();
+        if (dates.from) qs.set('from', dates.from);
+        if (dates.to) qs.set('to', dates.to);
+        if (currentType) qs.set('type', currentType);
+        qs.set('limit', '50');
+        qs.set('offset', currentOffset.toString());
 
-        document.getElementById('mm-title').textContent = m.business_name;
-
-        let html = `
-          <div class="stats-grid" style="margin-bottom: 1.5rem;">
-            <div class="stat-card"><div class="stat-value">${stats.clients}</div><div class="stat-label">Clients</div></div>
-            <div class="stat-card"><div class="stat-value">${Format.currency(stats.revenue)}</div><div class="stat-label">CA</div></div>
-            <div class="stat-card"><div class="stat-value">${stats.transactions}</div><div class="stat-label">Transactions</div></div>
-          </div>
-
-          <h3 class="mb-1">Informations</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-            <div><strong>Adresse :</strong> ${m.address}</div>
-            <div><strong>TVA :</strong> ${m.vat_number}</div>
-            <div><strong>Email :</strong> ${m.email}</div>
-            <div><strong>Tél :</strong> ${m.phone}</div>
-            <div><strong>Status :</strong> <span class="badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : 'danger'}">${m.status}</span></div>
-            <div><strong>Inscrit :</strong> ${Format.datetime(m.created_at)}</div>
-            <div><strong>Points/€ :</strong> ${m.points_per_euro}</div>
-            <div><strong>Récompense :</strong> ${m.points_for_reward} pts</div>
-          </div>
-          ${m.rejection_reason ? `<div class="alert alert-warning">Raison de refus : ${m.rejection_reason}</div>` : ''}
-
-          <h3 class="mb-1">Équipe (${staffList.length})</h3>
-        `;
-
-        if (staffList.length > 0) {
-          html += '<table class="table" style="margin-bottom: 0;"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actif</th></tr></thead><tbody>';
-          staffList.forEach(s => {
-            html += `<tr>
-              <td>${s.display_name}</td>
-              <td>${s.email}</td>
-              <td><span class="badge badge-info">${s.role}</span></td>
-              <td>${s.is_active ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-danger">Non</span>'}</td>
-            </tr>`;
-          });
-          html += '</tbody></table>';
-        } else {
-          html += '<p class="text-muted">Aucun membre</p>';
-        }
-
-        document.getElementById('mm-body').innerHTML = html;
-
-        let footer = '<div class="action-btns">';
-        if (m.status === 'pending') {
-          footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()">✅ Valider</button>`;
-          footer += `<button class="btn btn-danger btn-sm" onclick="showRejectModal()">❌ Refuser</button>`;
-        } else if (m.status === 'active') {
-          footer += `<button class="btn btn-danger btn-sm" onclick="suspendMerchant()">⏸️ Suspendre</button>`;
-        } else if (m.status === 'suspended') {
-          footer += `<button class="btn btn-success btn-sm" onclick="reactivateMerchant()">▶️ Réactiver</button>`;
-        }
-        footer += '</div>';
-        document.getElementById('mm-footer').innerHTML = footer;
-
-        document.getElementById('merchant-modal').classList.add('active');
+        const data = await API.call('/dashboard/activity?' + qs.toString());
+        allTransactions = allTransactions.concat(data.transactions);
+        renderFeed(allTransactions);
+        document.getElementById('feed-total').textContent = data.total + ' transaction(s)';
+        document.getElementById('feed-more').style.display = data.hasMore ? '' : 'none';
+        if (currentOffset === 0) updateCounts();
       } catch (e) {
-        console.error(e);
+        body.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">⚠️</div>Erreur de chargement</div>';
+        console.error('Activity error:', e);
       }
     }
 
-    function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
-    document.getElementById('merchant-modal').addEventListener('click', (e) => { if (e.target.id === 'merchant-modal') closeModal(); });
+    function loadMore() { currentOffset += 50; loadActivity(); }
 
-    // ─── Merchant Actions ───
-    async function validateMerchant() {
-      if (!confirm('✅ Valider et activer ce commerce ?')) return;
+    // ═══ TAB COUNTS ═══
+
+    async function updateCounts() {
       try {
-        await adminCall(`/merchants/${currentMerchantId}/validate`, { method: 'POST' });
-        closeModal(); loadMerchants(); loadStats();
-      } catch (e) { alert(e.message); }
-    }
-
-    function showRejectModal() { document.getElementById('reject-modal').classList.add('active'); }
-    function closeRejectModal() { document.getElementById('reject-modal').classList.remove('active'); }
-    document.getElementById('reject-modal').addEventListener('click', (e) => { if (e.target.id === 'reject-modal') closeRejectModal(); });
-
-    async function submitReject() {
-      const reason = document.getElementById('reject-reason').value.trim();
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/reject`, {
-          method: 'POST',
-          body: JSON.stringify({ reason }),
-        });
-        closeRejectModal(); closeModal(); loadMerchants(); loadStats();
-      } catch (e) { UI.showAlert('reject-alert', e.message, 'error'); }
-    }
-
-    async function suspendMerchant() {
-      if (!confirm('⏸️ Suspendre ce commerce ?')) return;
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/suspend`, { method: 'POST' });
-        closeModal(); loadMerchants(); loadStats();
-      } catch (e) { alert(e.message); }
-    }
-
-    async function reactivateMerchant() {
-      if (!confirm('▶️ Réactiver ce commerce ?')) return;
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/reactivate`, { method: 'POST' });
-        closeModal(); loadMerchants(); loadStats();
-      } catch (e) { alert(e.message); }
-    }
-
-
-    // ═══════════════════════════════════════════════════════
-    // USERS (end_users global table)
-    // ═══════════════════════════════════════════════════════
-
-    let usersSearchTimeout = null;
-
-    async function loadUsers(query = '') {
-      const container = document.getElementById('users-container');
-      try {
-        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
-        const qs = query ? `?q=${encodeURIComponent(query)}` : '';
-        const data = await adminCall(`/users${qs}`);
-        const users = data.users;
-
-        let html = `
-          <div class="users-search">
-            <input type="text" id="users-search-input" placeholder="Rechercher par nom, email, téléphone…"
-              value="${query}" oninput="onUsersSearch(this.value)">
-            <span class="search-count">${data.count} utilisateur${data.count > 1 ? 's' : ''}</span>
-          </div>
-        `;
-
-        if (users.length === 0) {
-          html += '<div class="admin-empty"><div class="admin-empty-icon">👤</div><p>Aucun utilisateur trouvé</p></div>';
-          container.innerHTML = html;
-          return;
+        const dates = periodDates(currentPeriod);
+        const qs = new URLSearchParams();
+        if (dates.from) qs.set('from', dates.from);
+        if (dates.to) qs.set('to', dates.to);
+        const all = await API.call('/dashboard/activity?' + qs.toString() + '&limit=0');
+        document.getElementById('cnt-all').textContent = all.total;
+        for (const t of ['credit', 'reward', 'adjustment']) {
+          const r = await API.call('/dashboard/activity?' + qs.toString() + '&type=' + t + '&limit=0');
+          document.getElementById(t === 'adjustment' ? 'cnt-adj' : 'cnt-' + t).textContent = r.total;
         }
-
-        html += `<table class="table"><thead><tr>
-          <th>Nom</th><th>Email</th><th>Téléphone</th><th>Commerces</th><th>Badges</th><th>Créé le</th>
-        </tr></thead><tbody>`;
-
-        users.forEach(u => {
-          let badges = '';
-          if (u.email_validated) badges += '<span class="badge badge-dark-success" style="font-size:0.65rem;">Email ✓</span> ';
-          if (u.has_pin) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">PIN</span> ';
-          if (u.has_qr) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">QR</span> ';
-          if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
-
-          html += `<tr class="merchant-row" onclick="showUser(${u.id})">
-            <td><strong>${u.name || '<em style=\"opacity:0.4\">—</em>'}</strong></td>
-            <td style="font-size: 0.85rem;">${u.email || '<em style="opacity:0.3">—</em>'}</td>
-            <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone || '—'}</td>
-            <td style="text-align: center;"><strong>${u.merchant_count}</strong></td>
-            <td>${badges || '<span style="opacity:0.2">—</span>'}</td>
-            <td style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        if (data.count >= 200) {
-          html += '<div style="text-align:center; padding:0.75rem; color:rgba(255,255,255,0.3); font-size:0.8rem;">Limité à 200 résultats — affinez votre recherche</div>';
-        }
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">⚠️ ${e.message}</div>`;
-      }
+      } catch (e) {}
     }
 
-    function onUsersSearch(val) {
-      clearTimeout(usersSearchTimeout);
-      usersSearchTimeout = setTimeout(() => loadUsers(val.trim()), 300);
-    }
+    // ═══ RENDER FEED ═══
 
-    // ─── User Detail Modal ───
-
-    async function showUser(id) {
-      try {
-        const data = await adminCall(`/users/${id}`);
-        const u = data.user;
-        const cards = data.cards;
-        const aliases = data.aliases;
-
-        document.getElementById('um-title').textContent = u.name || u.email || u.phone || `#${u.id}`;
-
-        let html = `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-            <div><strong>Email :</strong> ${u.email || '—'} ${u.email_validated ? '<span class="badge badge-success">validé</span>' : ''}</div>
-            <div><strong>Téléphone :</strong> ${u.phone || '—'}</div>
-            <div><strong>PIN :</strong> ${u.has_pin ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Non défini</span>'}</div>
-            <div><strong>QR :</strong> ${u.has_qr ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-warning">Non</span>'}</div>
-            <div><strong>Bloqué :</strong> ${u.is_blocked ? '<span class="badge badge-danger">Oui</span>' : 'Non'}</div>
-            <div><strong>Inscrit :</strong> ${Format.datetime(u.created_at)}</div>
-          </div>
-        `;
-
-        // Aliases
-        if (aliases.length > 0) {
-          html += '<h3 class="mb-1">Aliases (post-fusion)</h3>';
-          html += '<div style="margin-bottom: 1.5rem; font-size: 0.85rem;">';
-          aliases.forEach(a => {
-            html += `<span class="badge badge-info" style="margin-right: 0.4rem; margin-bottom: 0.3rem;">${a.alias_type}: ${a.alias_value}</span>`;
-          });
-          html += '</div>';
-        }
-
-        // Cards across merchants
-        html += `<h3 class="mb-1">Cartes de fidélité (${cards.length})</h3>`;
-
-        if (cards.length === 0) {
-          html += '<p class="text-muted">Aucune carte de fidélité</p>';
-        } else {
-          html += '<div class="user-cards-grid">';
-          cards.forEach(c => {
-            const statusBadge = c.merchant_status === 'active'
-              ? '<span class="badge badge-success" style="font-size:0.65rem;">actif</span>'
-              : `<span class="badge badge-warning" style="font-size:0.65rem;">${c.merchant_status}</span>`;
-
-            html += `
-              <div class="user-card-row">
-                <div>
-                  <div class="user-card-biz">${c.business_name} ${statusBadge}</div>
-                  <div style="font-size:0.75rem; color: var(--text-muted);">${c.merchant_email}</div>
-                </div>
-                <div class="user-card-stats">
-                  <div><strong>${c.points_balance}</strong> pts</div>
-                  <div><strong>${c.visit_count}</strong> visites</div>
-                  <div><strong>${Format.currency(c.total_spent)}</strong></div>
-                  <div style="color: rgba(0,0,0,0.35);">${Format.date(c.last_visit)}</div>
-                </div>
-              </div>
-            `;
-          });
-          html += '</div>';
-        }
-
-        document.getElementById('um-body').innerHTML = html;
-
-        // Footer with merge button
-        document.getElementById('um-footer').innerHTML = `
-          <div class="action-btns">
-            <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${(u.name || u.email || u.phone || '').replace(/'/g, "\\'")}')">🔀 Fusionner avec…</button>
-          </div>
-        `;
-
-        document.getElementById('user-modal').classList.add('active');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
-    document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
-
-    // ─── Merge Flow ───
-
-    let mergeTargetId = null;
-    let mergeSourceId = null;
-    let mergeSearchTimeout = null;
-
-    function openMergeModal(targetId, targetLabel) {
-      mergeTargetId = targetId;
-      mergeSourceId = null;
-      document.getElementById('merge-target-label').textContent = targetLabel + ` (#${targetId})`;
-      document.getElementById('merge-source-search').value = '';
-      document.getElementById('merge-source-results').innerHTML = '';
-      document.getElementById('merge-preview-section').style.display = 'none';
-      document.getElementById('merge-alert').innerHTML = '';
-      document.getElementById('merge-reason').value = 'Fusion demandée par le client';
-      document.getElementById('merge-modal').classList.add('active');
-    }
-
-    function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
-    document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
-
-    function onMergeSearch(val) {
-      clearTimeout(mergeSearchTimeout);
-      if (val.trim().length < 2) {
-        document.getElementById('merge-source-results').innerHTML = '';
-        return;
-      }
-      mergeSearchTimeout = setTimeout(async () => {
-        try {
-          const data = await adminCall(`/users?q=${encodeURIComponent(val.trim())}`);
-          const container = document.getElementById('merge-source-results');
-          // Filter out the target itself
-          const users = data.users.filter(u => u.id !== mergeTargetId);
-          if (users.length === 0) {
-            container.innerHTML = '<div style="padding:0.5rem; color:var(--text-muted); font-size:0.85rem;">Aucun résultat</div>';
-            return;
-          }
-          container.innerHTML = users.slice(0, 8).map(u => `
-            <div class="merge-result-search ${mergeSourceId === u.id ? 'selected' : ''}" onclick="selectMergeSource(${u.id})">
-              <strong>${u.name || '<em>Sans nom</em>'}</strong>
-              <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">${u.email || ''} ${u.phone || ''}</span>
-              <span style="float:right; font-size:0.75rem; color:var(--text-muted);">${u.merchant_count} commerce${u.merchant_count > 1 ? 's' : ''}</span>
-            </div>
-          `).join('');
-        } catch (e) {
-          console.error(e);
-        }
-      }, 300);
-    }
-
-    async function selectMergeSource(sourceId) {
-      mergeSourceId = sourceId;
-      // Highlight
-      document.querySelectorAll('.merge-result-search').forEach(el => el.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
-
-      // Load preview
-      try {
-        const preview = await adminCall(`/users/${mergeTargetId}/merge-preview?sourceId=${sourceId}`);
-        const section = document.getElementById('merge-preview-section');
-        const content = document.getElementById('merge-preview-content');
-
-        let html = `<h3 style="margin-bottom:0.75rem; font-size:0.95rem;">Aperçu de la fusion</h3>`;
-
-        html += `<div style="display:flex; gap:1rem; margin-bottom:1rem; font-size:0.85rem;">
-          <div style="flex:1; padding:0.6rem; border-radius:8px; background:#fef2f2; border:1px solid #fecaca;">
-            <strong>Source (supprimé)</strong><br>
-            ${preview.source.name || '—'}<br>
-            <span style="color:#6b7280;">${preview.source.email || ''} ${preview.source.phone || ''}</span>
-          </div>
-          <div style="display:flex; align-items:center; font-size:1.3rem;">→</div>
-          <div style="flex:1; padding:0.6rem; border-radius:8px; background:#f0fdf4; border:1px solid #bbf7d0;">
-            <strong>Cible (conservé)</strong><br>
-            ${preview.target.name || '—'}<br>
-            <span style="color:#6b7280;">${preview.target.email || ''} ${preview.target.phone || ''}</span>
-          </div>
-        </div>`;
-
-        if (preview.actions.length === 0) {
-          html += '<div style="padding:0.75rem; color:var(--text-muted);">Aucune carte à transférer (source sans commerce)</div>';
-        } else {
-          preview.actions.forEach(a => {
-            const tag = a.action === 'merge'
-              ? '<span class="merge-tag-merge">FUSION</span>'
-              : '<span class="merge-tag-transfer">TRANSFERT</span>';
-
-            let detail = '';
-            if (a.action === 'merge') {
-              detail = `${a.target_before.points} + ${a.source.points} → <strong>${a.target_after.points} pts</strong>`;
-            } else {
-              detail = `<strong>${a.source.points} pts</strong>, ${a.source.visits} visites`;
-            }
-
-            html += `<div class="merge-action">
-              <div>
-                <div class="merge-label">${a.business_name} ${tag}</div>
-                <div class="merge-detail">${detail}</div>
-              </div>
-            </div>`;
-          });
-        }
-
-        if (preview.newAliases.length > 0) {
-          html += `<div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);">
-            <strong>Aliases créés :</strong> ${preview.newAliases.map(a => a.value).join(', ')}
-          </div>`;
-        }
-
-        content.innerHTML = html;
-        section.style.display = 'block';
-      } catch (e) {
-        UI.showAlert('merge-alert', e.message, 'error');
-      }
-    }
-
-    async function executeMerge() {
-      if (!mergeSourceId || !mergeTargetId) return;
-      const reason = document.getElementById('merge-reason').value.trim();
-      if (!confirm(`⚠️ IRRÉVERSIBLE\n\nFusionner l'utilisateur #${mergeSourceId} dans #${mergeTargetId} ?\n\nLe user source sera supprimé définitivement.`)) return;
-
-      try {
-        const result = await adminCall(`/users/${mergeTargetId}/merge`, {
-          method: 'POST',
-          body: JSON.stringify({ sourceId: mergeSourceId, reason }),
-        });
-        closeMergeModal();
-        closeUserModal();
-        loadUsers();
-        loadStats();
-        alert(`✅ Fusion effectuée\n${result.merged} carte(s) fusionnée(s)\n${result.transferred} carte(s) transférée(s)`);
-      } catch (e) {
-        UI.showAlert('merge-alert', e.message, 'error');
-      }
-    }
-
-
-    // ═══════════════════════════════════════════════════════
-    // ANNOUNCEMENTS
-    // ═══════════════════════════════════════════════════════
-
-    async function loadAnnouncements() {
-      const container = document.getElementById('announcements-container');
-      try {
-        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
-
-        const data = await adminCall('/announcements');
-        const anns = data.announcements;
-
-        let html = `
-          <div class="flex-between mb-2">
-            <h2 style="margin: 0; color: #e2e8f0; font-size: 1.1rem;">📢 Annonces (${anns.length})</h2>
-            <button class="btn btn-primary btn-sm" onclick="showCreateAnn()">+ Nouvelle annonce</button>
-          </div>
-        `;
-
-        if (anns.length === 0) {
-          html += '<div class="admin-empty"><div class="admin-empty-icon">📢</div><p>Aucune annonce pour le moment</p></div>';
-          container.innerHTML = html;
-          return;
-        }
-
-        anns.forEach(a => {
-          const prioIcons = { info: 'ℹ️', warning: '⚠️', urgent: '🚨' };
-          const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
-
-          html += `
-            <div class="ann-card priority-${a.priority}" ${isExpired ? 'style="opacity: 0.4;"' : ''}>
-              <div class="ann-header">
-                <div>
-                  <span class="ann-title">${prioIcons[a.priority]} ${a.title}</span>
-                  ${isExpired ? '<span class="badge badge-dark-neutral" style="margin-left: 0.5rem;">Expirée</span>' : ''}
-                </div>
-                <div class="ann-actions">
-                  <button class="btn btn-outline btn-sm" onclick="editAnnouncement(${a.id})">✏️</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">🗑️</button>
-                </div>
-              </div>
-              <div class="ann-meta">
-                ${Format.datetime(a.created_at)} — par ${a.author_name}
-                · <strong>${a.read_count}</strong> lecture(s)
-                · ${a.target_type === 'all' ? '📢 Tous' : `🎯 ${a.targets.length} commerce(s)`}
-                ${a.expires_at ? ` · Expire le ${Format.datetime(a.expires_at)}` : ''}
-              </div>
-              <div class="ann-content">${a.content}</div>
-              ${a.target_type === 'selected' && a.targets.length > 0 ? `
-                <div class="ann-targets">
-                  ${a.targets.map(t => `<span class="ann-target-chip">${t.business_name}</span>`).join('')}
-                </div>
-              ` : ''}
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">⚠️ ${e.message}</div>`;
-      }
-    }
-
-    // ─── Announcement Modal ───
-
-    function toggleMerchantList() {
-      const val = document.getElementById('ann-target').value;
-      document.getElementById('merchant-list-group').style.display = val === 'selected' ? 'block' : 'none';
-      if (val === 'selected' && activeMerchants.length === 0) {
-        loadMerchantChecklist();
-      }
-    }
-
-    async function loadMerchantChecklist() {
-      try {
-        const data = await adminCall('/announcements/merchants');
-        activeMerchants = data.merchants;
-        const container = document.getElementById('merchant-checklist');
-        if (activeMerchants.length === 0) {
-          container.innerHTML = '<p class="text-muted text-sm">Aucun commerce actif</p>';
-          return;
-        }
-        container.innerHTML = activeMerchants.map(m => `
-          <div class="merchant-check-item">
-            <input type="checkbox" id="mc-${m.id}" value="${m.id}" class="merchant-cb">
-            <label for="mc-${m.id}">${m.business_name}</label>
-          </div>
-        `).join('');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function showCreateAnn() {
-      editingAnnouncementId = null;
-      document.getElementById('ann-modal-title').textContent = 'Nouvelle annonce';
-      document.getElementById('ann-title').value = '';
-      document.getElementById('ann-content').value = '';
-      document.getElementById('ann-priority').value = 'info';
-      document.getElementById('ann-target').value = 'all';
-      document.getElementById('ann-expires').value = '';
-      document.getElementById('merchant-list-group').style.display = 'none';
-      document.getElementById('ann-submit-btn').textContent = 'Publier l\'annonce';
-      UI.clearAlert('ann-alert');
-      document.getElementById('ann-modal').classList.add('active');
-    }
-
-    async function editAnnouncement(id) {
-      try {
-        const data = await adminCall('/announcements');
-        const ann = data.announcements.find(a => a.id === id);
-        if (!ann) return;
-
-        editingAnnouncementId = id;
-        document.getElementById('ann-modal-title').textContent = 'Modifier l\'annonce';
-        document.getElementById('ann-title').value = ann.title;
-        document.getElementById('ann-content').value = ann.content;
-        document.getElementById('ann-priority').value = ann.priority;
-        document.getElementById('ann-target').value = ann.target_type;
-        document.getElementById('ann-submit-btn').textContent = 'Mettre à jour';
-
-        if (ann.expires_at) {
-          const d = new Date(ann.expires_at + 'Z');
-          document.getElementById('ann-expires').value = d.toISOString().slice(0, 16);
-        } else {
-          document.getElementById('ann-expires').value = '';
-        }
-
-        if (ann.target_type === 'selected') {
-          document.getElementById('merchant-list-group').style.display = 'block';
-          await loadMerchantChecklist();
-          const targetIds = ann.targets.map(t => t.merchant_id);
-          document.querySelectorAll('.merchant-cb').forEach(cb => {
-            cb.checked = targetIds.includes(parseInt(cb.value));
-          });
-        } else {
-          document.getElementById('merchant-list-group').style.display = 'none';
-        }
-
-        UI.clearAlert('ann-alert');
-        document.getElementById('ann-modal').classList.add('active');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function closeAnnModal() { document.getElementById('ann-modal').classList.remove('active'); }
-    document.getElementById('ann-modal').addEventListener('click', (e) => { if (e.target.id === 'ann-modal') closeAnnModal(); });
-
-    async function submitAnnouncement() {
-      const title = document.getElementById('ann-title').value.trim();
-      const content = document.getElementById('ann-content').value.trim();
-      const priority = document.getElementById('ann-priority').value;
-      const targetType = document.getElementById('ann-target').value;
-      const expiresRaw = document.getElementById('ann-expires').value;
-
-      if (!title || !content) {
-        UI.showAlert('ann-alert', 'Titre et contenu requis', 'error');
+    function renderFeed(txs) {
+      const body = document.getElementById('feed-body');
+      if (txs.length === 0) {
+        body.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon">📭</div>Aucune activité sur cette période</div>';
         return;
       }
 
-      const merchantIds = [];
-      if (targetType === 'selected') {
-        document.querySelectorAll('.merchant-cb:checked').forEach(cb => {
-          merchantIds.push(parseInt(cb.value));
-        });
-        if (merchantIds.length === 0) {
-          UI.showAlert('ann-alert', 'Sélectionnez au moins un commerce', 'error');
-          return;
-        }
-      }
+      const sorted = getSortedTxs(txs);
+      const showDateSeps = sortCol === 'time'; // date separators only make sense when sorted by time
 
-      const payload = {
-        title, content, priority,
-        targetType,
-        merchantIds,
-        expiresAt: expiresRaw ? new Date(expiresRaw).toISOString() : null,
-      };
+      let html = '';
+      let lastDateStr = '';
 
-      try {
-        if (editingAnnouncementId) {
-          await adminCall(`/announcements/${editingAnnouncementId}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload),
-          });
-          UI.showAlert('ann-alert', 'Annonce mise à jour !', 'success');
-        } else {
-          await adminCall('/announcements', {
-            method: 'POST',
-            body: JSON.stringify(payload),
-          });
-          UI.showAlert('ann-alert', 'Annonce publiée !', 'success');
+      sorted.forEach(tx => {
+        const dt = new Date(tx.created_at + 'Z');
+        const dateStr = dt.toLocaleDateString('fr-FR', { weekday: 'short', day: '2-digit', month: 'short' });
+        const timeStr = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const type = tx.transaction_type;
+
+        // Date separator
+        if (showDateSeps && dateStr !== lastDateStr) {
+          html += '<div class="date-sep">' + dateStr + '</div>';
+          lastDateStr = dateStr;
         }
 
-        setTimeout(() => {
-          closeAnnModal();
-          loadAnnouncements();
-        }, 800);
-      } catch (e) {
-        UI.showAlert('ann-alert', e.message, 'error');
-      }
+        const clientLabel = tx.client_name || tx.client_email || tx.client_phone || 'Client';
+        const sign = tx.points_delta >= 0 ? '+' : '';
+        const metaParts = [tx.staff_name, tx.notes ? truncate(tx.notes, 30) : ''].filter(Boolean).join(' · ');
+
+        const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion' };
+        const amountStr = tx.amount ? Format.currency(tx.amount) : '–';
+
+        html += '<div class="tx-row">';
+
+        // Col 1: Time
+        html += '<div>';
+        html += '<div class="tx-time">' + timeStr + '</div>';
+        if (!showDateSeps) html += '<div class="tx-date-sub">' + dateStr + '</div>';
+        html += '</div>';
+
+        // Col 2: Client + meta
+        html += '<div class="tx-info">';
+        html += '<div class="tx-client">' + esc(clientLabel) + '</div>';
+        if (metaParts) html += '<div class="tx-meta">' + esc(metaParts) + '</div>';
+        html += '</div>';
+
+        // Col 3: Type badge
+        html += '<div><span class="tx-badge ' + type + '">' + (badges[type] || type) + '</span></div>';
+
+        // Col 4: Points
+        html += '<div class="tx-pts ' + type + '" style="text-align:right;">' + sign + tx.points_delta + '</div>';
+
+        // Col 5: Amount
+        html += '<div class="tx-amount tx-amount-cell">' + amountStr + '</div>';
+
+        html += '</div>';
+      });
+
+      body.innerHTML = html;
     }
 
-    async function deleteAnnouncement(id) {
-      if (!confirm('🗑️ Supprimer cette annonce ?')) return;
-      try {
-        await adminCall(`/announcements/${id}`, { method: 'DELETE' });
-        loadAnnouncements();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
+    function truncate(s, n) { return s.length > n ? s.substring(0, n) + '…' : s; }
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
+    // ═══ INIT ═══
 
-    // ═══════════════════════════════════════════════════════
-    // INIT
-    // ═══════════════════════════════════════════════════════
+    function reload() { currentOffset = 0; allTransactions = []; loadStats(); loadActivity(); }
 
-    loadStats();
-    loadMerchants();
-    checkHealth();
-    // Refresh health every 60s
-    setInterval(checkHealth, 60000);
+    const today = new Date().toISOString().substring(0, 10);
+    document.getElementById('date-from').value = today;
+    document.getElementById('date-to').value = today;
+    reload();
   </script>
 </body>
 </html>
