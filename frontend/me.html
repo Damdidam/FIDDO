@@ -492,6 +492,9 @@
   </div>
 
   <script>
+    // XSS protection helper
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
     // ═══════════════════════════════════════════════════════
     // CONFIG
     // ═══════════════════════════════════════════════════════
@@ -585,7 +588,7 @@
 
     function showLoginAlert(msg, type) {
       document.getElementById('login-alert').innerHTML =
-        `<div class="alert alert-${type}">${msg}</div>`;
+        `<div class="alert alert-${type}">${esc(msg)}</div>`;
     }
 
     // Enter key
@@ -711,7 +714,7 @@
         const data = await resp.json();
 
         if (!resp.ok) {
-          alert.innerHTML = '<span style="color:#EF4444;">' + data.error + '</span>';
+          alert.innerHTML = '<span style="color:#EF4444;">' + esc(data.error) + '</span>';
           return;
         }
 
@@ -745,13 +748,13 @@
           ? new Date(card.lastVisit).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' })
           : '—';
 
-        html += `<div class="loyalty-card" data-card-theme="${card.theme}">
+        html += `<div class="loyalty-card" data-card-theme="${esc(card.theme)}">
           <div class="lc-header">
             <div>
-              <div class="lc-merchant">${card.merchantName}</div>
+              <div class="lc-merchant">${esc(card.merchantName)}</div>
               <div class="lc-visits">${card.visitCount} visite(s) · Dernière : ${lastVisit}</div>
             </div>
-            <button class="btn-qr" onclick="showQR('${card.merchantName}')">
+            <button class="btn-qr" onclick="showQR('${card.merchantName.replace(/'/g, "\\'")}')">
               ⬡ QR
             </button>
           </div>
@@ -767,8 +770,8 @@
             </div>
           </div>
           ${card.canRedeem
-            ? '<div class="lc-reward">🎁 ' + card.rewardDescription + ' — Disponible !</div>'
-            : '<div class="lc-footer"><div class="lc-reward-desc">🎁 ' + card.rewardDescription + '</div></div>'
+            ? '<div class="lc-reward">🎁 ' + esc(card.rewardDescription) + ' — Disponible !</div>'
+            : '<div class="lc-footer"><div class="lc-reward-desc">🎁 ' + esc(card.rewardDescription) + '</div></div>'
           }
         </div>`;
       });
