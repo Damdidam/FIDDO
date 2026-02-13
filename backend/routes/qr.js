@@ -240,12 +240,13 @@ router.get('/info/:token', (req, res) => {
       return res.status(404).json({ error: 'Commerce non trouvé' });
     }
 
-    // Get theme
-    const prefs = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?').get(merchant.id);
+    // Get theme + language
+    const prefs = db.prepare('SELECT theme, language FROM merchant_preferences WHERE merchant_id = ?').get(merchant.id);
 
     res.json({
       merchantName: merchant.business_name,
       theme: prefs?.theme || 'teal',
+      language: prefs?.language || 'fr',
       pointsPerEuro: merchant.points_per_euro,
       pointsForReward: merchant.points_for_reward,
       rewardDescription: merchant.reward_description,
