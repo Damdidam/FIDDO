@@ -278,6 +278,37 @@ function sendMagicLinkEmail(clientEmail, magicUrl) {
   });
 }
 
+/**
+ * Email d'export avec pièce jointe (CSV ou backup).
+ */
+function sendExportEmail(ownerEmail, businessName, filename, content, mimeType) {
+  const isCSV = filename.endsWith('.csv');
+  return sendMail({
+    to: ownerEmail,
+    subject: `FIDDO — ${isCSV ? 'Export clients' : 'Backup'} ${businessName}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #0891B2;">${isCSV ? '📥 Export clients' : '💾 Backup'}</h2>
+        <p>Bonjour,</p>
+        <p>Vous trouverez ci-joint ${isCSV ? "l'export CSV de vos clients" : 'le backup complet de vos données'} pour <strong>${businessName}</strong>.</p>
+        <p style="background: #F1F5F9; padding: 12px 16px; border-radius: 8px; font-size: 14px;">
+          📎 <strong>${filename}</strong>
+        </p>
+        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+        <p style="font-size: 12px; color: #666;">
+          Cet email a été envoyé suite à votre demande depuis l'interface FIDDO.
+          Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
+        </p>
+      </div>
+    `,
+    attachments: [{
+      filename,
+      content,
+      contentType: mimeType,
+    }],
+  });
+}
+
 module.exports = {
   sendMail,
   sendValidationEmail,
@@ -288,4 +319,5 @@ module.exports = {
   sendPasswordChangedEmail,
   sendPinChangedEmail,
   sendMagicLinkEmail,
+  sendExportEmail,
 };
