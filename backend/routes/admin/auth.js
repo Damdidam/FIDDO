@@ -6,6 +6,35 @@ const { logAudit, auditCtx } = require('../../middleware/audit');
 
 const router = express.Router();
 
+// ─── Brute-force protection ───
+const loginAttempts = new Map(); // ip -> { count, lastAttempt }
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkAdminBruteForce(ip) {
+  const attempts = loginAttempts.get(ip);
+  if (!attempts) return false;
+  if (attempts.count >= MAX_ATTEMPTS && Date.now() - attempts.lastAttempt < LOCKOUT_MS) {
+    return true; // locked
+  }
+  if (Date.now() - attempts.lastAttempt >= LOCKOUT_MS) {
+    loginAttempts.delete(ip); // expired, reset
+    return false;
+  }
+  return false;
+}
+
+function recordAdminFailure(ip) {
+  const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  attempts.count++;
+  attempts.lastAttempt = Date.now();
+  loginAttempts.set(ip, attempts);
+}
+
+function clearAdminAttempts(ip) {
+  loginAttempts.delete(ip);
+}
+
 // ═══════════════════════════════════════════════════════
 // GET /api/admin/auth/needs-setup
 // ═══════════════════════════════════════════════════════
@@ -62,6 +91,13 @@ router.post('/setup', async (req, res) => {
 
 router.post('/login', async (req, res) => {
   try {
+    const ip = req.ip;
+
+    // Brute-force check
+    if (checkAdminBruteForce(ip)) {
+      return res.status(429).json({ error: 'Trop de tentatives. Réessayez dans 15 minutes.' });
+    }
+
     let { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email et mot de passe requis' });
@@ -71,8 +107,11 @@ router.post('/login', async (req, res) => {
     const admin = adminQueries.findByEmail.get(email);
 
     if (!admin || !(await bcrypt.compare(password, admin.password))) {
+      recordAdminFailure(ip);
       return res.status(401).json({ error: 'Identifiants incorrects' });
     }
+
+    clearAdminAttempts(ip);
 
     const token = generateAdminToken(admin);
     res.cookie('admin_token', token, adminCookieOptions);
