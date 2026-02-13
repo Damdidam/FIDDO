@@ -451,3 +451,9 @@ async function loadUnreadBadge() {
 // ─── Init ────────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', setupNavbar);
+
+// ─── PWA Service Worker ──────────────────────────────
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
