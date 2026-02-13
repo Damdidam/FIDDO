@@ -37,6 +37,13 @@ router.post('/register', async (req, res) => {
     if (ownerPassword.length < 6) {
       return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
     }
+    // Input length limits
+    if (businessName.length > 150) return res.status(400).json({ error: 'Nom du commerce trop long (max 150)' });
+    if (address.length > 300) return res.status(400).json({ error: 'Adresse trop longue (max 300)' });
+    if (ownerName.length > 100) return res.status(400).json({ error: 'Nom du responsable trop long (max 100)' });
+    if (ownerEmail.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
+    if (phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
+    if (ownerPhone.length > 20) return res.status(400).json({ error: 'Téléphone responsable trop long (max 20)' });
 
     // ── Normalize ──
     const normalizedOwnerEmail = normalizeEmail(ownerEmail);
