@@ -356,7 +356,7 @@
           <div class="form-group" id="field-email">
             <label class="form-label">Adresse email</label>
             <div class="input-wrap">
-              <input type="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off">
+              <input type="text" inputmode="email" id="client-email" class="form-control" placeholder="client@email.com" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-1p-ignore data-form-type="other">
               <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
               <div class="autocomplete-list" id="ac-email"></div>
             </div>
@@ -368,7 +368,7 @@
           <div class="form-group" id="field-phone" style="display:none;">
             <label class="form-label">Numéro de téléphone</label>
             <div class="input-wrap">
-              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off">
+              <input type="tel" id="client-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
               <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
               <div class="autocomplete-list" id="ac-phone"></div>
             </div>
@@ -414,7 +414,7 @@
           <div class="form-group">
             <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
             <div class="input-wrap">
-              <input type="text" id="client-name" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off">
+              <input type="text" id="client-name" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
               <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
             </div>
           </div>
@@ -423,7 +423,7 @@
           <div id="pin-group" class="form-group" style="display:none;">
             <label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Code PIN du client (4 chiffres)</label>
             <div class="input-wrap">
-              <input type="tel" id="client-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
+              <input type="tel" id="client-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
               <button type="button" class="btn-clear" onclick="clearField('client-pin')">×</button>
             </div>
             <div class="form-hint">Ce code sera demandé au client pour utiliser sa récompense</div>
@@ -434,14 +434,14 @@
             <div class="form-group">
               <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
               <div class="input-wrap">
-                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal">
+                <input type="number" id="amount" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
                 <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
               </div>
             </div>
             <div class="form-group">
               <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
               <div class="input-wrap">
-                <input type="text" id="notes" class="form-control" placeholder="Menu midi…" autocomplete="off">
+                <input type="text" id="notes" class="form-control" placeholder="Menu midi…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
                 <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
               </div>
             </div>
