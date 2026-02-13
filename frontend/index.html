@@ -771,7 +771,7 @@
       var eurosNeeded = pfr / ppe;
       preview.style.display = 'block';
       preview.innerHTML = '<strong>Aperçu pour vos clients :</strong><br>' +
-        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total — accumulez <strong>' + pfr + ' points</strong> — <strong>' + desc + '</strong>';
+        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total — accumulez <strong>' + pfr + ' points</strong> — <strong>' + esc(desc) + '</strong>';
     }
 
     document.getElementById('reg-ppe').addEventListener('input', updateRewardPreview);
@@ -811,10 +811,10 @@
         var displayMsg;
 
         if (msg.indexOf('incorrect') !== -1) displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
-        else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) displayMsg = msg;
+        else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) displayMsg = esc(msg);
         else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
         else if (msg.indexOf('suspendu') !== -1) displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
-        else if (msg.indexOf('refusée') !== -1) displayMsg = msg;
+        else if (msg.indexOf('refusée') !== -1) displayMsg = esc(msg);
         else if (msg.indexOf('résilié') !== -1) displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
         else if (msg.indexOf('pas actif') !== -1) displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
         else if (msg.indexOf('désactivé') !== -1) displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
@@ -888,7 +888,7 @@
 
         showPageAlert('register-alert',
           '<strong>Demande envoyée avec succès.</strong><br>' +
-          'Vous recevrez un email de confirmation à <strong>' + f.ownerEmail + '</strong> dès que votre commerce sera validé.',
+          'Vous recevrez un email de confirmation à <strong>' + esc(f.ownerEmail) + '</strong> dès que votre commerce sera validé.',
           'success'
         );
         document.querySelectorAll('#register-form .field-input').forEach(function(el) { el.disabled = true; });
