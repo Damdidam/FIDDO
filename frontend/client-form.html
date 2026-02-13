@@ -334,6 +334,10 @@
             <label class="form-label"><span id="lbl-name">Nom / prénom</span> <span style="font-weight:400; text-transform:none; letter-spacing:0;" id="lbl-optional">(optionnel)</span></label>
             <input type="text" id="inp-name" class="form-control" placeholder="Pierre" autocomplete="name">
           </div>
+          <div class="form-group">
+            <label class="form-label"><span id="lbl-pin">Code PIN</span> <span style="font-weight:400; text-transform:none; letter-spacing:0;" id="lbl-pin-hint">(4 chiffres — protège vos récompenses)</span></label>
+            <input type="tel" id="inp-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
+          </div>
           <button class="btn-submit" id="btn-submit" onclick="doSubmit()">✓ <span id="lbl-submit">C'est moi !</span></button>
         </div>
       </div>
@@ -365,6 +369,9 @@
         lblPhone: 'Numéro de téléphone',
         lblName: 'Nom / prénom',
         lblOptional: '(optionnel)',
+        lblPin: 'Code PIN',
+        lblPinHint: '(4 chiffres — protège vos récompenses)',
+        errInvalidPin: 'Le code PIN doit contenir 4 chiffres',
         btnSubmit: "C'est moi !",
         btnSending: 'Envoi…',
         placeholderName: 'Pierre',
@@ -393,6 +400,9 @@
         lblPhone: 'Telefoonnummer',
         lblName: 'Naam / voornaam',
         lblOptional: '(optioneel)',
+        lblPin: 'PIN-code',
+        lblPinHint: '(4 cijfers — beschermt uw beloningen)',
+        errInvalidPin: 'De PIN-code moet 4 cijfers bevatten',
         btnSubmit: 'Dat ben ik!',
         btnSending: 'Verzenden…',
         placeholderName: 'Jan',
@@ -421,6 +431,9 @@
         lblPhone: 'Phone number',
         lblName: 'Name',
         lblOptional: '(optional)',
+        lblPin: 'PIN code',
+        lblPinHint: '(4 digits — protects your rewards)',
+        errInvalidPin: 'PIN code must be 4 digits',
         btnSubmit: "That's me!",
         btnSending: 'Sending…',
         placeholderName: 'John',
@@ -449,6 +462,9 @@
         lblPhone: 'Telefonnummer',
         lblName: 'Name / Vorname',
         lblOptional: '(optional)',
+        lblPin: 'PIN-Code',
+        lblPinHint: '(4 Ziffern — schützt Ihre Belohnungen)',
+        errInvalidPin: 'Der PIN-Code muss 4 Ziffern enthalten',
         btnSubmit: 'Das bin ich!',
         btnSending: 'Senden…',
         placeholderName: 'Hans',
@@ -477,6 +493,9 @@
         lblPhone: 'Número de teléfono',
         lblName: 'Nombre / apellido',
         lblOptional: '(opcional)',
+        lblPin: 'Código PIN',
+        lblPinHint: '(4 dígitos — protege sus recompensas)',
+        errInvalidPin: 'El código PIN debe tener 4 dígitos',
         btnSubmit: '¡Soy yo!',
         btnSending: 'Enviando…',
         placeholderName: 'Pedro',
@@ -505,6 +524,9 @@
         lblPhone: 'رقم الهاتف',
         lblName: 'الاسم',
         lblOptional: '(اختياري)',
+        lblPin: 'رمز PIN',
+        lblPinHint: '(4 أرقام — يحمي مكافآتك)',
+        errInvalidPin: 'يجب أن يتكون رمز PIN من 4 أرقام',
         btnSubmit: 'هذا أنا!',
         btnSending: 'جارٍ الإرسال…',
         placeholderName: 'محمد',
@@ -564,6 +586,8 @@
       document.getElementById('lbl-phone').textContent = t.lblPhone;
       document.getElementById('lbl-name').textContent = t.lblName;
       document.getElementById('lbl-optional').textContent = t.lblOptional;
+      document.getElementById('lbl-pin').textContent = t.lblPin;
+      document.getElementById('lbl-pin-hint').textContent = t.lblPinHint;
       document.getElementById('lbl-submit').textContent = t.btnSubmit;
       document.getElementById('inp-name').placeholder = t.placeholderName;
       document.getElementById('footer').textContent = t.footer;
@@ -681,10 +705,12 @@
       var email = mode === 'email' ? document.getElementById('inp-email').value.trim() : null;
       var phone = mode === 'phone' ? document.getElementById('inp-phone').value.trim() : null;
       var name = document.getElementById('inp-name').value.trim() || null;
+      var pin = document.getElementById('inp-pin').value.trim() || null;
 
       if (mode === 'email' && !email) { showAlert(t.errEnterEmail); return; }
       if (mode === 'email' && !/\S+@\S+\.\S+/.test(email)) { showAlert(t.errInvalidEmail); return; }
       if (mode === 'phone' && !phone) { showAlert(t.errEnterPhone); return; }
+      if (pin && !/^\d{4}$/.test(pin)) { showAlert(t.errInvalidPin); return; }
 
       var btn = document.getElementById('btn-submit');
       btn.disabled = true;
@@ -694,7 +720,7 @@
         var resp = await fetch(API_BASE + '/qr/register', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ qrToken: qrToken, email: email, phone: phone, name: name }),
+          body: JSON.stringify({ qrToken: qrToken, email: email, phone: phone, name: name, pin: pin }),
         });
 
         var data = await resp.json();
