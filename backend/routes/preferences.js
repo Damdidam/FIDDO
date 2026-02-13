@@ -29,6 +29,7 @@ const DEFAULT_PREFS = {
   logo_url: null,
   backup_frequency: 'manual',
   last_backup_at: null,
+  credit_methods: '{"email":true,"phone":true,"qr":true,"scan":true}',
 };
 
 
@@ -61,7 +62,7 @@ router.put('/', requireRole('owner'), (req, res) => {
     const {
       theme, language, timezone, reward_message,
       notify_new_client, notify_reward_ready, notify_weekly_report,
-      logo_url, backup_frequency,
+      logo_url, backup_frequency, credit_methods,
     } = req.body;
 
     // Validate
@@ -75,6 +76,20 @@ router.put('/', requireRole('owner'), (req, res) => {
       return res.status(400).json({ error: 'Fréquence de backup invalide' });
     }
 
+    // Validate credit_methods if provided
+    const VALID_CREDIT_KEYS = ['email', 'phone', 'qr', 'scan'];
+    if (credit_methods) {
+      const cm = typeof credit_methods === 'string' ? JSON.parse(credit_methods) : credit_methods;
+      const keys = Object.keys(cm);
+      if (!keys.every(k => VALID_CREDIT_KEYS.includes(k))) {
+        return res.status(400).json({ error: 'Méthodes de crédit invalides' });
+      }
+      // At least one method must be enabled
+      if (!Object.values(cm).some(v => v === true)) {
+        return res.status(400).json({ error: 'Au moins une méthode de crédit doit être activée' });
+      }
+    }
+
     // Get current or defaults
     const current = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId) || DEFAULT_PREFS;
 
@@ -83,8 +98,8 @@ router.put('/', requireRole('owner'), (req, res) => {
       INSERT INTO merchant_preferences
         (merchant_id, theme, language, timezone, reward_message,
          notify_new_client, notify_reward_ready, notify_weekly_report,
-         logo_url, backup_frequency, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+         logo_url, backup_frequency, credit_methods, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
       ON CONFLICT(merchant_id) DO UPDATE SET
         theme = excluded.theme,
         language = excluded.language,
@@ -95,6 +110,7 @@ router.put('/', requireRole('owner'), (req, res) => {
         notify_weekly_report = excluded.notify_weekly_report,
         logo_url = excluded.logo_url,
         backup_frequency = excluded.backup_frequency,
+        credit_methods = excluded.credit_methods,
         updated_at = datetime('now')
     `).run(
       merchantId,
@@ -107,6 +123,7 @@ router.put('/', requireRole('owner'), (req, res) => {
       notify_weekly_report !== undefined ? (notify_weekly_report ? 1 : 0) : current.notify_weekly_report,
       logo_url !== undefined ? logo_url : current.logo_url,
       backup_frequency || current.backup_frequency,
+      credit_methods ? (typeof credit_methods === 'string' ? credit_methods : JSON.stringify(credit_methods)) : (current.credit_methods || '{"email":true,"phone":true,"qr":true,"scan":true}'),
     );
 
     logAudit({
