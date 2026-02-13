@@ -9,893 +9,1173 @@
   <meta name="apple-mobile-web-app-title" content="FIDDO">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <meta name="theme-color" content="#0891B2">
-  <title>Clients — FIDDO</title>
+  <title>Créditer — FIDDO</title>
   <link rel="stylesheet" href="/css/styles.css">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --primary-light: #CFFAFE;
-      --gradient: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    /* ═══════════════════════════════════════════════════════
+       CREDIT PAGE — Single column, no sidebar
+       ═══════════════════════════════════════════════════════ */
+
+    .credit-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+    .credit-page * { box-sizing: border-box; }
+
+    /* ── Centered layout ── */
+    .credit-wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 1rem;
     }
-    .dash { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
-    .dash * { box-sizing: border-box; }
-    .dash-wrap { max-width: 820px; margin: 0 auto; padding: 1rem; }
-    .pg-title { font-size: 1.05rem; font-weight: 700; color: #1E293B; margin: 0.3rem 0 0.6rem; letter-spacing: -0.3px; }
 
-    /* ═══ TOOLBAR ═══ */
-    .toolbar { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.9rem; }
-    .search-wrap { flex: 1; position: relative; }
-    .search-wrap .ico { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.8rem; color: #94A3B8; pointer-events: none; }
-    .search-wrap input { width: 100%; padding: 0.4rem 0.6rem 0.4rem 2rem; border: 1.5px solid #E2E8F0; border-radius: 16px; font-family: inherit; font-size: 0.78rem; color: #334155; background: white; transition: border-color 0.15s; }
-    .search-wrap input:focus { outline: none; border-color: var(--primary); }
-    .search-wrap input::placeholder { color: #CBD5E1; }
-    .toolbar-count { font-size: 0.68rem; color: #94A3B8; font-weight: 500; white-space: nowrap; }
+    .pg-title {
+      font-size: 1.05rem; font-weight: 700; color: #1E293B;
+      margin: 0.4rem 0 0.8rem; letter-spacing: -0.3px;
+    }
 
-    /* ═══ STAT CARDS ═══ */
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
-    .st { background: white; border-radius: 8px; padding: 0.45rem 0.4rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-    .st-val { font-size: 1.15rem; font-weight: 700; color: var(--primary); line-height: 1.15; letter-spacing: -0.5px; }
-    .st-val.green { color: #059669; }
-    .st-val.amber { color: #D97706; }
-    .st-lbl { font-size: 0.55rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 0.1rem; font-weight: 600; }
-    .st.st-action { cursor: pointer; transition: all 0.15s; border: 1.5px solid #E2E8F0; }
-    .st.st-action:hover { border-color: var(--primary); }
-    .st.st-action .st-icon { color: #64748B; margin-bottom: 1px; }
-    .st.st-action .st-icon svg { width: 18px; height: 18px; }
-    .st.st-action:hover .st-icon { color: var(--primary); }
+    /* ── Card ── */
+    .c-card {
+      background: white; border-radius: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+      overflow: hidden; position: relative;
+    }
+    .c-card-body { padding: 0.9rem 1rem 1rem; }
+    /* ── Alert ── */
+    .credit-page .alert {
+      border-radius: 7px; font-size: 0.82rem;
+      padding: 0.5rem 0.75rem; margin-bottom: 0.75rem;
+    }
 
-    /* ═══ TABLE ═══ */
-    .cl-card { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; }
-    .col-hdr { display: grid; grid-template-columns: 1fr 72px 60px 85px 100px; gap: 0.3rem; padding: 0.4rem 0.85rem; background: #F8FAFC; border-bottom: 1px solid #E2E8F0; }
-    .col-th { font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; color: #94A3B8; cursor: pointer; user-select: none; display: flex; align-items: center; gap: 3px; transition: color 0.12s; white-space: nowrap; }
-    .col-th:hover { color: #475569; }
-    .col-th.active { color: var(--primary-dark); }
-    .col-th .arrow { font-size: 0.55rem; opacity: 0; transition: opacity 0.12s; }
-    .col-th.active .arrow { opacity: 1; }
-    .col-th-right { justify-content: flex-end; }
-    .col-th-center { justify-content: center; }
-    .cl-body { max-height: 560px; overflow-y: auto; }
-    .cl-row { display: grid; grid-template-columns: 1fr 72px 60px 85px 100px; gap: 0.3rem; padding: 0.5rem 0.85rem; border-bottom: 1px solid #F8FAFC; align-items: center; cursor: pointer; transition: background 0.1s; }
-    .cl-row:last-child { border-bottom: none; }
-    .cl-row:hover { background: #FAFBFC; }
-    .cl-info { min-width: 0; }
-    .cl-name { font-weight: 600; color: #1E293B; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .cl-sub { font-size: 0.66rem; color: #94A3B8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .cl-badges { display: flex; gap: 3px; margin-top: 2px; }
-    .cl-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.55rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2px; }
-    .cl-badge.active { background: #D1FAE5; color: #047857; }
-    .cl-badge.inactive { background: #FEF3C7; color: #92400E; }
-    .cl-badge.blocked { background: #FEE2E2; color: #B91C1C; }
-    .cl-badge.reward { background: #D1FAE5; color: #047857; }
-    .cl-badge.custom { background: #E0F2FE; color: #0369A1; }
-    .cl-pts { font-weight: 700; font-size: 0.88rem; color: var(--primary); text-align: right; }
-    .cl-visits { font-size: 0.82rem; color: #64748B; text-align: center; font-weight: 500; }
-    .cl-last { font-size: 0.72rem; color: #64748B; text-align: right; }
-    .cl-prog { display: flex; align-items: center; gap: 0.35rem; }
-    .prog-bar { flex: 1; height: 6px; background: #E2E8F0; border-radius: 3px; overflow: hidden; }
-    .prog-fill { height: 100%; border-radius: 3px; background: var(--primary); transition: width 0.3s; }
-    .prog-fill.full { background: #059669; }
-    .prog-pct { font-size: 0.6rem; font-weight: 600; color: #94A3B8; min-width: 28px; text-align: right; }
-    .prog-pct.full { color: #059669; }
-    .cl-empty { padding: 2.5rem 1rem; text-align: center; color: #94A3B8; font-size: 0.85rem; }
-    .cl-empty-icon { font-size: 2rem; margin-bottom: 0.4rem; }
-    .cl-loading { padding: 1.5rem; text-align: center; color: #94A3B8; font-size: 0.78rem; }
+    /* ── Segmented control ── */
+    .seg {
+      display: flex;
+      background: #F1F5F9; border-radius: 7px; padding: 3px;
+      margin-bottom: 0.9rem;
+    }
+    .seg button {
+      flex: 1;
+      padding: 0.4rem; border: none; background: transparent;
+      border-radius: 5px; font-family: inherit; font-weight: 600;
+      font-size: 0.75rem; color: #64748B; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 4px;
+    }
+    .seg button svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .seg button.active {
+      background: white; color: var(--primary-dark);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+    }
 
-    /* ═══ MODAL OVERLAY ═══ */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.85); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
-    .modal-overlay.open { display: flex; }
-    .modal-box { background: white; border-radius: 12px; width: 90%; max-width: 580px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; }
+    /* ── Form ── */
+    .credit-page .form-group { margin-bottom: 0.8rem; }
+    .credit-page .form-label {
+      display: block; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      color: #64748B; margin-bottom: 0.25rem;
+    }
+    .credit-page .form-control {
+      width: 100%; padding: 0.5rem 0.65rem;
+      border: 1.5px solid #E2E8F0; border-radius: 6px;
+      font-family: inherit; font-size: 0.88rem; color: #1E293B;
+      background: #FAFBFC;
+    }
+    .credit-page .form-control:focus {
+      outline: none; border-color: var(--primary); background: white;
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary) 10%, transparent);
+    }
+    .credit-page .form-control::placeholder { color: #94A3B8; }
+    .credit-page .form-hint { font-size: 0.68rem; color: #94A3B8; margin-top: 0.15rem; }
 
-    /* ═══ HERO HEADER ═══ */
-    .hero { background: linear-gradient(135deg, #1E293B 0%, #334155 100%); padding: 1.25rem 1.2rem 2rem; color: white; border-radius: 12px 12px 0 0; position: relative; }
-    .hero-close { position: absolute; top: 10px; right: 12px; background: rgba(255,255,255,0.12); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
-    .hero-close:hover { background: rgba(255,255,255,0.25); }
-    .hero-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 2px; }
-    .hero-sub { font-size: 0.78rem; opacity: 0.6; }
-    .hero-badges { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
-    .hero-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2px; }
-    .hero-badge.custom { background: rgba(8,145,178,0.25); color: #67e8f9; }
-    .hero-badge.blocked { background: rgba(239,68,68,0.25); color: #fca5a5; }
-    .hero-badge.validated { background: rgba(16,185,129,0.25); color: #6ee7b7; }
+    /* ── Input wrap + clear ── */
+    .input-wrap { position: relative; }
+    .input-wrap .form-control { padding-right: 26px; }
+    .btn-clear {
+      position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; font-size: 0.82rem; cursor: pointer;
+      color: #94A3B8; padding: 2px 4px; line-height: 1; display: none;
+    }
+    .btn-clear:hover { color: #EF4444; }
+    .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
+    .input-wrap .form-control.has-value ~ .btn-clear { display: block; }
 
-    /* ═══ FLOATING STATS ═══ */
-    .float-stats { display: grid; grid-template-columns: repeat(3, 1fr); background: white; border: 1px solid #E2E8F0; border-radius: 10px; overflow: hidden; margin: -18px 1rem 0; position: relative; z-index: 2; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-    .float-st { text-align: center; padding: 10px 6px; }
-    .float-st:not(:last-child) { border-right: 1px solid #E2E8F0; }
-    .float-st-val { font-size: 1.2rem; font-weight: 700; color: var(--primary); line-height: 1; }
-    .float-st-lbl { font-size: 0.58rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 3px; font-weight: 600; }
+    /* ── Typo warning ── */
+    .typo-warning {
+      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 5px;
+      padding: 0.35rem 0.6rem; margin-top: 0.25rem; font-size: 0.72rem; color: #92400E;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .typo-warning button {
+      background: #F59E0B; color: white; border: none; border-radius: 3px;
+      padding: 1px 6px; font-size: 0.68rem; cursor: pointer; font-weight: 600;
+      white-space: nowrap; font-family: inherit;
+    }
 
-    /* ═══ MODAL BODY ═══ */
-    .m-body { padding: 1rem 1.2rem 1.5rem; }
+    /* ── Autocomplete ── */
+    .autocomplete-list {
+      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+      background: white; border: 1.5px solid #E2E8F0; border-top: none;
+      border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08); display: none;
+    }
+    .autocomplete-list.show { display: block; }
+    .ac-item {
+      padding: 0.4rem 0.65rem; cursor: pointer;
+      border-bottom: 1px solid #F8FAFC; font-size: 0.78rem;
+    }
+    .ac-item:last-child { border-bottom: none; }
+    .ac-item:hover, .ac-item.selected { background: color-mix(in srgb, var(--primary-light) 40%, white); }
+    .ac-item .ac-name { font-weight: 600; color: #1E293B; }
+    .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
+    .ac-item .ac-pts { float: right; color: var(--primary); font-weight: 700; font-size: 0.78rem; }
 
-    /* ── Reward card ── */
-    .rw-card { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 0.8rem 0.9rem; margin-bottom: 0.8rem; }
-    .rw-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-    .rw-label { font-size: 0.62rem; font-weight: 600; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.3px; }
-    .rw-name { font-size: 0.88rem; font-weight: 600; color: #1E293B; margin-top: 2px; }
-    .rw-edit-btn { background: none; border: 1px solid #E2E8F0; border-radius: 6px; padding: 3px 8px; font-size: 0.66rem; font-family: inherit; cursor: pointer; color: #64748B; transition: all 0.12s; }
-    .rw-edit-btn:hover { border-color: var(--primary); color: var(--primary); }
-    .rw-prog-bar { height: 7px; background: #E2E8F0; border-radius: 4px; overflow: hidden; margin-top: 8px; }
-    .rw-prog-fill { height: 100%; border-radius: 4px; transition: width 0.4s; }
-    .rw-prog-fill.near { background: var(--gradient); }
-    .rw-prog-fill.ready { background: linear-gradient(90deg, #10B981, #059669); }
-    .rw-prog-text { display: flex; justify-content: space-between; font-size: 0.66rem; color: #94A3B8; margin-top: 3px; }
-    .rw-ready { background: linear-gradient(135deg, #10B981, #059669); color: white; padding: 8px 10px; border-radius: 8px; margin-top: 8px; font-size: 0.78rem; font-weight: 600; text-align: center; cursor: pointer; transition: opacity 0.12s; animation: pulseGlow 2s ease-in-out infinite; }
-    .rw-ready:hover { opacity: 0.9; }
-    @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.3); } 50% { box-shadow: 0 0 10px 3px rgba(16,185,129,0.12); } }
-    .rw-edit-area { margin-top: 8px; padding-top: 8px; border-top: 1px solid #E2E8F0; display: none; }
-    .rw-edit-area.show { display: block; }
-    .rw-edit-row { display: flex; gap: 6px; align-items: flex-end; }
-    .rw-edit-row input { flex: 1; padding: 0.35rem 0.5rem; border: 1.5px solid #E2E8F0; border-radius: 6px; font-family: inherit; font-size: 0.78rem; color: #334155; }
-    .rw-edit-row input:focus { outline: none; border-color: var(--primary); }
-    .rw-save { padding: 0.35rem 0.6rem; border: none; border-radius: 6px; background: var(--primary); color: white; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; white-space: nowrap; }
+    /* ── Inline lookup strip ── */
+    .lookup-strip {
+      border-radius: 6px; padding: 0.45rem 0.65rem;
+      font-size: 0.78rem; margin-top: 0.35rem;
+      line-height: 1.5; display: none;
+    }
+    .lookup-strip.show { display: block; }
+    .lookup-strip.found {
+      background: color-mix(in srgb, var(--primary-light) 30%, white);
+      border: 1px solid color-mix(in srgb, var(--primary-light) 55%, white);
+    }
+    .lookup-strip.new-client {
+      background: #F8FAFC; border: 1px solid #E2E8F0;
+    }
+    .lookup-strip .l-name { font-weight: 600; }
+    .lookup-strip .l-pts { float: right; font-weight: 700; color: var(--primary); }
+    .lookup-strip .l-meta { font-size: 0.7rem; color: #64748B; }
+    .lookup-strip .l-prog { background: #E2E8F0; height: 3px; border-radius: 2px; margin: 0.25rem 0; overflow: hidden; }
+    .lookup-strip .l-prog-fill { height: 100%; background: var(--gradient); border-radius: 2px; }
+    .lookup-strip .l-reward {
+      background: linear-gradient(135deg, #059669, #10B981); color: white;
+      padding: 0.3rem 0.5rem; border-radius: 4px; text-align: center;
+      margin-top: 0.3rem; cursor: pointer; font-size: 0.72rem; font-weight: 500;
+    }
 
-    /* ── Action toolbar ── */
-    .act-toolbar { display: flex; gap: 3px; flex-wrap: wrap; justify-content: center; padding: 6px 0 10px; }
-    .act-btn { display: inline-flex; align-items: center; gap: 3px; padding: 5px 8px; border: none; border-radius: 6px; font-size: 0.68rem; font-weight: 500; font-family: inherit; cursor: pointer; background: #F1F5F9; color: #334155; transition: all 0.12s; text-decoration: none; white-space: nowrap; }
-    .act-btn:hover { background: #E2E8F0; }
-    .act-btn.danger { color: #DC2626; }
-    .act-btn.danger:hover { background: #FEF2F2; }
-    .act-btn.success { color: #059669; }
-    .act-btn.success:hover { background: #F0FDF4; }
+    /* ── Amount row + points counter ── */
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; align-items: end; }
+    .pts-badge {
+      display: inline-block; background: var(--gradient); color: white;
+      padding: 1px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
+      margin-left: 0.4rem; vertical-align: middle;
+    }
 
-    /* ── Edit form ── */
-    .edit-form { display: none; margin-top: 0.6rem; }
-    .edit-form.show { display: block; }
-    .edit-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-    .edit-grid .fg { margin-bottom: 0; }
-    .edit-grid .fg label { display: block; font-size: 0.66rem; font-weight: 600; color: #64748B; margin-bottom: 2px; }
-    .edit-grid .fg input { width: 100%; padding: 0.35rem 0.5rem; border: 1.5px solid #E2E8F0; border-radius: 6px; font-family: inherit; font-size: 0.78rem; color: #334155; }
-    .edit-grid .fg input:focus { outline: none; border-color: var(--primary); }
-    .edit-grid .full { grid-column: 1 / -1; }
-    .edit-actions { display: flex; gap: 0.4rem; justify-content: flex-end; margin-top: 0.4rem; }
-    .edit-actions button { padding: 0.3rem 0.6rem; border-radius: 6px; font-family: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; border: none; }
-    .edit-cancel { background: #F1F5F9; color: #64748B; }
-    .edit-save { background: var(--primary); color: white; }
+    /* ── Submit ── */
+    .btn-credit {
+      width: 100%; padding: 0.6rem; border: none; border-radius: 7px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
+    }
+    .btn-credit:hover:not(:disabled) {
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
+    .btn-credit:disabled { opacity: 0.55; cursor: not-allowed; }
 
-    /* ── Expandable sections ── */
-    .exp { border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; margin-top: 0.6rem; }
-    .exp-hdr { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; cursor: pointer; background: #FAFBFC; font-size: 0.78rem; font-weight: 600; color: #334155; user-select: none; transition: background 0.1s; }
-    .exp-hdr:hover { background: #F1F5F9; }
-    .exp-arrow { transition: transform 0.2s; font-size: 0.6rem; color: #94A3B8; }
-    .exp.open .exp-arrow { transform: rotate(90deg); }
-    .exp-body { display: none; padding: 10px 12px; border-top: 1px solid #E2E8F0; }
-    .exp.open .exp-body { display: block; }
+    /* ═══════════════════════════════════════════════════════
+       SUCCESS OVERLAY — covers the form, centered
+       ═══════════════════════════════════════════════════════ */
 
-    /* ── Notes ── */
-    .notes-area { width: 100%; padding: 6px 8px; border: 1.5px solid #E2E8F0; border-radius: 6px; font-family: inherit; font-size: 0.78rem; color: #334155; resize: vertical; min-height: 50px; max-height: 110px; }
-    .notes-area:focus { outline: none; border-color: var(--primary); }
-    .notes-meta { font-size: 0.62rem; color: #94A3B8; text-align: right; margin-top: 3px; display: flex; justify-content: flex-end; align-items: center; gap: 6px; }
-    .notes-save { padding: 2px 8px; border: none; border-radius: 4px; background: var(--primary); color: white; font-family: inherit; font-size: 0.62rem; font-weight: 600; cursor: pointer; }
+    .success-overlay {
+      position: absolute; inset: 0; z-index: 10;
+      background: white;
+      border-radius: 12px;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem 1.5rem;
+    }
+    .success-overlay.show { display: flex; }
 
-    /* ── Timeline ── */
-    .tl { display: flex; flex-direction: column; gap: 0; }
-    .tl-item { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid #F1F5F9; font-size: 0.78rem; }
-    .tl-item:last-child { border-bottom: none; }
-    .tl-dot { width: 7px; height: 7px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-    .tl-dot.credit { background: var(--primary); }
-    .tl-dot.reward { background: #10B981; }
-    .tl-dot.adjustment { background: #F59E0B; }
-    .tl-dot.merge { background: #8B5CF6; }
-    .tl-body { flex: 1; }
-    .tl-top { display: flex; justify-content: space-between; align-items: baseline; }
-    .tl-pts { font-weight: 700; }
-    .tl-pts.credit { color: var(--primary); }
-    .tl-pts.reward { color: #059669; }
-    .tl-pts.adjustment { color: #D97706; }
-    .tl-pts.merge { color: #7C3AED; }
-    .tl-date { font-size: 0.66rem; color: #94A3B8; }
-    .tl-detail { font-size: 0.68rem; color: #94A3B8; margin-top: 1px; }
-    .tl-empty { font-size: 0.78rem; color: #94A3B8; text-align: center; padding: 1rem; }
+    .success-pts {
+      font-size: 2.5rem; font-weight: 700; color: #059669;
+      line-height: 1; letter-spacing: -1px;
+    }
+    .success-label {
+      font-size: 0.75rem; color: #059669; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-top: 4px; font-weight: 600;
+    }
+    .success-info {
+      margin-top: 1rem; font-size: 0.85rem; color: #1E293B;
+      line-height: 1.7;
+      background: #F0FDF4; border: 1px solid #D1FAE5;
+      border-radius: 8px; padding: 0.75rem 1.25rem;
+      min-width: 240px;
+    }
+    .success-info strong { color: #047857; }
+    .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
+    .success-badge {
+      display: inline-block; background: color-mix(in srgb, var(--primary-light) 50%, white);
+      color: var(--primary-dark); padding: 2px 10px; border-radius: 12px;
+      font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
+    }
+    .success-btn {
+      margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 7px;
+      background: var(--gradient); color: white; font-family: inherit;
+      font-size: 0.88rem; font-weight: 600; cursor: pointer;
+      box-shadow: 0 2px 6px color-mix(in srgb, var(--primary) 18%, transparent);
+    }
+    .success-btn:hover {
+      box-shadow: 0 3px 10px color-mix(in srgb, var(--primary) 28%, transparent);
+    }
 
-    /* ── Celebration ── */
-    .celebration { position: absolute; inset: 0; background: rgba(255,255,255,0.97); display: flex; align-items: center; justify-content: center; z-index: 10; border-radius: 12px; animation: fadeIn 0.3s ease; }
-    .celebration-content { text-align: center; padding: 1.5rem; }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    /* ═══════════════════════════════════════════════════════
+       QR — Compact
+       ═══════════════════════════════════════════════════════ */
 
-    /* ═══ SUB-MODALS ═══ */
-    .sub-top { padding: 0.75rem 1rem; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: center; }
-    .sub-top h2 { font-size: 0.88rem; font-weight: 700; color: #1E293B; margin: 0; }
-    .sub-close { font-size: 1.2rem; cursor: pointer; color: #94A3B8; background: none; border: none; padding: 0.2rem; }
-    .sub-body { padding: 1rem; }
-    .sub-fg { margin-bottom: 0.7rem; }
-    .sub-fg label { display: block; font-size: 0.68rem; font-weight: 600; color: #475569; margin-bottom: 3px; }
-    .sub-fg input { width: 100%; padding: 0.4rem 0.5rem; border: 1.5px solid #E2E8F0; border-radius: 6px; font-family: inherit; font-size: 0.78rem; color: #334155; }
-    .sub-fg input:focus { outline: none; border-color: var(--primary); }
-    .sub-btn { padding: 0.4rem 1rem; border: none; border-radius: 10px; font-family: inherit; font-size: 0.78rem; font-weight: 600; cursor: pointer; width: 100%; transition: background 0.12s; }
-    .sub-btn-primary { background: var(--primary); color: white; }
-    .sub-btn-primary:hover { background: var(--primary-dark); }
-    .sub-btn-danger { background: #DC2626; color: white; }
-    .sub-btn-danger:hover { background: #B91C1C; }
-    .sub-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .qr-box {
+      text-align: center; padding: 1rem;
+      background: #FAFBFC; border: 1.5px solid #E2E8F0;
+      border-radius: 7px; margin-bottom: 0.8rem;
+    }
+    .qr-box .qr-sub { font-size: 0.72rem; color: #64748B; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .qr-box .qr-sub svg { width: 14px; height: 14px; }
 
-    /* Merge */
-    .merge-search-wrap { position: relative; }
-    .merge-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 50; background: white; border: 1.5px solid var(--primary); border-top: none; border-radius: 0 0 8px 8px; max-height: 140px; overflow-y: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    .merge-results.open { display: block; }
-    .merge-item { padding: 6px 10px; cursor: pointer; font-size: 0.78rem; border-bottom: 1px solid #F1F5F9; }
-    .merge-item:hover { background: #ECFEFF; }
-    .merge-item .m-name { font-weight: 600; color: #1E293B; }
-    .merge-item .m-detail { font-size: 0.66rem; color: #94A3B8; }
-    .merge-selected { background: #F0FDF4; border: 1.5px solid #86EFAC; border-radius: 8px; padding: 6px 10px; font-size: 0.78rem; display: none; justify-content: space-between; align-items: center; margin-top: 6px; }
-    .merge-selected.show { display: flex; }
-    .merge-clear { background: none; border: none; font-size: 0.8rem; cursor: pointer; color: #94A3B8; padding: 2px 4px; }
-    .merge-target-box { background: #F8FAFC; border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; font-weight: 600; color: #334155; }
-    .merge-section-title { font-size: 0.62rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; margin-top: 8px; }
+    .qr-frame {
+      position: relative; display: inline-block; padding: 6px;
+      background: white; border-radius: 6px; border: 1px solid #E2E8F0;
+    }
+    .qr-frame img { display: block; border-radius: 2px; }
+    .qr-frame::after { display: none; }
 
-    /* ═══ RESPONSIVE ═══ */
+    .qr-fullscreen-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      margin-top: 0.65rem; padding: 6px 14px;
+      background: white; border: 1px solid #E2E8F0; border-radius: 6px;
+      font-family: inherit; font-size: 0.72rem; font-weight: 600;
+      color: #64748B; cursor: pointer; transition: all 0.2s;
+    }
+    .qr-fullscreen-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .qr-fullscreen-btn svg { width: 13px; height: 13px; }
+
+    /* ── Cashier limit info ── */
+
+    /* ── Duplicate warning ── */
+    .dup-warning {
+      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px;
+      padding: 0.5rem 0.65rem; margin-top: 0.35rem; font-size: 0.72rem;
+      color: #92400E; line-height: 1.5; animation: fadeSlide 0.3s ease;
+    }
+    .dup-warning svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; flex-shrink: 0; }
+    .dup-warning-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    .dup-match {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 6px; background: rgba(245,158,11,0.08); border-radius: 4px;
+      margin-top: 3px; cursor: pointer; transition: background 0.15s;
+    }
+    .dup-match:hover { background: rgba(245,158,11,0.15); }
+    .dup-match-info { font-size: 0.7rem; }
+    .dup-match-name { font-weight: 600; color: #78350F; }
+    .dup-match-id { color: #92400E; }
+    .dup-match-use { font-size: 0.62rem; color: #B45309; font-weight: 600; white-space: nowrap; }
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(-4px); } }
+
+    /* ═══════════════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════════════ */
+
     @media (max-width: 768px) {
-      .dash-wrap { padding: 0.4rem; }
-      .pg-title { font-size: 0.95rem; }
-      .stats-row { gap: 0.3rem; grid-template-columns: repeat(4, 1fr); }
-      .st-val { font-size: 1.05rem; }
+      .credit-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.92rem; margin: 0.3rem 0 0.5rem; }
+      .c-card-body { padding: 0.7rem; }
 
-      /* Search — prevent iOS zoom */
-      .search-wrap input { font-size: 1rem; padding: 0.5rem 0.6rem 0.5rem 2rem; }
+      /* Seg buttons — bigger tap targets */
+      .seg { padding: 3px; gap: 2px; }
+      .seg button { min-height: 42px; font-size: 0.78rem; padding: 0.35rem 0.2rem; }
+      .seg button svg { width: 15px; height: 15px; }
 
-      /* Client rows — bigger tap targets */
-      .col-hdr, .cl-row { grid-template-columns: 1fr 60px 45px 75px; gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem; }
-      .cl-row { min-height: 52px; padding-top: 0.55rem; padding-bottom: 0.55rem; }
-      .col-th-prog, .cl-prog-cell { display: none; }
+      /* Inputs — 16px prevents iOS zoom */
+      .credit-page .form-control { font-size: 1rem; padding: 0.6rem 0.7rem; }
+      .credit-page .form-label { font-size: 0.68rem; }
 
-      /* Modal */
-      .modal-box { width: 97%; max-height: 94vh; border-radius: 12px 12px 0 0; }
-      .edit-grid { grid-template-columns: 1fr; }
-      .hero { padding: 1rem; border-radius: 0; }
-      .hero-name { font-size: 1rem; }
-      .hero-close { width: 36px; height: 36px; font-size: 1.2rem; }
-      .float-stats { margin: -14px 0.5rem 0; }
-      .float-st-val { font-size: 1rem; }
+      /* Amount + Notes stacked */
+      .row-2 { grid-template-columns: 1fr; gap: 0.5rem; }
 
-      /* Action buttons — scrollable row on mobile */
-      .act-toolbar { 
-        flex-wrap: nowrap; 
-        overflow-x: auto; 
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        padding: 6px 0.5rem 10px;
-        gap: 5px;
-      }
-      .act-toolbar::-webkit-scrollbar { display: none; }
-      .act-btn { padding: 6px 10px; font-size: 0.68rem; min-height: 34px; flex-shrink: 0; }
+      /* Submit button — big tap target */
+      .btn-credit { min-height: 48px; font-size: 0.92rem; border-radius: 10px; }
+
+      /* Lookup strip — readable */
+      .lookup-strip { font-size: 0.8rem; padding: 0.5rem 0.7rem; }
+      .lookup-strip .l-reward { min-height: 40px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; }
+
+      /* QR box */
+      .qr-box { padding: 0.8rem; }
+      .qr-fullscreen-btn { min-height: 36px; padding: 8px 16px; font-size: 0.75rem; }
+
+      /* Scanner */
+      #scan-reader { min-height: 220px; }
+
+      /* Autocomplete — bigger rows */
+      .ac-item { padding: 0.55rem 0.7rem; min-height: 44px; }
+
+      /* Success overlay */
+      .success-overlay { padding: 1.5rem 1rem; }
+      .success-pts { font-size: 2rem; }
+      .success-info { min-width: auto; }
+
+      /* Dup warning — bigger tap */
+      .dup-match { min-height: 40px; padding: 6px 8px; }
     }
-    @media (max-width: 480px) {
-      .col-hdr, .cl-row { grid-template-columns: 1fr 55px 72px; gap: 0.15rem; }
-      .col-th-visits, .cl-visits-cell { display: none; }
-      .cl-name { font-size: 0.85rem; }
-      .cl-sub { font-size: 0.68rem; }
+
+    @media (max-width: 380px) {
+      .seg button { font-size: 0.72rem; }
+      .seg button svg { width: 13px; height: 13px; }
+      .credit-page .form-control { font-size: 1rem; padding: 0.55rem 0.6rem; }
     }
-    .pin-section { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 1rem 1.15rem; margin-top: 0.6rem; margin-bottom: 0.75rem; }
-    .pin-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
-    .pin-hdr-left { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 600; color: #334155; }
-    .pin-status { font-size: 0.58rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; letter-spacing: 0.3px; }
-    .pin-status.set { background: #DCFCE7; color: #16A34A; }
-    .pin-status.unset { background: #FEE2E2; color: #DC2626; }
-    .pin-body { display: flex; align-items: center; gap: 0.75rem; }
-    .pin-digits { display: flex; gap: 6px; }
-    .pin-digit { width: 36px; height: 40px; text-align: center; font-size: 1.15rem; font-weight: 700; color: #1E293B; border: 2px solid #CBD5E1; border-radius: 8px; background: white; outline: none; transition: border-color 0.2s, box-shadow 0.2s; caret-color: var(--primary); }
-    .pin-digit:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(8,145,178,0.12); }
-    .pin-digit.filled { border-color: var(--primary); background: #F0FDFA; }
-    .pin-save { padding: 7px 14px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
-    .pin-save:hover { background: var(--primary-dark); transform: translateY(-1px); }
-    .pin-save:active { transform: translateY(0); }
-    .pin-warn { font-size: 0.68rem; color: #DC2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 4px; }
-    .pin-hint { font-size: 0.6rem; color: #94A3B8; margin-top: 6px; }
   </style>
 </head>
-<body class="dash">
+<body class="credit-page">
   <nav class="navbar">
     <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
     <div class="navbar-menu"></div>
   </nav>
 
-  <div class="dash-wrap">
-    <h1 class="pg-title">Clients</h1>
+  <div class="credit-wrap">
+    <h1 class="pg-title">Créditer des points</h1>
 
-    <div class="toolbar">
-      <div class="search-wrap">
-        <span class="ico">🔍</span>
-        <input type="text" id="search-input" placeholder="Rechercher par email, téléphone ou nom…">
-      </div>
-      <span class="toolbar-count" id="result-count"></span>
-    </div>
+    <div class="c-card">
+      <div class="c-card-body">
+        <div id="credit-alert"></div>
 
-    <div class="stats-row" id="stats-row">
-      <div class="st"><div class="st-val" id="s-total">–</div><div class="st-lbl">Clients</div></div>
-      <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Actifs (30j)</div></div>
-      <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses dispo</div></div>
-      <div class="st st-action" id="csv-card" style="display:none" onclick="API.clients.exportCSV()" title="Exporter les clients">
-        <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
-        <div class="st-lbl">Export CSV</div>
-      </div>
-    </div>
+        <div id="credit-form" autocomplete="off">
+          <!-- Segment toggle -->
+          <div class="seg">
+            <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              Email
+            </button>
+            <button type="button" id="toggle-phone" onclick="switchMode('phone')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+              Tél
+            </button>
+            <button type="button" id="toggle-qr" onclick="switchMode('qr')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14"/><line x1="21" y1="21" x2="21" y2="21"/></svg>
+              QR
+            </button>
+            <button type="button" id="toggle-scan" onclick="switchMode('scan')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Scan
+            </button>
+          </div>
 
-    <div class="cl-card">
-      <div class="col-hdr">
-        <div class="col-th active" onclick="colSort('name',this)">Client <span class="arrow">▲</span></div>
-        <div class="col-th col-th-right" onclick="colSort('points',this)">Points <span class="arrow">▼</span></div>
-        <div class="col-th col-th-center col-th-visits" onclick="colSort('visits',this)">Visites <span class="arrow">▼</span></div>
-        <div class="col-th col-th-right" onclick="colSort('last',this)">Dernière <span class="arrow">▼</span></div>
-        <div class="col-th col-th-prog" onclick="colSort('progress',this)">Progression <span class="arrow">▼</span></div>
-      </div>
-      <div class="cl-body" id="cl-body">
-        <div class="cl-loading">Chargement…</div>
-      </div>
-    </div>
-  </div>
+          <!-- Email -->
+          <div class="form-group" id="field-email">
+            <label class="form-label">Adresse email</label>
+            <div class="input-wrap">
+              <input type="text" inputmode="email" id="client-email" name="xfid_e7k" class="form-control" placeholder="client@email.com" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+              <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
+              <div class="autocomplete-list" id="ac-email"></div>
+            </div>
+            <div id="typo-email"></div>
+            <div class="lookup-strip" id="lookup-email"></div>
+          </div>
 
-  <!-- ═══ DETAIL MODAL ═══ -->
-  <div class="modal-overlay" id="detail-modal">
-    <div class="modal-box" id="detail-box">
-      <div id="modal-body"></div>
-    </div>
-  </div>
+          <!-- Phone -->
+          <div class="form-group" id="field-phone" style="display:none;">
+            <label class="form-label">Numéro de téléphone</label>
+            <div class="input-wrap">
+              <input type="tel" id="client-phone" name="xfid_p3m" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+              <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
+              <div class="autocomplete-list" id="ac-phone"></div>
+            </div>
+            <div class="form-hint">+32…, 0032…, 04…</div>
+            <div class="lookup-strip" id="lookup-phone"></div>
+          </div>
 
-  <!-- ═══ ADJUST MODAL ═══ -->
-  <div class="modal-overlay" id="adjust-modal">
-    <div class="modal-box" style="max-width:380px;">
-      <div class="sub-top"><h2>📏 Ajuster les points</h2><button class="sub-close" onclick="closeAdjust()">×</button></div>
-      <div class="sub-body">
-        <div id="adjust-alert"></div>
-        <div class="sub-fg"><label>Ajustement (+ ou -)</label><input type="number" id="adj-delta" placeholder="-10 ou +20"></div>
-        <div class="sub-fg"><label>Raison *</label><input type="text" id="adj-reason" placeholder="Correction erreur..."></div>
-        <button class="sub-btn sub-btn-primary" onclick="submitAdjust()">Confirmer</button>
-      </div>
-    </div>
-  </div>
+          <!-- QR (static) -->
+          <div id="field-qr" style="display:none;">
+            <div class="qr-box" id="qr-inline">
+              <div class="qr-sub">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+                Présentez ce QR au client
+              </div>
+              <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
+              <br>
+              <button type="button" class="qr-fullscreen-btn" onclick="showQRFullscreen()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                Plein écran
+              </button>
+            </div>
 
-  <!-- ═══ MERGE MODAL ═══ -->
-  <div class="modal-overlay" id="merge-modal">
-    <div class="modal-box" style="max-width:420px;">
-      <div class="sub-top"><h2>🔀 Fusionner</h2><button class="sub-close" onclick="closeMerge()">×</button></div>
-      <div class="sub-body">
-        <div id="merge-alert"></div>
-        <div class="alert alert-info" style="font-size:0.72rem;padding:6px 10px;margin-bottom:0.6rem;">
-          ⚠️ Le client source sera <strong>supprimé</strong>. Points, visites et historique transférés vers le client cible.
+            <!-- Pending identifications -->
+            <div id="pending-clients" style="margin-top:0.75rem;"></div>
+            <div class="lookup-strip" id="lookup-qr"></div>
+          </div>
+
+          <!-- Scanner (camera) -->
+          <div id="field-scan" style="display:none;">
+            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;">
+              <div id="scan-reader" style="width:100%;min-height:250px;"></div>
+            </div>
+            <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
+              Scannez le QR du client
+            </div>
+            <div class="lookup-strip" id="lookup-scan"></div>
+          </div>
+
+          <!-- Duplicate warning -->
+          <div id="dup-container"></div>
+
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+            <div class="input-wrap">
+              <input type="text" id="client-name" name="xfid_n2q" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+              <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
+            </div>
+          </div>
+
+          <!-- Amount + Notes -->
+          <div id="pin-group" class="form-group" style="display:none;">
+            <label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Code PIN du client (4 chiffres)</label>
+            <div class="input-wrap">
+              <input type="tel" id="client-pin" name="xfid_c4j" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
+              <button type="button" class="btn-clear" onclick="clearField('client-pin')">×</button>
+            </div>
+            <div class="form-hint">Ce code sera demandé au client pour utiliser sa récompense</div>
+          </div>
+
+          <!-- Amount + Notes -->
+          <div class="row-2">
+            <div class="form-group">
+              <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
+              <div class="input-wrap">
+                <input type="number" id="amount" name="xfid_a8v" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+                <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+              <div class="input-wrap">
+                <input type="text" id="notes" name="xfid_r5w" class="form-control" placeholder="Menu midi…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+                <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn-credit" id="submit-btn">Créditer les points</button>
         </div>
-        <div class="merge-section-title">🎯 Cible (conservé)</div>
-        <div class="merge-target-box" id="merge-target"></div>
-        <div class="merge-section-title">📦 Source (sera supprimé)</div>
-        <div class="merge-search-wrap">
-          <input type="text" id="merge-search" placeholder="Rechercher un client…" style="width:100%;padding:0.4rem 0.5rem;border:1.5px solid #E2E8F0;border-radius:6px;font-family:inherit;font-size:0.78rem;">
-          <div class="merge-results" id="merge-results"></div>
-        </div>
-        <div class="merge-selected" id="merge-selected">
-          <span id="merge-selected-name"></span>
-          <button class="merge-clear" onclick="clearMergeSelection()">✕</button>
-        </div>
-        <div class="sub-fg" style="margin-top:0.6rem;"><label>Raison (optionnel)</label><input type="text" id="merge-reason" placeholder="Doublon, couple..."></div>
-        <button class="sub-btn sub-btn-danger" id="merge-confirm-btn" onclick="submitMerge()" disabled>Confirmer la fusion</button>
       </div>
+
+      <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
+      <div class="success-overlay" id="success-overlay">
+        <div class="success-pts" id="s-pts"></div>
+        <div class="success-label">Crédités ✓</div>
+        <div class="success-info" id="s-info"></div>
+        <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
+      </div>
+
     </div>
   </div>
 
+  <!-- Fullscreen QR overlay (for table service) -->
+  <div id="qr-fullscreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="closeQRFullscreen()">
+    <div style="text-align:center;">
+      <div style="font-size:1.1rem; font-weight:600; color:#1E293B; margin-bottom:0.5rem;" id="qr-fs-merchant"></div>
+      <div style="font-size:0.8rem; color:#64748B; margin-bottom:1.5rem;">Scannez pour gagner vos points fidélité</div>
+      <div id="qr-fs-canvas" style="display:inline-block; padding:16px; background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.1);"></div>
+      <div style="margin-top:1.5rem; font-size:0.7rem; color:#94A3B8;">Appuyez n'importe où pour fermer</div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
   <script src="/js/app.js"></script>
   <script>
-    if (!requireManager()) throw 'Not authorized';
+    if (!requireAuth()) throw 'Not authenticated';
 
-    const staff = Auth.getStaff();
     const merchant = Auth.getMerchant();
-    const isOwner = staff.role === 'owner';
-    const isManager = ['owner', 'manager'].includes(staff.role);
-    const rewardThreshold = merchant.points_for_reward;
+    const staff = Auth.getStaff();
+    let currentMode = 'email';
+    let lastCreditKey = null; // anti-double-credit
+    let lookupIsNew = false;  // true when current client is new (needs PIN)
 
-    let allClients = [];
-    let displayedClients = [];
-    let currentClientId = null;
-    let currentClientData = null;
-    let mergeSourceId = null;
-    let sortCol = 'name';
-    let sortAsc = true;
+    // ═══════════════════════════════════════════════════════
+    // CREDIT METHODS — filter based on merchant preferences
+    // ═══════════════════════════════════════════════════════
 
-    if (isOwner) {
-      document.getElementById('csv-card').style.display = '';
-      document.getElementById('stats-row').style.gridTemplateColumns = 'repeat(4, 1fr)';
-    }
-
-    // ═══ HELPERS ═══
-    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-    function fmtNum(n) { return n >= 1000 ? (n / 1000).toFixed(1) + 'k' : n.toString(); }
-    function daysSince(d) { if (!d) return 9999; return Math.floor((Date.now() - new Date(d)) / 86400000); }
-    function fmtSince(d) {
-      const days = daysSince(d);
-      if (days === 0) return "Auj.";
-      if (days === 1) return 'Hier';
-      if (days < 7) return days + 'j';
-      if (days < 30) return Math.floor(days / 7) + ' sem.';
-      if (days < 365) return Math.floor(days / 30) + ' mois';
-      return Math.floor(days / 365) + ' an(s)';
-    }
-
-    // ═══ LOAD ═══
-    async function loadClients() {
+    (async () => {
       try {
-        const data = await API.call('/clients/enriched');
-        allClients = data.clients.map(enrich);
-        displayedClients = allClients;
-        updateStats();
-        renderClients();
-      } catch (err) {
-        document.getElementById('cl-body').innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">⚠️</div>Erreur de chargement</div>';
+        const data = await API.preferences.get();
+        const prefs = data.preferences || {};
+        const cm = prefs.credit_methods
+          ? (typeof prefs.credit_methods === 'string' ? JSON.parse(prefs.credit_methods) : prefs.credit_methods)
+          : { email: true, phone: true, qr: true, scan: true };
+
+        const methods = ['email', 'phone', 'qr', 'scan'];
+        methods.forEach(m => {
+          if (cm[m] === false) {
+            const btn = document.getElementById('toggle-' + m);
+            if (btn) btn.style.display = 'none';
+          }
+        });
+
+        // Switch to first enabled method
+        const firstEnabled = methods.find(m => cm[m] !== false);
+        if (firstEnabled && firstEnabled !== 'email') {
+          switchMode(firstEnabled);
+        } else if (!cm.email) {
+          switchMode(firstEnabled || 'email');
+        }
+      } catch (_) { /* defaults — show all */ }
+    })();
+
+    // ═══════════════════════════════════════════════════════
+    // LOOKUP — inline strip under the active field
+    // ═══════════════════════════════════════════════════════
+
+    function getLookupEl() {
+      return document.getElementById('lookup-' + currentMode);
+    }
+
+    function showLookup(data) {
+      const el = getLookupEl();
+      if (!el) return;
+
+      if (!data.found) {
+        lookupIsNew = true;
+        el.className = 'lookup-strip show new-client';
+        el.innerHTML = 'Nouveau client — sera créé au crédit.';
+        showPinField(true);
+        checkNearDuplicates();
+        return;
       }
-    }
-
-    function enrich(c) {
-      return { ...c, _label: c.name || c.email || c.phone || 'N/A', _sub: c.name ? (c.email || c.phone || '') : (c.phone || ''), _days: daysSince(c.last_visit), _progress: Math.min(Math.round((c.points_balance / rewardThreshold) * 100), 100), _canRedeem: c.points_balance >= rewardThreshold };
-    }
-
-    function updateStats() {
-      document.getElementById('s-total').textContent = fmtNum(allClients.length);
-      document.getElementById('s-active').textContent = fmtNum(allClients.filter(c => c._days <= 30).length);
-      document.getElementById('s-rewards').textContent = fmtNum(allClients.filter(c => c._canRedeem).length);
-    }
-
-    // ═══ SEARCH ═══
-    let searchTimeout;
-    document.getElementById('search-input').addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      clearTimeout(searchTimeout);
-      if (q.length === 0) { displayedClients = allClients; renderClients(); return; }
-      if (q.length < 2) return;
-      searchTimeout = setTimeout(async () => {
-        try { const data = await API.clients.search(q); displayedClients = data.clients.map(enrich); renderClients(); } catch (err) { console.error(err); }
-      }, 300);
-    });
-
-    // ═══ SORT ═══
-    function colSort(col, el) {
-      if (sortCol === col) sortAsc = !sortAsc; else { sortCol = col; sortAsc = (col === 'name'); }
-      document.querySelectorAll('.col-th').forEach(th => th.classList.remove('active'));
-      el.classList.add('active');
-      el.querySelector('.arrow').textContent = sortAsc ? '▲' : '▼';
-      renderClients();
-    }
-    function getSorted(list) {
-      const sorted = [...list], dir = sortAsc ? 1 : -1;
-      sorted.sort((a, b) => {
-        switch (sortCol) {
-          case 'name': return dir * a._label.toLowerCase().localeCompare(b._label.toLowerCase());
-          case 'points': return dir * (a.points_balance - b.points_balance);
-          case 'visits': return dir * (a.visit_count - b.visit_count);
-          case 'last': return dir * (a._days - b._days) * -1;
-          case 'progress': return dir * (a._progress - b._progress);
-          default: return 0;
+      const c = data.client;
+      if (data.isNew) {
+        lookupIsNew = true;
+        el.className = 'lookup-strip show new-client';
+        el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + c.name : '');
+        if (c.name && !document.getElementById('client-name').value) {
+          document.getElementById('client-name').value = c.name;
+          document.getElementById('client-name').classList.add('has-value');
         }
-      });
-      return sorted;
-    }
-
-    // ═══ RENDER TABLE ═══
-    function renderClients() {
-      const body = document.getElementById('cl-body');
-      document.getElementById('result-count').textContent = displayedClients.length + ' client(s)';
-      if (displayedClients.length === 0) { body.innerHTML = '<div class="cl-empty"><div class="cl-empty-icon">👥</div>Aucun client trouvé</div>'; return; }
-      const sorted = getSorted(displayedClients);
-      let html = '';
-      sorted.forEach(c => {
-        const isActive = c._days <= 30;
-        const pClass = c._progress >= 100 ? 'full' : '';
-        const hasCustom = !!c.custom_reward;
-        html += '<div class="cl-row" onclick="showDetail(' + c.id + ')">';
-        html += '<div class="cl-info"><div class="cl-name">' + esc(c._label) + '</div>';
-        if (c._sub) html += '<div class="cl-sub">' + esc(c._sub) + '</div>';
-        html += '<div class="cl-badges">';
-        if (c.is_blocked) html += '<span class="cl-badge blocked">bloqué</span>';
-        else if (isActive) html += '<span class="cl-badge active">actif</span>';
-        else html += '<span class="cl-badge inactive">inactif</span>';
-        if (c._canRedeem) html += '<span class="cl-badge reward">🎁</span>';
-        if (hasCustom) html += '<span class="cl-badge custom">⭐ perso</span>';
-        html += '</div></div>';
-        html += '<div class="cl-pts">' + c.points_balance + '</div>';
-        html += '<div class="cl-visits cl-visits-cell">' + c.visit_count + '</div>';
-        html += '<div class="cl-last">' + fmtSince(c.last_visit) + '</div>';
-        html += '<div class="cl-prog cl-prog-cell"><div class="prog-bar"><div class="prog-fill ' + pClass + '" style="width:' + c._progress + '%"></div></div><span class="prog-pct ' + pClass + '">' + c._progress + '%</span></div>';
-        html += '</div>';
-      });
-      body.innerHTML = html;
-    }
-
-    // ════════════════════════════════════════
-    // DETAIL MODAL — FULL FEATURE SET
-    // ════════════════════════════════════════
-
-    async function showDetail(mcId) {
-      try {
-        currentClientId = mcId;
-        const data = await API.clients.getById(mcId);
-        const c = data.client;
-        const txs = data.transactions;
-        currentClientData = c;
-
-        const progress = Math.min(Math.round((c.points_balance / c.reward_threshold) * 100), 100);
-        const isReady = c.can_redeem;
-        const hasCustom = !!c.custom_reward;
-        const displayName = c.name || c.email || c.phone || 'Client #' + mcId;
-        const subLine = (c.name && (c.email || c.phone)) ? (c.email || c.phone) : '';
-
-        let h = '';
-
-        // ── HERO ──
-        h += '<div class="hero"><button class="hero-close" onclick="closeDetail()">×</button>';
-        h += '<div class="hero-name">' + esc(displayName) + '</div>';
-        if (subLine) h += '<div class="hero-sub">' + esc(subLine) + '</div>';
-        h += '<div class="hero-badges">';
-        if (hasCustom) h += '<span class="hero-badge custom">⭐ Récompense perso</span>';
-        if (c.is_blocked) h += '<span class="hero-badge blocked">Bloqué</span>';
-        if (c.email_validated) h += '<span class="hero-badge validated">✓ Email validé</span>';
-        h += '</div></div>';
-
-        // ── FLOATING STATS ──
-        h += '<div class="float-stats">';
-        h += '<div class="float-st"><div class="float-st-val">' + c.points_balance + '</div><div class="float-st-lbl">Points</div></div>';
-        h += '<div class="float-st"><div class="float-st-val">' + c.visit_count + '</div><div class="float-st-lbl">Visites</div></div>';
-        h += '<div class="float-st"><div class="float-st-val">' + Format.date(c.first_visit) + '</div><div class="float-st-lbl">Depuis</div></div>';
-        h += '</div>';
-
-        // ── BODY ──
-        h += '<div class="m-body">';
-
-        // REWARD CARD
-        const rewardDesc = c.custom_reward || c.reward_description || merchant.reward_description;
-        h += '<div class="rw-card"><div class="rw-top"><div>';
-        h += '<div class="rw-label">🎁 Récompense' + (hasCustom ? ' <span style="font-size:0.55rem;background:#E0F2FE;color:#0369A1;padding:1px 5px;border-radius:6px;margin-left:2px;font-weight:600">Perso</span>' : '') + '</div>';
-        h += '<div class="rw-name">' + esc(rewardDesc) + '</div>';
-        h += '</div>';
-        if (isManager) h += '<button class="rw-edit-btn" onclick="toggleRewardEdit()">Modifier</button>';
-        h += '</div>';
-        h += '<div class="rw-prog-bar"><div class="rw-prog-fill ' + (isReady ? 'ready' : 'near') + '" style="width:' + progress + '%"></div></div>';
-        h += '<div class="rw-prog-text"><span>' + c.points_balance + ' / ' + c.reward_threshold + ' pts</span><span>' + (isReady ? '✅ Prêt !' : 'Encore ' + (c.reward_threshold - c.points_balance)) + '</span></div>';
-
-        if (isReady) {
-          h += '<div class="rw-ready" onclick="redeemReward(' + c.id + ')">';
-          h += '🎁 Récompense disponible — Cliquer pour appliquer !';
-          h += '<div style="font-size:0.64rem;opacity:0.85;margin-top:3px">' + c.points_balance + ' pts → ' + (c.points_balance - c.reward_threshold) + ' pts après déduction</div></div>';
-        }
-
-        if (isManager) {
-          h += '<div class="rw-edit-area" id="reward-edit-section"><div id="reward-alert"></div>';
-          h += '<div class="rw-edit-row"><input type="text" id="custom-reward-input" value="' + esc(c.custom_reward || '') + '" placeholder="' + esc(merchant.reward_description) + '" maxlength="150">';
-          h += '<button class="rw-save" onclick="saveCustomReward()">Enregistrer</button></div>';
-          h += '<div style="font-size:0.58rem;color:#94A3B8;margin-top:3px;">Vide = récompense par défaut</div></div>';
-        }
-        h += '</div>';
-
-        // ACTION TOOLBAR
-        if (isManager) {
-          const hasEmail = !!c.email;
-          const cp = hasEmail ? 'email=' + encodeURIComponent(c.email) : 'phone=' + encodeURIComponent(c.phone || '');
-          h += '<div class="act-toolbar">';
-          h += '<a href="/credit?' + cp + (c.name ? '&name=' + encodeURIComponent(c.name) : '') + '" class="act-btn">➕ Créditer</a>';
-          h += '<button class="act-btn" onclick="toggleEditForm()">✏️ Modifier</button>';
-          h += '<button class="act-btn" onclick="openAdjust()">📏 Ajuster</button>';
-          if (isOwner) h += '<button class="act-btn" onclick="openMerge()">🔀 Fusionner</button>';
-          h += c.is_blocked
-            ? '<button class="act-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>'
-            : '<button class="act-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>';
-          if (isOwner) h += '<button class="act-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>';
-          h += '</div>';
-        }
-
-        // EDIT FORM (hidden)
-        if (isManager) {
-          h += '<div class="edit-form" id="edit-section"><div id="edit-alert"></div>';
-          h += '<div class="edit-grid">';
-          h += '<div class="fg full"><label>Nom / surnom</label><input type="text" id="edit-name" value="' + esc(c.name || '') + '"></div>';
-          h += '<div class="fg"><label>Email</label><input type="email" id="edit-email" value="' + esc(c.email || '') + '"></div>';
-          h += '<div class="fg"><label>Téléphone</label><input type="tel" id="edit-phone" value="' + esc(c.phone || '') + '"></div>';
-          h += '</div><div class="edit-actions">';
-          h += '<button class="edit-cancel" onclick="toggleEditForm()">Annuler</button>';
-          h += '<button class="edit-save" onclick="saveEdit()">Enregistrer</button>';
-          h += '</div></div>';
-        }
-
-        // NOTES (expandable)
-        if (isManager) {
-          const hasNotes = !!(c.notes_private && c.notes_private.trim());
-          h += '<div class="exp ' + (hasNotes ? 'open' : '') + '" onclick="this.classList.toggle(\'open\')" id="notes-section">';
-          h += '<div class="exp-hdr"><span>📝 Notes privées' + (hasNotes ? '' : ' <span style="font-size:0.64rem;color:#94A3B8;font-weight:400;margin-left:4px">Aucune</span>') + '</span><span class="exp-arrow">▶</span></div>';
-          h += '<div class="exp-body" onclick="event.stopPropagation()">';
-          h += '<textarea class="notes-area" id="notes-area" placeholder="VIP, allergique noix, couple table 12…" maxlength="500">' + esc(c.notes_private || '') + '</textarea>';
-          h += '<div class="notes-meta"><span id="notes-count">' + (c.notes_private || '').length + '</span>/500 <button class="notes-save" onclick="saveNotes()">Sauver</button></div>';
-          h += '</div></div>';
-        }
-
-        // PIN SECTION (always visible for manager+)
-        if (isManager) {
-          h += '<div class="pin-section">';
-          h += '<div class="pin-hdr"><div class="pin-hdr-left">🔒 Code PIN récompense</div>';
-          if (c.has_pin) h += '<span class="pin-status set">✓ Défini</span>';
-          else h += '<span class="pin-status unset">Non défini</span>';
-          h += '</div>';
-          if (!c.has_pin) h += '<div class="pin-warn">⚠ Aucun PIN — ce client ne peut pas valider de récompense</div>';
-          h += '<div class="pin-body">';
-          h += '<div class="pin-digits">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="0" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="1" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="2" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="3" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '</div>';
-          h += '<button class="pin-save" onclick="savePin()">' + (c.has_pin ? '✏️ Modifier' : '✓ Définir') + '</button>';
-          h += '</div>';
-          h += '<div class="pin-hint">Code à 4 chiffres requis pour valider les récompenses</div>';
-          h += '</div>';
-        }
-
-        // TRANSACTIONS (expandable, collapsed by default)
-        h += '<div class="exp" onclick="this.classList.toggle(\'open\')">';
-        h += '<div class="exp-hdr"><span>📜 Historique <span style="font-size:0.64rem;color:#94A3B8;font-weight:400;margin-left:4px">' + txs.length + ' transaction' + (txs.length !== 1 ? 's' : '') + '</span></span><span class="exp-arrow">▶</span></div>';
-        h += '<div class="exp-body" onclick="event.stopPropagation()">';
-
-        if (txs.length === 0) {
-          h += '<div class="tl-empty">Aucune transaction</div>';
-        } else {
-          h += '<div class="tl">';
-          txs.forEach(t => {
-            const type = t.transaction_type;
-            const sign = t.points_delta >= 0 ? '+' : '';
-            h += '<div class="tl-item"><div class="tl-dot ' + type + '"></div><div class="tl-body">';
-            h += '<div class="tl-top"><span class="tl-pts ' + type + '">' + sign + t.points_delta + ' pts</span>';
-            h += '<span class="tl-date">' + Format.datetime(t.created_at) + '</span></div>';
-            h += '<div class="tl-detail">';
-            if (t.amount) h += Format.currency(t.amount) + ' · ';
-            h += type;
-            if (t.staff_name) h += ' · ' + esc(t.staff_name);
-            if (t.notes) h += '<br>' + esc(t.notes);
-            h += '</div></div></div>';
-          });
-          h += '</div>';
-        }
-        h += '</div></div>';
-
-        h += '</div>'; // m-body
-
-        document.getElementById('modal-body').innerHTML = h;
-
-        // Notes counter
-        const notesEl = document.getElementById('notes-area');
-        if (notesEl) notesEl.addEventListener('input', () => { document.getElementById('notes-count').textContent = notesEl.value.length; });
-
-        document.getElementById('detail-modal').classList.add('open');
-      } catch (err) { console.error('Detail error:', err); }
-    }
-
-    function closeDetail() { document.getElementById('detail-modal').classList.remove('open'); }
-    document.getElementById('detail-modal').addEventListener('click', (e) => { if (e.target.id === 'detail-modal') closeDetail(); });
-
-    // ════════════════════════════════════════
-    // EDIT CLIENT
-    // ════════════════════════════════════════
-
-    function toggleEditForm() { const el = document.getElementById('edit-section'); if (el) el.classList.toggle('show'); }
-
-    async function saveEdit() {
-      try {
-        const name = document.getElementById('edit-name').value.trim();
-        const email = document.getElementById('edit-email').value.trim();
-        const phone = document.getElementById('edit-phone').value.trim();
-        if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
-        await API.call('/clients/' + currentClientId + '/edit', { method: 'PUT', body: JSON.stringify({ name: name || null, email: email || null, phone: phone || null }) });
-        closeDetail(); loadClients();
-      } catch (err) { UI.showAlert('edit-alert', err.message, 'error'); }
-    }
-
-    // ════════════════════════════════════════
-    // NOTES
-    // ════════════════════════════════════════
-
-    async function saveNotes() {
-      try {
-        const notes = document.getElementById('notes-area').value;
-        await API.call('/clients/' + currentClientId + '/notes', { method: 'PUT', body: JSON.stringify({ notes }) });
-        const idx = allClients.findIndex(c => c.id === currentClientId);
-        if (idx >= 0) allClients[idx].notes_private = notes;
-      } catch (err) { alert('Erreur : ' + err.message); }
-    }
-
-    // ════════════════════════════════════════
-    // CUSTOM REWARD
-    // ════════════════════════════════════════
-
-    function toggleRewardEdit() { const el = document.getElementById('reward-edit-section'); if (el) el.classList.toggle('show'); }
-
-    async function saveCustomReward() {
-      try {
-        const value = document.getElementById('custom-reward-input').value.trim();
-        await API.clients.setCustomReward(currentClientId, value || null);
-        showDetail(currentClientId);
-      } catch (err) { UI.showAlert('reward-alert', err.message, 'error'); }
-    }
-
-    async function savePin() {
-      const digits = document.querySelectorAll('.pin-digit');
-      const pin = Array.from(digits).map(d => d.value).join('');
-      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); digits[0].focus(); return; }
-      try {
-        await API.clients.setPin(currentClientId, pin);
-        showDetail(currentClientId);
-      } catch (err) { alert(err.message); }
-    }
-
-    function pinDigitNav(el) {
-      el.value = el.value.replace(/\D/g, '').slice(-1);
-      if (el.value) el.classList.add('filled'); else el.classList.remove('filled');
-      if (el.value && el.dataset.pin < 3) {
-        const next = document.querySelector('.pin-digit[data-pin="' + (parseInt(el.dataset.pin) + 1) + '"]');
-        if (next) next.focus();
-      }
-    }
-
-    function pinDigitBack(e) {
-      if (e.key === 'Backspace' && !e.target.value && e.target.dataset.pin > 0) {
-        const prev = document.querySelector('.pin-digit[data-pin="' + (parseInt(e.target.dataset.pin) - 1) + '"]');
-        if (prev) { prev.value = ''; prev.classList.remove('filled'); prev.focus(); }
-      }
-    }
-
-    // ════════════════════════════════════════
-    // REDEEM + CELEBRATION
-    // ════════════════════════════════════════
-
-    async function redeemReward(mcId) {
-      const c = currentClientData;
-      const rewardDesc = c.custom_reward || c.reward_description || merchant.reward_description;
-      const newBal = c.points_balance - c.reward_threshold;
-
-      const pin = prompt('🔒 Code PIN du client (4 chiffres) :');
-      if (!pin) return; // cancelled
-      if (!/^\d{4}$/.test(pin)) {
-        alert('Le code PIN doit contenir 4 chiffres');
+        showPinField(!c.has_pin); // only if they don't already have a PIN
         return;
       }
 
-      if (!confirm('🎁 Appliquer la récompense ?\n\n→ ' + rewardDesc + '\n\nSolde : ' + c.points_balance + ' pts → ' + newBal + ' pts')) return;
-      try {
-        const result = await API.clients.reward({ merchantClientId: mcId, pin });
-        const box = document.getElementById('detail-box');
-        const ov = document.createElement('div');
-        ov.className = 'celebration';
-        ov.innerHTML = '<div class="celebration-content">' +
-          '<div style="font-size:3rem;margin-bottom:0.5rem">🎉</div>' +
-          '<h2 style="margin:0 0 0.5rem;color:#059669;font-size:1.1rem;font-family:inherit">Récompense appliquée !</h2>' +
-          '<p style="font-size:0.92rem;font-weight:600;margin:0 0 0.75rem">' + esc(rewardDesc) + '</p>' +
-          '<div style="display:flex;justify-content:center;gap:2rem;margin-bottom:1rem">' +
-            '<div style="text-align:center"><div style="font-size:0.58rem;color:#94A3B8;text-transform:uppercase">Avant</div><div style="font-size:1.2rem;font-weight:700;color:#94A3B8;text-decoration:line-through">' + c.points_balance + ' pts</div></div>' +
-            '<div style="font-size:1.2rem;color:#94A3B8">→</div>' +
-            '<div style="text-align:center"><div style="font-size:0.58rem;color:#94A3B8;text-transform:uppercase">Après</div><div style="font-size:1.2rem;font-weight:700;color:var(--primary)">' + result.client.points_balance + ' pts</div></div>' +
-          '</div>' +
-          '<button class="sub-btn sub-btn-primary" style="width:auto;padding:0.4rem 1.5rem;border-radius:8px" onclick="this.closest(\'.celebration\').remove(); showDetail(' + mcId + ');">OK</button></div>';
-        box.appendChild(ov);
-        loadClients();
-      } catch (err) { alert('Erreur : ' + err.message); }
+      lookupIsNew = false;
+      showPinField(false);
+      el.className = 'lookup-strip show found';
+      const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+      let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
+        '<span class="l-name">' + (c.name || c.email || c.phone) + '</span>' +
+        (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
+        '<div class="l-meta">' + c.visit_count + ' visite(s) · ' + c.points_balance + '/' + c.reward_threshold + '</div>' +
+        '<div class="l-prog"><div class="l-prog-fill" style="width:' + pct + '%"></div></div>';
+      if (c.can_redeem) {
+        h += '<div class="l-reward" onclick="redeemReward(' + c.id + ')">' +
+          (c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
+      }
+      el.innerHTML = h;
+
+      if (c.name && !document.getElementById('client-name').value) {
+        document.getElementById('client-name').value = c.name;
+        document.getElementById('client-name').classList.add('has-value');
+      }
     }
 
-    // ════════════════════════════════════════
-    // BLOCK / UNBLOCK
-    // ════════════════════════════════════════
-
-    async function toggleBlock(block) {
-      if (!confirm((block ? '🔒 Bloquer' : '🔓 Débloquer') + ' ce client ?')) return;
-      try {
-        if (block) await API.clients.block(currentClientId); else await API.clients.unblock(currentClientId);
-        closeDetail(); loadClients();
-      } catch (err) { alert(err.message); }
+    function hideLookup() {
+      document.querySelectorAll('.lookup-strip').forEach(el => {
+        el.classList.remove('show');
+        el.innerHTML = '';
+      });
+      document.getElementById('dup-container').innerHTML = '';
+      lookupIsNew = false;
+      showPinField(false);
     }
 
-    // ════════════════════════════════════════
-    // DELETE (double confirm)
-    // ════════════════════════════════════════
-
-    async function deleteClient() {
-      const c = currentClientData;
-      const label = c.name || c.email || c.phone || '#' + currentClientId;
-      if (!confirm('🗑️ Supprimer "' + label + '" ?\n\nCette action est irréversible.\nTous les points et l\'historique seront perdus.')) return;
-      if (!confirm('⚠️ DERNIÈRE CONFIRMATION\n\nSupprimer définitivement "' + label + '" et toutes ses données ?')) return;
-      try {
-        await API.call('/clients/' + currentClientId, { method: 'DELETE' });
-        closeDetail(); loadClients();
-      } catch (err) { alert('Erreur : ' + err.message); }
+    function showPinField(show) {
+      const g = document.getElementById('pin-group');
+      if (!g) return;
+      g.style.display = show ? 'block' : 'none';
+      if (!show) {
+        document.getElementById('client-pin').value = '';
+      }
     }
 
-    // ════════════════════════════════════════
-    // ADJUST MODAL
-    // ════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // PRE-FILL FROM URL
+    // ═══════════════════════════════════════════════════════
+    (function() {
+      const p = new URLSearchParams(window.location.search);
+      if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); }
+      else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); }
+      if (p.get('name')) document.getElementById('client-name').value = p.get('name');
+      if (p.get('email') || p.get('phone')) setTimeout(triggerLookup, 500);
+      if (p.toString()) window.history.replaceState({}, '', window.location.pathname);
+    })();
 
-    function openAdjust() {
-      document.getElementById('adj-delta').value = '';
-      document.getElementById('adj-reason').value = '';
-      document.getElementById('adjust-alert').innerHTML = '';
-      document.getElementById('adjust-modal').classList.add('open');
+    // ═══════════════════════════════════════════════════════
+    // MODE SWITCH
+    // ═══════════════════════════════════════════════════════
+
+    function getFirstEnabledMode() {
+      const methods = ['email', 'phone', 'qr', 'scan'];
+      return methods.find(m => {
+        const btn = document.getElementById('toggle-' + m);
+        return btn && btn.style.display !== 'none';
+      }) || 'email';
     }
-    function closeAdjust() { document.getElementById('adjust-modal').classList.remove('open'); }
-    document.getElementById('adjust-modal').addEventListener('click', (e) => { if (e.target.id === 'adjust-modal') closeAdjust(); });
 
-    async function submitAdjust() {
-      const delta = parseInt(document.getElementById('adj-delta').value);
-      const reason = document.getElementById('adj-reason').value.trim();
-      const al = document.getElementById('adjust-alert');
-      if (!delta) { al.innerHTML = '<div class="alert alert-error" style="font-size:0.72rem">Ajustement requis</div>'; return; }
-      if (!reason) { al.innerHTML = '<div class="alert alert-error" style="font-size:0.72rem">Raison requise</div>'; return; }
-      try {
-        await API.clients.adjust({ merchantClientId: currentClientId, pointsDelta: delta, reason });
-        closeAdjust(); showDetail(currentClientId); loadClients();
-      } catch (err) { al.innerHTML = '<div class="alert alert-error" style="font-size:0.72rem">' + esc(err.message) + '</div>'; }
+    function resetToDefaultMode() {
+      switchMode(getFirstEnabledMode());
     }
 
-    // ════════════════════════════════════════
-    // MERGE MODAL
-    // ════════════════════════════════════════
-
-    function openMerge() {
-      mergeSourceId = null;
-      document.getElementById('merge-search').value = '';
-      document.getElementById('merge-search').style.display = '';
-      document.getElementById('merge-results').classList.remove('open');
-      document.getElementById('merge-selected').classList.remove('show');
-      document.getElementById('merge-confirm-btn').disabled = true;
-      document.getElementById('merge-reason').value = '';
-      document.getElementById('merge-alert').innerHTML = '';
-      const c = currentClientData;
-      document.getElementById('merge-target').innerHTML = '<strong>' + esc(c.name || c.email || c.phone || '#' + currentClientId) + '</strong> — ' + c.points_balance + ' pts, ' + c.visit_count + ' visites';
-      document.getElementById('merge-modal').classList.add('open');
+    function switchMode(mode) {
+      if (currentMode === 'qr' && mode !== 'qr') {
+        stopPendingPoll();
+      }
+      if (currentMode === 'scan' && mode !== 'scan') {
+        stopScanner();
+      }
+      currentMode = mode;
+      document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
+      document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
+      document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
+      document.getElementById('toggle-scan').classList.toggle('active', mode === 'scan');
+      document.getElementById('field-email').style.display = mode === 'email' ? '' : 'none';
+      document.getElementById('field-phone').style.display = mode === 'phone' ? '' : 'none';
+      document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
+      document.getElementById('field-scan').style.display = mode === 'scan' ? '' : 'none';
+      if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
+      if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
+      hideLookup();
+      if (mode === 'qr') startPendingPoll();
+      if (mode === 'scan') startScanner();
     }
-    function closeMerge() { document.getElementById('merge-modal').classList.remove('open'); }
-    document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMerge(); });
 
-    let mergeSearchTimeout;
-    document.getElementById('merge-search').addEventListener('input', (e) => {
-      clearTimeout(mergeSearchTimeout);
-      const q = e.target.value.trim();
-      if (q.length < 2) { document.getElementById('merge-results').classList.remove('open'); return; }
-      mergeSearchTimeout = setTimeout(() => {
-        const results = allClients.filter(c =>
-          c.id !== currentClientId &&
-          ((c.email || '').toLowerCase().includes(q.toLowerCase()) ||
-           (c.phone || '').toLowerCase().includes(q.toLowerCase()) ||
-           (c.name || '').toLowerCase().includes(q.toLowerCase()))
-        ).slice(0, 8);
-        const dd = document.getElementById('merge-results');
-        dd.innerHTML = results.length === 0
-          ? '<div style="padding:6px 10px;font-size:0.78rem;color:#94A3B8">Aucun résultat</div>'
-          : results.map(r => '<div class="merge-item" onclick="selectMergeSource(' + r.id + ')"><div class="m-name">' + esc(r.name || r.email || r.phone || '#' + r.id) + '</div><div class="m-detail">' + r.points_balance + ' pts · ' + r.visit_count + ' vis.</div></div>').join('');
-        dd.classList.add('open');
-      }, 200);
+    // ═══════════════════════════════════════════════════════
+    // CLEAR
+    // ═══════════════════════════════════════════════════════
+    function clearField(id) {
+      const el = document.getElementById(id);
+      el.value = ''; el.focus(); el.dispatchEvent(new Event('input'));
+      if (id === 'amount') document.getElementById('pts-badge').textContent = '0 pts';
+    }
+    document.querySelectorAll('.input-wrap .form-control').forEach(el => {
+      el.addEventListener('input', () => el.classList.toggle('has-value', el.value.length > 0));
     });
 
-    function selectMergeSource(id) {
-      mergeSourceId = id;
-      const c = allClients.find(x => x.id === id); if (!c) return;
-      document.getElementById('merge-results').classList.remove('open');
-      document.getElementById('merge-search').style.display = 'none';
-      document.getElementById('merge-selected-name').innerHTML = '<strong>' + esc(c.name || c.email || c.phone) + '</strong> — ' + c.points_balance + ' pts, ' + c.visit_count + ' vis.';
-      document.getElementById('merge-selected').classList.add('show');
-      document.getElementById('merge-confirm-btn').disabled = false;
+    // ═══════════════════════════════════════════════════════
+    // POINTS BADGE
+    // ═══════════════════════════════════════════════════════
+    document.getElementById('amount').addEventListener('input', (e) => {
+      const pts = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
+      document.getElementById('pts-badge').textContent = pts + ' pts';
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // EMAIL TYPO
+    // ═══════════════════════════════════════════════════════
+    const TYPOS = {
+      'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com',
+      'gamil.com':'gmail.com','gnail.com':'gmail.com','gmali.com':'gmail.com',
+      'gmai.com':'gmail.com','gmail.co':'gmail.com','gmail.be':'gmail.com',
+      'hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmaill.com':'hotmail.com',
+      'hotmial.com':'hotmail.com','hotamil.com':'hotmail.com',
+      'outloo.com':'outlook.com','outlok.com':'outlook.com',
+      'yahooo.com':'yahoo.com','yaho.com':'yahoo.com','yahooo.fr':'yahoo.fr',
+      'iclould.com':'icloud.com','iclou.com':'icloud.com',
+    };
+    function checkEmailTypo(v) {
+      const c = document.getElementById('typo-email'); c.innerHTML = '';
+      if (!v || !v.includes('@')) return;
+      const parts = v.split('@'); if (parts.length !== 2) return;
+      const fix = TYPOS[parts[1].toLowerCase()];
+      if (fix) {
+        const corrected = parts[0] + '@' + fix;
+        c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + corrected + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + corrected + '\')">Corriger</button></div>';
+      }
+    }
+    function applyTypo(v) {
+      document.getElementById('client-email').value = v;
+      document.getElementById('typo-email').innerHTML = '';
+      triggerLookup();
     }
 
-    function clearMergeSelection() {
-      mergeSourceId = null;
-      document.getElementById('merge-selected').classList.remove('show');
-      document.getElementById('merge-search').style.display = '';
-      document.getElementById('merge-search').value = '';
-      document.getElementById('merge-confirm-btn').disabled = true;
+    // ═══════════════════════════════════════════════════════
+    // AUTOCOMPLETE
+    // ═══════════════════════════════════════════════════════
+    let acTimer;
+    function setupAC(inputId, listId) {
+      const inp = document.getElementById(inputId), list = document.getElementById(listId);
+      inp.addEventListener('input', () => {
+        clearTimeout(acTimer);
+        const v = inp.value.trim();
+        triggerLookup();
+        if (v.length < 3) { list.classList.remove('show'); if (inputId === 'client-email') checkEmailTypo(v); return; }
+        if (inputId === 'client-email') checkEmailTypo(v);
+        acTimer = setTimeout(async () => {
+          try {
+            const d = await API.clients.searchGlobal(v);
+            if (!d.clients || !d.clients.length) { list.classList.remove('show'); return; }
+            list.innerHTML = d.clients.slice(0, 6).map(c =>
+              '<div class="ac-item" data-email="' + (c.email || '') + '" data-phone="' + (c.phone || '') + '" data-name="' + (c.name || '') + '">' +
+              '<span class="ac-pts">' + (c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>') + '</span>' +
+              '<div class="ac-name">' + (c.name || c.email || c.phone || '?') + '</div>' +
+              '<div class="ac-meta">' + (c.email || '') + (c.email && c.phone ? ' · ' : '') + (c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
+            ).join('');
+            list.classList.add('show');
+            list.querySelectorAll('.ac-item').forEach(item => {
+              item.addEventListener('click', () => {
+                const e = item.dataset.email, p = item.dataset.phone, n = item.dataset.name;
+                if (currentMode === 'email' && e) { inp.value = e; inp.classList.add('has-value'); }
+                else if (currentMode === 'phone' && p) { inp.value = p; inp.classList.add('has-value'); }
+                else if (e) { switchMode('email'); document.getElementById('client-email').value = e; }
+                else if (p) { switchMode('phone'); document.getElementById('client-phone').value = p; }
+                if (n) { document.getElementById('client-name').value = n; document.getElementById('client-name').classList.add('has-value'); }
+                list.classList.remove('show');
+                document.getElementById('typo-email').innerHTML = '';
+                triggerLookup();
+              });
+            });
+          } catch (e) { list.classList.remove('show'); }
+        }, 350);
+      });
+      document.addEventListener('click', (e) => { if (!inp.contains(e.target) && !list.contains(e.target)) list.classList.remove('show'); });
+    }
+    setupAC('client-email', 'ac-email');
+    setupAC('client-phone', 'ac-phone');
+
+    // ═══════════════════════════════════════════════════════
+    // LOOKUP
+    // ═══════════════════════════════════════════════════════
+    let lookupTimer;
+    function triggerLookup() {
+      clearTimeout(lookupTimer);
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      if (!email && !phone) { hideLookup(); return; }
+      lookupTimer = setTimeout(async () => {
+        try {
+          const p = {};
+          if (email) p.email = email;
+          if (phone) p.phone = phone;
+          showLookup(await API.clients.lookup(p));
+        } catch (e) { console.error(e); }
+      }, 300);
     }
 
-    async function submitMerge() {
-      if (!mergeSourceId) return;
-      const src = allClients.find(x => x.id === mergeSourceId);
-      const label = src ? (src.name || src.email || src.phone) : '#' + mergeSourceId;
-      if (!confirm('⚠️ ATTENTION\n\n"' + label + '" sera SUPPRIMÉ.\nSes points et historique transférés vers le client actuel.\n\nIrréversible. Continuer ?')) return;
+    // ═══════════════════════════════════════════════════════
+    // REDEEM
+    // ═══════════════════════════════════════════════════════
+    async function redeemReward(mcId) {
+      let pin = null;
+      if (!qrVerifiedFlag) {
+        pin = prompt('Code PIN du client (4 chiffres) :');
+        if (!pin) return; // cancelled
+        if (!/^\d{4}$/.test(pin)) {
+          UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
+          return;
+        }
+      }
       try {
-        const reason = document.getElementById('merge-reason').value.trim();
-        await API.call('/clients/' + currentClientId + '/merge', { method: 'POST', body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason || 'Fusion manuelle' }) });
-        closeMerge(); closeDetail(); loadClients();
-        setTimeout(() => showDetail(currentClientId), 300);
-      } catch (err) { document.getElementById('merge-alert').innerHTML = '<div class="alert alert-error" style="font-size:0.72rem">' + esc(err.message) + '</div>'; }
+        const r = await API.clients.reward({
+          merchantClientId: mcId,
+          pin: pin || undefined,
+          qrVerified: qrVerifiedFlag || undefined,
+        });
+        UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
+        triggerLookup();
+      } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
     }
 
-    document.addEventListener('click', (e) => { if (!e.target.closest('.merge-search-wrap')) document.getElementById('merge-results').classList.remove('open'); });
+    // ═══════════════════════════════════════════════════════
+    // SUBMIT — with anti-double-credit
+    // ═══════════════════════════════════════════════════════
+    document.getElementById('submit-btn').addEventListener('click', async (e) => {
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      const name = document.getElementById('client-name').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const notes = document.getElementById('notes').value.trim();
 
-    // ═══ INIT ═══
-    loadClients();
+      if (!email && !phone) { UI.showAlert('credit-alert', (currentMode === 'qr' || currentMode === 'scan') ? 'Scannez d\'abord le QR du client' : 'Email ou téléphone requis', 'error'); return; }
+      if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
+
+      // ── Anti-double-credit: generate unique key per submission ──
+      const creditKey = (email || '') + '|' + (phone || '') + '|' + amount + '|' + Date.now();
+      if (lastCreditKey && lastCreditKey === creditKey) {
+        UI.showAlert('credit-alert', 'Ce crédit vient d\'être effectué', 'warning');
+        return;
+      }
+
+      try {
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('submit-btn').textContent = 'Traitement…';
+        UI.clearAlert('credit-alert');
+
+        const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+        const pinVal = document.getElementById('client-pin').value.trim();
+
+        const r = await API.clients.credit({
+          email: email || undefined, phone: phone || undefined,
+          name: name || undefined, amount, notes: notes || undefined,
+          idempotencyKey,
+          pin: pinVal || undefined,
+        });
+
+        // ── Mark this credit as done (prevent re-submit) ──
+        lastCreditKey = creditKey;
+
+        // ── Show success overlay (blocks form access) ──
+        const n = r.client.name || r.client.email || r.client.phone || 'Client';
+        document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
+
+        let info = '<strong>' + n + '</strong>';
+        info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
+        if (r.client.email) info += '<br><span class="s-detail">' + r.client.email + '</span>';
+        if (r.client.phone) info += '<br><span class="s-detail">' + r.client.phone + '</span>';
+        if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
+
+        document.getElementById('s-info').innerHTML = info;
+        document.getElementById('success-overlay').classList.add('show');
+
+      } catch (err) {
+        UI.showAlert('credit-alert', err.message, 'error');
+      } finally {
+        document.getElementById('submit-btn').disabled = false;
+        document.getElementById('submit-btn').textContent = 'Créditer les points';
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // RESET — only way back from success overlay
+    // ═══════════════════════════════════════════════════════
+    function resetForm() {
+      // Hide overlay
+      document.getElementById('success-overlay').classList.remove('show');
+
+      // Full form reset
+      lastCreditKey = null;
+      qrVerifiedFlag = false;
+      document.querySelectorAll('#credit-form .form-control').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
+      document.getElementById('pts-badge').textContent = '0 pts';
+      hideLookup();
+      UI.clearAlert('credit-alert');
+
+      // QR cleanup — poll refresh
+      if (currentMode === 'qr') pollPending();
+      else {
+        stopPendingPoll();
+      }
+
+      resetToDefaultMode();
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // QR CODE
+    // ═══════════════════════════════════════════════════════
+    // ═══════════════════════════════════════════════════════
+    // QR STATIC — Display + Pending identifications polling
+    // ═══════════════════════════════════════════════════════
+
+    let merchantQrUrl = null;
+    let merchantQrToken = null;
+    let qrInst = null;
+    let pendingPoll = null;
+
+    async function loadStaticQR() {
+      try {
+        const resp = await API.call('/qr/token');
+        merchantQrToken = resp.token;
+        merchantQrUrl = resp.url;
+
+        const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
+        qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      } catch (e) {
+        console.error('QR load error:', e);
+      }
+    }
+
+    function showQRFullscreen() {
+      if (!merchantQrUrl) return;
+      const overlay = document.getElementById('qr-fullscreen');
+      const cv = document.getElementById('qr-fs-canvas'); cv.innerHTML = '';
+      document.getElementById('qr-fs-merchant').textContent = merchant.business_name;
+      new QRCode(cv, { text: merchantQrUrl, width: 260, height: 260, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+      overlay.style.display = 'flex';
+    }
+
+    function closeQRFullscreen() {
+      document.getElementById('qr-fullscreen').style.display = 'none';
+    }
+
+    // Pending identifications polling
+    function startPendingPoll() {
+      stopPendingPoll();
+      pollPending(); // immediate first call
+      pendingPoll = setInterval(pollPending, 3000);
+    }
+
+    function stopPendingPoll() {
+      if (pendingPoll) { clearInterval(pendingPoll); pendingPoll = null; }
+    }
+
+    async function pollPending() {
+      try {
+        const resp = await API.call('/qr/pending');
+        renderPending(resp.clients);
+      } catch (e) {}
+    }
+
+    function renderPending(clients) {
+      const el = document.getElementById('pending-clients');
+      if (!clients || clients.length === 0) {
+        el.innerHTML = '<div style="text-align:center;padding:0.5rem;color:#94A3B8;font-size:0.75rem;">En attente de clients…</div>';
+        return;
+      }
+
+      // Auto-select if only one client
+      if (clients.length === 1) {
+        consumeIdent(clients[0].identId);
+        return;
+      }
+
+      let html = '';
+      clients.forEach(c => {
+        const label = c.name || c.email || c.phone || 'Client';
+        const badge = c.isNew
+          ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
+          : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+        const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + c.identId + '\')">' +
+          '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
+          '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+          '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
+      });
+      el.innerHTML = html;
+    }
+
+    async function consumeIdent(identId) {
+      try {
+        const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
+
+        // Pre-fill the credit form
+        if (d.email) {
+          switchMode('email');
+          document.getElementById('client-email').value = d.email;
+          document.getElementById('client-email').classList.add('has-value');
+        } else if (d.phone) {
+          switchMode('phone');
+          document.getElementById('client-phone').value = d.phone;
+          document.getElementById('client-phone').classList.add('has-value');
+        }
+        if (d.name) {
+          document.getElementById('client-name').value = d.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+
+        setTimeout(triggerLookup, 300);
+        setTimeout(() => document.getElementById('amount').focus(), 600);
+      } catch (e) {
+        console.error('Consume error:', e);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // NEAR-DUPLICATE DETECTION
+    // ═══════════════════════════════════════════════════════
+
+    async function checkNearDuplicates() {
+      const container = document.getElementById('dup-container');
+      container.innerHTML = '';
+
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      if (!email && !phone) return;
+
+      try {
+        const params = new URLSearchParams();
+        if (email) params.set('email', email);
+        if (phone) params.set('phone', phone);
+
+        const data = await API.call('/clients/near-duplicates?' + params.toString());
+        if (!data.matches || data.matches.length === 0) return;
+
+        let html = '<div class="dup-warning">' +
+          '<div class="dup-warning-title">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+            'Client similaire trouvé' +
+          '</div>';
+
+        data.matches.forEach(m => {
+          const identifier = m.email || m.phone || '';
+          const useEmail = m.email || '';
+          const usePhone = m.phone || '';
+          html += '<div class="dup-match" onclick="useDuplicate(\'' +
+            useEmail.replace(/'/g, "\\'") + "', '" +
+            usePhone.replace(/'/g, "\\'") + "', '" +
+            (m.name || '').replace(/'/g, "\\'") + '\')">' +
+            '<div class="dup-match-info">' +
+              '<span class="dup-match-name">' + (m.name || 'Sans nom') + '</span> ' +
+              '<span class="dup-match-id">' + identifier + '</span>' +
+              (m.pointsBalance > 0 ? ' · ' + m.pointsBalance + ' pts' : '') +
+            '</div>' +
+            '<span class="dup-match-use">Utiliser</span>' +
+          '</div>';
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+      } catch (e) {
+        // Silent fail
+      }
+    }
+
+    function useDuplicate(email, phone, name) {
+      document.getElementById('dup-container').innerHTML = '';
+      if (email) {
+        switchMode('email');
+        document.getElementById('client-email').value = email;
+        document.getElementById('client-email').classList.add('has-value');
+      } else if (phone) {
+        switchMode('phone');
+        document.getElementById('client-phone').value = phone;
+        document.getElementById('client-phone').classList.add('has-value');
+      }
+      if (name) {
+        document.getElementById('client-name').value = name;
+        document.getElementById('client-name').classList.add('has-value');
+      }
+      setTimeout(triggerLookup, 200);
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // QR SCANNER (camera)
+    // ═══════════════════════════════════════════════════════
+
+    let html5QrScanner = null;
+    let qrVerifiedFlag = false;  // true if client was identified by QR scan
+    let scannerBusy = false;     // debounce scan results
+
+    function startScanner() {
+      document.getElementById('scan-status').textContent = 'Démarrage de la caméra…';
+      document.getElementById('scan-status').style.color = '#64748B';
+      scannerBusy = false;
+
+      // Small delay to let the container become visible and get dimensions
+      setTimeout(() => {
+        try {
+          html5QrScanner = new Html5Qrcode('scan-reader');
+          html5QrScanner.start(
+            { facingMode: 'environment' },
+            {
+              fps: 10,
+              qrbox: function(vw, vh) {
+                const s = Math.min(vw, vh) * 0.7;
+                return { width: Math.floor(s), height: Math.floor(s) };
+              },
+              aspectRatio: 1.0,
+            },
+            onScanSuccess,
+            () => {} // ignore scan failures
+          ).then(() => {
+            document.getElementById('scan-status').textContent = 'Scannez le QR du client';
+            document.getElementById('scan-status').style.color = '#64748B';
+          }).catch(err => {
+            console.error('Scanner start error:', err);
+            document.getElementById('scan-status').innerHTML =
+              '⚠ Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
+            document.getElementById('scan-status').style.color = '#DC2626';
+          });
+        } catch (err) {
+          console.error('Scanner init error:', err);
+          document.getElementById('scan-status').textContent = '⚠ Erreur d\'initialisation du scanner';
+          document.getElementById('scan-status').style.color = '#DC2626';
+        }
+      }, 300);
+    }
+
+    function stopScanner() {
+      if (html5QrScanner) {
+        try {
+          html5QrScanner.stop().then(() => {
+            html5QrScanner.clear();
+            html5QrScanner = null;
+          }).catch(() => {
+            html5QrScanner = null;
+          });
+        } catch (e) {
+          html5QrScanner = null;
+        }
+      }
+    }
+
+    async function onScanSuccess(decodedText) {
+      if (scannerBusy) return;  // debounce
+      scannerBusy = true;
+
+      // Extract client token from URL: fiddo.be/c/TOKEN
+      let clientQrToken = null;
+      try {
+        const url = new URL(decodedText);
+        const parts = url.pathname.split('/');
+        if (parts[1] === 'c' && parts[2]) {
+          clientQrToken = parts[2];
+        }
+      } catch (e) {
+        // Not a URL — maybe just the token itself
+        if (/^[A-Za-z0-9_-]{6,20}$/.test(decodedText)) {
+          clientQrToken = decodedText;
+        }
+      }
+
+      if (!clientQrToken) {
+        document.getElementById('scan-status').textContent = '⚠ QR non reconnu';
+        document.getElementById('scan-status').style.color = '#D97706';
+        setTimeout(() => { scannerBusy = false; }, 2000);
+        return;
+      }
+
+      // Stop scanner immediately
+      stopScanner();
+      document.getElementById('scan-status').textContent = 'QR lu ! Recherche du client…';
+      document.getElementById('scan-status').style.color = '#059669';
+
+      // Lookup client
+      try {
+        const d = await API.call('/qr/client-lookup/' + clientQrToken);
+
+        // Set QR verified flag (for PIN bypass on redeem)
+        qrVerifiedFlag = true;
+
+        // Pre-fill credit form
+        if (d.email) {
+          switchMode('email');
+          document.getElementById('client-email').value = d.email;
+          document.getElementById('client-email').classList.add('has-value');
+        } else if (d.phone) {
+          switchMode('phone');
+          document.getElementById('client-phone').value = d.phone;
+          document.getElementById('client-phone').classList.add('has-value');
+        }
+        if (d.name) {
+          document.getElementById('client-name').value = d.name;
+          document.getElementById('client-name').classList.add('has-value');
+        }
+
+        UI.showAlert('credit-alert',
+          (d.isNew ? 'Nouveau client : ' : 'Client identifié : ') +
+          (d.name || d.email || d.phone) +
+          (d.pointsBalance > 0 ? ' — ' + d.pointsBalance + ' pts' : ''),
+          'success');
+
+        setTimeout(triggerLookup, 300);
+        setTimeout(() => document.getElementById('amount').focus(), 600);
+      } catch (e) {
+        document.getElementById('scan-status').textContent = '⚠ Client non trouvé';
+        document.getElementById('scan-status').style.color = '#DC2626';
+        scannerBusy = false;
+        setTimeout(() => switchMode('scan'), 2000); // restart scanner
+      }
+    }
+
+    // Load QR on page init (lazy)
+    loadStaticQR();
+
+    window.addEventListener('beforeunload', () => { stopPendingPoll(); stopScanner(); });
   </script>
 </body>
 </html>
