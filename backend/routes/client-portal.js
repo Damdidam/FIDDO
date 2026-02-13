@@ -138,6 +138,7 @@ router.get('/cards', authenticateClient, (req, res) => {
   try {
     const endUser = endUserQueries.findById.get(req.endUserId);
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
     // Get all merchant_client relationships
     const cards = db.prepare(`
@@ -193,6 +194,7 @@ router.post('/pin', authenticateClient, async (req, res) => {
   try {
     const endUser = endUserQueries.findById.get(req.endUserId);
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
     const { currentPin, newPin } = req.body;
 
@@ -230,6 +232,7 @@ router.get('/qr', authenticateClient, (req, res) => {
   try {
     const endUser = endUserQueries.findById.get(req.endUserId);
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
     // Generate qr_token if missing (legacy users)
     let qrToken = endUser.qr_token;
