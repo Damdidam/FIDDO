@@ -765,7 +765,7 @@ router.post('/:id/pin', requireRole('owner', 'manager'), async (req, res) => {
     // Fire-and-forget: notify client by email if validated
     if (eu.email && eu.email_validated) {
       const merchant = merchantQueries.findById.get(merchantId);
-      sendPinChangedEmail(eu.email, merchant.business_name, pin);
+      sendPinChangedEmail(eu.email, merchant.business_name);
     }
 
     res.json({ message: 'Code PIN mis à jour', has_pin: true });
