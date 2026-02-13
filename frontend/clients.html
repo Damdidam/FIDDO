@@ -265,22 +265,6 @@
       .cl-name { font-size: 0.85rem; }
       .cl-sub { font-size: 0.68rem; }
     }
-    .pin-section { background: linear-gradient(135deg, #F8FAFC, #F1F5F9); border: 1.5px solid #E2E8F0; border-radius: 12px; padding: 1rem 1.15rem; margin-top: 0.6rem; margin-bottom: 0.75rem; }
-    .pin-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.6rem; }
-    .pin-hdr-left { display: flex; align-items: center; gap: 0.4rem; font-size: 0.78rem; font-weight: 600; color: #334155; }
-    .pin-status { font-size: 0.58rem; padding: 2px 8px; border-radius: 10px; font-weight: 600; letter-spacing: 0.3px; }
-    .pin-status.set { background: #DCFCE7; color: #16A34A; }
-    .pin-status.unset { background: #FEE2E2; color: #DC2626; }
-    .pin-body { display: flex; align-items: center; gap: 0.75rem; }
-    .pin-digits { display: flex; gap: 6px; }
-    .pin-digit { width: 36px; height: 40px; text-align: center; font-size: 1.15rem; font-weight: 700; color: #1E293B; border: 2px solid #CBD5E1; border-radius: 8px; background: white; outline: none; transition: border-color 0.2s, box-shadow 0.2s; caret-color: var(--primary); }
-    .pin-digit:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(8,145,178,0.12); }
-    .pin-digit.filled { border-color: var(--primary); background: #F0FDFA; }
-    .pin-save { padding: 7px 14px; border: none; border-radius: 8px; background: var(--primary); color: white; font-size: 0.72rem; font-weight: 600; cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap; }
-    .pin-save:hover { background: var(--primary-dark); transform: translateY(-1px); }
-    .pin-save:active { transform: translateY(0); }
-    .pin-warn { font-size: 0.68rem; color: #DC2626; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 4px; }
-    .pin-hint { font-size: 0.6rem; color: #94A3B8; margin-top: 6px; }
   </style>
 </head>
 <body class="dash">
@@ -572,6 +556,7 @@
           h += c.is_blocked
             ? '<button class="act-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>'
             : '<button class="act-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>';
+          h += '<button class="act-btn" onclick="promptPin()">🔑 PIN</button>';
           if (isOwner) h += '<button class="act-btn danger" onclick="deleteClient()">🗑️ Supprimer</button>';
           h += '</div>';
         }
@@ -598,27 +583,6 @@
           h += '<textarea class="notes-area" id="notes-area" placeholder="VIP, allergique noix, couple table 12…" maxlength="500">' + esc(c.notes_private || '') + '</textarea>';
           h += '<div class="notes-meta"><span id="notes-count">' + (c.notes_private || '').length + '</span>/500 <button class="notes-save" onclick="saveNotes()">Sauver</button></div>';
           h += '</div></div>';
-        }
-
-        // PIN SECTION (always visible for manager+)
-        if (isManager) {
-          h += '<div class="pin-section">';
-          h += '<div class="pin-hdr"><div class="pin-hdr-left">🔒 Code PIN récompense</div>';
-          if (c.has_pin) h += '<span class="pin-status set">✓ Défini</span>';
-          else h += '<span class="pin-status unset">Non défini</span>';
-          h += '</div>';
-          if (!c.has_pin) h += '<div class="pin-warn">⚠ Aucun PIN — ce client ne peut pas valider de récompense</div>';
-          h += '<div class="pin-body">';
-          h += '<div class="pin-digits">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="0" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="1" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="2" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '<input type="tel" class="pin-digit" maxlength="1" inputmode="numeric" data-pin="3" oninput="pinDigitNav(this)" onkeydown="pinDigitBack(event)">';
-          h += '</div>';
-          h += '<button class="pin-save" onclick="savePin()">' + (c.has_pin ? '✏️ Modifier' : '✓ Définir') + '</button>';
-          h += '</div>';
-          h += '<div class="pin-hint">Code à 4 chiffres requis pour valider les récompenses</div>';
-          h += '</div>';
         }
 
         // TRANSACTIONS (expandable, collapsed by default)
@@ -706,30 +670,17 @@
       } catch (err) { UI.showAlert('reward-alert', err.message, 'error'); }
     }
 
-    async function savePin() {
-      const digits = document.querySelectorAll('.pin-digit');
-      const pin = Array.from(digits).map(d => d.value).join('');
-      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); digits[0].focus(); return; }
+    async function promptPin() {
+      const c = currentClientData;
+      const label = c.has_pin ? 'Modifier le code PIN (4 chiffres) :' : 'Définir un code PIN (4 chiffres) :';
+      const pin = prompt('🔑 ' + label);
+      if (!pin) return;
+      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); return; }
       try {
         await API.clients.setPin(currentClientId, pin);
+        alert('✓ Code PIN mis à jour');
         showDetail(currentClientId);
       } catch (err) { alert(err.message); }
-    }
-
-    function pinDigitNav(el) {
-      el.value = el.value.replace(/\D/g, '').slice(-1);
-      if (el.value) el.classList.add('filled'); else el.classList.remove('filled');
-      if (el.value && el.dataset.pin < 3) {
-        const next = document.querySelector('.pin-digit[data-pin="' + (parseInt(el.dataset.pin) + 1) + '"]');
-        if (next) next.focus();
-      }
-    }
-
-    function pinDigitBack(e) {
-      if (e.key === 'Backspace' && !e.target.value && e.target.dataset.pin > 0) {
-        const prev = document.querySelector('.pin-digit[data-pin="' + (parseInt(e.target.dataset.pin) - 1) + '"]');
-        if (prev) { prev.value = ''; prev.classList.remove('filled'); prev.focus(); }
-      }
     }
 
     // ════════════════════════════════════════
