@@ -1,7 +1,7 @@
 {
   "name": "FIDDO — Fidélité",
   "short_name": "FIDDO",
-  "description": "Programme de fidélité pour restaurateurs belges",
+  "description": "Programme de fidélité pour commerces belges",
   "start_url": "/credit",
   "display": "standalone",
   "background_color": "#0F172A",
