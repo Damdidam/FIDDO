@@ -135,6 +135,7 @@
     .toggle-row:last-child { border-bottom: none; }
     .toggle-label { font-size: 0.78rem; color: #334155; font-weight: 500; }
     .toggle-desc { font-size: 0.62rem; color: #94A3B8; margin-top: 1px; }
+    .toggle-warn { font-size: 0.62rem; color: #DC2626; margin-top: 3px; font-weight: 500; }
     .toggle-switch {
       position: relative; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer;
     }
@@ -399,6 +400,63 @@
               <button type="button" class="save-btn" onclick="saveNotif()">Enregistrer</button>
             </div>
           </div>
+
+          <div class="pref-card" style="margin-top: 1rem;">
+            <div class="pref-card-title">Méthodes d'identification (page Créditer)</div>
+            <div id="credit-methods-alert"></div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Email</div>
+                <div class="toggle-desc">Identifier le client par adresse email</div>
+                <div class="toggle-warn" id="warn-email" style="display:none;">Les clients enregistrés uniquement par email ne pourront plus être retrouvés en caisse.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-email" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Téléphone</div>
+                <div class="toggle-desc">Identifier le client par numéro de téléphone</div>
+                <div class="toggle-warn" id="warn-phone" style="display:none;">Les clients enregistrés uniquement par téléphone ne pourront plus être retrouvés en caisse.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-phone" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">QR Code (attente)</div>
+                <div class="toggle-desc">Le client scanne votre QR et vous le voyez apparaître</div>
+                <div class="toggle-warn" id="warn-qr" style="display:none;">Pensez à retirer votre QR du comptoir si vous désactivez cette méthode, sinon les clients scanneront pour rien.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-qr" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-label">Scan carte</div>
+                <div class="toggle-desc">Scanner le QR personnel du client avec la caméra</div>
+                <div class="toggle-warn" id="warn-scan" style="display:none;">Les clients ayant un QR personnel ne pourront plus être scannés en caisse.</div>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="cm-scan" checked onchange="toggleCmWarn()">
+                <span class="toggle-track"></span>
+              </label>
+            </div>
+
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveCreditMethods()">Enregistrer</button>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -408,6 +466,13 @@
             <strong>Nouveau client :</strong> envoyé dès la première visite d'un client inconnu.<br><br>
             <strong>Récompense :</strong> envoyé quand un client peut réclamer sa récompense.<br><br>
             <strong>Rapport :</strong> résumé avec nombre de visites, points distribués et nouveaux clients de la semaine.
+          </div>
+          <div class="info-side" style="margin-top: 0.8rem;">
+            <div class="info-side-title">Méthodes d'identification</div>
+            Choisissez quelles méthodes apparaissent sur la page Créditer. Au moins une doit rester active.<br><br>
+            <strong>Email / Tél :</strong> le caissier saisit manuellement l'identifiant du client.<br><br>
+            <strong>QR Code :</strong> le client scanne votre QR au comptoir et apparaît automatiquement.<br><br>
+            <strong>Scan :</strong> le caissier scanne le QR personnel du client.
           </div>
         </div>
       </div>
@@ -680,6 +745,16 @@
         document.getElementById('notif-reward-ready').checked = !!currentPrefs.notify_reward_ready;
         document.getElementById('notif-weekly').checked = !!currentPrefs.notify_weekly_report;
 
+        // Credit methods
+        const cm = currentPrefs.credit_methods
+          ? (typeof currentPrefs.credit_methods === 'string' ? JSON.parse(currentPrefs.credit_methods) : currentPrefs.credit_methods)
+          : { email: true, phone: true, qr: true, scan: true };
+        document.getElementById('cm-email').checked = cm.email !== false;
+        document.getElementById('cm-phone').checked = cm.phone !== false;
+        document.getElementById('cm-qr').checked = cm.qr !== false;
+        document.getElementById('cm-scan').checked = cm.scan !== false;
+        toggleCmWarn();
+
         // Theme
         if (currentPrefs.theme) {
           currentTheme = currentPrefs.theme;
@@ -856,6 +931,35 @@
       } catch (err) {
         showAlert('notif-alert', err.message, 'error');
       }
+    }
+
+    async function saveCreditMethods() {
+      const cm = {
+        email: document.getElementById('cm-email').checked,
+        phone: document.getElementById('cm-phone').checked,
+        qr: document.getElementById('cm-qr').checked,
+        scan: document.getElementById('cm-scan').checked,
+      };
+      if (!Object.values(cm).some(v => v)) {
+        showAlert('credit-methods-alert', 'Au moins une méthode doit rester active', 'error');
+        setTimeout(() => clearAlert('credit-methods-alert'), 3000);
+        return;
+      }
+      try {
+        await API.preferences.update({ credit_methods: cm });
+        currentPrefs.credit_methods = JSON.stringify(cm);
+        showAlert('credit-methods-alert', 'Méthodes d\'identification enregistrées', 'success');
+        setTimeout(() => clearAlert('credit-methods-alert'), 3000);
+      } catch (err) {
+        showAlert('credit-methods-alert', err.message, 'error');
+      }
+    }
+
+    function toggleCmWarn() {
+      ['email', 'phone', 'qr', 'scan'].forEach(m => {
+        const checked = document.getElementById('cm-' + m).checked;
+        document.getElementById('warn-' + m).style.display = checked ? 'none' : '';
+      });
     }
 
     // ═══════════════════════════════════════════════════════
