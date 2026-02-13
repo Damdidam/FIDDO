@@ -37,6 +37,9 @@ router.post('/register', async (req, res) => {
     if (ownerPassword.length < 6) {
       return res.status(400).json({ error: 'Le mot de passe doit contenir au moins 6 caractères' });
     }
+    if (ownerPassword.length > 72) {
+      return res.status(400).json({ error: 'Le mot de passe ne doit pas dépasser 72 caractères' });
+    }
     // Input length limits
     if (businessName.length > 150) return res.status(400).json({ error: 'Nom du commerce trop long (max 150)' });
     if (address.length > 300) return res.status(400).json({ error: 'Adresse trop longue (max 300)' });
@@ -281,7 +284,7 @@ router.post('/logout', (req, res) => {
   res.clearCookie('staff_token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'lax',
   });
   res.json({ message: 'Déconnecté' });
 });
