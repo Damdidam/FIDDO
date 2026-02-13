@@ -1,7 +1,13 @@
 const jwt = require('jsonwebtoken');
-const { merchantQueries } = require('../database');
+const { merchantQueries, staffQueries } = require('../database');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fiddo-secret-change-me';
+const DEFAULT_JWT_SECRET = 'fiddo-secret-change-me';
+const JWT_SECRET = process.env.JWT_SECRET || DEFAULT_JWT_SECRET;
+
+if (process.env.NODE_ENV === 'production' && JWT_SECRET === DEFAULT_JWT_SECRET) {
+  console.error('⛔ CRITICAL: JWT_SECRET is using the default value in production!');
+  process.exit(1);
+}
 
 // Brute force config
 const MAX_FAILED_ATTEMPTS = 5;
@@ -9,7 +15,8 @@ const LOCKOUT_MINUTES = 15;
 
 /**
  * Middleware: authenticate staff via HTTP-only cookie.
- * Verifies the JWT, checks that the merchant is still active.
+ * Verifies the JWT, re-checks staff is_active and merchant status from DB.
+ * Uses live DB role (not stale JWT) to prevent privilege escalation after demotion.
  * Sets req.staff = { id, email, merchant_id, role }
  */
 function authenticateStaff(req, res, next) {
@@ -21,13 +28,25 @@ function authenticateStaff(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
 
+    // Re-check staff from DB (catches deactivation + role changes after JWT issued)
+    const staff = staffQueries.findById.get(decoded.id);
+    if (!staff || !staff.is_active) {
+      return res.status(403).json({ error: 'Compte désactivé' });
+    }
+
     // Verify merchant is still active
-    const merchant = merchantQueries.findById.get(decoded.merchant_id);
+    const merchant = merchantQueries.findById.get(staff.merchant_id);
     if (!merchant || merchant.status !== 'active') {
       return res.status(403).json({ error: 'Commerce non actif' });
     }
 
-    req.staff = decoded; // { id, email, merchant_id, role }
+    // Use live DB values (not stale JWT) for id, role, merchant_id
+    req.staff = {
+      id: staff.id,
+      email: staff.email,
+      merchant_id: staff.merchant_id,
+      role: staff.role,
+    };
     next();
   } catch (err) {
     return res.status(403).json({ error: 'Token invalide' });
@@ -80,7 +99,7 @@ function staffCookieOptions(role) {
   return {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    sameSite: 'lax',
     maxAge,
   };
 }
