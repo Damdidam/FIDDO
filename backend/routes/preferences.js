@@ -268,6 +268,14 @@ router.post('/backup/import', requireRole('owner'), (req, res) => {
       return res.status(400).json({ error: 'Backup invalide', errors: validation.errors });
     }
 
+    // Verify backup belongs to this merchant (or is a fresh import)
+    if (data._meta && data._meta.merchant_id && data._meta.merchant_id !== merchantId) {
+      return res.status(403).json({
+        error: 'Ce backup appartient à un autre commerce',
+        details: `Backup: ${data._meta.business_name || 'inconnu'} (ID ${data._meta.merchant_id}) — Votre commerce: ID ${merchantId}`,
+      });
+    }
+
     const result = importMerchantData(merchantId, data);
 
     logAudit({
