@@ -284,7 +284,8 @@
     .admin-main .table thead { background: rgba(255,255,255,0.04); }
     .admin-main .table thead th { color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.06); }
     .admin-main .table td { color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
-    .admin-main .table tbody tr:hover td { background: rgba(8,145,178,0.05); }
+    .admin-main .table tbody tr:hover td { background: rgba(8,145,178,0.08); }
+    .admin-main .table tbody tr:hover { background: rgba(8,145,178,0.08); }
     .admin-main .table tbody tr:last-child td { border-bottom: none; }
 
     .merchant-row { cursor: pointer; }
@@ -390,6 +391,25 @@
     .user-card-biz { font-weight: 600; font-size: 0.9rem; }
     .user-card-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); }
     .user-card-stats strong { color: var(--text); }
+
+    /* Merge preview */
+    .merge-result { padding: 0.5rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; }
+    .merge-result-search {
+      padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer;
+      border: 1px solid var(--border); margin-bottom: 0.3rem;
+      transition: background 0.15s;
+    }
+    .merge-result-search:hover { background: var(--primary-bg); }
+    .merge-result-search.selected { border-color: var(--primary); background: var(--primary-bg); }
+    .merge-action {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.6rem 0.75rem; border-radius: 8px; margin-bottom: 0.4rem;
+      border: 1px solid var(--border); background: var(--bg-card);
+    }
+    .merge-action .merge-label { font-weight: 600; font-size: 0.9rem; }
+    .merge-action .merge-detail { font-size: 0.8rem; color: var(--text-muted); }
+    .merge-tag-merge { display: inline-block; background: #fef3c7; color: #92400e; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+    .merge-tag-transfer { display: inline-block; background: #dbeafe; color: #1e40af; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
 
     /* ─── Responsive ──────────────────────────────── */
     @media (max-width: 768px) {
@@ -624,6 +644,41 @@
         <button class="close-modal" onclick="closeUserModal()">×</button>
       </div>
       <div class="modal-body" id="um-body"></div>
+      <div class="modal-footer" id="um-footer"></div>
+    </div>
+  </div>
+
+  <!-- ═══ USER MERGE MODAL ═══ -->
+  <div id="merge-modal" class="modal">
+    <div class="modal-content" style="max-width: 650px;">
+      <div class="modal-header">
+        <h2>🔀 Fusion globale</h2>
+        <button class="close-modal" onclick="closeMergeModal()">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="merge-alert"></div>
+
+        <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border);">
+          <strong>Cible (conservé) :</strong> <span id="merge-target-label">—</span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Rechercher l'utilisateur source (à absorber)</label>
+          <input type="text" id="merge-source-search" class="form-control" placeholder="Email, téléphone ou nom…" oninput="onMergeSearch(this.value)">
+        </div>
+        <div id="merge-source-results" style="max-height: 180px; overflow-y: auto; margin-bottom: 1rem;"></div>
+
+        <div id="merge-preview-section" style="display: none;">
+          <div id="merge-preview-content"></div>
+
+          <div class="form-group" style="margin-top: 1rem;">
+            <label class="form-label">Note (visible par les commerçants)</label>
+            <input type="text" id="merge-reason" class="form-control" placeholder="Ex : Fusion demandée par le client" value="Fusion demandée par le client">
+          </div>
+
+          <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="executeMerge()">⚠️ Confirmer la fusion (irréversible)</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1083,6 +1138,14 @@
         }
 
         document.getElementById('um-body').innerHTML = html;
+
+        // Footer with merge button
+        document.getElementById('um-footer').innerHTML = `
+          <div class="action-btns">
+            <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${(u.name || u.email || u.phone || '').replace(/'/g, "\\'")}')">🔀 Fusionner avec…</button>
+          </div>
+        `;
+
         document.getElementById('user-modal').classList.add('active');
       } catch (e) {
         console.error(e);
@@ -1091,6 +1154,141 @@
 
     function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
     document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
+
+    // ─── Merge Flow ───
+
+    let mergeTargetId = null;
+    let mergeSourceId = null;
+    let mergeSearchTimeout = null;
+
+    function openMergeModal(targetId, targetLabel) {
+      mergeTargetId = targetId;
+      mergeSourceId = null;
+      document.getElementById('merge-target-label').textContent = targetLabel + ` (#${targetId})`;
+      document.getElementById('merge-source-search').value = '';
+      document.getElementById('merge-source-results').innerHTML = '';
+      document.getElementById('merge-preview-section').style.display = 'none';
+      document.getElementById('merge-alert').innerHTML = '';
+      document.getElementById('merge-reason').value = 'Fusion demandée par le client';
+      document.getElementById('merge-modal').classList.add('active');
+    }
+
+    function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
+    document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
+
+    function onMergeSearch(val) {
+      clearTimeout(mergeSearchTimeout);
+      if (val.trim().length < 2) {
+        document.getElementById('merge-source-results').innerHTML = '';
+        return;
+      }
+      mergeSearchTimeout = setTimeout(async () => {
+        try {
+          const data = await adminCall(`/users?q=${encodeURIComponent(val.trim())}`);
+          const container = document.getElementById('merge-source-results');
+          // Filter out the target itself
+          const users = data.users.filter(u => u.id !== mergeTargetId);
+          if (users.length === 0) {
+            container.innerHTML = '<div style="padding:0.5rem; color:var(--text-muted); font-size:0.85rem;">Aucun résultat</div>';
+            return;
+          }
+          container.innerHTML = users.slice(0, 8).map(u => `
+            <div class="merge-result-search ${mergeSourceId === u.id ? 'selected' : ''}" onclick="selectMergeSource(${u.id})">
+              <strong>${u.name || '<em>Sans nom</em>'}</strong>
+              <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">${u.email || ''} ${u.phone || ''}</span>
+              <span style="float:right; font-size:0.75rem; color:var(--text-muted);">${u.merchant_count} commerce${u.merchant_count > 1 ? 's' : ''}</span>
+            </div>
+          `).join('');
+        } catch (e) {
+          console.error(e);
+        }
+      }, 300);
+    }
+
+    async function selectMergeSource(sourceId) {
+      mergeSourceId = sourceId;
+      // Highlight
+      document.querySelectorAll('.merge-result-search').forEach(el => el.classList.remove('selected'));
+      event.currentTarget.classList.add('selected');
+
+      // Load preview
+      try {
+        const preview = await adminCall(`/users/${mergeTargetId}/merge-preview?sourceId=${sourceId}`);
+        const section = document.getElementById('merge-preview-section');
+        const content = document.getElementById('merge-preview-content');
+
+        let html = `<h3 style="margin-bottom:0.75rem; font-size:0.95rem;">Aperçu de la fusion</h3>`;
+
+        html += `<div style="display:flex; gap:1rem; margin-bottom:1rem; font-size:0.85rem;">
+          <div style="flex:1; padding:0.6rem; border-radius:8px; background:#fef2f2; border:1px solid #fecaca;">
+            <strong>Source (supprimé)</strong><br>
+            ${preview.source.name || '—'}<br>
+            <span style="color:#6b7280;">${preview.source.email || ''} ${preview.source.phone || ''}</span>
+          </div>
+          <div style="display:flex; align-items:center; font-size:1.3rem;">→</div>
+          <div style="flex:1; padding:0.6rem; border-radius:8px; background:#f0fdf4; border:1px solid #bbf7d0;">
+            <strong>Cible (conservé)</strong><br>
+            ${preview.target.name || '—'}<br>
+            <span style="color:#6b7280;">${preview.target.email || ''} ${preview.target.phone || ''}</span>
+          </div>
+        </div>`;
+
+        if (preview.actions.length === 0) {
+          html += '<div style="padding:0.75rem; color:var(--text-muted);">Aucune carte à transférer (source sans commerce)</div>';
+        } else {
+          preview.actions.forEach(a => {
+            const tag = a.action === 'merge'
+              ? '<span class="merge-tag-merge">FUSION</span>'
+              : '<span class="merge-tag-transfer">TRANSFERT</span>';
+
+            let detail = '';
+            if (a.action === 'merge') {
+              detail = `${a.target_before.points} + ${a.source.points} → <strong>${a.target_after.points} pts</strong>`;
+            } else {
+              detail = `<strong>${a.source.points} pts</strong>, ${a.source.visits} visites`;
+            }
+
+            html += `<div class="merge-action">
+              <div>
+                <div class="merge-label">${a.business_name} ${tag}</div>
+                <div class="merge-detail">${detail}</div>
+              </div>
+            </div>`;
+          });
+        }
+
+        if (preview.newAliases.length > 0) {
+          html += `<div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);">
+            <strong>Aliases créés :</strong> ${preview.newAliases.map(a => a.value).join(', ')}
+          </div>`;
+        }
+
+        content.innerHTML = html;
+        section.style.display = 'block';
+      } catch (e) {
+        UI.showAlert('merge-alert', e.message, 'error');
+      }
+    }
+
+    async function executeMerge() {
+      if (!mergeSourceId || !mergeTargetId) return;
+      const reason = document.getElementById('merge-reason').value.trim();
+      if (!confirm(`⚠️ IRRÉVERSIBLE\n\nFusionner l'utilisateur #${mergeSourceId} dans #${mergeTargetId} ?\n\nLe user source sera supprimé définitivement.`)) return;
+
+      try {
+        const result = await adminCall(`/users/${mergeTargetId}/merge`, {
+          method: 'POST',
+          body: JSON.stringify({ sourceId: mergeSourceId, reason }),
+        });
+        closeMergeModal();
+        closeUserModal();
+        loadUsers();
+        loadStats();
+        alert(`✅ Fusion effectuée\n${result.merged} carte(s) fusionnée(s)\n${result.transferred} carte(s) transférée(s)`);
+      } catch (e) {
+        UI.showAlert('merge-alert', e.message, 'error');
+      }
+    }
 
 
     // ═══════════════════════════════════════════════════════
