@@ -143,14 +143,14 @@ router.post('/credit', async (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const staffId = req.staff.id;
-    const { email, phone, name, amount, notes, idempotencyKey, pin } = req.body;
+    const { email, phone, name, amount, notes, idempotencyKey, pin, pinHash: pinHashDirect } = req.body;
 
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
     if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
     if (req.staff.role === 'cashier' && parseFloat(amount) > 200) return res.status(403).json({ error: 'Max 200€ pour un caissier' });
 
     // Hash PIN if provided (only stored for new clients)
-    const pinHash = pin ? await bcrypt.hash(pin, 10) : null;
+    const pinHash = pinHashDirect || (pin ? await bcrypt.hash(pin, 10) : null);
 
     const result = creditPoints({
       merchantId, staffId, email: email || null, phone: phone || null, name: name || null,
@@ -720,7 +720,7 @@ router.post('/:id/pin', requireRole('owner', 'manager'), async (req, res) => {
     // Fire-and-forget: notify client by email if validated
     if (eu.email && eu.email_validated) {
       const merchant = merchantQueries.findById.get(merchantId);
-      sendPinChangedEmail(eu.email, merchant.business_name);
+      sendPinChangedEmail(eu.email, merchant.business_name, pin);
     }
 
     res.json({ message: 'Code PIN mis à jour', has_pin: true });
