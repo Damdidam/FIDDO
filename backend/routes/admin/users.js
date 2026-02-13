@@ -1,6 +1,7 @@
 const express = require('express');
-const { db, endUserQueries, aliasQueries } = require('../../database');
+const { db, endUserQueries, aliasQueries, merchantClientQueries, transactionQueries, mergeQueries } = require('../../database');
 const { authenticateAdmin } = require('../../middleware/admin-auth');
+const { logAudit, auditCtx } = require('../../middleware/audit');
 
 const router = express.Router();
 router.use(authenticateAdmin);
@@ -37,7 +38,6 @@ router.get('/', (req, res) => {
       `).all();
     }
 
-    // Strip sensitive fields
     const safe = users.map(u => ({
       id: u.id,
       name: u.name,
@@ -60,7 +60,7 @@ router.get('/', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/admin/users/:id — User detail + merchant cards + aliases
+// GET /api/admin/users/:id — User detail + cards + aliases
 // ═══════════════════════════════════════════════════════
 
 router.get('/:id', (req, res) => {
@@ -69,7 +69,6 @@ router.get('/:id', (req, res) => {
     const user = endUserQueries.findById.get(userId);
     if (!user) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
-    // All merchant_clients for this user + merchant name
     const cards = db.prepare(`
       SELECT mc.*, m.business_name, m.email AS merchant_email, m.status AS merchant_status
       FROM merchant_clients mc
@@ -78,7 +77,6 @@ router.get('/:id', (req, res) => {
       ORDER BY mc.last_visit DESC
     `).all(userId);
 
-    // Aliases
     const aliases = aliasQueries.getByUser.all(userId);
 
     res.json({
@@ -106,6 +104,7 @@ router.get('/:id', (req, res) => {
         visit_count: c.visit_count,
         is_blocked: c.is_blocked,
         custom_reward: c.custom_reward,
+        notes_private: c.notes_private,
         first_visit: c.first_visit,
         last_visit: c.last_visit,
       })),
@@ -114,6 +113,215 @@ router.get('/:id', (req, res) => {
   } catch (error) {
     console.error('Erreur detail user:', error);
     res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/admin/users/:id/merge-preview?sourceId=XX
+// Preview: shows exactly what will happen, commerce by commerce
+// ═══════════════════════════════════════════════════════
+
+router.get('/:id/merge-preview', (req, res) => {
+  try {
+    const targetId = parseInt(req.params.id);
+    const sourceId = parseInt(req.query.sourceId);
+
+    if (!sourceId || sourceId === targetId) {
+      return res.status(400).json({ error: 'sourceId invalide' });
+    }
+
+    const target = endUserQueries.findById.get(targetId);
+    const source = endUserQueries.findById.get(sourceId);
+    if (!target) return res.status(404).json({ error: 'Utilisateur cible non trouvé' });
+    if (!source) return res.status(404).json({ error: 'Utilisateur source non trouvé' });
+
+    const sourceCards = db.prepare(`
+      SELECT mc.*, m.business_name
+      FROM merchant_clients mc JOIN merchants m ON m.id = mc.merchant_id
+      WHERE mc.end_user_id = ?
+    `).all(sourceId);
+
+    const targetCards = db.prepare(`
+      SELECT mc.*, m.business_name
+      FROM merchant_clients mc JOIN merchants m ON m.id = mc.merchant_id
+      WHERE mc.end_user_id = ?
+    `).all(targetId);
+
+    const targetMerchantIds = new Set(targetCards.map(c => c.merchant_id));
+
+    const actions = sourceCards.map(sc => {
+      const hasConflict = targetMerchantIds.has(sc.merchant_id);
+      const tc = hasConflict ? targetCards.find(c => c.merchant_id === sc.merchant_id) : null;
+
+      return {
+        merchant_id: sc.merchant_id,
+        business_name: sc.business_name,
+        action: hasConflict ? 'merge' : 'transfer',
+        source: { points: sc.points_balance, visits: sc.visit_count, spent: sc.total_spent },
+        target_before: tc ? { points: tc.points_balance, visits: tc.visit_count, spent: tc.total_spent } : null,
+        target_after: tc
+          ? { points: tc.points_balance + sc.points_balance, visits: tc.visit_count + sc.visit_count, spent: tc.total_spent + sc.total_spent }
+          : { points: sc.points_balance, visits: sc.visit_count, spent: sc.total_spent },
+      };
+    });
+
+    const newAliases = [];
+    if (source.email_lower) newAliases.push({ type: 'email', value: source.email_lower });
+    if (source.phone_e164) newAliases.push({ type: 'phone', value: source.phone_e164 });
+
+    res.json({
+      source: { id: source.id, name: source.name, email: source.email, phone: source.phone },
+      target: { id: target.id, name: target.name, email: target.email, phone: target.phone },
+      actions,
+      newAliases,
+      summary: {
+        commerces_affected: actions.length,
+        cards_merged: actions.filter(a => a.action === 'merge').length,
+        cards_transferred: actions.filter(a => a.action === 'transfer').length,
+      },
+    });
+  } catch (error) {
+    console.error('Erreur merge preview:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/admin/users/:id/merge — Global merge (super admin only)
+// Target = :id (kept), Source = body.sourceId (absorbed)
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/merge', (req, res) => {
+  try {
+    const targetId = parseInt(req.params.id);
+    const { sourceId, reason } = req.body;
+
+    if (!sourceId || sourceId === targetId) {
+      return res.status(400).json({ error: 'sourceId invalide' });
+    }
+
+    const target = endUserQueries.findById.get(targetId);
+    const source = endUserQueries.findById.get(sourceId);
+    if (!target) return res.status(404).json({ error: 'Utilisateur cible non trouvé' });
+    if (!source) return res.status(404).json({ error: 'Utilisateur source non trouvé' });
+
+    const mergeNote = reason || 'Fusion globale par le super admin';
+
+    const run = db.transaction(() => {
+      const sourceCards = db.prepare(`
+        SELECT mc.*, m.business_name
+        FROM merchant_clients mc JOIN merchants m ON m.id = mc.merchant_id
+        WHERE mc.end_user_id = ?
+      `).all(sourceId);
+
+      const results = { merged: [], transferred: [] };
+
+      for (const sc of sourceCards) {
+        const tc = merchantClientQueries.find.get(sc.merchant_id, targetId);
+
+        if (tc) {
+          // ── MERGE: both have a card at this merchant ──
+          merchantClientQueries.mergeStats.run(
+            sc.points_balance, sc.total_spent, sc.visit_count,
+            sc.first_visit, sc.last_visit,
+            tc.id
+          );
+
+          // Concat notes
+          if (sc.notes_private) {
+            const combined = tc.notes_private
+              ? `${tc.notes_private}\n--- Fusionné (${source.name || source.email || '#' + sourceId}) ---\n${sc.notes_private}`
+              : sc.notes_private;
+            db.prepare("UPDATE merchant_clients SET notes_private = ?, updated_at = datetime('now') WHERE id = ?")
+              .run(combined, tc.id);
+          }
+
+          // Reassign transactions
+          transactionQueries.reassignClient.run(tc.id, sc.id);
+
+          // Merge trace visible in merchant history
+          transactionQueries.create.run(
+            sc.merchant_id, tc.id, null, null, 0, 'merge', null, 'admin',
+            `[Super Admin] ${mergeNote} — ${source.name || source.email || source.phone || '#' + sourceId} fusionné (+${sc.points_balance} pts, +${sc.visit_count} visites)`
+          );
+
+          merchantClientQueries.delete.run(sc.id);
+          results.merged.push({ merchant: sc.business_name, points: sc.points_balance });
+        } else {
+          // ── TRANSFER: source card moves to target user ──
+          merchantClientQueries.updateEndUser.run(targetId, sc.id);
+
+          transactionQueries.create.run(
+            sc.merchant_id, sc.id, null, null, 0, 'merge', null, 'admin',
+            `[Super Admin] ${mergeNote} — Carte transférée depuis ${source.name || source.email || source.phone || '#' + sourceId}`
+          );
+
+          results.transferred.push({ merchant: sc.business_name, points: sc.points_balance });
+        }
+      }
+
+      // ── Global aliases ──
+      if (source.email_lower) {
+        aliasQueries.create.run(targetId, 'email', source.email_lower);
+      }
+      if (source.phone_e164) {
+        aliasQueries.create.run(targetId, 'phone', source.phone_e164);
+      }
+
+      // ── Enrich target with missing identifiers from source ──
+      if (!target.email && source.email) {
+        db.prepare("UPDATE end_users SET email = ?, email_lower = ?, updated_at = datetime('now') WHERE id = ?")
+          .run(source.email, source.email_lower, targetId);
+      }
+      if (!target.phone && source.phone) {
+        db.prepare("UPDATE end_users SET phone = ?, phone_e164 = ?, updated_at = datetime('now') WHERE id = ?")
+          .run(source.phone, source.phone_e164, targetId);
+      }
+      if (!target.name && source.name) {
+        db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?")
+          .run(source.name, targetId);
+      }
+      if (!target.pin_hash && source.pin_hash) {
+        endUserQueries.setPin.run(source.pin_hash, targetId);
+      }
+      if (source.email_validated && !target.email_validated) {
+        db.prepare("UPDATE end_users SET email_validated = 1, updated_at = datetime('now') WHERE id = ?")
+          .run(targetId);
+      }
+
+      // ── Record in end_user_merges ──
+      mergeQueries.create.run(
+        sourceId, targetId, req.admin.id, mergeNote,
+        JSON.stringify(results)
+      );
+
+      // ── Soft-delete source user ──
+      endUserQueries.softDelete.run(sourceId);
+
+      return results;
+    });
+
+    const results = run();
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'admin', actorId: req.admin.id, merchantId: null,
+      action: 'global_user_merge',
+      targetType: 'end_user', targetId: targetId,
+      details: { sourceId, targetId, reason: reason || null, ...results },
+    });
+
+    res.json({
+      message: 'Fusion globale effectuée',
+      merged: results.merged.length,
+      transferred: results.transferred.length,
+      details: results,
+    });
+  } catch (error) {
+    console.error('Erreur merge global:', error);
+    res.status(500).json({ error: error.message || 'Erreur lors de la fusion' });
   }
 });
 
