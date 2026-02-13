@@ -208,12 +208,23 @@ const Validate = {
 
 // ─── UI Utilities ────────────────────────────────────
 
+/**
+ * HTML-escape a string to prevent XSS when injecting into innerHTML.
+ * Available globally on all pages via app.js.
+ */
+function esc(s) {
+  if (!s && s !== 0) return '';
+  const d = document.createElement('div');
+  d.textContent = String(s);
+  return d.innerHTML;
+}
+
 const UI = {
   showAlert: (elId, message, type = 'info') => {
     const el = document.getElementById(elId);
     if (!el) return;
     const icons = { success: '✅', error: '⚠️', info: 'ℹ️', warning: '⚠️' };
-    el.innerHTML = `<div class="alert alert-${type === 'error' ? 'error' : type}">${icons[type] || ''} ${message}</div>`;
+    el.innerHTML = `<div class="alert alert-${type === 'error' ? 'error' : esc(type)}">${icons[type] || ''} ${esc(message)}</div>`;
   },
   clearAlert: (elId) => {
     const el = document.getElementById(elId);
