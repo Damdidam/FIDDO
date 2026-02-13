@@ -2,7 +2,7 @@ const express = require('express');
 const { db } = require('../database');
 const { authenticateStaff } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
-const { sendMail } = require('../services/email');
+const { sendMail, escHtml } = require('../services/email');
 
 const router = express.Router();
 router.use(authenticateStaff);
@@ -81,6 +81,12 @@ router.post('/feedback', async (req, res) => {
     if (!message || !message.trim()) {
       return res.status(400).json({ error: 'Message requis' });
     }
+    if (message.length > 5000) {
+      return res.status(400).json({ error: 'Message trop long (max 5000 caractères)' });
+    }
+    if (subject && subject.length > 200) {
+      return res.status(400).json({ error: 'Sujet trop long (max 200 caractères)' });
+    }
 
     const merchantId = req.staff.merchant_id;
     const merchant = db.prepare('SELECT business_name FROM merchants WHERE id = ?').get(merchantId);
@@ -108,13 +114,13 @@ router.post('/feedback', async (req, res) => {
           </div>
           <div style="background: white; padding: 20px; border: 1px solid #ddd; border-top: none; border-radius: 0 0 10px 10px;">
             <table style="width: 100%; font-size: 0.9rem; margin-bottom: 15px;">
-              <tr><td style="color: #666; padding: 4px 0;"><strong>Commerce :</strong></td><td>${merchant?.business_name || 'N/A'} (ID: ${merchantId})</td></tr>
-              <tr><td style="color: #666; padding: 4px 0;"><strong>De :</strong></td><td>${staffName} (${staffEmail})</td></tr>
-              <tr><td style="color: #666; padding: 4px 0;"><strong>Rôle :</strong></td><td>${req.staff.role}</td></tr>
-              ${subject ? `<tr><td style="color: #666; padding: 4px 0;"><strong>Sujet :</strong></td><td>${subject}</td></tr>` : ''}
+              <tr><td style="color: #666; padding: 4px 0;"><strong>Commerce :</strong></td><td>${escHtml(merchant?.business_name || 'N/A')} (ID: ${merchantId})</td></tr>
+              <tr><td style="color: #666; padding: 4px 0;"><strong>De :</strong></td><td>${escHtml(staffName)} (${escHtml(staffEmail)})</td></tr>
+              <tr><td style="color: #666; padding: 4px 0;"><strong>Rôle :</strong></td><td>${escHtml(req.staff.role)}</td></tr>
+              ${subject ? `<tr><td style="color: #666; padding: 4px 0;"><strong>Sujet :</strong></td><td>${escHtml(subject)}</td></tr>` : ''}
             </table>
             <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;">
-            <div style="white-space: pre-wrap; line-height: 1.6;">${message.trim()}</div>
+            <div style="white-space: pre-wrap; line-height: 1.6;">${escHtml(message.trim())}</div>
             <hr style="border: none; border-top: 1px solid #eee; margin: 15px 0;">
             <p style="font-size: 0.8rem; color: #999;">Répondre directement à cet email contactera le merchant.</p>
           </div>
