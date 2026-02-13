@@ -311,7 +311,7 @@
 
     function showAlert(id, msg, type) {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = `<div class="s-alert ${type}">${msg}</div>`;
+      if (el) el.innerHTML = `<div class="s-alert ${type}">${esc(msg)}</div>`;
     }
     function clearAlert(id) {
       const el = document.getElementById(id);
@@ -392,31 +392,34 @@
           ? Format.timeSince(m.last_login)
           : '<span style="color:#CBD5E1">Jamais</span>';
 
+        const safeName = esc(m.display_name);
+        const safeNameAttr = m.display_name.replace(/'/g, "\\'").replace(/</g, '&lt;');
+
         let actions = '<div class="action-btns">';
         if (isSelf) {
           actions += '<span class="s-badge you">Vous</span>';
         } else if (!isOwner) {
           if (m.is_active) {
-            actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Désactiver">
+            actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${safeNameAttr}')" title="Désactiver">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
             </button>`;
           } else {
-            actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Activer">
+            actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${safeNameAttr}')" title="Activer">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
             </button>`;
           }
-          actions += `<button class="act-btn" onclick="showPwModal(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Mot de passe">
+          actions += `<button class="act-btn" onclick="showPwModal(${m.id}, '${safeNameAttr}')" title="Mot de passe">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
           </button>`;
-          actions += `<button class="act-btn danger" onclick="deleteMember(${m.id}, '${m.display_name.replace(/'/g, "\\'")}')" title="Supprimer">
+          actions += `<button class="act-btn danger" onclick="deleteMember(${m.id}, '${safeNameAttr}')" title="Supprimer">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"/></svg>
           </button>`;
         }
         actions += '</div>';
 
         html += `<tr>
-          <td><span class="staff-name">${m.display_name}</span></td>
-          <td class="hide-mobile"><span class="staff-email">${m.email}</span></td>
+          <td><span class="staff-name">${safeName}</span></td>
+          <td class="hide-mobile"><span class="staff-email">${esc(m.email)}</span></td>
           <td>${roleCell}</td>
           <td>${statusBadge}</td>
           <td class="hide-mobile"><span class="staff-login">${lastLogin}</span></td>
