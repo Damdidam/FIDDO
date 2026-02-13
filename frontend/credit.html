@@ -868,11 +868,26 @@
       const btn = document.getElementById('s-reward');
       const mcId = parseInt(btn.dataset.clientId);
       if (!mcId) return;
+
+      // PIN required if not QR-verified
+      let pin = null;
+      if (!qrVerifiedFlag) {
+        pin = prompt('Code PIN du client (4 chiffres) :');
+        if (!pin) return; // cancelled
+        if (!/^\d{4}$/.test(pin)) {
+          btn.textContent = '❌ Le code PIN doit contenir 4 chiffres';
+          btn.style.background = '#DC2626';
+          setTimeout(() => { btn.textContent = '🎁 Réessayer'; btn.style.background = ''; }, 2000);
+          return;
+        }
+      }
+
       btn.disabled = true;
       btn.textContent = 'Traitement…';
       try {
         const r = await API.clients.reward({
           merchantClientId: mcId,
+          pin: pin || undefined,
           qrVerified: qrVerifiedFlag || undefined,
         });
         btn.textContent = '✓ Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
