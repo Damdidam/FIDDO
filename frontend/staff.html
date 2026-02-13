@@ -186,11 +186,25 @@
     .s-alert.info { background: color-mix(in srgb, var(--primary-light) 40%, white); color: #0E7490; border-color: var(--primary); }
 
     @media (max-width: 768px) {
-      .stats-row { grid-template-columns: repeat(3, 1fr); }
-      .staff-table { font-size: 0.75rem; }
-      .staff-table th, .staff-table td { padding: 0.4rem 0.55rem; }
+      .dash-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.95rem; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+
+      /* Table rows — bigger tap targets */
+      .staff-table { font-size: 0.78rem; }
+      .staff-table th, .staff-table td { padding: 0.55rem 0.6rem; }
+      .staff-table tr { min-height: 48px; }
       .staff-table .hide-mobile { display: none; }
-      .pg-btn { font-size: 0.72rem; padding: 0.35rem 0.8rem; }
+
+      /* Buttons */
+      .pg-btn { font-size: 0.75rem; padding: 0.4rem 0.85rem; min-height: 36px; }
+
+      /* Form inputs in modal — prevent iOS zoom */
+      .s-modal input, .s-modal select { font-size: 1rem; }
+      .s-modal .s-btn { min-height: 44px; }
+    }
+    @media (max-width: 480px) {
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
     }
   </style>
 </head>
