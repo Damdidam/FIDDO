@@ -365,6 +365,32 @@
 
     .tab-panels { min-height: 400px; }
 
+    /* Users search */
+    .users-search {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .users-search input {
+      flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 0.9rem;
+    }
+    .users-search input::placeholder { color: rgba(255,255,255,0.25); }
+    .users-search input:focus { outline: none; border-color: #0891B2; background: rgba(255,255,255,0.06); }
+    .users-search .search-count { color: rgba(255,255,255,0.3); font-size: 0.8rem; white-space: nowrap; }
+
+    /* User cards in modal */
+    .user-cards-grid {
+      display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;
+    }
+    .user-card-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 0.65rem 0.85rem; border-radius: 8px;
+      background: var(--bg-card); border: 1px solid var(--border);
+    }
+    .user-card-biz { font-weight: 600; font-size: 0.9rem; }
+    .user-card-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); }
+    .user-card-stats strong { color: var(--text); }
+
     /* ─── Responsive ──────────────────────────────── */
     @media (max-width: 768px) {
       .admin-banner-inner { padding: 0.65rem 1rem; }
@@ -499,11 +525,13 @@
       <button class="admin-tab active" onclick="switchTab('pending')">⏳ En attente</button>
       <button class="admin-tab" onclick="switchTab('active')">✅ Actifs</button>
       <button class="admin-tab" onclick="switchTab('all')">📋 Tous</button>
+      <button class="admin-tab" onclick="switchTab('users')">👤 Utilisateurs</button>
       <button class="admin-tab" onclick="switchTab('announcements')">📢 Annonces</button>
     </div>
 
     <div class="tab-panels">
       <div id="merchants-container"></div>
+      <div id="users-container" style="display: none;"></div>
       <div id="announcements-container" style="display: none;"></div>
     </div>
   </main>
@@ -585,6 +613,17 @@
         </div>
         <button class="btn btn-primary btn-block" id="ann-submit-btn" onclick="submitAnnouncement()">Publier l'annonce</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ═══ USER DETAIL MODAL ═══ -->
+  <div id="user-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="um-title">Utilisateur</h2>
+        <button class="close-modal" onclick="closeUserModal()">×</button>
+      </div>
+      <div class="modal-body" id="um-body"></div>
     </div>
   </div>
 
@@ -744,15 +783,21 @@
       event.target.classList.add('active');
 
       const merchantsEl = document.getElementById('merchants-container');
+      const usersEl = document.getElementById('users-container');
       const annEl = document.getElementById('announcements-container');
 
+      merchantsEl.style.display = 'none';
+      usersEl.style.display = 'none';
+      annEl.style.display = 'none';
+
       if (tab === 'announcements') {
-        merchantsEl.style.display = 'none';
         annEl.style.display = 'block';
         loadAnnouncements();
+      } else if (tab === 'users') {
+        usersEl.style.display = 'block';
+        loadUsers();
       } else {
         merchantsEl.style.display = 'block';
-        annEl.style.display = 'none';
         loadMerchants();
       }
     }
@@ -910,6 +955,142 @@
         closeModal(); loadMerchants(); loadStats();
       } catch (e) { alert(e.message); }
     }
+
+
+    // ═══════════════════════════════════════════════════════
+    // USERS (end_users global table)
+    // ═══════════════════════════════════════════════════════
+
+    let usersSearchTimeout = null;
+
+    async function loadUsers(query = '') {
+      const container = document.getElementById('users-container');
+      try {
+        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
+        const qs = query ? `?q=${encodeURIComponent(query)}` : '';
+        const data = await adminCall(`/users${qs}`);
+        const users = data.users;
+
+        let html = `
+          <div class="users-search">
+            <input type="text" id="users-search-input" placeholder="Rechercher par nom, email, téléphone…"
+              value="${query}" oninput="onUsersSearch(this.value)">
+            <span class="search-count">${data.count} utilisateur${data.count > 1 ? 's' : ''}</span>
+          </div>
+        `;
+
+        if (users.length === 0) {
+          html += '<div class="admin-empty"><div class="admin-empty-icon">👤</div><p>Aucun utilisateur trouvé</p></div>';
+          container.innerHTML = html;
+          return;
+        }
+
+        html += `<table class="table"><thead><tr>
+          <th>Nom</th><th>Email</th><th>Téléphone</th><th>Commerces</th><th>Badges</th><th>Créé le</th>
+        </tr></thead><tbody>`;
+
+        users.forEach(u => {
+          let badges = '';
+          if (u.email_validated) badges += '<span class="badge badge-dark-success" style="font-size:0.65rem;">Email ✓</span> ';
+          if (u.has_pin) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">PIN</span> ';
+          if (u.has_qr) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">QR</span> ';
+          if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
+
+          html += `<tr class="merchant-row" onclick="showUser(${u.id})">
+            <td><strong>${u.name || '<em style=\"opacity:0.4\">—</em>'}</strong></td>
+            <td style="font-size: 0.85rem;">${u.email || '<em style="opacity:0.3">—</em>'}</td>
+            <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone || '—'}</td>
+            <td style="text-align: center;"><strong>${u.merchant_count}</strong></td>
+            <td>${badges || '<span style="opacity:0.2">—</span>'}</td>
+            <td style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
+          </tr>`;
+        });
+        html += '</tbody></table>';
+        if (data.count >= 200) {
+          html += '<div style="text-align:center; padding:0.75rem; color:rgba(255,255,255,0.3); font-size:0.8rem;">Limité à 200 résultats — affinez votre recherche</div>';
+        }
+        container.innerHTML = html;
+      } catch (e) {
+        container.innerHTML = `<div class="alert alert-error">⚠️ ${e.message}</div>`;
+      }
+    }
+
+    function onUsersSearch(val) {
+      clearTimeout(usersSearchTimeout);
+      usersSearchTimeout = setTimeout(() => loadUsers(val.trim()), 300);
+    }
+
+    // ─── User Detail Modal ───
+
+    async function showUser(id) {
+      try {
+        const data = await adminCall(`/users/${id}`);
+        const u = data.user;
+        const cards = data.cards;
+        const aliases = data.aliases;
+
+        document.getElementById('um-title').textContent = u.name || u.email || u.phone || `#${u.id}`;
+
+        let html = `
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
+            <div><strong>Email :</strong> ${u.email || '—'} ${u.email_validated ? '<span class="badge badge-success">validé</span>' : ''}</div>
+            <div><strong>Téléphone :</strong> ${u.phone || '—'}</div>
+            <div><strong>PIN :</strong> ${u.has_pin ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Non défini</span>'}</div>
+            <div><strong>QR :</strong> ${u.has_qr ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-warning">Non</span>'}</div>
+            <div><strong>Bloqué :</strong> ${u.is_blocked ? '<span class="badge badge-danger">Oui</span>' : 'Non'}</div>
+            <div><strong>Inscrit :</strong> ${Format.datetime(u.created_at)}</div>
+          </div>
+        `;
+
+        // Aliases
+        if (aliases.length > 0) {
+          html += '<h3 class="mb-1">Aliases (post-fusion)</h3>';
+          html += '<div style="margin-bottom: 1.5rem; font-size: 0.85rem;">';
+          aliases.forEach(a => {
+            html += `<span class="badge badge-info" style="margin-right: 0.4rem; margin-bottom: 0.3rem;">${a.alias_type}: ${a.alias_value}</span>`;
+          });
+          html += '</div>';
+        }
+
+        // Cards across merchants
+        html += `<h3 class="mb-1">Cartes de fidélité (${cards.length})</h3>`;
+
+        if (cards.length === 0) {
+          html += '<p class="text-muted">Aucune carte de fidélité</p>';
+        } else {
+          html += '<div class="user-cards-grid">';
+          cards.forEach(c => {
+            const statusBadge = c.merchant_status === 'active'
+              ? '<span class="badge badge-success" style="font-size:0.65rem;">actif</span>'
+              : `<span class="badge badge-warning" style="font-size:0.65rem;">${c.merchant_status}</span>`;
+
+            html += `
+              <div class="user-card-row">
+                <div>
+                  <div class="user-card-biz">${c.business_name} ${statusBadge}</div>
+                  <div style="font-size:0.75rem; color: var(--text-muted);">${c.merchant_email}</div>
+                </div>
+                <div class="user-card-stats">
+                  <div><strong>${c.points_balance}</strong> pts</div>
+                  <div><strong>${c.visit_count}</strong> visites</div>
+                  <div><strong>${Format.currency(c.total_spent)}</strong></div>
+                  <div style="color: rgba(0,0,0,0.35);">${Format.date(c.last_visit)}</div>
+                </div>
+              </div>
+            `;
+          });
+          html += '</div>';
+        }
+
+        document.getElementById('um-body').innerHTML = html;
+        document.getElementById('user-modal').classList.add('active');
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
+    document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
 
 
     // ═══════════════════════════════════════════════════════
