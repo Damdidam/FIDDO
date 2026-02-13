@@ -119,14 +119,7 @@ const API = {
     merge: (targetId, sourceMerchantClientId, reason) => API.call(`/clients/${targetId}/merge`, { method: 'POST', body: JSON.stringify({ sourceMerchantClientId, reason }) }),
     delete: (id) => API.call(`/clients/${id}`, { method: 'DELETE' }),
     exportCSV: () => {
-      // Use hidden link to avoid navigating away from PWA on iOS
-      const a = document.createElement('a');
-      a.href = `${API_BASE_URL}/clients/export/csv`;
-      a.download = 'clients.csv';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 100);
+      window.open(`${API_BASE_URL}/clients/export/csv`, '_blank');
     },
   },
 
@@ -147,13 +140,7 @@ const API = {
     getMerchantInfo: () => API.call('/preferences/merchant-info'),
     updateMerchantInfo: (d) => API.call('/preferences/merchant-info', { method: 'PUT', body: JSON.stringify(d) }),
     exportBackup: () => {
-      const a = document.createElement('a');
-      a.href = `${API_BASE_URL}/preferences/backup/export`;
-      a.download = 'fiddo-backup.json';
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => a.remove(), 100);
+      window.open(`${API_BASE_URL}/preferences/backup/export`, '_blank');
     },
     validateBackup: (data) => API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) }),
     importBackup: (data) => API.call('/preferences/backup/import', { method: 'POST', body: JSON.stringify({ data, confirmReplace: true }) }),
