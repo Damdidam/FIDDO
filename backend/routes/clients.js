@@ -404,7 +404,11 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
 
     const run = db.transaction(() => {
-      db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(mcId);
+      // Anonymize transactions (keep financial data, remove link to person)
+      db.prepare(`
+        UPDATE transactions SET notes = '[SUPPRIMÉ]', updated_at = datetime('now')
+        WHERE merchant_client_id = ?
+      `).run(mcId);
       merchantClientQueries.delete.run(mcId);
 
       const otherRelations = db.prepare(
@@ -413,6 +417,8 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
 
       let userDeleted = false;
       if (otherRelations.count === 0) {
+        // Clean aliases pointing to this user
+        aliasQueries.deleteByUser.run(mc.end_user_id);
         endUserQueries.softDelete.run(mc.end_user_id);
         userDeleted = true;
       }
