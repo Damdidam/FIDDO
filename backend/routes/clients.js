@@ -369,10 +369,8 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
       transactionQueries.create.run(merchantId, targetMcId, req.staff.id, null, 0, 'merge', null, 'manual',
         `Fusion avec ${sourceEu?.name || sourceEu?.email || sourceEu?.phone || '#'+sourceMcId} — ${reason || 'Fusion manuelle'}`);
 
-      if (sourceEu) {
-        if (sourceEu.email_lower) aliasQueries.create.run(target.end_user_id, 'email', sourceEu.email_lower);
-        if (sourceEu.phone_e164) aliasQueries.create.run(target.end_user_id, 'phone', sourceEu.phone_e164);
-      }
+      // Note: no global aliases created here — merge is local to this merchant only
+      // Global merges (with aliases) are handled by super admin
 
       merchantClientQueries.delete.run(sourceMcId);
 
