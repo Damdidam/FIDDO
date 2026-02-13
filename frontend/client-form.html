@@ -357,6 +357,9 @@
   <div class="footer" id="footer">Propulsé par FIDDO</div>
 
   <script>
+    // XSS protection helper
+    function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
     // ═══════════════════════════════════════════════════════
     // TRANSLATIONS (6 languages)
     // ═══════════════════════════════════════════════════════
@@ -595,7 +598,7 @@
       // Reward info (if merchant loaded)
       if (merchantInfo) {
         document.getElementById('reward-info').innerHTML =
-          t.rewardInfo(merchantInfo.pointsPerEuro, merchantInfo.pointsForReward, merchantInfo.rewardDescription);
+          t.rewardInfo(merchantInfo.pointsPerEuro, merchantInfo.pointsForReward, esc(merchantInfo.rewardDescription));
       }
     }
 
@@ -761,7 +764,7 @@
 
     function showAlert(msg) {
       document.getElementById('form-alert').innerHTML =
-        '<div class="alert alert-error">' + msg + '</div>';
+        '<div class="alert alert-error">' + esc(msg) + '</div>';
     }
 
     document.addEventListener('keydown', function(e) {
