@@ -472,3 +472,9 @@ document.addEventListener('DOMContentLoaded', setupNavbar);
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js').catch(() => {});
 }
+
+// ─── Lock Portrait Orientation (PWA) ────────────────
+
+if (screen.orientation && screen.orientation.lock) {
+  screen.orientation.lock('portrait').catch(() => {});
+}
