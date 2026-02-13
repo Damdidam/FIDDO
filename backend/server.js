@@ -14,7 +14,23 @@ const PORT = process.env.PORT || 3000;
 // GLOBAL MIDDLEWARE
 // ═══════════════════════════════════════════════════════
 
-app.use(cors({ origin: true, credentials: true }));
+// CORS: restrict origins in production
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? (origin, callback) => {
+        const allowed = (process.env.CORS_ORIGINS || 'https://fiddo.be')
+          .split(',').map(s => s.trim());
+        // Allow same-origin requests (no origin header) and allowed origins
+        if (!origin || allowed.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error('Origine non autorisée'));
+        }
+      }
+    : true,
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '1mb' }));
 // Raised limit only for backup import (large JSON payloads)
 app.use('/api/preferences/backup', express.json({ limit: '10mb' }));
