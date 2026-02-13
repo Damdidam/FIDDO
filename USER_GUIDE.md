@@ -1,6 +1,6 @@
 # FIDDO — Le Guide pour les Nuls (et les Malins) 🧠
 
-> *Imagine que ton restaurant préféré te donne des autocollants à chaque fois que tu y manges. Quand t'en as assez… CADEAU ! Bah FIDDO, c'est pareil, mais sur téléphone.*
+> *Imagine que ton commerce préféré te donne des autocollants à chaque fois que tu y passes. Quand t'en as assez… CADEAU ! Bah FIDDO, c'est pareil, mais sur téléphone.*
 
 ---
 
@@ -121,7 +121,7 @@ Quand tu cliques sur un client, une fiche détaillée s'ouvre avec :
   - 🔒 **Bloquer** — si quelqu'un abuse
   - 🔑 **PIN** — changer son code PIN
   - 🗑️ **Supprimer** — effacer complètement (irréversible !)
-- **Notes privées** : un petit bloc-notes que toi seul vois ("en famille, toujours table 5", "allergique aux noix"…)
+- **Notes privées** : un petit bloc-notes que toi seul vois ("VIP, client fidèle", "préfère le matin", "vient en famille"…)
 - **Historique** : toutes les transactions, comme un relevé de banque
 
 ---
@@ -133,13 +133,13 @@ Quand tu cliques sur un client, une fiche détaillée s'ouvre avec :
 Tu configures dans les **Préférences** :
 - Combien de **points par euro** (ex: 1 pt/€)
 - Le **seuil** pour la récompense (ex: 100 pts)
-- La **description** de la récompense (ex: "Dessert offert")
+- La **description** de la récompense (ex: "10% de réduction")
 
 Quand un client atteint 100 points → le bouton récompense s'allume. Tu cliques, ça déduit les points, le client est content. 🎉
 
 ### Récompense personnalisée
 
-Tu peux donner une récompense **différente** à un client spécial. Par exemple, ton meilleur client a droit à "Bouteille de vin offerte" au lieu du dessert. Tu le configures dans sa fiche.
+Tu peux donner une récompense **différente** à un client spécial. Par exemple, ton meilleur client a droit à "Cadeau surprise" au lieu de la réduction standard. Tu le configures dans sa fiche.
 
 ---
 
@@ -211,7 +211,7 @@ Tu peux **envoyer des messages** à l'équipe FIDDO (le super admin) directement
 
 | Mot | Traduction pour un gosse de 10 ans |
 |-----|-----------------------------------|
-| **Multi-tenant** | Chaque restaurant a son propre tiroir, personne ne voit les affaires des autres |
+| **Multi-tenant** | Chaque commerce a son propre tiroir, personne ne voit les affaires des autres |
 | **JWT** | Un badge invisible qui prouve que tu es connecté |
 | **Magic link** | Un lien secret envoyé par email pour se connecter sans mot de passe |
 | **PIN** | Code secret à 4 chiffres, comme sur une carte bancaire |
