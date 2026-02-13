@@ -4,7 +4,7 @@ const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQ
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendValidationEmail, sendPointsCreditedEmail, sendPinChangedEmail } = require('../services/email');
+const { sendValidationEmail, sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 
 const router = express.Router();
@@ -585,14 +585,29 @@ router.get('/search-global', (req, res) => {
   }
 });
 
-router.get('/export/csv', requireRole('owner'), (req, res) => {
+router.post('/export/csv', requireRole('owner'), async (req, res) => {
   try {
     const clients = merchantClientQueries.getByMerchant.all(req.staff.merchant_id);
+    const merchant = merchantQueries.findById.get(req.staff.merchant_id);
     let csv = 'Email,Téléphone,Nom,Points,Total dépensé,Visites,Première visite,Dernière visite,Email validé,Bloqué,Récompense perso\n';
     clients.forEach(c => { csv += `"${c.email||''}","${c.phone||''}","${c.name||''}",${c.points_balance},${c.total_spent},${c.visit_count},"${c.first_visit}","${c.last_visit}",${c.email_validated?'Oui':'Non'},${c.is_blocked?'Oui':'Non'},"${c.custom_reward||''}"\n`; });
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', 'attachment; filename=clients.csv');
-    res.send('\uFEFF' + csv);
+
+    const date = new Date().toISOString().slice(0, 10);
+    const filename = `clients-${merchant.business_name.replace(/[^a-zA-Z0-9]/g, '-')}-${date}.csv`;
+
+    const sent = await sendExportEmail(
+      req.staff.email,
+      merchant.business_name,
+      filename,
+      '\uFEFF' + csv,
+      'text/csv'
+    );
+
+    if (sent) {
+      res.json({ success: true, message: `Export envoyé à ${req.staff.email}` });
+    } else {
+      res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'email' });
+    }
   } catch (error) { res.status(500).json({ error: 'Erreur export' }); }
 });
 
