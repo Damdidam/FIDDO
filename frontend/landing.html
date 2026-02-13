@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="FIDDO">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0891B2">
   <title>FIDDO — Programme de fidélité pour restaurants belges</title>
   <meta name="description" content="FIDDO digitalise la fidélité de vos clients. Simple, efficace, conçu pour les restaurateurs belges. Essai gratuit 30 jours.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -899,5 +905,6 @@
       });
     });
   </script>
+<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
 </body>
 </html>
