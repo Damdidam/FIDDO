@@ -1,5 +1,19 @@
 const nodemailer = require('nodemailer');
 
+/**
+ * Escape HTML entities in strings used in email templates.
+ * Prevents HTML injection via business_name, reward_description, etc.
+ */
+function escHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // ═══════════════════════════════════════════════════════
 // EMAIL TRANSPORT
 // ═══════════════════════════════════════════════════════
@@ -58,7 +72,7 @@ function sendValidationEmail(clientEmail, validationToken, businessName) {
     subject: `Bienvenue chez ${businessName} - Validez votre compte fidélité`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">Bienvenue chez ${businessName} ! 🎉</h2>
+        <h2 style="color: #0891B2;">Bienvenue chez ${escHtml(businessName)} ! 🎉</h2>
         <p>Vous êtes inscrit(e) à notre programme de fidélité.</p>
         <p>Cliquez ci-dessous pour valider votre compte :</p>
         <div style="text-align: center; margin: 30px 0;">
@@ -92,7 +106,7 @@ function sendPointsCreditedEmail(clientEmail, pointsEarned, newBalance, business
     rewardSection = `
       <div style="background-color: #10B981; color: white; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;">
         <h3 style="margin: 0;">🎁 Récompense disponible !</h3>
-        <p style="margin: 10px 0 0;">Présentez-vous pour bénéficier de : <strong>${merchantSettings.reward_description}</strong></p>
+        <p style="margin: 10px 0 0;">Présentez-vous pour bénéficier de : <strong>${escHtml(merchantSettings.reward_description)}</strong></p>
       </div>
     `;
   } else {
@@ -123,7 +137,7 @@ function sendPointsCreditedEmail(clientEmail, pointsEarned, newBalance, business
         ${rewardSection}
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
         <p style="font-size: 12px; color: #666; text-align: center;">
-          ${businessName} | Programme de fidélité
+          ${escHtml(businessName)} | Programme de fidélité
         </p>
       </div>
     `,
@@ -140,7 +154,7 @@ function sendMerchantValidatedEmail(merchantEmail, businessName) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #0891B2;">Félicitations ! 🎉</h2>
-        <p>Votre commerce <strong>${businessName}</strong> a été validé sur FIDDO.</p>
+        <p>Votre commerce <strong>${escHtml(businessName)}</strong> a été validé sur FIDDO.</p>
         <p>Vous pouvez maintenant vous connecter et commencer à fidéliser vos clients.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.BASE_URL || 'http://localhost:3000'}"
@@ -164,8 +178,8 @@ function sendMerchantRejectedEmail(merchantEmail, businessName, reason) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #EF4444;">Demande non approuvée</h2>
-        <p>Votre demande d'inscription pour <strong>${businessName}</strong> n'a pas pu être approuvée.</p>
-        ${reason ? `<p><strong>Raison :</strong> ${reason}</p>` : ''}
+        <p>Votre demande d'inscription pour <strong>${escHtml(businessName)}</strong> n'a pas pu être approuvée.</p>
+        ${reason ? `<p><strong>Raison :</strong> ${escHtml(reason)}</p>` : ''}
         <p>Si vous pensez qu'il s'agit d'une erreur, contactez-nous à support@fiddo.be.</p>
       </div>
     `,
@@ -177,9 +191,9 @@ function sendMerchantRejectedEmail(merchantEmail, businessName, reason) {
  */
 function sendMerchantInfoChangedEmail(adminEmail, oldName, newName, ownerEmail, changes) {
   const changeRows = changes.map(c =>
-    `<tr><td style="padding:6px 12px;border:1px solid #ddd;font-weight:600;">${c.field}</td>
-     <td style="padding:6px 12px;border:1px solid #ddd;color:#EF4444;text-decoration:line-through;">${c.old}</td>
-     <td style="padding:6px 12px;border:1px solid #ddd;color:#10B981;font-weight:600;">${c.new}</td></tr>`
+    `<tr><td style="padding:6px 12px;border:1px solid #ddd;font-weight:600;">${escHtml(c.field)}</td>
+     <td style="padding:6px 12px;border:1px solid #ddd;color:#EF4444;text-decoration:line-through;">${escHtml(c.old)}</td>
+     <td style="padding:6px 12px;border:1px solid #ddd;color:#10B981;font-weight:600;">${escHtml(c.new)}</td></tr>`
   ).join('');
 
   sendMail({
@@ -188,7 +202,7 @@ function sendMerchantInfoChangedEmail(adminEmail, oldName, newName, ownerEmail, 
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #1F2937;">🔔 Modification d'informations commerce</h2>
-        <p>Le propriétaire <strong>${ownerEmail}</strong> a modifié les informations de <strong>${oldName}</strong>.</p>
+        <p>Le propriétaire <strong>${escHtml(ownerEmail)}</strong> a modifié les informations de <strong>${escHtml(oldName)}</strong>.</p>
         <table style="width:100%;border-collapse:collapse;margin:20px 0;">
           <thead>
             <tr style="background:#1F2937;color:white;">
@@ -215,7 +229,7 @@ function sendPasswordChangedEmail(staffEmail, displayName) {
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #0891B2;">Mot de passe modifié 🔒</h2>
-        <p>Bonjour ${displayName},</p>
+        <p>Bonjour ${escHtml(displayName)},</p>
         <p>Votre mot de passe FIDDO a été modifié avec succès.</p>
         <p>Si vous n'êtes pas à l'origine de cette modification, contactez immédiatement <strong>support@fiddo.be</strong>.</p>
         <hr style="margin:30px 0;border:none;border-top:1px solid #ddd;">
@@ -236,7 +250,7 @@ function sendPinChangedEmail(clientEmail, businessName) {
       <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
         <h2 style="color: #0891B2;">🔒 Code PIN modifié</h2>
         <p>Bonjour,</p>
-        <p>Votre code PIN pour <strong>${businessName}</strong> a été mis à jour.</p>
+        <p>Votre code PIN pour <strong>${escHtml(businessName)}</strong> a été mis à jour.</p>
         <div style="background: #FEF3C7; border-left: 3px solid #F59E0B; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
           <p style="margin: 0; font-size: 0.9rem;">⚠️ Si vous n'êtes pas à l'origine de ce changement, veuillez contacter le commerce immédiatement.</p>
         </div>
@@ -285,9 +299,9 @@ function sendExportEmail(ownerEmail, businessName, filename, content, mimeType) 
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #0891B2;">${isCSV ? '📥 Export clients' : '💾 Backup'}</h2>
         <p>Bonjour,</p>
-        <p>Vous trouverez ci-joint ${isCSV ? "l'export CSV de vos clients" : 'le backup complet de vos données'} pour <strong>${businessName}</strong>.</p>
+        <p>Vous trouverez ci-joint ${isCSV ? "l'export CSV de vos clients" : 'le backup complet de vos données'} pour <strong>${escHtml(businessName)}</strong>.</p>
         <p style="background: #F1F5F9; padding: 12px 16px; border-radius: 8px; font-size: 14px;">
-          📎 <strong>${filename}</strong>
+          📎 <strong>${escHtml(filename)}</strong>
         </p>
         <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
         <p style="font-size: 12px; color: #666;">
@@ -319,11 +333,11 @@ function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sour
       <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
         <h2 style="color: #0891B2;">🔀 Fusion de comptes client</h2>
         <p>Bonjour,</p>
-        <p>L'équipe FIDDO a effectué une fusion de comptes client qui concerne <strong>${businessName}</strong>.</p>
+        <p>L'équipe FIDDO a effectué une fusion de comptes client qui concerne <strong>${escHtml(businessName)}</strong>.</p>
         <div style="background: #f8fafc; border-left: 3px solid #0891B2; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
           <p style="margin: 0;"><strong>Action :</strong> Fiche client ${actionLabel}</p>
-          <p style="margin: 0.5rem 0 0;"><strong>Client concerné :</strong> ${sourceName || '—'}</p>
-          <p style="margin: 0.5rem 0 0;"><strong>Motif :</strong> ${reason}</p>
+          <p style="margin: 0.5rem 0 0;"><strong>Client concerné :</strong> ${escHtml(sourceName) || '—'}</p>
+          <p style="margin: 0.5rem 0 0;"><strong>Motif :</strong> ${escHtml(reason)}</p>
         </div>
         <p>Les détails sont visibles dans l'historique des transactions du client (type : <em>merge</em>).</p>
         <p style="color: #6b7280; font-size: 0.85rem;">Aucune action requise de votre part.</p>
@@ -336,6 +350,7 @@ function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sour
 
 module.exports = {
   sendMail,
+  escHtml,
   sendValidationEmail,
   sendPointsCreditedEmail,
   sendMerchantValidatedEmail,
