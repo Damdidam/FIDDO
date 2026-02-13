@@ -1,481 +1,474 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const { db, merchantQueries, staffQueries } = require('../database');
-const { authenticateStaff, requireRole } = require('../middleware/auth');
-const { logAudit, auditCtx } = require('../middleware/audit');
-const { exportMerchantData, validateBackup, importMerchantData } = require('../services/backup');
-const { sendMerchantInfoChangedEmail, sendPasswordChangedEmail, sendExportEmail } = require('../services/email');
-const { normalizeEmail, normalizeVAT } = require('../services/normalizer');
+// ═══════════════════════════════════════════════════════
+// FIDDO V3.5 — Frontend Core
+// ═══════════════════════════════════════════════════════
 
-const router = express.Router();
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000/api'
+  : '/api';
 
-// All routes require authentication
-router.use(authenticateStaff);
+// ─── Theme Colors ────────────────────────────────────
 
-// ─── Theme defaults ──────────────────────────────────
+const THEME_COLORS = {
+  teal:   ['#0891B2', '#0E7490'],
+  navy:   ['#2563EB', '#1D4ED8'],
+  violet: ['#7C3AED', '#6D28D9'],
+  forest: ['#059669', '#047857'],
+  brick:  ['#DC2626', '#B91C1C'],
+  amber:  ['#D97706', '#B45309'],
+  slate:  ['#475569', '#334155'],
+};
 
-const VALID_THEMES = ['teal', 'navy', 'violet', 'forest', 'brick', 'amber', 'slate'];
-const VALID_LANGUAGES = ['fr', 'nl', 'en'];
-const VALID_BACKUP_FREQ = ['manual', 'daily', 'twice', 'thrice'];
+/**
+ * Apply a theme globally: set CSS variables + persist in sessionStorage.
+ * Called from setupNavbar() on every page load and from preferences selectTheme().
+ */
+function applyTheme(themeId) {
+  const colors = THEME_COLORS[themeId];
+  if (!colors) return;
+  document.documentElement.style.setProperty('--primary', colors[0]);
+  document.documentElement.style.setProperty('--primary-dark', colors[1]);
+  sessionStorage.setItem('fiddo_theme', themeId);
+}
 
-const DEFAULT_PREFS = {
-  theme: 'teal',
-  language: 'fr',
-  timezone: 'Europe/Brussels',
-  reward_message: 'Félicitations ! Vous avez gagné votre récompense ! 🎁',
-  notify_new_client: 1,
-  notify_reward_ready: 1,
-  notify_weekly_report: 0,
-  logo_url: null,
-  backup_frequency: 'manual',
-  last_backup_at: null,
-  credit_methods: '{"email":true,"phone":true,"qr":true,"scan":true}',
+// ─── Auth ────────────────────────────────────────────
+
+const Auth = {
+  getStaff: () => {
+    const s = sessionStorage.getItem('staff');
+    return s ? JSON.parse(s) : null;
+  },
+  getMerchant: () => {
+    const m = sessionStorage.getItem('merchant');
+    return m ? JSON.parse(m) : null;
+  },
+  setSession: (staff, merchant) => {
+    sessionStorage.setItem('staff', JSON.stringify(staff));
+    sessionStorage.setItem('merchant', JSON.stringify(merchant));
+  },
+  clearSession: () => {
+    sessionStorage.removeItem('staff');
+    sessionStorage.removeItem('merchant');
+    sessionStorage.removeItem('fiddo_theme');
+  },
+  isAuthenticated: () => !!Auth.getStaff(),
+  hasRole: (...roles) => {
+    const s = Auth.getStaff();
+    return s && roles.includes(s.role);
+  },
+  logout: async () => {
+    try { await API.auth.logout(); } catch (e) { /* ignore */ }
+    Auth.clearSession();
+    window.location.href = '/login';
+  },
 };
 
 
-// ═══════════════════════════════════════════════════════
-// GET /api/preferences — Get current preferences
-// ═══════════════════════════════════════════════════════
+// ─── API Wrapper ─────────────────────────────────────
 
-router.get('/', (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const prefs = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId);
+const API = {
+  async call(endpoint, options = {}) {
+    const config = {
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      ...options,
+    };
 
-    res.json({
-      preferences: prefs || { merchant_id: merchantId, ...DEFAULT_PREFS },
-    });
-  } catch (error) {
-    console.error('Erreur get preferences:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
 
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/preferences — Update all preferences (owner only)
-// ═══════════════════════════════════════════════════════
-
-router.put('/', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const {
-      theme, language, timezone, reward_message,
-      notify_new_client, notify_reward_ready, notify_weekly_report,
-      logo_url, backup_frequency, credit_methods,
-    } = req.body;
-
-    // Validate
-    if (theme && !VALID_THEMES.includes(theme)) {
-      return res.status(400).json({ error: `Thème invalide. Choix : ${VALID_THEMES.join(', ')}` });
-    }
-    if (language && !VALID_LANGUAGES.includes(language)) {
-      return res.status(400).json({ error: `Langue invalide. Choix : ${VALID_LANGUAGES.join(', ')}` });
-    }
-    if (backup_frequency && !VALID_BACKUP_FREQ.includes(backup_frequency)) {
-      return res.status(400).json({ error: 'Fréquence de backup invalide' });
+    if (response.status === 401 && !endpoint.startsWith('/auth/login') && !endpoint.startsWith('/auth/register')) {
+      Auth.clearSession();
+      window.location.href = '/login';
+      return;
     }
 
-    // Validate credit_methods if provided
-    const VALID_CREDIT_KEYS = ['email', 'phone', 'qr', 'scan'];
-    if (credit_methods) {
-      const cm = typeof credit_methods === 'string' ? JSON.parse(credit_methods) : credit_methods;
-      const keys = Object.keys(cm);
-      if (!keys.every(k => VALID_CREDIT_KEYS.includes(k))) {
-        return res.status(400).json({ error: 'Méthodes de crédit invalides' });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Une erreur est survenue');
+    return data;
+  },
+
+  auth: {
+    register: (data) => API.call('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+    login: (creds) => API.call('/auth/login', { method: 'POST', body: JSON.stringify(creds) }),
+    verify: () => API.call('/auth/verify'),
+    logout: () => API.call('/auth/logout', { method: 'POST' }),
+    updateSettings: (s) => API.call('/auth/settings', { method: 'PUT', body: JSON.stringify(s) }),
+  },
+
+  clients: {
+    credit: (d) => API.call('/clients/credit', { method: 'POST', body: JSON.stringify(d) }),
+    reward: (d) => API.call('/clients/reward', { method: 'POST', body: JSON.stringify(d) }),
+    adjust: (d) => API.call('/clients/adjust', { method: 'POST', body: JSON.stringify(d) }),
+    lookup: (params) => {
+      const qs = new URLSearchParams(params).toString();
+      return API.call(`/clients/lookup?${qs}`);
+    },
+    getAll: () => API.call('/clients'),
+    search: (q) => API.call(`/clients/search?q=${encodeURIComponent(q)}`),
+    searchGlobal: (q) => API.call(`/clients/search-global?q=${encodeURIComponent(q)}`),
+    quickSearch: (q, mode) => API.call(`/clients/quick-search?q=${encodeURIComponent(q)}&mode=${mode || 'email'}`),
+    enriched: () => API.call('/clients/enriched'),
+    recentActivity: (limit) => API.call(`/clients/recent-activity?limit=${limit || 50}`),
+    getById: (id) => API.call(`/clients/${id}`),
+    edit: (id, data) => API.call(`/clients/${id}/edit`, { method: 'PUT', body: JSON.stringify(data) }),
+    updateNotes: (id, notes) => API.call(`/clients/${id}/notes`, { method: 'PUT', body: JSON.stringify({ notes }) }),
+    block: (id) => API.call(`/clients/${id}/block`, { method: 'POST' }),
+    unblock: (id) => API.call(`/clients/${id}/unblock`, { method: 'POST' }),
+    setPin: (id, pin) => API.call(`/clients/${id}/pin`, { method: 'POST', body: JSON.stringify({ pin }) }),
+    setCustomReward: (id, customReward) => API.call(`/clients/${id}/custom-reward`, { method: 'PUT', body: JSON.stringify({ customReward }) }),
+    resendEmail: (id) => API.call(`/clients/${id}/resend-email`, { method: 'POST' }),
+    merge: (targetId, sourceMerchantClientId, reason) => API.call(`/clients/${targetId}/merge`, { method: 'POST', body: JSON.stringify({ sourceMerchantClientId, reason }) }),
+    delete: (id) => API.call(`/clients/${id}`, { method: 'DELETE' }),
+    exportCSV: async () => {
+      try {
+        const data = await API.call('/clients/export/csv', { method: 'POST' });
+        alert('✅ ' + data.message);
+      } catch (e) {
+        alert('❌ Erreur: ' + e.message);
       }
-      // At least one method must be enabled
-      if (!Object.values(cm).some(v => v === true)) {
-        return res.status(400).json({ error: 'Au moins une méthode de crédit doit être activée' });
+    },
+  },
+
+  staff: {
+    list: () => API.call('/staff'),
+    create: (d) => API.call('/staff', { method: 'POST', body: JSON.stringify(d) }),
+    updateRole: (id, role) => API.call(`/staff/${id}/role`, { method: 'PUT', body: JSON.stringify({ role }) }),
+    toggle: (id) => API.call(`/staff/${id}/toggle`, { method: 'PUT' }),
+    resetPassword: (id, password) => API.call(`/staff/${id}/password`, { method: 'PUT', body: JSON.stringify({ password }) }),
+    delete: (id) => API.call(`/staff/${id}`, { method: 'DELETE' }),
+  },
+
+  preferences: {
+    get: () => API.call('/preferences'),
+    update: (d) => API.call('/preferences', { method: 'PUT', body: JSON.stringify(d) }),
+    setTheme: (theme) => API.call('/preferences/theme', { method: 'PATCH', body: JSON.stringify({ theme }) }),
+    changePassword: (d) => API.call('/preferences/password', { method: 'PUT', body: JSON.stringify(d) }),
+    getMerchantInfo: () => API.call('/preferences/merchant-info'),
+    updateMerchantInfo: (d) => API.call('/preferences/merchant-info', { method: 'PUT', body: JSON.stringify(d) }),
+    exportBackup: async () => {
+      try {
+        const data = await API.call('/preferences/backup/export', { method: 'POST' });
+        alert('✅ ' + data.message);
+      } catch (e) {
+        alert('❌ Erreur: ' + e.message);
+      }
+    },
+    validateBackup: (data) => API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) }),
+    importBackup: (data) => API.call('/preferences/backup/import', { method: 'POST', body: JSON.stringify({ data, confirmReplace: true }) }),
+  },
+
+  // ← V3.5: Messages & Invoices
+  messages: {
+    getAll: (type) => {
+      const qs = type && type !== 'all' ? `?type=${type}` : '';
+      return API.call(`/messages${qs}`);
+    },
+    getUnreadCount: () => API.call('/messages/unread-count'),
+    markRead: (id) => API.call(`/messages/${id}/read`, { method: 'POST' }),
+    markAllRead: () => API.call('/messages/read-all', { method: 'POST' }),
+    getInvoices: () => API.call('/messages/invoices'),
+  },
+};
+
+
+// ─── Formatting ──────────────────────────────────────
+
+const Format = {
+  date: (d) => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+  datetime: (d) => new Date(d).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }),
+  currency: (a) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(a),
+  timeSince: (d) => {
+    const days = Math.floor((Date.now() - new Date(d)) / 86400000);
+    if (days === 0) return "Aujourd'hui";
+    if (days === 1) return 'Hier';
+    if (days < 7) return `Il y a ${days}j`;
+    if (days < 30) return `Il y a ${Math.floor(days / 7)} sem.`;
+    return `Il y a ${Math.floor(days / 30)} mois`;
+  },
+  phone: (p) => {
+    if (!p) return '';
+    if (p.startsWith('+32') && p.length === 12) {
+      return `+32 ${p.slice(3, 6)} ${p.slice(6, 8)} ${p.slice(8, 10)} ${p.slice(10)}`;
+    }
+    return p;
+  },
+};
+
+
+// ─── Validation ──────────────────────────────────────
+
+const Validate = {
+  email: (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e),
+  phone: (p) => {
+    const c = p.replace(/[\s\-.()+]/g, '');
+    return c.length >= 9 && c.length <= 13;
+  },
+  password: (p) => p.length >= 6,
+};
+
+
+// ─── UI Utilities ────────────────────────────────────
+
+const UI = {
+  showAlert: (elId, message, type = 'info') => {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    const icons = { success: '✅', error: '⚠️', info: 'ℹ️', warning: '⚠️' };
+    el.innerHTML = `<div class="alert alert-${type === 'error' ? 'error' : type}">${icons[type] || ''} ${message}</div>`;
+  },
+  clearAlert: (elId) => {
+    const el = document.getElementById(elId);
+    if (el) el.innerHTML = '';
+  },
+  showLoading: (elId, msg = 'Chargement...') => {
+    const el = document.getElementById(elId);
+    if (el) el.innerHTML = `<div class="loading"><div class="spinner"></div>${msg}</div>`;
+  },
+  showEmptyState: (elId, icon, msg) => {
+    const el = document.getElementById(elId);
+    if (el) el.innerHTML = `<div class="empty-state"><div class="empty-state-icon">${icon}</div><p>${msg}</p></div>`;
+  },
+  showError: (elId, msg) => {
+    const el = document.getElementById(elId);
+    if (el) el.innerHTML = `<div class="alert alert-error">⚠️ ${msg}</div>`;
+  },
+};
+
+
+// ─── Auth Guard ──────────────────────────────────────
+
+function requireAuth() {
+  if (!Auth.isAuthenticated()) {
+    window.location.href = '/login';
+    return false;
+  }
+  return true;
+}
+
+function requireOwner() {
+  if (!requireAuth()) return false;
+  if (!Auth.hasRole('owner')) {
+    window.location.href = '/credit';
+    return false;
+  }
+  return true;
+}
+
+function requireManager() {
+  if (!requireAuth()) return false;
+  if (!Auth.hasRole('owner', 'manager')) {
+    window.location.href = '/credit';
+    return false;
+  }
+  return true;
+}
+
+
+// ─── Navbar Setup (Concept B — Pill Navigation) ─────
+
+function setupNavbar() {
+  const staff = Auth.getStaff();
+  const merchant = Auth.getMerchant();
+  if (!staff || !merchant) return;
+
+  // ── Apply saved theme immediately (sessionStorage cache = instant) ──
+  const cachedTheme = sessionStorage.getItem('fiddo_theme');
+  if (cachedTheme && THEME_COLORS[cachedTheme]) {
+    applyTheme(cachedTheme);
+  }
+
+  // ── Sync from server in background (first login or other-device change) ──
+  API.preferences.get().then(data => {
+    const serverTheme = data?.preferences?.theme;
+    if (serverTheme && THEME_COLORS[serverTheme] && serverTheme !== cachedTheme) {
+      applyTheme(serverTheme);
+    }
+  }).catch(() => { /* silent */ });
+
+  const navbar = document.querySelector('.navbar');
+  if (!navbar) return;
+
+  const path = window.location.pathname;
+
+  // Build links based on role
+  const links = [];
+  links.push({ href: '/credit', label: 'Créditer' });
+
+  if (['owner', 'manager'].includes(staff.role)) {
+    links.push({ href: '/dashboard', label: 'Tableau de bord' });
+    links.push({ href: '/clients', label: 'Clients' });
+  }
+
+  if (staff.role === 'owner') {
+    links.push({ href: '/staff', label: 'Équipe' });
+    links.push({ href: '/preferences', label: 'Préférences' });
+  }
+
+  // V3.5: All staff can see messages
+  links.push({ href: '/messages', label: 'Messages', id: 'nav-messages' });
+
+  // Generate initials for avatar
+  const initials = (staff.display_name || 'U')
+    .split(' ')
+    .map(w => w[0])
+    .join('')
+    .substring(0, 2)
+    .toUpperCase();
+
+  // Build complete navbar inner HTML (desktop menu)
+  const linksHTML = links.map(l =>
+    `<a href="${l.href}" class="navbar-link${path === l.href ? ' active' : ''}"${l.id ? ` id="${l.id}"` : ''}>${l.label}</a>`
+  ).join('');
+
+  navbar.innerHTML = `
+    <div class="navbar-inner">
+      <a href="/credit" class="navbar-brand">
+        <span class="brand-mark">FIDDO</span>
+        <span class="brand-divider"></span>
+        <span class="brand-merchant">${merchant.business_name}</span>
+      </a>
+      <div class="navbar-menu">${linksHTML}</div>
+      <div class="navbar-user">
+        <span class="navbar-user-name">${staff.display_name}</span>
+        <div class="navbar-avatar" onclick="Auth.logout()" title="Déconnexion">${initials}</div>
+      </div>
+    </div>
+  `;
+
+  // ── Bottom Navigation (mobile) ──
+  buildBottomNav(staff, path);
+
+  // V3.5: Fetch unread badge
+  loadUnreadBadge();
+}
+
+// ─── SVG Icons for bottom nav ────────────────────────
+
+const NAV_ICONS = {
+  credit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>',
+  dashboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>',
+  clients: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+  preferences: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
+  messages: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+  staff: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>',
+  more: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+};
+
+function buildBottomNav(staff, path) {
+  // Remove existing bottom nav if any
+  const existing = document.querySelector('.bottom-nav');
+  if (existing) existing.remove();
+  const existingSheet = document.querySelector('.bnav-sheet');
+  if (existingSheet) existingSheet.remove();
+
+  // Define nav items per role
+  const mainItems = [];
+  const sheetItems = [];
+
+  mainItems.push({ href: '/credit', label: 'Créditer', icon: 'credit' });
+
+  if (['owner', 'manager'].includes(staff.role)) {
+    mainItems.push({ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' });
+    mainItems.push({ href: '/clients', label: 'Clients', icon: 'clients' });
+  }
+
+  // Messages always visible in main bar (for badge visibility)
+  mainItems.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'bnav-messages' });
+
+  if (staff.role === 'owner') {
+    // Owner: overflow préfs + equipe + logout
+    mainItems.push({ href: '#more', label: 'Plus', icon: 'more', isMore: true });
+
+    sheetItems.push({ href: '/preferences', label: 'Préférences', icon: 'preferences' });
+    sheetItems.push({ href: '/staff', label: 'Équipe', icon: 'staff' });
+    sheetItems.push({ href: '#logout', label: 'Déconnexion', icon: 'logout', isLogout: true, danger: true });
+  } else {
+    // Manager/Cashier: logout in sheet via "Plus"
+    mainItems.push({ href: '#more', label: 'Plus', icon: 'more', isMore: true });
+    sheetItems.push({ href: '#logout', label: 'Déconnexion', icon: 'logout', isLogout: true, danger: true });
+  }
+
+  // Build bottom nav HTML
+  const navHTML = mainItems.map(item => {
+    if (item.isMore) {
+      return `<a href="#" class="bnav-item" onclick="toggleBnavSheet(event)">${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+    }
+    const active = path === item.href ? ' active' : '';
+    const idAttr = item.id ? ` id="${item.id}"` : '';
+    return `<a href="${item.href}" class="bnav-item${active}"${idAttr}>${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+  }).join('');
+
+  const bottomNav = document.createElement('nav');
+  bottomNav.className = 'bottom-nav';
+  bottomNav.innerHTML = `<div class="bottom-nav-inner">${navHTML}</div>`;
+  document.body.appendChild(bottomNav);
+  document.body.classList.add('has-bnav');
+
+  // Build sheet if needed (owner)
+  if (sheetItems.length > 0) {
+    const sheetHTML = sheetItems.map(item => {
+      if (item.isLogout) {
+        return `<a href="#" class="bnav-sheet-item danger" onclick="event.preventDefault();Auth.logout();">${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+      }
+      const idAttr = item.id ? ` id="${item.id}"` : '';
+      return `<a href="${item.href}" class="bnav-sheet-item"${idAttr}>${NAV_ICONS[item.icon]}<span>${item.label}</span></a>`;
+    }).join('');
+
+    const sheet = document.createElement('div');
+    sheet.className = 'bnav-sheet';
+    sheet.id = 'bnav-sheet';
+    sheet.onclick = function(e) { if (e.target === this) closeBnavSheet(); };
+    sheet.innerHTML = `<div class="bnav-sheet-content"><div class="bnav-sheet-handle"></div>${sheetHTML}</div>`;
+    document.body.appendChild(sheet);
+  }
+}
+
+function toggleBnavSheet(e) {
+  e.preventDefault();
+  const sheet = document.getElementById('bnav-sheet');
+  if (sheet) sheet.classList.toggle('open');
+}
+function closeBnavSheet() {
+  const sheet = document.getElementById('bnav-sheet');
+  if (sheet) sheet.classList.remove('open');
+}
+
+
+// ─── Unread Messages Badge (V3.5) ───────────────────
+
+async function loadUnreadBadge() {
+  try {
+    const data = await API.messages.getUnreadCount();
+    if (data.unread > 0) {
+      // Desktop navbar badge
+      const navLink = document.getElementById('nav-messages');
+      if (navLink) {
+        navLink.innerHTML = `Messages <span class="navbar-badge">${data.unread}</span>`;
+      }
+      // Bottom nav badge
+      const bnavLink = document.getElementById('bnav-messages');
+      if (bnavLink) {
+        // Add badge to bottom nav item (check if not already there)
+        if (!bnavLink.querySelector('.bnav-badge')) {
+          const badge = document.createElement('span');
+          badge.className = 'bnav-badge';
+          badge.textContent = data.unread;
+          bnavLink.appendChild(badge);
+        }
       }
     }
-
-    // Get current or defaults
-    const current = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId) || DEFAULT_PREFS;
-
-    // Upsert
-    db.prepare(`
-      INSERT INTO merchant_preferences
-        (merchant_id, theme, language, timezone, reward_message,
-         notify_new_client, notify_reward_ready, notify_weekly_report,
-         logo_url, backup_frequency, credit_methods, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-      ON CONFLICT(merchant_id) DO UPDATE SET
-        theme = excluded.theme,
-        language = excluded.language,
-        timezone = excluded.timezone,
-        reward_message = excluded.reward_message,
-        notify_new_client = excluded.notify_new_client,
-        notify_reward_ready = excluded.notify_reward_ready,
-        notify_weekly_report = excluded.notify_weekly_report,
-        logo_url = excluded.logo_url,
-        backup_frequency = excluded.backup_frequency,
-        credit_methods = excluded.credit_methods,
-        updated_at = datetime('now')
-    `).run(
-      merchantId,
-      theme || current.theme,
-      language || current.language,
-      timezone || current.timezone,
-      reward_message !== undefined ? reward_message : current.reward_message,
-      notify_new_client !== undefined ? (notify_new_client ? 1 : 0) : current.notify_new_client,
-      notify_reward_ready !== undefined ? (notify_reward_ready ? 1 : 0) : current.notify_reward_ready,
-      notify_weekly_report !== undefined ? (notify_weekly_report ? 1 : 0) : current.notify_weekly_report,
-      logo_url !== undefined ? logo_url : current.logo_url,
-      backup_frequency || current.backup_frequency,
-      credit_methods ? (typeof credit_methods === 'string' ? credit_methods : JSON.stringify(credit_methods)) : (current.credit_methods || '{"email":true,"phone":true,"qr":true,"scan":true}'),
-    );
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'preferences_updated',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: { theme, language, backup_frequency },
-    });
-
-    // Return updated
-    const updated = db.prepare('SELECT * FROM merchant_preferences WHERE merchant_id = ?').get(merchantId);
-    res.json({ message: 'Préférences mises à jour', preferences: updated });
-  } catch (error) {
-    console.error('Erreur update preferences:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+  } catch (e) {
+    // Silent — badge is non-critical
   }
-});
+}
 
 
-// ═══════════════════════════════════════════════════════
-// PATCH /api/preferences/theme — Quick theme switch (any staff)
-// ═══════════════════════════════════════════════════════
+// ─── Init ────────────────────────────────────────────
 
-router.patch('/theme', (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { theme } = req.body;
+document.addEventListener('DOMContentLoaded', setupNavbar);
 
-    if (!theme || !VALID_THEMES.includes(theme)) {
-      return res.status(400).json({ error: `Thème invalide. Choix : ${VALID_THEMES.join(', ')}` });
-    }
+// ─── PWA Service Worker ──────────────────────────────
 
-    db.prepare(`
-      INSERT INTO merchant_preferences (merchant_id, theme, updated_at)
-      VALUES (?, ?, datetime('now'))
-      ON CONFLICT(merchant_id) DO UPDATE SET theme = excluded.theme, updated_at = datetime('now')
-    `).run(merchantId, theme);
-
-    res.json({ message: 'Thème mis à jour', theme });
-  } catch (error) {
-    console.error('Erreur theme:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/preferences/backup/export — Send backup by email (owner only)
-// ═══════════════════════════════════════════════════════
-
-router.post('/backup/export', requireRole('owner'), async (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const backup = exportMerchantData(merchantId);
-
-    // Mark backup time
-    db.prepare(`
-      INSERT INTO merchant_preferences (merchant_id, last_backup_at, updated_at)
-      VALUES (?, datetime('now'), datetime('now'))
-      ON CONFLICT(merchant_id) DO UPDATE SET last_backup_at = datetime('now'), updated_at = datetime('now')
-    `).run(merchantId);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'backup_exported',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: backup._stats,
-    });
-
-    const filename = `fiddo-backup-${backup._meta.business_name.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.json`;
-
-    const sent = await sendExportEmail(
-      req.staff.email,
-      backup._meta.business_name,
-      filename,
-      JSON.stringify(backup, null, 2),
-      'application/json'
-    );
-
-    if (sent) {
-      res.json({ success: true, message: `Backup envoyé à ${req.staff.email}` });
-    } else {
-      res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'email' });
-    }
-  } catch (error) {
-    console.error('Erreur export backup:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/preferences/backup/validate — Preview backup before import
-// ═══════════════════════════════════════════════════════
-
-router.post('/backup/validate', requireRole('owner'), (req, res) => {
-  try {
-    const data = req.body;
-
-    if (!data || typeof data !== 'object') {
-      return res.status(400).json({ error: 'Aucune donnée reçue' });
-    }
-
-    const result = validateBackup(data);
-    res.json(result);
-  } catch (error) {
-    console.error('Erreur validate backup:', error);
-    res.status(500).json({ error: 'Erreur lors de la validation' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/preferences/backup/import — Restore from backup (owner only)
-// ⚠️ DESTRUCTIVE: replaces all client/transaction data
-// ═══════════════════════════════════════════════════════
-
-router.post('/backup/import', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { data, confirmReplace } = req.body;
-
-    if (!data || typeof data !== 'object') {
-      return res.status(400).json({ error: 'Aucune donnée reçue' });
-    }
-
-    if (!confirmReplace) {
-      return res.status(400).json({ error: 'Confirmation requise (confirmReplace: true)' });
-    }
-
-    // Extra safety: validate first
-    const validation = validateBackup(data);
-    if (!validation.valid) {
-      return res.status(400).json({ error: 'Backup invalide', errors: validation.errors });
-    }
-
-    const result = importMerchantData(merchantId, data);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'backup_imported',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: {
-        ...result,
-        source_business: data._meta.business_name,
-        source_date: data._meta.exported_at,
-      },
-    });
-
-    res.json({
-      message: 'Données restaurées avec succès',
-      result,
-    });
-  } catch (error) {
-    console.error('Erreur import backup:', error);
-    res.status(500).json({ error: error.message || 'Erreur lors de l\'import' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/preferences/merchant-info — Get merchant business info
-// ═══════════════════════════════════════════════════════
-
-router.get('/merchant-info', requireRole('owner'), (req, res) => {
-  try {
-    const merchant = merchantQueries.findById.get(req.staff.merchant_id);
-    if (!merchant) return res.status(404).json({ error: 'Commerce non trouvé' });
-
-    const staff = staffQueries.findById.get(req.staff.id);
-
-    res.json({
-      businessName: merchant.business_name,
-      address: merchant.address,
-      vatNumber: merchant.vat_number,
-      email: merchant.email,
-      phone: merchant.phone,
-      ownerPhone: merchant.owner_phone,
-      ownerName: staff?.display_name || '',
-      ownerEmail: staff?.email || '',
-    });
-  } catch (error) {
-    console.error('Erreur get merchant-info:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/preferences/merchant-info — Update merchant business info (owner only)
-// Sends notification email to super admin
-// ═══════════════════════════════════════════════════════
-
-router.put('/merchant-info', requireRole('owner'), (req, res) => {
-  try {
-    const merchantId = req.staff.merchant_id;
-    const { businessName, address, vatNumber, email, phone, ownerPhone, ownerName } = req.body;
-
-    // Validate required fields
-    if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
-      return res.status(400).json({ error: 'Tous les champs sont requis' });
-    }
-
-    // Normalize & validate VAT
-    const normalizedVat = normalizeVAT(vatNumber);
-    if (!normalizedVat) {
-      return res.status(400).json({ error: 'Numéro de TVA invalide (format: BE0123456789)' });
-    }
-
-    // Check VAT uniqueness (if changed)
-    const current = merchantQueries.findById.get(merchantId);
-    if (!current) return res.status(404).json({ error: 'Commerce non trouvé' });
-
-    if (normalizedVat !== current.vat_number) {
-      const existing = db.prepare('SELECT id FROM merchants WHERE vat_number = ? AND id != ?').get(normalizedVat, merchantId);
-      if (existing) {
-        return res.status(400).json({ error: 'Ce numéro de TVA est déjà utilisé par un autre commerce' });
-      }
-    }
-
-    // Build change log for admin notification
-    const changes = [];
-    if (businessName.trim() !== current.business_name) changes.push({ field: 'Nom du commerce', old: current.business_name, new: businessName.trim() });
-    if (address.trim() !== current.address) changes.push({ field: 'Adresse', old: current.address, new: address.trim() });
-    if (normalizedVat !== current.vat_number) changes.push({ field: 'N° TVA', old: current.vat_number, new: normalizedVat });
-    if (email.trim().toLowerCase() !== current.email) changes.push({ field: 'Email commerce', old: current.email, new: email.trim().toLowerCase() });
-    if (phone.trim() !== current.phone) changes.push({ field: 'Téléphone', old: current.phone, new: phone.trim() });
-    if (ownerPhone.trim() !== current.owner_phone) changes.push({ field: 'Tél. propriétaire', old: current.owner_phone, new: ownerPhone.trim() });
-
-    if (changes.length === 0 && (!ownerName || ownerName.trim() === (staffQueries.findById.get(req.staff.id)?.display_name || ''))) {
-      return res.json({ message: 'Aucune modification détectée', changes: [] });
-    }
-
-    // Update merchant
-    db.prepare(`
-      UPDATE merchants
-      SET business_name = ?, address = ?, vat_number = ?,
-          email = ?, phone = ?, owner_phone = ?
-      WHERE id = ?
-    `).run(
-      businessName.trim(), address.trim(), normalizedVat,
-      email.trim().toLowerCase(), phone.trim(), ownerPhone.trim(),
-      merchantId
-    );
-
-    // Update owner display name if provided
-    if (ownerName && ownerName.trim()) {
-      const currentStaff = staffQueries.findById.get(req.staff.id);
-      if (currentStaff && ownerName.trim() !== currentStaff.display_name) {
-        changes.push({ field: 'Nom propriétaire', old: currentStaff.display_name, new: ownerName.trim() });
-        db.prepare('UPDATE staff_accounts SET display_name = ? WHERE id = ?').run(ownerName.trim(), req.staff.id);
-      }
-    }
-
-    // Audit
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId,
-      action: 'merchant_info_updated',
-      targetType: 'merchant',
-      targetId: merchantId,
-      details: { changes },
-    });
-
-    // 🔥 Notify Super Sayan God (all super admins)
-    if (changes.length > 0) {
-      const admins = db.prepare('SELECT email FROM super_admins').all();
-      admins.forEach(admin => {
-        sendMerchantInfoChangedEmail(
-          admin.email,
-          current.business_name,
-          businessName.trim(),
-          req.staff.email,
-          changes
-        );
-      });
-    }
-
-    // Update session data
-    const updated = merchantQueries.findById.get(merchantId);
-
-    res.json({
-      message: 'Informations mises à jour',
-      merchant: updated,
-      changes,
-    });
-  } catch (error) {
-    console.error('Erreur update merchant-info:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/preferences/password — Change own password
-// ═══════════════════════════════════════════════════════
-
-router.put('/password', async (req, res) => {
-  try {
-    const { currentPassword, newPassword } = req.body;
-
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: 'Mot de passe actuel et nouveau requis' });
-    }
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: 'Le nouveau mot de passe doit contenir au moins 6 caractères' });
-    }
-
-    const staff = staffQueries.findById.get(req.staff.id);
-    if (!staff) return res.status(404).json({ error: 'Compte non trouvé' });
-
-    const valid = await bcrypt.compare(currentPassword, staff.password);
-    if (!valid) {
-      return res.status(401).json({ error: 'Mot de passe actuel incorrect' });
-    }
-
-    const hashed = await bcrypt.hash(newPassword, 10);
-    staffQueries.updatePassword.run(hashed, req.staff.id);
-
-    logAudit({
-      ...auditCtx(req),
-      actorType: 'staff',
-      actorId: req.staff.id,
-      merchantId: req.staff.merchant_id,
-      action: 'password_changed',
-      targetType: 'staff',
-      targetId: req.staff.id,
-    });
-
-    // Fire-and-forget confirmation email
-    sendPasswordChangedEmail(staff.email, staff.display_name);
-
-    res.json({ message: 'Mot de passe modifié avec succès' });
-  } catch (error) {
-    console.error('Erreur changement mot de passe:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-module.exports = router;
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
