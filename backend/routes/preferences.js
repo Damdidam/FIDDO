@@ -4,7 +4,7 @@ const { db, merchantQueries, staffQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { exportMerchantData, validateBackup, importMerchantData } = require('../services/backup');
-const { sendMerchantInfoChangedEmail, sendPasswordChangedEmail } = require('../services/email');
+const { sendMerchantInfoChangedEmail, sendPasswordChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, normalizeVAT } = require('../services/normalizer');
 
 const router = express.Router();
@@ -175,10 +175,10 @@ router.patch('/theme', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/preferences/backup/export — Download full backup (owner only)
+// POST /api/preferences/backup/export — Send backup by email (owner only)
 // ═══════════════════════════════════════════════════════
 
-router.get('/backup/export', requireRole('owner'), (req, res) => {
+router.post('/backup/export', requireRole('owner'), async (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const backup = exportMerchantData(merchantId);
@@ -201,12 +201,21 @@ router.get('/backup/export', requireRole('owner'), (req, res) => {
       details: backup._stats,
     });
 
-    // Send as downloadable JSON
     const filename = `fiddo-backup-${backup._meta.business_name.replace(/[^a-zA-Z0-9]/g, '-')}-${new Date().toISOString().slice(0, 10)}.json`;
 
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-    res.send(JSON.stringify(backup, null, 2));
+    const sent = await sendExportEmail(
+      req.staff.email,
+      backup._meta.business_name,
+      filename,
+      JSON.stringify(backup, null, 2),
+      'application/json'
+    );
+
+    if (sent) {
+      res.json({ success: true, message: `Backup envoyé à ${req.staff.email}` });
+    } else {
+      res.status(500).json({ error: 'Erreur lors de l\'envoi de l\'email' });
+    }
   } catch (error) {
     console.error('Erreur export backup:', error);
     res.status(500).json({ error: 'Erreur lors de l\'export' });
