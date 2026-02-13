@@ -1,7 +1,7 @@
 {
   "name": "fiddo-v3",
   "version": "3.1.0",
-  "description": "FIDDO - Loyalty program for restaurants (multi-tenant)",
+  "description": "FIDDO - Loyalty program for businesses (multi-tenant)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
