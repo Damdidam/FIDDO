@@ -279,7 +279,7 @@
 
     // ─── Alert ───
     function showAlert(id, msg, type) {
-      document.getElementById(id).innerHTML = `<div class="adm-alert ${type}">${msg}</div>`;
+      document.getElementById(id).innerHTML = `<div class="adm-alert ${type}">${esc(msg)}</div>`;
     }
     function clearAlert(id) { document.getElementById(id).innerHTML = ''; }
 
@@ -307,7 +307,7 @@
         allMerchants = data.merchants;
         const container = document.getElementById('merchant-chips');
         container.innerHTML = allMerchants.map(m =>
-          `<div class="merch-chip" data-id="${m.id}" onclick="toggleMerchant(${m.id},this)">${m.business_name}</div>`
+          `<div class="merch-chip" data-id="${m.id}" onclick="toggleMerchant(${m.id},this)">${esc(m.business_name)}</div>`
         ).join('');
       } catch (e) { console.error(e); }
     }
