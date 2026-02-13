@@ -158,12 +158,13 @@ router.post('/credit', async (req, res) => {
       pinHash,
     });
 
+    const merchant = merchantQueries.findById.get(merchantId);
+
     if (!result.idempotent) {
       logAudit({ ...auditCtx(req), actorType: 'staff', actorId: staffId, merchantId, action: 'points_credited',
         targetType: 'merchant_client', targetId: result.merchantClient.id,
         details: { amount: parseFloat(amount), pointsDelta: result.transaction.points_delta, isNewClient: result.isNewClient } });
 
-      const merchant = merchantQueries.findById.get(merchantId);
       if (result.isNewClient && result.endUser.email)
         sendValidationEmail(result.endUser.email, result.endUser.validation_token, merchant.business_name);
       if (result.endUser.email && result.endUser.email_validated)
@@ -171,11 +172,15 @@ router.post('/credit', async (req, res) => {
           merchant.business_name, { points_for_reward: merchant.points_for_reward, reward_description: merchant.reward_description });
     }
 
+    const canRedeem = result.merchantClient.points_balance >= merchant.points_for_reward;
+
     res.json({
       message: result.isNewClient ? 'Nouveau client créé et points crédités' : 'Points crédités',
       client: { id: result.merchantClient.id, email: result.endUser.email, phone: result.endUser.phone,
         name: result.endUser.name, points_balance: result.merchantClient.points_balance,
-        total_spent: result.merchantClient.total_spent, visit_count: result.merchantClient.visit_count },
+        total_spent: result.merchantClient.total_spent, visit_count: result.merchantClient.visit_count,
+        can_redeem: canRedeem, reward_threshold: merchant.points_for_reward,
+        reward_description: result.merchantClient.custom_reward || merchant.reward_description },
       transaction: { amount: parseFloat(amount), points_delta: result.transaction.points_delta },
       isNewClient: result.isNewClient,
     });
