@@ -20,6 +20,7 @@ Le restaurateur crédite des points à chaque passage client. Quand le seuil est
 
 - **Crédit automatique** : saisie du montant dépensé, calcul automatique des points selon le ratio configuré (ex : 1 pt/€)
 - **Récompense** : déduction automatique quand le seuil est atteint, avec animation de célébration
+- **Récompense depuis le crédit** : après un crédit qui atteint le seuil, un bouton récompense apparaît directement dans l'overlay de succès (avec prompt PIN si identification par email/téléphone)
 - **Récompense personnalisée** : possibilité de définir une récompense custom par client (ex : "Café offert" pour un habitué)
 - **Ajustement manuel** : correction de points par le manager/propriétaire avec raison obligatoire
 - **Idempotence** : protection contre les double-crédits via clé d'idempotence unique par transaction
@@ -32,9 +33,22 @@ La page de crédit propose quatre onglets d'identification, chacun avec une icô
 
 **Téléphone** — Saisie par numéro avec normalisation E.164 automatique (+32 par défaut), autocomplete et lookup identique.
 
-**QR statique** — Un QR code permanent propre au commerce s'affiche en caisse. Le client le scanne avec son téléphone et s'identifie via un formulaire public (`fiddo.be/q/TOKEN`). Le staff voit le client apparaître dans une file d'attente en temps réel (polling 3s). Si un seul client est en file, il est auto-sélectionné et le formulaire est pré-rempli sans intervention du staff. Formulaire multilingue : FR, EN, NL, TR, ZH, AR.
+**QR statique** — Un QR code permanent propre au commerce s'affiche en caisse. Le client le scanne avec son téléphone et s'identifie via un formulaire public (`fiddo.be/q/TOKEN`). Le staff voit le client apparaître dans une file d'attente en temps réel (polling 3s). Si un seul client est en file, il est auto-sélectionné et le formulaire est pré-rempli sans intervention du staff. Formulaire multilingue : FR, NL, EN, DE, ES, AR.
 
 **Scan** — Le staff scanne le QR personnel du client avec la caméra du téléphone/tablette (lib html5-qrcode). Le client est identifié instantanément, le formulaire est pré-rempli, et la récompense peut être appliquée **sans code PIN** — le scan QR faisant office de preuve de présence.
+
+### Code PIN client
+
+Le code PIN (4 chiffres) protège les récompenses contre les abus. Trois chemins de création/modification :
+
+- **À l'inscription** : le formulaire public QR (`client-form.html`) propose un champ PIN optionnel, traduit dans les 6 langues. Pour les nouveaux clients, le hash est transmis via la queue d'identification. Pour les clients existants sans PIN, il est appliqué directement en base.
+- **Portail client** (`fiddo.be/me`) : section "Code PIN" dans le dashboard — création si absent, modification avec vérification du PIN actuel si existant.
+- **Par le marchand** (dernier recours) : bouton "🔑 PIN" dans la toolbar d'actions de la fiche client. Le client reçoit un email avec le nouveau PIN en clair dans un encadré visuel.
+
+Logique de vérification :
+- Identification **QR / Scan** → PIN ignoré (preuve de présence physique)
+- Identification **Email / Téléphone** → PIN requis pour valider une récompense
+- Client sans PIN → erreur explicite invitant à en définir un
 
 ### Détection de doublons
 
@@ -53,6 +67,7 @@ Espace personnel du client, accessible par **magic link email** (pas de mot de p
 - Le client entre son email → reçoit un lien valable 15 minutes
 - Clic sur le lien → JWT client valable 30 jours
 - **Dashboard** : liste de toutes ses cartes de fidélité (tous commerces), avec pour chaque carte : nom du merchant, thème couleur, solde, progression, description de la récompense, statut (disponible ou non)
+- **Code PIN** : création ou modification du PIN depuis le portail (vérification du PIN actuel si déjà défini)
 - **QR personnel** : affichage plein écran du QR unique du client, prêt à être montré au staff pour identification instantanée
 
 Le QR client est généré automatiquement à la création du compte (`end_users.qr_token`). Les clients existants sans token sont backfillés au démarrage du serveur.
@@ -85,9 +100,9 @@ URL du QR client : `fiddo.be/c/TOKEN` → redirige vers le portail.
 - **Liste complète** avec cards : points, visites, dernière visite, badges (actif/inactif, bloqué, email validé)
 - **Colonne Récompense** : affiche la récompense custom ou la récompense par défaut
 - **Recherche** par email, téléphone ou nom
-- **Fiche client détaillée** (modal) : hero header avec gradient, stats, reward card avec barre de progression, banner cliquable avec célébration animée (confettis + overlay), historique en timeline, toolbar d'actions
-- **Actions** : bloquer/débloquer, ajuster les points, récompense personnalisée, notes privées, renvoi email de validation, crédit rapide, suppression RGPD (soft-delete avec anonymisation), merge de doublons
-- **Export CSV** de la liste clients
+- **Fiche client détaillée** (modal) : hero header teal doux, stats, reward card avec barre de progression, banner cliquable avec célébration animée (confettis + overlay), historique en timeline, toolbar d'actions
+- **Actions** : créditer, modifier, ajuster, fusionner, bloquer/débloquer, PIN (prompt simple), supprimer — plus notes privées, récompense personnalisée, renvoi email de validation, suppression RGPD (soft-delete avec anonymisation), merge de doublons
+- **Export CSV** : envoyé par email au propriétaire (pièce jointe)
 
 ### Préférences
 
@@ -97,7 +112,7 @@ Page préférences avec 7 onglets :
 - **Notifications** : toggles pour nouveaux clients, récompenses disponibles, rapport hebdomadaire
 - **Mon commerce** : édition nom, adresse, TVA, email, téléphone — notification au super admin à chaque modification
 - **Mot de passe** : changement avec indicateur de force
-- **Sauvegarde** : export/import JSON complet avec drag-and-drop et preview avant import
+- **Sauvegarde** : export JSON envoyé par email / import avec drag-and-drop et preview avant import
 - **QR Code** : affichage du QR commerce, aperçu d'impression, téléchargement PDF (format A6 paysage) et impression directe
 
 ### Messagerie
@@ -133,7 +148,9 @@ Page préférences avec 7 onglets :
 - **Modification commerce** : notification au super admin
 - **Magic link client** : lien de connexion au portail client (15 min de validité)
 - **Changement de mot de passe** : email de confirmation au staff
-- **Changement de PIN** : notification au client
+- **Changement de PIN** : notification au client avec le nouveau PIN en clair (encadré visuel)
+- **Export CSV** : envoi de la liste clients en pièce jointe
+- **Export backup** : envoi du JSON de sauvegarde en pièce jointe
 - Tous les emails sont **fire-and-forget** : un échec SMTP ne bloque jamais l'opération métier
 - DNS configuré : SPF + DKIM (Brevo) + DMARC
 
@@ -142,18 +159,21 @@ Page préférences avec 7 onglets :
 - Authentification **JWT via cookies HTTP-only** (SameSite, Secure en production) pour le staff
 - Authentification **JWT Bearer** pour le portail client
 - **Protection brute force** : verrouillage après 5 tentatives pendant 15 minutes
-- **Rate limiting** : magic link (5 par IP par heure), PIN (5 tentatives par session)
+- **Rate limiting** : magic link (5 par IP par heure), PIN (5 tentatives par session), identifications QR (20 par IP par heure)
 - **Audit trail immutable** : chaque action est tracée (IP, user-agent, request ID corrélé)
 - **Normalisation stricte** : email lowercase, téléphone E.164 (+32 par défaut), TVA belge BE0XXXXXXXXX
 - Sessions différenciées : 8h caissier, 7 jours manager/propriétaire, 24h super admin, 30 jours portail client
 - Messages d'erreur structurés (codes erreur + hints UX) sans fuite d'information
 - Le `merchant_id` vient **toujours du JWT**, jamais du body — impossible de créditer pour un autre commerce
 - **Anti-énumération** : le login magic link retourne toujours "succès" même si l'email n'existe pas
+- **PIN bcrypt** : les codes PIN sont hashés en base, jamais stockés en clair
 
 ### Interface et UX
 
+- **PWA** : manifest avec orientation portrait verrouillée, service worker, installable sur iOS/Android
 - **Login split-screen** : brand panel animé (gradient, orbe lumineux, features list) + formulaire avec alertes
 - **Navbar unifiée** : logo FIDDO teal + barre verticale + nom du commerce en uppercase (identique au panel admin)
+- **Bottom nav mobile** : hauteur adaptée pour éviter le chevauchement avec la scrollbar iOS
 - **Design mobile-first** responsive (navbar collapse, grids adaptatifs)
 - **Icônes SVG monochromes** partout (pas d'emojis dans l'interface staff)
 - **Animations** : célébration récompense (confettis + backdrop), pulse reward banner, spinner chargement
@@ -191,10 +211,10 @@ backend/
 ├── package.json
 ├── routes/
 │   ├── auth.js                  # Login, register, settings, password, merchant-info
-│   ├── clients.js               # Credit, reward, adjust, lookup, near-duplicates, search, block, export
-│   ├── qr.js                    # QR statique merchant, client-lookup, pending queue
-│   ├── client-portal.js         # Magic link login, verify, cards, QR client
-│   ├── preferences.js           # Thèmes, notifications, backup export/import
+│   ├── clients.js               # Credit, reward, adjust, lookup, near-duplicates, search, block, PIN, export email
+│   ├── qr.js                    # QR statique merchant, client-lookup, pending queue, register avec PIN
+│   ├── client-portal.js         # Magic link login, verify, cards, QR client, PIN management
+│   ├── preferences.js           # Thèmes, notifications, backup export email/import
 │   ├── dashboard.js             # Stats dashboard
 │   ├── staff.js                 # Gestion équipe
 │   ├── messages.js              # Messagerie merchant
@@ -212,21 +232,21 @@ backend/
 ├── services/
 │   ├── points.js                # Logique métier (credit, redeem, adjust, qr_token auto)
 │   ├── normalizer.js            # Email, phone, TVA normalization
-│   ├── email.js                 # Templates email + magic link + transport Brevo
+│   ├── email.js                 # Templates email + magic link + export + PIN + transport Brevo
 │   ├── backup.js                # Export/import JSON backup
 │   └── backup-db.js             # Backup base de données
 
 frontend/
 ├── landing.html                 # Page d'accueil publique fiddo.be
 ├── index.html                   # Login split-screen / inscription commerce
-├── credit.html                  # Page caissier (crédit + 4 modes identification + scanner)
+├── credit.html                  # Page caissier (crédit + 4 modes identification + scanner + reward overlay)
 ├── clients.html                 # Liste clients + modal détail + historique
 ├── dashboard.html               # Tableau de bord (stats + activité)
 ├── staff.html                   # Gestion équipe (propriétaire)
 ├── preferences.html             # Préférences (7 onglets dont QR Code)
 ├── messages.html                # Messagerie
-├── client-form.html             # Formulaire public multilingue (scan QR commerce)
-├── me.html                      # Portail client (magic link + cartes + QR personnel)
+├── client-form.html             # Formulaire public multilingue + PIN (scan QR commerce)
+├── me.html                      # Portail client (magic link + cartes + QR personnel + PIN)
 ├── admin/
 │   ├── index.html               # Login super admin
 │   └── dashboard.html           # Panel admin (commerces, stats, santé, annonces)
@@ -325,13 +345,14 @@ PORT=3000
 |---------|-------|-------------|
 | POST | `/login` | Envoyer magic link par email |
 | POST | `/verify` | Valider magic link → JWT 30j |
-| GET | `/cards` | Toutes les cartes fidélité du client |
+| GET | `/cards` | Toutes les cartes fidélité du client (+ hasPin) |
 | GET | `/qr` | QR token du client |
+| POST | `/pin` | Créer ou modifier le code PIN client |
 
 ### Clients (`/api/clients`)
 | Méthode | Route | Rôle | Description |
 |---------|-------|------|-------------|
-| POST | `/credit` | Staff | Créditer des points |
+| POST | `/credit` | Staff | Créditer des points (accepte pinHash depuis QR) |
 | POST | `/reward` | Staff | Réclamer une récompense (PIN ou QR) |
 | POST | `/adjust` | Owner/Manager | Ajustement manuel |
 | GET | `/lookup` | Staff | Lookup rapide par email/phone |
@@ -339,10 +360,11 @@ PORT=3000
 | GET | `/` | Owner/Manager | Liste clients |
 | GET | `/search` | Owner/Manager | Recherche clients |
 | GET | `/search-global` | Staff | Recherche cross-merchant |
-| GET | `/export/csv` | Owner | Export CSV |
+| POST | `/export/csv` | Owner | Export CSV envoyé par email |
 | GET | `/:id` | Owner/Manager | Détails + historique |
 | POST | `/:id/block` | Owner/Manager | Bloquer |
 | POST | `/:id/unblock` | Owner/Manager | Débloquer |
+| POST | `/:id/pin` | Owner/Manager | Définir/modifier le code PIN (+ email au client) |
 | PUT | `/:id/custom-reward` | Owner/Manager | Récompense custom |
 | DELETE | `/:id/custom-reward` | Owner/Manager | Supprimer custom reward |
 | POST | `/:id/notes` | Owner/Manager | Notes privées |
@@ -356,10 +378,10 @@ PORT=3000
 | POST | `/generate` | Owner | Générer le QR token commerce (get-or-create) |
 | GET | `/token` | Staff | Obtenir le QR token (auto-génère si absent) |
 | GET | `/client-lookup/:token` | Staff | Lookup client par QR scan |
-| POST | `/register` | Public | Identification client via QR commerce |
+| POST | `/register` | Public | Identification client via QR commerce (+ PIN optionnel) |
 | GET | `/status/:identId` | Public | Vérifier statut d'une identification |
 | GET | `/pending` | Staff | File d'attente des identifications |
-| POST | `/consume/:identId` | Staff | Consommer une identification |
+| POST | `/consume/:identId` | Staff | Consommer une identification (retourne pinHash si nouveau) |
 
 ### Préférences (`/api/preferences`)
 | Méthode | Route | Description |
@@ -370,7 +392,7 @@ PORT=3000
 | GET | `/merchant-info` | Charger infos commerce |
 | PUT | `/merchant-info` | Modifier infos commerce |
 | PUT | `/password` | Changer mot de passe |
-| GET | `/backup/export` | Export JSON complet |
+| POST | `/backup/export` | Export JSON envoyé par email |
 | POST | `/backup/validate` | Valider un fichier backup |
 | POST | `/backup/import` | Importer un backup |
 
