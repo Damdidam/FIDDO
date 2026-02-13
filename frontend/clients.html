@@ -30,16 +30,19 @@
     .search-wrap input:focus { outline: none; border-color: var(--primary); }
     .search-wrap input::placeholder { color: #CBD5E1; }
     .toolbar-count { font-size: 0.68rem; color: #94A3B8; font-weight: 500; white-space: nowrap; }
-    .csv-btn { padding: 0.3rem 0.65rem; border: 1.5px solid #E2E8F0; border-radius: 16px; background: white; font-family: inherit; font-size: 0.72rem; font-weight: 500; color: #64748B; cursor: pointer; transition: all 0.12s; white-space: nowrap; }
-    .csv-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
 
     /* ═══ STAT CARDS ═══ */
-    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; margin-bottom: 1rem; }
-    .st { background: white; border-radius: 10px; padding: 0.7rem 0.6rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-    .st-val { font-size: 1.5rem; font-weight: 700; color: var(--primary); line-height: 1.15; letter-spacing: -0.5px; }
+    .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+    .st { background: white; border-radius: 8px; padding: 0.45rem 0.4rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+    .st-val { font-size: 1.15rem; font-weight: 700; color: var(--primary); line-height: 1.15; letter-spacing: -0.5px; }
     .st-val.green { color: #059669; }
     .st-val.amber { color: #D97706; }
-    .st-lbl { font-size: 0.62rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600; }
+    .st-lbl { font-size: 0.55rem; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.3px; margin-top: 0.1rem; font-weight: 600; }
+    .st.st-action { cursor: pointer; transition: all 0.15s; border: 1.5px solid #E2E8F0; }
+    .st.st-action:hover { border-color: var(--primary); }
+    .st.st-action .st-icon { color: #64748B; margin-bottom: 1px; }
+    .st.st-action .st-icon svg { width: 18px; height: 18px; }
+    .st.st-action:hover .st-icon { color: var(--primary); }
 
     /* ═══ TABLE ═══ */
     .cl-card { background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); overflow: hidden; }
@@ -81,7 +84,8 @@
     /* ═══ MODAL OVERLAY ═══ */
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.85); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center; }
     .modal-overlay.open { display: flex; }
-    .modal-box { background: white; border-radius: 12px; width: 90%; max-width: 580px; max-height: 88vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; }
+    .modal-box { background: white; border-radius: 12px; width: 90%; max-width: 580px; max-height: 88vh; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2); position: relative; display: flex; flex-direction: column; }
+    #modal-body { overflow-y: auto; flex: 1; }
 
     /* ═══ HERO HEADER ═══ */
     .hero { background: linear-gradient(135deg, #1E293B 0%, #334155 100%); padding: 1.25rem 1.2rem 2rem; color: white; border-radius: 12px 12px 0 0; position: relative; }
@@ -224,8 +228,8 @@
     @media (max-width: 768px) {
       .dash-wrap { padding: 0.4rem; }
       .pg-title { font-size: 0.95rem; }
-      .stats-row { gap: 0.4rem; }
-      .st-val { font-size: 1.3rem; }
+      .stats-row { gap: 0.3rem; grid-template-columns: repeat(4, 1fr); }
+      .st-val { font-size: 1.05rem; }
 
       /* Search — prevent iOS zoom */
       .search-wrap input { font-size: 1rem; padding: 0.5rem 0.6rem 0.5rem 2rem; }
@@ -234,9 +238,6 @@
       .col-hdr, .cl-row { grid-template-columns: 1fr 60px 45px 75px; gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem; }
       .cl-row { min-height: 52px; padding-top: 0.55rem; padding-bottom: 0.55rem; }
       .col-th-prog, .cl-prog-cell { display: none; }
-
-      /* Export & toolbar buttons */
-      .csv-btn { min-height: 36px; display: inline-flex; align-items: center; padding: 0.35rem 0.75rem; }
 
       /* Modal */
       .modal-box { width: 97%; max-height: 94vh; border-radius: 12px 12px 0 0; }
@@ -298,13 +299,16 @@
         <input type="text" id="search-input" placeholder="Rechercher par email, téléphone ou nom…">
       </div>
       <span class="toolbar-count" id="result-count"></span>
-      <button class="csv-btn" id="csv-btn" style="display:none" onclick="API.clients.exportCSV()">📥 CSV</button>
     </div>
 
-    <div class="stats-row">
+    <div class="stats-row" id="stats-row">
       <div class="st"><div class="st-val" id="s-total">–</div><div class="st-lbl">Clients</div></div>
       <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Actifs (30j)</div></div>
       <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses dispo</div></div>
+      <div class="st st-action" id="csv-card" style="display:none" onclick="API.clients.exportCSV()" title="Exporter les clients">
+        <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        <div class="st-lbl">Export CSV</div>
+      </div>
     </div>
 
     <div class="cl-card">
@@ -385,7 +389,10 @@
     let sortCol = 'name';
     let sortAsc = true;
 
-    if (isOwner) document.getElementById('csv-btn').style.display = '';
+    if (isOwner) {
+      document.getElementById('csv-card').style.display = '';
+      document.getElementById('stats-row').style.gridTemplateColumns = 'repeat(4, 1fr)';
+    }
 
     // ═══ HELPERS ═══
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
