@@ -241,8 +241,17 @@
       .float-stats { margin: -14px 0.5rem 0; }
       .float-st-val { font-size: 1rem; }
 
-      /* Action buttons — bigger */
-      .act-btn { padding: 6px 10px; font-size: 0.68rem; min-height: 34px; }
+      /* Action buttons — scrollable row on mobile */
+      .act-toolbar { 
+        flex-wrap: nowrap; 
+        overflow-x: auto; 
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding: 6px 0.5rem 10px;
+        gap: 5px;
+      }
+      .act-toolbar::-webkit-scrollbar { display: none; }
+      .act-btn { padding: 6px 10px; font-size: 0.68rem; min-height: 34px; flex-shrink: 0; }
     }
     @media (max-width: 480px) {
       .col-hdr, .cl-row { grid-template-columns: 1fr 55px 72px; gap: 0.15rem; }
@@ -600,8 +609,8 @@
           h += '</div>';
         }
 
-        // TRANSACTIONS (expandable, open)
-        h += '<div class="exp open" onclick="this.classList.toggle(\'open\')">';
+        // TRANSACTIONS (expandable, collapsed by default)
+        h += '<div class="exp" onclick="this.classList.toggle(\'open\')">';
         h += '<div class="exp-hdr"><span>📜 Historique <span style="font-size:0.64rem;color:#94A3B8;font-weight:400;margin-left:4px">' + txs.length + ' transaction' + (txs.length !== 1 ? 's' : '') + '</span></span><span class="exp-arrow">▶</span></div>';
         h += '<div class="exp-body" onclick="event.stopPropagation()">';
 
