@@ -228,7 +228,7 @@ function sendPasswordChangedEmail(staffEmail, displayName) {
 /**
  * Email de notification de changement de code PIN fidélité.
  */
-function sendPinChangedEmail(clientEmail, businessName, newPin) {
+function sendPinChangedEmail(clientEmail, businessName) {
   return sendMail({
     to: clientEmail,
     subject: `Votre code PIN a été modifié — ${businessName}`,
