@@ -32,14 +32,7 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.06);
       overflow: hidden; position: relative;
     }
-    .c-card-hdr {
-      padding: 0.7rem 1rem;
-      border-bottom: 1px solid #F1F5F9;
-      font-weight: 600; font-size: 0.88rem; color: #1E293B;
-      display: flex; align-items: center; gap: 0.45rem;
-    }
     .c-card-body { padding: 0.9rem 1rem 1rem; }
-
     /* ── Alert ── */
     .credit-page .alert {
       border-radius: 7px; font-size: 0.82rem;
@@ -152,7 +145,7 @@
     }
 
     /* ── Amount row + points counter ── */
-    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; align-items: end; }
     .pts-badge {
       display: inline-block; background: var(--gradient); color: white;
       padding: 1px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700;
@@ -250,11 +243,6 @@
     .qr-fullscreen-btn svg { width: 13px; height: 13px; }
 
     /* ── Cashier limit info ── */
-    .config-strip {
-      font-size: 0.7rem; color: #94A3B8; margin-bottom: 0.75rem;
-      padding: 0.3rem 0.5rem; background: #F8FAFC; border-radius: 5px;
-      border: 1px solid #F1F5F9;
-    }
 
     /* ── Duplicate warning ── */
     .dup-warning {
@@ -340,19 +328,8 @@
     <h1 class="pg-title">Créditer des points</h1>
 
     <div class="c-card">
-      <div class="c-card-hdr">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--primary)">
-          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M8 4.5v4M6 6.5l2 2 2-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Nouveau passage
-      </div>
-
       <div class="c-card-body">
         <div id="credit-alert"></div>
-
-        <!-- Config strip -->
-        <div class="config-strip" id="config-strip"></div>
 
         <form id="credit-form" autocomplete="off">
           <!-- Segment toggle -->
@@ -506,12 +483,6 @@
     let currentMode = 'email';
     let lastCreditKey = null; // anti-double-credit
     let lookupIsNew = false;  // true when current client is new (needs PIN)
-
-    // Config strip
-    document.getElementById('config-strip').textContent =
-      merchant.points_per_euro + ' pt/€ · Récompense à ' + merchant.points_for_reward + ' pts — ' +
-      merchant.reward_description +
-      (staff.role === 'cashier' ? ' · Max 200€' : '');
 
     // ═══════════════════════════════════════════════════════
     // LOOKUP — inline strip under the active field
