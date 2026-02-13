@@ -442,6 +442,82 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// GET /api/clients/near-duplicates — Fuzzy phone/email duplicate detection
+// ═══════════════════════════════════════════════════════
+
+router.get('/near-duplicates', (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const { email, phone } = req.query;
+    if (!email && !phone) return res.json({ matches: [] });
+
+    const matches = [];
+
+    // Phone: match on last 7 digits (catches typos, format differences)
+    if (phone) {
+      const e164 = normalizePhone(phone);
+      if (e164) {
+        const digits = e164.replace(/\D/g, '');
+        if (digits.length >= 7) {
+          const suffix = digits.slice(-7);
+          const phoneMatches = db.prepare(`
+            SELECT eu.id, eu.name, eu.email, eu.phone, eu.phone_e164,
+                   mc.points_balance, mc.visit_count
+            FROM end_users eu
+            LEFT JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = ?
+            WHERE eu.deleted_at IS NULL
+              AND eu.phone_e164 IS NOT NULL
+              AND eu.phone_e164 LIKE ?
+              AND eu.phone_e164 != ?
+            LIMIT 5
+          `).all(merchantId, '%' + suffix, e164);
+          phoneMatches.forEach(m => matches.push({ ...m, matchType: 'phone' }));
+        }
+      }
+    }
+
+    // Email: match on local part (before @)
+    if (email) {
+      const emailLower = normalizeEmail(email);
+      if (emailLower) {
+        const localPart = emailLower.split('@')[0];
+        if (localPart && localPart.length >= 3) {
+          const emailMatches = db.prepare(`
+            SELECT eu.id, eu.name, eu.email, eu.phone, eu.email_lower,
+                   mc.points_balance, mc.visit_count
+            FROM end_users eu
+            LEFT JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = ?
+            WHERE eu.deleted_at IS NULL
+              AND eu.email_lower IS NOT NULL
+              AND eu.email_lower LIKE ?
+              AND eu.email_lower != ?
+            LIMIT 5
+          `).all(merchantId, localPart + '%@%', emailLower);
+          emailMatches.forEach(m => {
+            if (!matches.find(x => x.id === m.id)) matches.push({ ...m, matchType: 'email' });
+          });
+        }
+      }
+    }
+
+    res.json({
+      matches: matches.map(m => ({
+        name: m.name,
+        email: m.email,
+        phone: m.phone,
+        pointsBalance: m.points_balance || 0,
+        visitCount: m.visit_count || 0,
+        matchType: m.matchType,
+      })),
+    });
+  } catch (error) {
+    console.error('Near-duplicates error:', error);
+    res.json({ matches: [] });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // STANDARD ENDPOINTS (lookup, list, search, export, detail, block)
 // ═══════════════════════════════════════════════════════
 
