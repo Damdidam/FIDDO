@@ -1,6 +1,7 @@
 const express = require('express');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
@@ -201,11 +202,49 @@ router.get('/cards', authenticateClient, (req, res) => {
         email: endUser.email,
         phone: endUser.phone,
         qrToken: endUser.qr_token,
+        hasPin: !!endUser.pin_hash,
       },
       cards: result,
     });
   } catch (error) {
     console.error('Cards error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/me/pin — Set or update client PIN
+// ═══════════════════════════════════════════════════════
+
+router.post('/pin', authenticateClient, async (req, res) => {
+  try {
+    const endUser = endUserQueries.findById.get(req.endUserId);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const { currentPin, newPin } = req.body;
+
+    // Validate new PIN
+    if (!newPin || !/^\d{4}$/.test(newPin)) {
+      return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
+    }
+
+    // If user already has a PIN, verify current one
+    if (endUser.pin_hash) {
+      if (!currentPin) {
+        return res.status(400).json({ error: 'Code PIN actuel requis' });
+      }
+      if (!bcrypt.compareSync(currentPin, endUser.pin_hash)) {
+        return res.status(403).json({ error: 'Code PIN actuel incorrect' });
+      }
+    }
+
+    const pinHash = await bcrypt.hash(newPin, 10);
+    endUserQueries.setPin.run(pinHash, endUser.id);
+
+    res.json({ ok: true, message: 'Code PIN mis à jour' });
+  } catch (error) {
+    console.error('PIN update error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
