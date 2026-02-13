@@ -256,6 +256,26 @@
       border: 1px solid #F1F5F9;
     }
 
+    /* ── Duplicate warning ── */
+    .dup-warning {
+      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 6px;
+      padding: 0.5rem 0.65rem; margin-top: 0.35rem; font-size: 0.72rem;
+      color: #92400E; line-height: 1.5; animation: fadeSlide 0.3s ease;
+    }
+    .dup-warning svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; flex-shrink: 0; }
+    .dup-warning-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+    .dup-match {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 4px 6px; background: rgba(245,158,11,0.08); border-radius: 4px;
+      margin-top: 3px; cursor: pointer; transition: background 0.15s;
+    }
+    .dup-match:hover { background: rgba(245,158,11,0.15); }
+    .dup-match-info { font-size: 0.7rem; }
+    .dup-match-name { font-weight: 600; color: #78350F; }
+    .dup-match-id { color: #92400E; }
+    .dup-match-use { font-size: 0.62rem; color: #B45309; font-weight: 600; white-space: nowrap; }
+    @keyframes fadeSlide { from { opacity: 0; transform: translateY(-4px); } }
+
     /* ═══════════════════════════════════════════════════════
        RESPONSIVE
        ═══════════════════════════════════════════════════════ */
@@ -375,6 +395,9 @@
             <div class="lookup-strip" id="lookup-scan"></div>
           </div>
 
+          <!-- Duplicate warning -->
+          <div id="dup-container"></div>
+
           <!-- Name -->
           <div class="form-group">
             <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
@@ -472,6 +495,7 @@
         el.className = 'lookup-strip show new-client';
         el.innerHTML = 'Nouveau client — sera créé au crédit.';
         showPinField(true);
+        checkNearDuplicates();
         return;
       }
       const c = data.client;
@@ -513,6 +537,7 @@
         el.classList.remove('show');
         el.innerHTML = '';
       });
+      document.getElementById('dup-container').innerHTML = '';
       lookupIsNew = false;
       showPinField(false);
     }
@@ -894,6 +919,74 @@
       } catch (e) {
         console.error('Consume error:', e);
       }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    // NEAR-DUPLICATE DETECTION
+    // ═══════════════════════════════════════════════════════
+
+    async function checkNearDuplicates() {
+      const container = document.getElementById('dup-container');
+      container.innerHTML = '';
+
+      const email = document.getElementById('client-email').value.trim();
+      const phone = document.getElementById('client-phone').value.trim();
+      if (!email && !phone) return;
+
+      try {
+        const params = new URLSearchParams();
+        if (email) params.set('email', email);
+        if (phone) params.set('phone', phone);
+
+        const data = await API.call('/clients/near-duplicates?' + params.toString());
+        if (!data.matches || data.matches.length === 0) return;
+
+        let html = '<div class="dup-warning">' +
+          '<div class="dup-warning-title">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+            'Client similaire trouvé' +
+          '</div>';
+
+        data.matches.forEach(m => {
+          const identifier = m.email || m.phone || '';
+          const useEmail = m.email || '';
+          const usePhone = m.phone || '';
+          html += '<div class="dup-match" onclick="useDuplicate(\'' +
+            useEmail.replace(/'/g, "\\'") + "', '" +
+            usePhone.replace(/'/g, "\\'") + "', '" +
+            (m.name || '').replace(/'/g, "\\'") + '\')">' +
+            '<div class="dup-match-info">' +
+              '<span class="dup-match-name">' + (m.name || 'Sans nom') + '</span> ' +
+              '<span class="dup-match-id">' + identifier + '</span>' +
+              (m.pointsBalance > 0 ? ' · ' + m.pointsBalance + ' pts' : '') +
+            '</div>' +
+            '<span class="dup-match-use">Utiliser</span>' +
+          '</div>';
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+      } catch (e) {
+        // Silent fail
+      }
+    }
+
+    function useDuplicate(email, phone, name) {
+      document.getElementById('dup-container').innerHTML = '';
+      if (email) {
+        switchMode('email');
+        document.getElementById('client-email').value = email;
+        document.getElementById('client-email').classList.add('has-value');
+      } else if (phone) {
+        switchMode('phone');
+        document.getElementById('client-phone').value = phone;
+        document.getElementById('client-phone').classList.add('has-value');
+      }
+      if (name) {
+        document.getElementById('client-name').value = name;
+        document.getElementById('client-name').classList.add('has-value');
+      }
+      setTimeout(triggerLookup, 200);
     }
 
     // ═══════════════════════════════════════════════════════
