@@ -210,6 +210,14 @@
       color: var(--primary-dark); padding: 2px 10px; border-radius: 12px;
       font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
     }
+    .success-reward {
+      display: none; margin-top: 1rem; padding: 0.65rem 1.25rem; 
+      background: #059669; color: white; border: none; border-radius: 8px;
+      font-family: inherit; font-size: 0.82rem; font-weight: 600;
+      cursor: pointer; transition: background 0.15s; width: 100%; max-width: 300px;
+    }
+    .success-reward:hover { background: #047857; }
+    .success-reward.show { display: block; }
     .success-btn {
       margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 7px;
       background: var(--gradient); color: white; font-family: inherit;
@@ -463,6 +471,7 @@
         <div class="success-pts" id="s-pts"></div>
         <div class="success-label">Crédités ✓</div>
         <div class="success-info" id="s-info"></div>
+        <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()">🎁 Appliquer la récompense</button>
         <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
       </div>
 
@@ -830,6 +839,17 @@
         if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
 
         document.getElementById('s-info').innerHTML = info;
+
+        // ── Reward button if eligible ──
+        const rewardBtn = document.getElementById('s-reward');
+        if (r.client.can_redeem) {
+          rewardBtn.textContent = '🎁 ' + r.client.reward_description + ' — Appliquer';
+          rewardBtn.dataset.clientId = r.client.id;
+          rewardBtn.classList.add('show');
+        } else {
+          rewardBtn.classList.remove('show');
+        }
+
         document.getElementById('success-overlay').classList.add('show');
 
       } catch (err) {
@@ -843,9 +863,42 @@
     // ═══════════════════════════════════════════════════════
     // RESET — only way back from success overlay
     // ═══════════════════════════════════════════════════════
+
+    async function redeemFromSuccess() {
+      const btn = document.getElementById('s-reward');
+      const mcId = parseInt(btn.dataset.clientId);
+      if (!mcId) return;
+      btn.disabled = true;
+      btn.textContent = 'Traitement…';
+      try {
+        const r = await API.clients.reward({
+          merchantClientId: mcId,
+          qrVerified: qrVerifiedFlag || undefined,
+        });
+        btn.textContent = '✓ Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
+        btn.style.background = '#047857';
+        btn.onclick = null;
+      } catch (e) {
+        btn.textContent = '❌ ' + e.message;
+        btn.style.background = '#DC2626';
+        setTimeout(() => {
+          btn.disabled = false;
+          btn.textContent = '🎁 Réessayer';
+          btn.style.background = '';
+        }, 2000);
+      }
+    }
+
     function resetForm() {
       // Hide overlay
       document.getElementById('success-overlay').classList.remove('show');
+
+      // Reset reward button
+      const rb = document.getElementById('s-reward');
+      rb.classList.remove('show');
+      rb.disabled = false;
+      rb.style.background = '';
+      rb.onclick = redeemFromSuccess;
 
       // Full form reset
       lastCreditKey = null;
