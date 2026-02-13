@@ -196,11 +196,37 @@
 
     /* ═══ RESPONSIVE ═══ */
     @media (max-width: 768px) {
-      .dash-wrap { padding: 0.5rem; }
+      .dash-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.95rem; }
       .pref-grid { grid-template-columns: 1fr; }
       .theme-grid { grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); }
-      .pref-tabs { gap: 0.25rem; }
-      .pref-tab { font-size: 0.68rem; padding: 0.28rem 0.55rem; }
+
+      /* Tabs — horizontal scroll, no wrap */
+      .pref-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        gap: 0.3rem;
+        padding-bottom: 4px;
+      }
+      .pref-tabs::-webkit-scrollbar { display: none; }
+      .pref-tab { min-height: 36px; font-size: 0.72rem; padding: 0.35rem 0.7rem; flex-shrink: 0; }
+
+      /* Form inputs — prevent iOS zoom */
+      .fg input, .fg select, .fg textarea { font-size: 1rem; }
+
+      /* Save button — bigger */
+      .save-btn { min-height: 40px; padding: 0.45rem 1.2rem; }
+
+      /* Toggle rows — bigger targets */
+      .toggle-row { padding: 0.7rem 0; min-height: 52px; }
+      .toggle-switch { width: 44px; height: 24px; }
+      .toggle-track::after { width: 20px; height: 20px; }
+      .toggle-switch input:checked + .toggle-track::after { transform: translateX(20px); }
+
+      /* QR download buttons */
+      .pref-card .save-btn { min-height: 44px; }
     }
   </style>
 </head>
