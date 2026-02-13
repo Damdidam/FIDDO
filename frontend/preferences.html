@@ -705,7 +705,7 @@
     // ═══ ALERT HELPER ═══
     function showAlert(id, msg, type) {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = '<div class="pref-alert pref-alert-' + type + '">' + msg + '</div>';
+      if (el) el.innerHTML = '<div class="pref-alert pref-alert-' + type + '">' + esc(msg) + '</div>';
     }
     function clearAlert(id) {
       const el = document.getElementById(id);
