@@ -45,13 +45,6 @@
     }
     .period-pill:hover:not(.active) { border-color: #CBD5E1; }
     .toolbar-spacer { flex: 1; }
-    .csv-btn {
-      padding: 0.3rem 0.65rem; border: 1.5px solid #E2E8F0;
-      border-radius: 16px; background: white; font-family: inherit;
-      font-size: 0.72rem; font-weight: 500; color: #64748B;
-      cursor: pointer; transition: all 0.12s; white-space: nowrap;
-    }
-    .csv-btn:hover { border-color: var(--primary); color: var(--primary-dark); }
 
     .period-dates {
       display: none; align-items: center; gap: 0.4rem; margin-left: 0.35rem;
@@ -68,23 +61,30 @@
     /* ═══ STAT CARDS ═══ */
 
     .stats-row {
-      display: grid; grid-template-columns: repeat(5, 1fr);
-      gap: 0.6rem; margin-bottom: 1rem;
+      display: grid; grid-template-columns: repeat(6, 1fr);
+      gap: 0.5rem; margin-bottom: 1rem;
     }
     .st {
-      background: white; border-radius: 10px; padding: 0.7rem 0.6rem;
+      background: white; border-radius: 8px; padding: 0.45rem 0.4rem;
       text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
     }
     .st-val {
-      font-size: 1.5rem; font-weight: 700; color: var(--primary);
+      font-size: 1.15rem; font-weight: 700; color: var(--primary);
       line-height: 1.15; letter-spacing: -0.5px;
     }
     .st-val.green { color: #059669; }
     .st-val.amber { color: #D97706; }
     .st-lbl {
-      font-size: 0.62rem; color: #94A3B8; text-transform: uppercase;
-      letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600;
+      font-size: 0.55rem; color: #94A3B8; text-transform: uppercase;
+      letter-spacing: 0.3px; margin-top: 0.1rem; font-weight: 600;
     }
+    .st.st-action {
+      cursor: pointer; transition: all 0.15s; border: 1.5px solid #E2E8F0;
+    }
+    .st.st-action:hover { border-color: var(--primary); }
+    .st.st-action .st-icon { color: #64748B; margin-bottom: 1px; }
+    .st.st-action .st-icon svg { width: 18px; height: 18px; }
+    .st.st-action:hover .st-icon { color: var(--primary); }
 
     /* ═══ ACTIVITY FEED ═══ */
 
@@ -218,7 +218,7 @@
       .dash-wrap { padding: 0.4rem; }
       .pg-title { font-size: 0.95rem; }
       .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
-      .st-val { font-size: 1.3rem; }
+      .st-val { font-size: 1.05rem; }
       .feed-body { max-height: 420px; }
 
       /* Period pills — bigger tap targets */
@@ -237,9 +237,9 @@
       .feed-tab { min-height: 36px; padding: 0.4rem 0.65rem; }
     }
     @media (max-width: 480px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.4rem; }
-      .st { padding: 0.55rem 0.5rem; }
-      .st-val { font-size: 1.2rem; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
+      .st { padding: 0.35rem 0.3rem; }
+      .st-val { font-size: 1rem; }
       .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.7rem; }
     }
   </style>
@@ -266,7 +266,6 @@
         <input type="date" id="date-to">
       </div>
       <span class="toolbar-spacer"></span>
-      <button class="csv-btn" onclick="API.clients.exportCSV()">📥 CSV</button>
     </div>
 
     <!-- ════════ STATS ════════ -->
@@ -276,6 +275,10 @@
       <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
       <div class="st"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
       <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
+      <div class="st st-action" onclick="API.clients.exportCSV()" title="Exporter les clients">
+        <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
+        <div class="st-lbl">Export CSV</div>
+      </div>
     </div>
 
     <!-- ════════ ACTIVITY FEED ════════ -->
