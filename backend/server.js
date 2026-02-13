@@ -15,7 +15,9 @@ const PORT = process.env.PORT || 3000;
 // ═══════════════════════════════════════════════════════
 
 app.use(cors({ origin: true, credentials: true }));
-app.use(express.json({ limit: '10mb' }));          // raised for PDF upload
+app.use(express.json({ limit: '1mb' }));
+// Raised limit only for backup import (large JSON payloads)
+app.use('/api/preferences/backup', express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(requestIdMiddleware);
 app.use('/api/staff', require('./routes/staff'));
