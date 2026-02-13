@@ -209,22 +209,32 @@
     /* ═══ RESPONSIVE ═══ */
 
     @media (max-width: 768px) {
-      .dash-wrap { padding: 0.5rem; }
-      .stats-row { grid-template-columns: repeat(3, 1fr); }
-      .feed-body { max-height: 420px; }
+      .dash-wrap { padding: 0.4rem; }
+      .pg-title { font-size: 0.95rem; }
+      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
       .st-val { font-size: 1.3rem; }
+      .feed-body { max-height: 420px; }
+
+      /* Period pills — bigger tap targets */
+      .period-pill { min-height: 36px; padding: 0.35rem 0.75rem; font-size: 0.75rem; }
+      .toolbar { gap: 0.3rem; flex-wrap: wrap; }
+
+      /* Transaction rows */
       .col-hdr, .tx-row {
         grid-template-columns: 52px 1fr 60px 60px;
         gap: 0.2rem; padding-left: 0.5rem; padding-right: 0.5rem;
       }
+      .tx-row { min-height: 44px; }
       .col-th-amount, .tx-amount-cell { display: none; }
-      .toolbar { gap: 0.25rem; }
+
+      /* Feed tabs */
+      .feed-tab { min-height: 36px; padding: 0.4rem 0.65rem; }
     }
     @media (max-width: 480px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.45rem; }
-      .st { padding: 0.55rem 0.4rem; }
-      .st-val { font-size: 1.15rem; }
-      .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.68rem; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); gap: 0.4rem; }
+      .st { padding: 0.55rem 0.5rem; }
+      .st-val { font-size: 1.2rem; }
+      .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.7rem; }
     }
   </style>
 </head>
