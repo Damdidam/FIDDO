@@ -462,9 +462,16 @@
         font-size: 0.88rem;
         margin-top: 0.4rem;
       }
+
+      /* Prevent iOS zoom + bigger tap targets */
+      .field-input { font-size: 1rem; padding: 0.85rem 1rem; }
+      .btn-submit { min-height: 48px; font-size: 1rem; padding: 0.9rem 1.5rem; }
     }
 
-    @media (max-width: 600px) { .field-row { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) {
+      .field-row { grid-template-columns: 1fr; }
+      .form-panel { padding: 1rem; }
+    }
 
     .form-panel::-webkit-scrollbar { width: 5px; }
     .form-panel::-webkit-scrollbar-track { background: transparent; }
