@@ -275,6 +275,11 @@ function initDatabase() {
     )
   `);
 
+  // ── Add credit_methods column if missing (V3.6) ──
+  try {
+    db.exec(`ALTER TABLE merchant_preferences ADD COLUMN credit_methods TEXT NOT NULL DEFAULT '{"email":true,"phone":true,"qr":true,"scan":true}'`);
+  } catch (_) { /* column already exists */ }
+
   // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
