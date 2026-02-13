@@ -321,6 +321,36 @@ function sendExportEmail(ownerEmail, businessName, filename, content, mimeType) 
   });
 }
 
+/**
+ * Notify merchant owner that a global merge affected one of their clients.
+ */
+function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sourceName, reason) {
+  const actionLabel = action === 'merge'
+    ? 'fusionnée avec un compte existant'
+    : 'transférée depuis un autre compte';
+
+  return sendMail({
+    to: ownerEmail,
+    subject: `[FIDDO] Fusion de comptes client — ${businessName}`,
+    html: `
+      <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
+        <h2 style="color: #0891B2;">🔀 Fusion de comptes client</h2>
+        <p>Bonjour,</p>
+        <p>L'équipe FIDDO a effectué une fusion de comptes client qui concerne <strong>${businessName}</strong>.</p>
+        <div style="background: #f8fafc; border-left: 3px solid #0891B2; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+          <p style="margin: 0;"><strong>Action :</strong> Fiche client ${actionLabel}</p>
+          <p style="margin: 0.5rem 0 0;"><strong>Client concerné :</strong> ${sourceName || '—'}</p>
+          <p style="margin: 0.5rem 0 0;"><strong>Motif :</strong> ${reason}</p>
+        </div>
+        <p>Les détails sont visibles dans l'historique des transactions du client (type : <em>merge</em>).</p>
+        <p style="color: #6b7280; font-size: 0.85rem;">Aucune action requise de votre part.</p>
+        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
+        <p style="font-size: 0.75rem; color: #94a3b8;">FIDDO — Programme de fidélité</p>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   sendMail,
   sendValidationEmail,
@@ -332,4 +362,5 @@ module.exports = {
   sendPinChangedEmail,
   sendMagicLinkEmail,
   sendExportEmail,
+  sendGlobalMergeNotificationEmail,
 };
