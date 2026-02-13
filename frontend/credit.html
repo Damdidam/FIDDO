@@ -823,7 +823,7 @@
           name: name || undefined, amount, notes: notes || undefined,
           idempotencyKey,
           pin: pinVal || undefined,
-          pinHash: qrPinHash || undefined,
+          pinToken: qrPinToken || undefined,
         });
 
         // ── Mark this credit as done (prevent re-submit) ──
@@ -919,7 +919,7 @@
       // Full form reset
       lastCreditKey = null;
       qrVerifiedFlag = false;
-      qrPinHash = null;
+      qrPinToken = null;
       document.querySelectorAll('#credit-form .form-control').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
       document.getElementById('pts-badge').textContent = '0 pts';
       hideLookup();
@@ -1023,7 +1023,7 @@
         const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
 
         // Store pre-hashed PIN from QR registration (for new clients)
-        if (d.pinHash) qrPinHash = d.pinHash;
+        if (d.pinToken) qrPinToken = d.pinToken;
 
         // Pre-fill the credit form
         if (d.email) {
@@ -1121,7 +1121,7 @@
 
     let html5QrScanner = null;
     let qrVerifiedFlag = false;  // true if client was identified by QR scan
-    let qrPinHash = null;        // pre-hashed PIN from QR registration
+    let qrPinToken = null;        // server-side PIN token from QR registration
     let scannerBusy = false;     // debounce scan results
 
     function startScanner() {
