@@ -265,7 +265,7 @@ router.post('/:id/merge', (req, res) => {
 
       // ── Global aliases (skip if already exists) ──
       if (source.email_lower) {
-        const exists = db.prepare("SELECT 1 FROM end_user_aliases WHERE end_user_id = ? AND type = 'email' AND value = ?").get(targetId, source.email_lower);
+        const exists = db.prepare("SELECT 1 FROM end_user_aliases WHERE end_user_id = ? AND alias_type = 'email' AND alias_value = ?").get(targetId, source.email_lower);
         if (!exists) {
           try { aliasQueries.create.run(targetId, 'email', source.email_lower); } catch (e) {
             console.warn(`Alias email skip (duplicate): ${source.email_lower}`, e.message);
@@ -273,7 +273,7 @@ router.post('/:id/merge', (req, res) => {
         }
       }
       if (source.phone_e164) {
-        const exists = db.prepare("SELECT 1 FROM end_user_aliases WHERE end_user_id = ? AND type = 'phone' AND value = ?").get(targetId, source.phone_e164);
+        const exists = db.prepare("SELECT 1 FROM end_user_aliases WHERE end_user_id = ? AND alias_type = 'phone' AND alias_value = ?").get(targetId, source.phone_e164);
         if (!exists) {
           try { aliasQueries.create.run(targetId, 'phone', source.phone_e164); } catch (e) {
             console.warn(`Alias phone skip (duplicate): ${source.phone_e164}`, e.message);
