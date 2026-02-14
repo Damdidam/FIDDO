@@ -40,6 +40,9 @@ app.use(requestIdMiddleware);
 // Static files — index: false so that GET / hits our landing route, not index.html
 app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
 
+// PWA mobile app — static assets (css/, js/, assets/)
+app.use('/app', express.static(path.join(__dirname, '../frontend/app'), { index: false }));
+
 // ═══════════════════════════════════════════════════════
 // INIT ADDITIONAL TABLES (V3.5)
 // ═══════════════════════════════════════════════════════
@@ -114,6 +117,10 @@ app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../fronten
 app.get('/me', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
 app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app-redirect.html')));
 app.get('/c/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
+
+// Mobile PWA app
+app.get('/app', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
+app.get('/app/*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
 
 // Super admin pages
 app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
