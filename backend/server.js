@@ -110,8 +110,8 @@ app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../fron
 // QR client-facing form
 app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
 
-// QR static deep link — /q/ABC123 → client portal
-app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
+// QR static deep link — /q/ABC123 → redirect to PWA with merchant token
+app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/qr-landing.html')));
 
 // Client portal (legacy me.html)
 app.get('/me', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
