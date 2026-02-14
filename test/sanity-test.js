@@ -82,6 +82,8 @@ let createdManagerId = null;
 let merchantQrToken = null;
 let qrIdentId = null;
 let createdBackupFilename = null;
+let createdAdminMsgId = null;
+let createdAdminInvoiceId = null;
 
 // ─── Results ─────────────────────────────────────────
 const results = { passed: 0, failed: 0, skipped: 0, errors: [] };
@@ -163,6 +165,7 @@ async function suiteFrontendPages() {
 async function suiteAdminAuth() {
   console.log('\n🔐 ADMIN AUTH');
   if (ADMIN_EMAIL === 'CHANGE_ME') { skip('Admin', 'Set env vars'); return false; }
+  await test('Needs setup', async () => { const r = await api('GET', '/api/admin/auth/needs-setup'); assertStatus(r, 200, 'ns'); assert(typeof r.data.needsSetup === 'boolean', 'Bad shape'); });
   await test('Login', async () => {
     const r = await api('POST', '/api/admin/auth/login', { body: { email: ADMIN_EMAIL, password: ADMIN_PASSWORD }, raw: true });
     assert(r.ok, `${r.status}`); adminCookies = extractCookies(r); assert(adminCookies.includes('admin_token'), 'No token');
@@ -526,6 +529,17 @@ async function suiteMerchantSide() {
   await test('Dashboard stats', async () => { assertStatus(await api('GET', '/api/dashboard/stats', { cookies: ownerCookies }), 200, 's'); });
   await test('Dashboard activity', async () => { assertStatus(await api('GET', '/api/dashboard/activity', { cookies: ownerCookies }), 200, 'a'); });
   await test('Announcements', async () => { assertStatus(await api('GET', '/api/announcements', { cookies: ownerCookies }), 200, 'a'); });
+  await test('Announcement mark read', async () => {
+    // Get first announcement ID
+    const list = await api('GET', '/api/announcements', { cookies: ownerCookies });
+    if (list.data.announcements?.length > 0) {
+      const annId = list.data.announcements[0].id;
+      assertStatus(await api('POST', `/api/announcements/${annId}/read`, { cookies: ownerCookies }), 200, 'ar');
+    } else { assert(true, 'No announcements to read'); }
+  });
+  await test('Feedback', async () => {
+    assertAnyStatus(await api('POST', '/api/announcements/feedback', { cookies: ownerCookies, body: { message: `Test feedback ${TEST_PREFIX}`, type: 'suggestion' } }), [200, 201], 'fb');
+  });
   await test('CSV export', async () => { const r = await api('POST', '/api/clients/export/csv', { cookies: ownerCookies }); assertStatus(r, 200, 'c'); assert(r.data.success, '!ok'); });
   await test('Logout', async () => { assertStatus(await api('POST', '/api/auth/logout', { cookies: ownerCookies }), 200, 'l'); });
 }
@@ -588,6 +602,7 @@ async function suiteAnnouncements() {
   console.log('\n📢 ANNOUNCEMENTS');
   await test('Create', async () => { const r = await api('POST', '/api/admin/announcements', { cookies: adminCookies, body: { title: `S ${TEST_PREFIX}`, content: 'T.', priority: 'info', targetType: 'all', merchantIds: [], expiresAt: null } }); assertStatus(r, 201, 'c'); createdAnnouncementId = r.data.id; });
   await test('List', async () => { assertStatus(await api('GET', '/api/admin/announcements', { cookies: adminCookies }), 200, 'l'); });
+  await test('Merchants (targeting)', async () => { assertStatus(await api('GET', '/api/admin/announcements/merchants', { cookies: adminCookies }), 200, 'mt'); });
   if (createdAnnouncementId) {
     await test('Update', async () => { assertStatus(await api('PUT', `/api/admin/announcements/${createdAnnouncementId}`, { cookies: adminCookies, body: { title: `U ${TEST_PREFIX}`, content: 'U.', priority: 'warning', targetType: 'all', merchantIds: [], expiresAt: null } }), 200, 'u'); });
     await test('Delete', async () => { assertStatus(await api('DELETE', `/api/admin/announcements/${createdAnnouncementId}`, { cookies: adminCookies }), 200, 'd'); createdAnnouncementId = null; });
@@ -643,7 +658,47 @@ async function suiteClientPortal() {
 }
 
 // ═══════════════════════════════════════════════════════
-// 22. STAFF ADVANCED (5) — staff delete requires backend FK fix
+// 22. ADMIN MESSAGES (6)
+// ═══════════════════════════════════════════════════════
+
+async function suiteAdminMessages() {
+  console.log('\n📨 ADMIN MESSAGES');
+  await test('List messages', async () => { assertStatus(await api('GET', '/api/admin/messages', { cookies: adminCookies }), 200, 'l'); });
+  await test('Create message', async () => {
+    const r = await api('POST', '/api/admin/messages', { cookies: adminCookies, body: {
+      title: `Msg ${TEST_PREFIX}`, body: 'Test message content.', priority: 'info',
+      targetType: 'all', merchantIds: [],
+    } });
+    assertAnyStatus(r, [200, 201], 'cm'); createdAdminMsgId = r.data.id || r.data.messageId;
+  });
+  if (createdAdminMsgId) {
+    await test('Delete message', async () => { assertStatus(await api('DELETE', `/api/admin/messages/${createdAdminMsgId}`, { cookies: adminCookies }), 200, 'dm'); createdAdminMsgId = null; });
+  }
+  await test('List invoices (admin)', async () => { assertStatus(await api('GET', '/api/admin/messages/invoices', { cookies: adminCookies }), 200, 'li'); });
+  await test('Create invoice', async () => {
+    if (!createdMerchantId) { skip('Create invoice', 'No merchant'); return; }
+    const r = await api('POST', '/api/admin/messages/invoices', { cookies: adminCookies, body: {
+      merchantId: createdMerchantId, title: `Facture ${TEST_PREFIX}`,
+      amount: 29.99, description: 'Test invoice',
+    } });
+    assertAnyStatus(r, [200, 201], 'ci'); createdAdminInvoiceId = r.data.id || r.data.invoiceId;
+  });
+  if (createdAdminInvoiceId) {
+    await test('Delete invoice', async () => { assertStatus(await api('DELETE', `/api/admin/messages/invoices/${createdAdminInvoiceId}`, { cookies: adminCookies }), 200, 'di'); createdAdminInvoiceId = null; });
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// 23. ADMIN LOGOUT (1)
+// ═══════════════════════════════════════════════════════
+
+async function suiteAdminLogout() {
+  console.log('\n🔓 ADMIN LOGOUT');
+  await test('Admin logout', async () => { assertStatus(await api('POST', '/api/admin/auth/logout', { cookies: adminCookies }), 200, 'al'); });
+}
+
+// ═══════════════════════════════════════════════════════
+// 24. STAFF ADVANCED (5)
 // ═══════════════════════════════════════════════════════
 
 async function suiteStaffAdvanced() {
@@ -684,6 +739,8 @@ async function cleanup() {
   if (SKIP_CLEANUP) { console.log('  ⏭️  Skipped'); return; }
 
   if (createdAnnouncementId) { try { await api('DELETE', `/api/admin/announcements/${createdAnnouncementId}`, { cookies: adminCookies }); console.log('  🗑️  Announcement'); } catch {} }
+  if (createdAdminMsgId) { try { await api('DELETE', `/api/admin/messages/${createdAdminMsgId}`, { cookies: adminCookies }); console.log('  🗑️  Admin message'); } catch {} }
+  if (createdAdminInvoiceId) { try { await api('DELETE', `/api/admin/messages/invoices/${createdAdminInvoiceId}`, { cookies: adminCookies }); console.log('  🗑️  Admin invoice'); } catch {} }
   if (createdBackupFilename) { try { await api('DELETE', `/api/admin/backups/${createdBackupFilename}`, { cookies: adminCookies }); console.log('  🗑️  Backup'); } catch {} }
 
   try { await reloginOwner(); } catch {}
@@ -738,7 +795,9 @@ async function main() {
   await suiteMerchantLifecycle();
   await suiteAdminBackups();
   await suiteClientPortal();
+  await suiteAdminMessages();
   await suiteStaffAdvanced();
+  await suiteAdminLogout();
   await cleanup();
   printReport();
 }
