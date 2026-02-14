@@ -643,7 +643,7 @@ const App = (() => {
     else toast(res.data?.error || 'Erreur');
   }
 
-  // ─── My QR — uses toDataURL + img (not canvas) ────
+  // ─── My QR — with fallback ────────────────
 
   async function showMyQR() {
     openModal('modal-qr');
@@ -653,19 +653,35 @@ const App = (() => {
     qrImg.alt = 'Chargement…';
 
     const res = await API.getQR();
-    if (!res.ok) { qrImg.alt = 'Erreur'; return; }
-
-    try {
-      const dataUrl = await QRCode.toDataURL(res.data.qrUrl, {
-        width: 220, margin: 2,
-        color: { dark: '#0f172a', light: '#ffffff' }
-      });
-      qrImg.src = dataUrl;
+    if (!res.ok) {
+      console.error('QR API error:', res.status, res.data);
+      // Fallback: generate QR from client email directly
+      const fallbackUrl = `https://www.fiddo.be/c/${client?.qrToken || 'unknown'}`;
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fallbackUrl)}`;
       qrImg.alt = 'Mon QR code';
-    } catch (e) {
-      console.error('QR generation error:', e);
-      qrImg.alt = 'Erreur génération QR';
+      return;
     }
+
+    const qrUrl = res.data.qrUrl;
+
+    // Method 1: Use qrcode lib if loaded
+    if (typeof QRCode !== 'undefined' && QRCode.toDataURL) {
+      try {
+        const dataUrl = await QRCode.toDataURL(qrUrl, {
+          width: 220, margin: 2,
+          color: { dark: '#0f172a', light: '#ffffff' }
+        });
+        qrImg.src = dataUrl;
+        qrImg.alt = 'Mon QR code';
+        return;
+      } catch (e) {
+        console.error('QRCode lib error:', e);
+      }
+    }
+
+    // Method 2: Fallback to external QR API
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrl)}`;
+    qrImg.alt = 'Mon QR code';
   }
 
   // ─── Scanner — auto-identify at merchant ──
