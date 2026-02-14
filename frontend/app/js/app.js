@@ -79,6 +79,16 @@ const App = (() => {
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
 
+    // Save merchant QR token if present (from /q/TOKEN redirect)
+    const merchantParam = params.get('merchant');
+    if (merchantParam) {
+      sessionStorage.setItem('fiddo_pending_merchant', merchantParam);
+      // Clean URL
+      const url = new URL(window.location);
+      url.searchParams.delete('merchant');
+      window.history.replaceState({}, '', url.pathname + url.search);
+    }
+
     // 1) Magic link verify token
     let verifyToken = params.get('token');
     if (!verifyToken && hash.startsWith('#verify=')) verifyToken = decodeURIComponent(hash.substring(8));
@@ -197,6 +207,41 @@ const App = (() => {
     buildFilterPills();
     loadProfile();
     loadNotifPrefs();
+
+    // Auto-register at merchant if we came from a QR scan
+    const pendingMerchant = sessionStorage.getItem('fiddo_pending_merchant');
+    if (pendingMerchant) {
+      sessionStorage.removeItem('fiddo_pending_merchant');
+      autoRegisterAtMerchant(pendingMerchant);
+    }
+  }
+
+  async function autoRegisterAtMerchant(merchantQrToken) {
+    toast('Identification en cours…');
+    try {
+      const res = await API.call('/api/qr/register', {
+        method: 'POST',
+        body: {
+          qrToken: merchantQrToken,
+          email: client?.email || '',
+          phone: client?.phone || '',
+          name: client?.name || '',
+        },
+        noAuth: true,
+      });
+
+      if (res.ok) {
+        const name = res.data.clientName || client?.name || '';
+        toast(`✓ ${name} identifié avec succès !`);
+        // Refresh cards to show the new/updated card
+        setTimeout(() => refreshCards(), 1500);
+      } else {
+        toast(res.data?.error || 'Erreur identification');
+      }
+    } catch (e) {
+      console.error('Auto-register error:', e);
+      toast('Erreur réseau');
+    }
   }
 
   // ─── Search & Filter ──────────────────────
