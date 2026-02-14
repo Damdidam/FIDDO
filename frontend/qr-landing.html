@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#3b82f6">
+  <title>FIDDO — Fidélité</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 40%,#3b82f6 100%);min-height:100vh;display:flex;justify-content:center;align-items:center;padding:24px}
+    .card{background:#fff;border-radius:24px;padding:44px 28px 36px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .logo{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#60a5fa);color:#fff;font-size:32px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 8px 24px rgba(59,130,246,.3)}
+    h1{font-size:22px;color:#0f172a;margin-bottom:6px;font-weight:800}
+    .merchant-name{font-size:16px;color:#3b82f6;font-weight:600;margin-bottom:16px}
+    p{color:#64748b;font-size:14px;line-height:1.6;margin-bottom:24px}
+    .spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#3b82f6;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 20px}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .btn{display:block;background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff;text-decoration:none;padding:16px 28px;border-radius:16px;font-weight:700;font-size:16px;box-shadow:0 4px 20px rgba(59,130,246,.25);transition:transform .15s;margin-bottom:12px}
+    .btn:active{transform:scale(.97)}
+    .stores{display:flex;gap:10px;justify-content:center;margin-top:16px}
+    .store-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:12px;background:#0f172a;color:#fff;text-decoration:none;font-size:12px;font-weight:600;transition:transform .15s}
+    .store-btn:active{transform:scale(.95)}
+    .store-btn svg{width:18px;height:18px;fill:#fff}
+    .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#94a3b8;font-size:12px}
+    .divider::before,.divider::after{content:'';flex:1;height:1px;background:#e2e8f0}
+    .link{display:block;color:#64748b;font-size:13px;padding:8px;text-decoration:none}
+  </style>
+  <script>
+    (function() {
+      // Extract merchant QR token from URL: /q/TOKEN
+      var parts = window.location.pathname.split('/');
+      var merchantToken = parts[parts.length - 1];
+      if (!merchantToken || merchantToken === 'q') return;
+
+      // Auto-redirect to PWA
+      var appUrl = '/app/?merchant=' + encodeURIComponent(merchantToken);
+
+      // If already in standalone PWA mode, redirect immediately
+      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+        window.location.replace(appUrl);
+        return;
+      }
+
+      // For browsers: redirect after brief delay (shows the page briefly)
+      setTimeout(function() {
+        window.location.href = appUrl;
+      }, 1500);
+
+      // Update buttons
+      document.addEventListener('DOMContentLoaded', function() {
+        var btn = document.getElementById('btn-open');
+        if (btn) btn.href = appUrl;
+      });
+    })();
+  </script>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">F</div>
+    <h1>Bienvenue !</h1>
+    <p>Scannez, cumulez des points et profitez de récompenses exclusives</p>
+    <div class="spinner"></div>
+    <a class="btn" id="btn-open" href="/app/">Ouvrir FIDDO</a>
+
+    <div class="divider">ou téléchargez l'app</div>
+
+    <div class="stores">
+      <a class="store-btn" href="https://apps.apple.com" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M18.71 19.5C17.88 20.74 17 21.95 15.66 21.97C14.32 22 13.89 21.18 12.37 21.18C10.84 21.18 10.37 21.95 9.1 22C7.79 22.05 6.8 20.68 5.96 19.47C4.25 16.56 2.93 11.3 4.7 7.72C5.57 5.94 7.36 4.86 9.28 4.84C10.56 4.81 11.78 5.72 12.58 5.72C13.38 5.72 14.88 4.62 16.42 4.82C17.07 4.84 18.94 5.09 20.13 6.82C20.04 6.88 17.88 8.16 17.91 10.81C17.95 14.01 20.68 15.05 20.71 15.06C20.69 15.12 20.24 16.68 19.18 18.27L18.71 19.5Z"/></svg>
+        App Store
+      </a>
+      <a class="store-btn" href="https://play.google.com" target="_blank">
+        <svg viewBox="0 0 24 24"><path d="M3.18 23.77L14.07 12.88L3.18.23C2.55.77 2.15 1.62 2.15 2.63V21.37C2.15 22.38 2.55 23.23 3.18 23.77ZM15.48 11.47L5.19.7L18.88 8.56L15.48 11.47ZM15.48 14.29L18.88 17.2L5.19 25.06L15.48 14.29ZM19.78 10.2L21.85 11.38C22.6 11.81 22.6 12.95 21.85 13.38L19.78 14.56L16.89 12.88L19.78 10.2Z"/></svg>
+        Google Play
+      </a>
+    </div>
+  </div>
+</body>
+</html>
