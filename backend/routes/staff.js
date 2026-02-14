@@ -272,8 +272,9 @@ router.delete('/:id', (req, res) => {
       return res.status(403).json({ error: 'Impossible de supprimer un propriétaire' });
     }
 
-    staffQueries.delete.run(staffId, req.staff.merchant_id);
-
+// Nullify staff_id in transactions before deleting (FK constraint)
+db.prepare('UPDATE transactions SET staff_id = NULL WHERE staff_id = ?').run(staffId);
+    
     logAudit({
       ...auditCtx(req),
       actorType: 'staff',
