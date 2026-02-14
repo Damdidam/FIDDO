@@ -412,7 +412,7 @@ async function suiteMessages() {
     assertStatus(r, 200, 'l');
     // Find an admin_message (not announcement) to mark read
     if (r.data.messages?.length > 0) {
-      const adminMsg = r.data.messages.find(m => m.source === 'admin_message' || m.msg_type);
+      const adminMsg = r.data.messages.find(m => m.source === 'admin_message');
       if (adminMsg) adminMsgId = adminMsg.id;
     }
   });
@@ -654,27 +654,23 @@ async function suiteStaffAdvanced() {
     await test('Change staff pwd', async () => { assertStatus(await api('PUT', `/api/staff/${createdCashierId}/password`, { cookies: ownerCookies, body: { password: 'NewC123!' } }), 200, 'cp'); });
     await test('Login new pwd', async () => {
       const r = await api('POST', '/api/auth/login', { body: { email: TEST_CASHIER.email, password: 'NewC123!' }, raw: true });
-      // May get 403 if account was toggled or session issue — accept both
-      assert(r.ok || r.status === 403, `Unexpected: ${r.status}`);
+      assert(r.ok, `Login failed: ${r.status}`);
     });
     await test('Delete cashier', async () => {
-      const r = await api('DELETE', `/api/staff/${createdCashierId}`, { cookies: ownerCookies });
-      assertAnyStatus(r, [200, 500], 'dc'); // 500 = FK constraint bug (transactions.staff_id)
-      if (r.status === 200) createdCashierId = null;
+      assertStatus(await api('DELETE', `/api/staff/${createdCashierId}`, { cookies: ownerCookies }), 200, 'dc');
+      createdCashierId = null;
     });
   }
   if (createdManagerId) {
     await test('Delete manager', async () => {
-      const r = await api('DELETE', `/api/staff/${createdManagerId}`, { cookies: ownerCookies });
-      assertAnyStatus(r, [200, 500], 'dm');
-      if (r.status === 200) createdManagerId = null;
+      assertStatus(await api('DELETE', `/api/staff/${createdManagerId}`, { cookies: ownerCookies }), 200, 'dm');
+      createdManagerId = null;
     });
   }
-  await test('Staff list after cleanup', async () => {
+  await test('Staff list = 1 (owner only)', async () => {
     const r = await api('GET', '/api/staff', { cookies: ownerCookies });
     assertStatus(r, 200, 'l');
-    // If deletes failed (FK bug), list will have 3; if they worked, 1
-    assert(r.data.staff.length >= 1, 'Empty');
+    assert(r.data.staff.length === 1, `Expected 1, got ${r.data.staff.length}`);
   });
 }
 
