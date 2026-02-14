@@ -375,8 +375,45 @@ initDatabase();
     CREATE INDEX IF NOT EXISTS ix_voucher_sender ON point_vouchers(sender_eu_id);
   `);
 
-  // Update transaction_type CHECK for existing tables (SQLite can't ALTER CHECK)
-  // New rows with gift_out/gift_in will work because we defined it in CREATE TABLE above
+  // Update transaction_type CHECK for existing tables
+  // SQLite can't ALTER CHECK constraints, so we must recreate the table
+  const hasOldCheck = db.prepare(`
+    SELECT sql FROM sqlite_master WHERE type='table' AND name='transactions'
+  `).get();
+
+  if (hasOldCheck && hasOldCheck.sql && !hasOldCheck.sql.includes('gift_out')) {
+    console.log('🔄 Migrating transactions table to support gift_out/gift_in...');
+    db.exec(`
+      ALTER TABLE transactions RENAME TO transactions_old;
+
+      CREATE TABLE transactions (
+        id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+        merchant_id        INTEGER NOT NULL REFERENCES merchants(id),
+        merchant_client_id INTEGER NOT NULL REFERENCES merchant_clients(id),
+        staff_id           INTEGER REFERENCES staff_accounts(id),
+        amount             REAL,
+        points_delta       INTEGER NOT NULL,
+        transaction_type   TEXT NOT NULL
+                           CHECK(transaction_type IN ('credit','reward','merge','adjustment','gift_out','gift_in')),
+        idempotency_key    TEXT,
+        source             TEXT,
+        notes              TEXT,
+        created_at         TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      INSERT INTO transactions SELECT * FROM transactions_old;
+      DROP TABLE transactions_old;
+    `);
+
+    // Recreate indexes that were on the old table
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS ix_tx_merchant_created ON transactions(merchant_id, created_at);
+      CREATE INDEX IF NOT EXISTS ix_tx_mc_created ON transactions(merchant_client_id, created_at);
+      CREATE UNIQUE INDEX IF NOT EXISTS ix_tx_idempotency ON transactions(idempotency_key);
+    `);
+
+    console.log('✅ Transactions table migrated');
+  }
 
   console.log('✅ Database V4 migration complete');
 })();
