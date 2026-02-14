@@ -678,13 +678,13 @@ async function suiteAdminMessages() {
   await test('Create invoice', async () => {
     if (!createdMerchantId) { skip('Create invoice', 'No merchant'); return; }
     const r = await api('POST', '/api/admin/messages/invoices', { cookies: adminCookies, body: {
-      merchantId: createdMerchantId, title: `Facture ${TEST_PREFIX}`,
-      amount: 29.99, description: 'Test invoice',
-      month: '2026-02',
+      merchantId: createdMerchantId, label: `Facture ${TEST_PREFIX}`,
+      amount: 29.99, month: '2026-02',
     } });
     assertAnyStatus(r, [200, 201], 'ci'); createdAdminInvoiceId = r.data.id || r.data.invoiceId;
   });
   if (createdAdminInvoiceId) {
+    await test('Patch invoice status', async () => { assertStatus(await api('PATCH', `/api/admin/messages/invoices/${createdAdminInvoiceId}/status`, { cookies: adminCookies, body: { status: 'paid' } }), 200, 'ps'); });
     await test('Delete invoice', async () => { assertStatus(await api('DELETE', `/api/admin/messages/invoices/${createdAdminInvoiceId}`, { cookies: adminCookies }), 200, 'di'); createdAdminInvoiceId = null; });
   }
 }
