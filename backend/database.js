@@ -281,6 +281,58 @@ function initDatabase() {
   } catch (_) { /* column already exists */ }
 
   // ───────────────────────────────────────────
+  // MIGRATIONS V4 — Mobile App
+  // ───────────────────────────────────────────
+
+  // ── Merchants: carte de visite (app mobile) ──
+  try { db.exec('ALTER TABLE merchants ADD COLUMN website_url TEXT'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN description TEXT'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN opening_hours TEXT'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN latitude REAL'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN longitude REAL'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN logo_url TEXT'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN instagram_url TEXT'); } catch (_) {}
+  try { db.exec('ALTER TABLE merchants ADD COLUMN facebook_url TEXT'); } catch (_) {}
+
+  // ── End Users: profil enrichi + notif prefs ──
+  try { db.exec('ALTER TABLE end_users ADD COLUMN date_of_birth TEXT'); } catch (_) {}
+  try { db.exec('ALTER TABLE end_users ADD COLUMN profile_completed INTEGER NOT NULL DEFAULT 0'); } catch (_) {}
+  try { db.exec('ALTER TABLE end_users ADD COLUMN notif_credit INTEGER NOT NULL DEFAULT 1'); } catch (_) {}
+  try { db.exec('ALTER TABLE end_users ADD COLUMN notif_reward INTEGER NOT NULL DEFAULT 1'); } catch (_) {}
+  try { db.exec('ALTER TABLE end_users ADD COLUMN notif_promo INTEGER NOT NULL DEFAULT 1'); } catch (_) {}
+  try { db.exec('ALTER TABLE end_users ADD COLUMN notif_birthday INTEGER NOT NULL DEFAULT 1'); } catch (_) {}
+
+  // ── Push tokens (Expo push notifications) ──
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS push_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      end_user_id INTEGER NOT NULL REFERENCES end_users(id),
+      token TEXT NOT NULL UNIQUE,
+      platform TEXT NOT NULL CHECK(platform IN ('ios','android')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS ix_push_tokens_user ON push_tokens(end_user_id)');
+
+  // ── Refresh tokens (persistent auth) ──
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS refresh_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      end_user_id INTEGER NOT NULL REFERENCES end_users(id),
+      token TEXT NOT NULL UNIQUE,
+      device_name TEXT,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      last_used_at TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+  db.exec('CREATE INDEX IF NOT EXISTS ix_refresh_tokens_user ON refresh_tokens(end_user_id)');
+  db.exec('CREATE INDEX IF NOT EXISTS ix_refresh_tokens_token ON refresh_tokens(token)');
+
+  console.log('✅ Database V4 (mobile) migrations applied');
+
+  // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
   db.exec(`
@@ -318,6 +370,7 @@ function initDatabase() {
   `);
 
   console.log('✅ Database V3.4 initialized');
+  console.log('✅ Database V4.0 (mobile app) ready');
 }
 
 // Init on require
@@ -453,6 +506,18 @@ const endUserQueries = {
   setMagicToken: db.prepare("UPDATE end_users SET magic_token = ?, magic_token_expires = ?, updated_at = datetime('now') WHERE id = ?"),
   findByMagicToken: db.prepare('SELECT * FROM end_users WHERE magic_token = ? AND deleted_at IS NULL'),
   clearMagicToken: db.prepare("UPDATE end_users SET magic_token = NULL, magic_token_expires = NULL, updated_at = datetime('now') WHERE id = ?"),
+
+  // V4 — Mobile app profile
+  updateProfile: db.prepare(`
+    UPDATE end_users
+    SET name = ?, phone = ?, phone_e164 = ?, date_of_birth = ?, profile_completed = 1, updated_at = datetime('now')
+    WHERE id = ?
+  `),
+  updateNotifPrefs: db.prepare(`
+    UPDATE end_users
+    SET notif_credit = ?, notif_reward = ?, notif_promo = ?, notif_birthday = ?, updated_at = datetime('now')
+    WHERE id = ?
+  `),
 };
 
 // ─── End User Aliases ────────────────────────────────
@@ -593,6 +658,41 @@ const mergeQueries = {
 };
 
 
+// ─── Push Tokens ─────────────────────────────────────
+
+const pushTokenQueries = {
+  upsert: db.prepare(`
+    INSERT INTO push_tokens (end_user_id, token, platform)
+    VALUES (?, ?, ?)
+    ON CONFLICT(token) DO UPDATE SET end_user_id = excluded.end_user_id, platform = excluded.platform, updated_at = datetime('now')
+  `),
+  deleteByToken: db.prepare('DELETE FROM push_tokens WHERE token = ?'),
+  deleteByUser: db.prepare('DELETE FROM push_tokens WHERE end_user_id = ?'),
+  getByUser: db.prepare('SELECT * FROM push_tokens WHERE end_user_id = ?'),
+  getByUsers: (userIds) => {
+    if (!userIds.length) return [];
+    const placeholders = userIds.map(() => '?').join(',');
+    return db.prepare(`SELECT * FROM push_tokens WHERE end_user_id IN (${placeholders})`).all(...userIds);
+  },
+};
+
+// ─── Refresh Tokens ──────────────────────────────────
+
+const refreshTokenQueries = {
+  create: db.prepare(`
+    INSERT INTO refresh_tokens (end_user_id, token, device_name, expires_at)
+    VALUES (?, ?, ?, ?)
+  `),
+  findByToken: db.prepare('SELECT * FROM refresh_tokens WHERE token = ?'),
+  updateLastUsed: db.prepare("UPDATE refresh_tokens SET last_used_at = datetime('now') WHERE id = ?"),
+  delete: db.prepare('DELETE FROM refresh_tokens WHERE id = ?'),
+  deleteByToken: db.prepare('DELETE FROM refresh_tokens WHERE token = ?'),
+  deleteByUser: db.prepare('DELETE FROM refresh_tokens WHERE end_user_id = ?'),
+  deleteExpired: db.prepare("DELETE FROM refresh_tokens WHERE expires_at < datetime('now')"),
+  getByUser: db.prepare('SELECT id, device_name, created_at, last_used_at FROM refresh_tokens WHERE end_user_id = ? ORDER BY last_used_at DESC'),
+};
+
+
 // ═══════════════════════════════════════════════════════
 // EXPORTS
 // ═══════════════════════════════════════════════════════
@@ -609,4 +709,6 @@ module.exports = {
   transactionQueries,
   auditQueries,
   mergeQueries,
+  pushTokenQueries,
+  refreshTokenQueries,
 };
