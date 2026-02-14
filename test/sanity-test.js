@@ -289,7 +289,7 @@ async function suiteClientFlow() {
     });
     assertStatus(r, 200, 'credit');
     assert(r.data.client, 'No client in response');
-    assert(r.data.client.points_earned > 0, 'No points earned');
+    assert(r.data.transaction && r.data.transaction.points_delta > 0, 'No points earned');
   });
 
   // Credit client 2
@@ -492,11 +492,9 @@ async function suiteMerchantSide() {
   });
 
   await test('Export CSV', async () => {
-    const resp = await fetch(`${BASE}/api/clients/export/csv`, {
-      headers: { Cookie: staffCookies },
-    });
-    assert(resp.ok, `CSV export failed: ${resp.status}`);
-    const ct = resp.headers.get('content-type');
+    const r = await api('GET', '/api/clients/export/csv', { cookies: staffCookies, raw: true });
+    assert(r.ok, `CSV export failed: ${r.status}`);
+    const ct = r.headers.get('content-type');
     assert(ct && ct.includes('csv'), `Not CSV content-type: ${ct}`);
   });
 }
