@@ -53,6 +53,21 @@ function resolvePinToken(token) {
   return entry.pinHash;
 }
 
+// Server-side QR verify tokens: proves client was identified by QR scan (bypass PIN for redeem)
+// Map<qrVerifyToken, { createdAt }>
+const qrVerifyTokens = new Map();
+const QR_VERIFY_TTL_MS = 30 * 60 * 1000; // 30 min
+
+/** Resolve a qrVerifyToken (one-time use) — returns true if valid */
+function resolveQrVerifyToken(token) {
+  if (!token) return false;
+  const entry = qrVerifyTokens.get(token);
+  if (!entry) return false;
+  qrVerifyTokens.delete(token);
+  if (Date.now() - entry.createdAt > QR_VERIFY_TTL_MS) return false;
+  return true;
+}
+
 // Cleanup every 2 minutes
 setInterval(() => {
   const now = Date.now();
@@ -87,6 +102,13 @@ setInterval(() => {
   for (const [key, data] of consumedPinHashes) {
     if (now - data.createdAt > PIN_TOKEN_TTL_MS) {
       consumedPinHashes.delete(key);
+    }
+  }
+
+  // Clean expired QR verify tokens
+  for (const [key, data] of qrVerifyTokens) {
+    if (now - data.createdAt > QR_VERIFY_TTL_MS) {
+      qrVerifyTokens.delete(key);
     }
   }
 }, 2 * 60 * 1000);
@@ -630,6 +652,10 @@ router.get('/client-lookup/:token', authenticateStaff, (req, res) => {
     // Check merchant_client relationship
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
 
+    // Generate a server-side verify token (not a boolean the client can forge)
+    const qrVerifyToken = crypto.randomBytes(16).toString('hex');
+    qrVerifyTokens.set(qrVerifyToken, { createdAt: Date.now() });
+
     res.json({
       endUserId: endUser.id,
       name: endUser.name,
@@ -638,7 +664,7 @@ router.get('/client-lookup/:token', authenticateStaff, (req, res) => {
       pointsBalance: mc?.points_balance || 0,
       visitCount: mc?.visit_count || 0,
       isNew: !mc,
-      qrVerified: true,  // flag: identified by QR scan → can bypass PIN for redeem
+      qrVerifyToken,  // secure token — frontend passes this back on redeem
     });
   } catch (error) {
     console.error('Client lookup error:', error);
@@ -805,3 +831,4 @@ router.get('/client-data', (req, res) => {
 
 module.exports = router;
 module.exports.resolvePinToken = resolvePinToken;
+module.exports.resolveQrVerifyToken = resolveQrVerifyToken;
