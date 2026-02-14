@@ -4,37 +4,27 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
-const { db, endUserQueries, merchantClientQueries, merchantQueries, pushTokenQueries, refreshTokenQueries } = require('../database');
-const { normalizeEmail, normalizePhone } = require('../services/normalizer');
+const { db, endUserQueries, merchantClientQueries, merchantQueries } = require('../database');
+const { normalizeEmail } = require('../services/normalizer');
 const { sendMagicLinkEmail } = require('../services/email');
-const {
-  generateAccessToken,
-  generateClientToken,
-  generateRefreshToken,
-  getRefreshTokenExpiresAt,
-  authenticateClient,
-} = require('../middleware/client-auth');
-
+const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
 
 // ═══════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════
 
-const MAGIC_LINK_TTL_MS = 5 * 60 * 1000; // 5 min
+const MAGIC_LINK_TTL_MS = 5 * 60 * 1000; // 5 min (reduced from 15 for security)
 
 // Rate limiting: Map<ip, { count, lastAttempt }>
 const loginAttempts = new Map();
+
+// Cleanup every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [key, data] of loginAttempts) {
     if (now - data.lastAttempt > 3600000) loginAttempts.delete(key);
   }
 }, 5 * 60 * 1000);
-
-// Cleanup expired refresh tokens every hour
-setInterval(() => {
-  try { refreshTokenQueries.deleteExpired.run(); } catch (_) {}
-}, 60 * 60 * 1000);
 
 
 // ═══════════════════════════════════════════════════════
@@ -73,16 +63,19 @@ router.post('/login', (req, res) => {
     const endUser = endUserQueries.findByEmailLower.get(emailLower);
 
     if (endUser && !endUser.is_blocked) {
+      // Generate magic token
       const magicToken = crypto.randomBytes(32).toString('base64url');
       const expires = new Date(Date.now() + MAGIC_LINK_TTL_MS).toISOString();
 
       endUserQueries.setMagicToken.run(magicToken, expires, endUser.id);
 
+      // Send email
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const magicUrl = `${baseUrl}/me/verify/${magicToken}`;
       sendMagicLinkEmail(endUser.email, magicUrl);
     }
 
+    // Always return success (no account enumeration)
     res.json({ ok: true, message: 'Si un compte existe, un email de connexion a été envoyé.' });
   } catch (error) {
     console.error('Magic link error:', error);
@@ -92,13 +85,12 @@ router.post('/login', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/me/verify — Validate magic link, return tokens
-// Returns both accessToken (24h) and refreshToken (90d)
+// POST /api/me/verify — Validate magic link, return JWT
 // ═══════════════════════════════════════════════════════
 
 router.post('/verify', (req, res) => {
   try {
-    const { token, deviceName } = req.body;
+    const { token } = req.body;
     if (!token) return res.status(400).json({ error: 'Token requis' });
 
     const endUser = endUserQueries.findByMagicToken.get(token);
@@ -106,6 +98,7 @@ router.post('/verify', (req, res) => {
       return res.status(401).json({ error: 'Lien invalide ou expiré' });
     }
 
+    // Check expiry
     if (endUser.magic_token_expires && new Date(endUser.magic_token_expires) < new Date()) {
       endUserQueries.clearMagicToken.run(endUser.id);
       return res.status(401).json({ error: 'Lien expiré. Demandez un nouveau lien.' });
@@ -118,34 +111,16 @@ router.post('/verify', (req, res) => {
     // Clear magic token (one-time use)
     endUserQueries.clearMagicToken.run(endUser.id);
 
-    // Generate access token (JWT, short-lived)
-    const accessToken = generateAccessToken(endUser.id, endUser.email, endUser.phone);
-
-    // Generate refresh token (opaque, long-lived, stored in DB)
-    const refreshToken = generateRefreshToken();
-    refreshTokenQueries.create.run(
-      endUser.id,
-      refreshToken,
-      deviceName || null,
-      getRefreshTokenExpiresAt()
-    );
-
-    // Also generate legacy token for backward compat with web portal
-    const clientToken = generateClientToken(endUser.id, endUser.email, endUser.phone);
+    // Generate JWT
+    const clientToken = generateClientToken(endUser.id);
 
     res.json({
-      // New mobile tokens
-      accessToken,
-      refreshToken,
-      // Legacy web portal token (backward compat)
       token: clientToken,
       client: {
         name: endUser.name,
         email: endUser.email,
         phone: endUser.phone,
         qrToken: endUser.qr_token,
-        dateOfBirth: endUser.date_of_birth || null,
-        profileCompleted: !!endUser.profile_completed,
       },
     });
   } catch (error) {
@@ -156,164 +131,7 @@ router.post('/verify', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/me/refresh — Exchange refresh token for new access token
-// ═══════════════════════════════════════════════════════
-
-router.post('/refresh', (req, res) => {
-  try {
-    const { refreshToken } = req.body;
-    if (!refreshToken) return res.status(400).json({ error: 'Refresh token requis' });
-
-    const stored = refreshTokenQueries.findByToken.get(refreshToken);
-    if (!stored) {
-      return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
-    }
-
-    // Check expiry
-    if (new Date(stored.expires_at) < new Date()) {
-      refreshTokenQueries.delete.run(stored.id);
-      return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
-    }
-
-    const endUser = endUserQueries.findById.get(stored.end_user_id);
-    if (!endUser || endUser.is_blocked) {
-      refreshTokenQueries.delete.run(stored.id);
-      return res.status(403).json({ error: 'Compte bloqué ou supprimé' });
-    }
-
-    // Update last_used
-    refreshTokenQueries.updateLastUsed.run(stored.id);
-
-    // Issue new access token
-    const accessToken = generateAccessToken(endUser.id, endUser.email, endUser.phone);
-
-    res.json({
-      accessToken,
-      client: {
-        name: endUser.name,
-        email: endUser.email,
-        phone: endUser.phone,
-        qrToken: endUser.qr_token,
-        dateOfBirth: endUser.date_of_birth || null,
-        profileCompleted: !!endUser.profile_completed,
-      },
-    });
-  } catch (error) {
-    console.error('Refresh error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// POST /api/me/logout — Invalidate refresh token + push token
-// ═══════════════════════════════════════════════════════
-
-router.post('/logout', authenticateClient, (req, res) => {
-  try {
-    const { refreshToken, pushToken } = req.body;
-
-    if (refreshToken) {
-      refreshTokenQueries.deleteByToken.run(refreshToken);
-    }
-    if (pushToken) {
-      pushTokenQueries.deleteByToken.run(pushToken);
-    }
-
-    res.json({ ok: true, message: 'Déconnecté' });
-  } catch (error) {
-    console.error('Logout error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// PUT /api/me/profile — Update client profile (name, phone, DOB)
-// ═══════════════════════════════════════════════════════
-
-router.put('/profile', authenticateClient, (req, res) => {
-  try {
-    const endUser = endUserQueries.findById.get(req.endUserId);
-    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-    if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
-
-    const { name, phone, dateOfBirth } = req.body;
-
-    // Validate name
-    const newName = name ? name.trim().substring(0, 100) : endUser.name;
-
-    // Validate phone
-    let newPhone = endUser.phone;
-    let newPhoneE164 = endUser.phone_e164;
-    if (phone !== undefined) {
-      if (phone) {
-        newPhoneE164 = normalizePhone(phone);
-        if (!newPhoneE164) return res.status(400).json({ error: 'Numéro de téléphone invalide' });
-        // Check uniqueness
-        if (newPhoneE164 !== endUser.phone_e164) {
-          const existing = endUserQueries.findByPhoneE164.get(newPhoneE164);
-          if (existing && existing.id !== endUser.id) {
-            return res.status(400).json({ error: 'Ce numéro est déjà utilisé' });
-          }
-        }
-        newPhone = phone.trim();
-      } else {
-        newPhone = null;
-        newPhoneE164 = null;
-      }
-    }
-
-    // Validate date of birth
-    let newDob = endUser.date_of_birth;
-    if (dateOfBirth !== undefined) {
-      if (dateOfBirth) {
-        // Validate format YYYY-MM-DD
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
-          return res.status(400).json({ error: 'Format date invalide (AAAA-MM-JJ)' });
-        }
-        const dob = new Date(dateOfBirth);
-        if (isNaN(dob.getTime())) return res.status(400).json({ error: 'Date invalide' });
-
-        // Age validation: >13 years, <120 years
-        const age = (Date.now() - dob.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
-        if (age < 13) return res.status(400).json({ error: 'Vous devez avoir au moins 13 ans' });
-        if (age > 120) return res.status(400).json({ error: 'Date de naissance invalide' });
-
-        newDob = dateOfBirth;
-      } else {
-        newDob = null;
-      }
-    }
-
-    // Ensure at least email OR phone
-    if (!endUser.email_lower && !newPhoneE164) {
-      return res.status(400).json({ error: 'Au moins un email ou téléphone requis' });
-    }
-
-    endUserQueries.updateProfile.run(newName, newPhone, newPhoneE164, newDob, endUser.id);
-
-    const updated = endUserQueries.findById.get(endUser.id);
-    res.json({
-      ok: true,
-      message: 'Profil mis à jour',
-      client: {
-        name: updated.name,
-        email: updated.email,
-        phone: updated.phone,
-        dateOfBirth: updated.date_of_birth,
-        profileCompleted: !!updated.profile_completed,
-      },
-    });
-  } catch (error) {
-    console.error('Profile update error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/me/cards — List all loyalty cards
+// GET /api/me/cards — List all loyalty cards for this client
 // ═══════════════════════════════════════════════════════
 
 router.get('/cards', authenticateClient, (req, res) => {
@@ -322,37 +140,37 @@ router.get('/cards', authenticateClient, (req, res) => {
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
+    // Get all merchant_client relationships
     const cards = db.prepare(`
       SELECT mc.merchant_id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.last_visit, mc.is_blocked, mc.custom_reward,
-             m.business_name, m.points_per_euro, m.points_for_reward, m.reward_description,
-             m.status, m.address, m.phone, m.email
+             m.business_name, m.points_per_euro, m.points_for_reward,
+             m.reward_description, m.status, m.business_type, m.allow_gifts
       FROM merchant_clients mc
       JOIN merchants m ON mc.merchant_id = m.id
       WHERE mc.end_user_id = ? AND m.status = 'active'
       ORDER BY mc.last_visit DESC
     `).all(endUser.id);
 
-    const getTheme = db.prepare('SELECT theme, logo_url FROM merchant_preferences WHERE merchant_id = ?');
+    // Get theme for each merchant
+    const getTheme = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?');
 
-    const result = cards.map(c => {
-      const prefs = getTheme.get(c.merchant_id);
-      return {
-        merchantId: c.merchant_id,
-        merchantName: c.business_name,
-        theme: prefs?.theme || 'teal',
-        logoUrl: prefs?.logo_url || null,
-        pointsBalance: c.points_balance,
-        totalSpent: c.total_spent,
-        visitCount: c.visit_count,
-        lastVisit: c.last_visit,
-        pointsPerEuro: c.points_per_euro,
-        pointsForReward: c.points_for_reward,
-        rewardDescription: c.custom_reward || c.reward_description,
-        canRedeem: c.points_balance >= c.points_for_reward,
-        progress: Math.min((c.points_balance / c.points_for_reward) * 100, 100),
-      };
-    });
+    const result = cards.map(c => ({
+      merchantId: c.merchant_id,
+      merchantName: c.business_name,
+      theme: getTheme.get(c.merchant_id)?.theme || 'teal',
+      businessType: c.business_type || 'horeca',
+      allowGifts: !!c.allow_gifts,
+      pointsBalance: c.points_balance,
+      totalSpent: c.total_spent,
+      visitCount: c.visit_count,
+      lastVisit: c.last_visit,
+      pointsPerEuro: c.points_per_euro,
+      pointsForReward: c.points_for_reward,
+      rewardDescription: c.custom_reward || c.reward_description,
+      canRedeem: c.points_balance >= c.points_for_reward,
+      progress: Math.min((c.points_balance / c.points_for_reward) * 100, 100),
+    }));
 
     res.json({
       client: {
@@ -361,8 +179,6 @@ router.get('/cards', authenticateClient, (req, res) => {
         phone: endUser.phone,
         qrToken: endUser.qr_token,
         hasPin: !!endUser.pin_hash,
-        dateOfBirth: endUser.date_of_birth || null,
-        profileCompleted: !!endUser.profile_completed,
       },
       cards: result,
     });
@@ -374,7 +190,7 @@ router.get('/cards', authenticateClient, (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/me/cards/:merchantId — Card detail + merchant business card
+// GET /api/me/cards/:merchantId — Card detail
 // ═══════════════════════════════════════════════════════
 
 router.get('/cards/:merchantId', authenticateClient, (req, res) => {
@@ -384,21 +200,24 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
     if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
     const merchantId = parseInt(req.params.merchantId);
-    const merchant = merchantQueries.findById.get(merchantId);
-    if (!merchant || merchant.status !== 'active') {
-      return res.status(404).json({ error: 'Commerce non trouvé' });
-    }
 
-    const mc = merchantClientQueries.find.get(merchantId, endUser.id);
+    const mc = db.prepare(`
+      SELECT mc.*, m.business_name, m.points_per_euro, m.points_for_reward,
+             m.reward_description, m.address, m.phone, m.email,
+             m.business_type, m.website_url, m.instagram_url, m.facebook_url,
+             m.opening_hours, m.latitude, m.longitude, m.description, m.allow_gifts
+      FROM merchant_clients mc
+      JOIN merchants m ON mc.merchant_id = m.id
+      WHERE mc.merchant_id = ? AND mc.end_user_id = ? AND m.status = 'active'
+    `).get(merchantId, endUser.id);
+
     if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
 
-    const prefs = db.prepare('SELECT theme, logo_url FROM merchant_preferences WHERE merchant_id = ?').get(merchantId);
+    const theme = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?')
+      .get(merchantId)?.theme || 'teal';
 
-    // Parse opening_hours JSON safely
     let openingHours = null;
-    if (merchant.opening_hours) {
-      try { openingHours = JSON.parse(merchant.opening_hours); } catch (_) {}
-    }
+    try { openingHours = mc.opening_hours ? JSON.parse(mc.opening_hours) : null; } catch {}
 
     res.json({
       card: {
@@ -406,29 +225,29 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
         totalSpent: mc.total_spent,
         visitCount: mc.visit_count,
         lastVisit: mc.last_visit,
-        firstVisit: mc.first_visit,
-        pointsPerEuro: merchant.points_per_euro,
-        pointsForReward: merchant.points_for_reward,
-        rewardDescription: mc.custom_reward || merchant.reward_description,
-        canRedeem: mc.points_balance >= merchant.points_for_reward,
-        progress: Math.min((mc.points_balance / merchant.points_for_reward) * 100, 100),
-        pointsUntilReward: Math.max(merchant.points_for_reward - mc.points_balance, 0),
+        pointsPerEuro: mc.points_per_euro,
+        pointsForReward: mc.points_for_reward,
+        rewardDescription: mc.custom_reward || mc.reward_description,
+        canRedeem: mc.points_balance >= mc.points_for_reward,
+        pointsUntilReward: Math.max(mc.points_for_reward - mc.points_balance, 0),
+        progress: Math.min((mc.points_balance / mc.points_for_reward) * 100, 100),
       },
       merchant: {
-        id: merchant.id,
-        name: merchant.business_name,
-        address: merchant.address,
-        phone: merchant.phone,
-        email: merchant.email,
-        websiteUrl: merchant.website_url || null,
-        description: merchant.description || null,
+        id: merchantId,
+        name: mc.business_name,
+        theme,
+        businessType: mc.business_type || 'horeca',
+        address: mc.address,
+        phone: mc.phone,
+        email: mc.email,
+        websiteUrl: mc.website_url,
+        instagramUrl: mc.instagram_url,
+        facebookUrl: mc.facebook_url,
         openingHours,
-        latitude: merchant.latitude || null,
-        longitude: merchant.longitude || null,
-        logoUrl: merchant.logo_url || prefs?.logo_url || null,
-        instagramUrl: merchant.instagram_url || null,
-        facebookUrl: merchant.facebook_url || null,
-        theme: prefs?.theme || 'teal',
+        latitude: mc.latitude,
+        longitude: mc.longitude,
+        description: mc.description,
+        allowGifts: !!mc.allow_gifts,
       },
     });
   } catch (error) {
@@ -439,7 +258,7 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/me/cards/:merchantId/transactions — Transaction history
+// GET /api/me/cards/:merchantId/transactions — History
 // ═══════════════════════════════════════════════════════
 
 router.get('/cards/:merchantId/transactions', authenticateClient, (req, res) => {
@@ -448,39 +267,38 @@ router.get('/cards/:merchantId/transactions', authenticateClient, (req, res) => 
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
     const merchantId = parseInt(req.params.merchantId);
+    const limit = Math.min(parseInt(req.query.limit) || 30, 100);
+    const offset = parseInt(req.query.offset) || 0;
+
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
     if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
 
-    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
-    const offset = parseInt(req.query.offset) || 0;
+    const total = db.prepare('SELECT COUNT(*) as c FROM transactions WHERE merchant_client_id = ?').get(mc.id).c;
 
     const transactions = db.prepare(`
       SELECT t.id, t.amount, t.points_delta, t.transaction_type, t.notes, t.created_at,
-             sa.display_name as staff_name
+             s.display_name as staff_name
       FROM transactions t
-      LEFT JOIN staff_accounts sa ON t.staff_id = sa.id
+      LEFT JOIN staff_accounts s ON t.staff_id = s.id
       WHERE t.merchant_client_id = ?
       ORDER BY t.created_at DESC
       LIMIT ? OFFSET ?
     `).all(mc.id, limit, offset);
 
-    const total = db.prepare('SELECT COUNT(*) as c FROM transactions WHERE merchant_client_id = ?').get(mc.id).c;
-
     res.json({
+      total,
       transactions: transactions.map(t => ({
         id: t.id,
+        type: t.transaction_type,
         amount: t.amount,
         pointsDelta: t.points_delta,
-        type: t.transaction_type,
         notes: t.notes,
-        staffName: t.staff_name || null,
+        staffName: t.staff_name,
         createdAt: t.created_at,
       })),
-      total,
-      hasMore: offset + transactions.length < total,
     });
   } catch (error) {
-    console.error('Transactions error:', error);
+    console.error('History error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -498,12 +316,16 @@ router.post('/pin', authenticateClient, async (req, res) => {
 
     const { currentPin, newPin } = req.body;
 
+    // Validate new PIN
     if (!newPin || !/^\d{4}$/.test(newPin)) {
       return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
     }
 
+    // If user already has a PIN, verify current one
     if (endUser.pin_hash) {
-      if (!currentPin) return res.status(400).json({ error: 'Code PIN actuel requis' });
+      if (!currentPin) {
+        return res.status(400).json({ error: 'Code PIN actuel requis' });
+      }
       if (!bcrypt.compareSync(currentPin, endUser.pin_hash)) {
         return res.status(403).json({ error: 'Code PIN actuel incorrect' });
       }
@@ -521,6 +343,39 @@ router.post('/pin', authenticateClient, async (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// PUT /api/me/email — Update email address
+// ═══════════════════════════════════════════════════════
+
+router.put('/email', authenticateClient, async (req, res) => {
+  try {
+    const endUser = endUserQueries.findById.get(req.endUserId);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const { newEmail } = req.body;
+    if (!newEmail || !newEmail.includes('@')) {
+      return res.status(400).json({ error: 'Email invalide' });
+    }
+
+    const emailLower = newEmail.trim().toLowerCase();
+
+    const existing = endUserQueries.findByEmailLower.get(emailLower);
+    if (existing && existing.id !== endUser.id) {
+      return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+    }
+
+    db.prepare(`
+      UPDATE end_users SET email = ?, email_lower = ?, updated_at = datetime('now') WHERE id = ?
+    `).run(newEmail.trim(), emailLower, endUser.id);
+
+    res.json({ ok: true, email: newEmail.trim() });
+  } catch (error) {
+    console.error('Email update error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // GET /api/me/qr — Get client QR token (for display)
 // ═══════════════════════════════════════════════════════
 
@@ -530,9 +385,10 @@ router.get('/qr', authenticateClient, (req, res) => {
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
+    // Generate qr_token if missing (legacy users)
     let qrToken = endUser.qr_token;
     if (!qrToken) {
-      qrToken = crypto.randomBytes(8).toString('base64url');
+      qrToken = require('crypto').randomBytes(8).toString('base64url');
       endUserQueries.setQrToken.run(qrToken, endUser.id);
     }
 
@@ -550,103 +406,170 @@ router.get('/qr', authenticateClient, (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/me/push-token — Register Expo push token
+// POST /api/me/cards/:merchantId/gift — Create gift voucher
+// Debits ALL points from sender, creates a shareable link
 // ═══════════════════════════════════════════════════════
 
-router.post('/push-token', authenticateClient, (req, res) => {
+router.post('/cards/:merchantId/gift', authenticateClient, (req, res) => {
   try {
-    const { token, platform } = req.body;
+    const endUser = endUserQueries.findById.get(req.endUserId);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
-    if (!token) return res.status(400).json({ error: 'Token requis' });
-    if (!['ios', 'android'].includes(platform)) {
-      return res.status(400).json({ error: 'Platform invalide (ios ou android)' });
+    const merchantId = parseInt(req.params.merchantId);
+
+    // Check merchant allows gifts
+    const merchant = merchantQueries.findById.get(merchantId);
+    if (!merchant || merchant.status !== 'active') {
+      return res.status(404).json({ error: 'Commerce non trouvé' });
+    }
+    if (!merchant.allow_gifts) {
+      return res.status(400).json({ error: 'Ce commerce n\'autorise pas les transferts de points' });
     }
 
-    pushTokenQueries.upsert.run(req.endUserId, token, platform);
+    // Check sender has points
+    const mc = merchantClientQueries.find.get(merchantId, endUser.id);
+    if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
+    if (mc.points_balance <= 0) {
+      return res.status(400).json({ error: 'Aucun point à offrir' });
+    }
 
-    res.json({ ok: true, message: 'Push token enregistré' });
-  } catch (error) {
-    console.error('Push token error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
+    const points = mc.points_balance;
+    const token = crypto.randomBytes(16).toString('base64url');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+    // Transaction: debit sender + create voucher
+    const trx = db.transaction(() => {
+      // Debit sender
+      db.prepare('UPDATE merchant_clients SET points_balance = 0, updated_at = datetime(\'now\') WHERE id = ?')
+        .run(mc.id);
 
-// ═══════════════════════════════════════════════════════
-// DELETE /api/me/push-token — Remove push token
-// ═══════════════════════════════════════════════════════
+      // Record transaction
+      db.prepare(`
+        INSERT INTO transactions (merchant_id, merchant_client_id, staff_id, amount, points_delta, transaction_type, notes, created_at)
+        VALUES (?, ?, NULL, NULL, ?, 'gift_out', ?, datetime('now'))
+      `).run(merchantId, mc.id, -points, `Cadeau de ${points} pts — voucher ${token.substring(0, 8)}`);
 
-router.delete('/push-token', authenticateClient, (req, res) => {
-  try {
-    const { token } = req.body;
-    if (!token) return res.status(400).json({ error: 'Token requis' });
-
-    pushTokenQueries.deleteByToken.run(token);
-
-    res.json({ ok: true, message: 'Push token supprimé' });
-  } catch (error) {
-    console.error('Push token delete error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
-
-
-// ═══════════════════════════════════════════════════════
-// GET /api/me/notifications/preferences — Get notification prefs
-// ═══════════════════════════════════════════════════════
-
-router.get('/notifications/preferences', authenticateClient, (req, res) => {
-  try {
-    const endUser = endUserQueries.findById.get(req.endUserId);
-    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-
-    res.json({
-      notifCredit: !!endUser.notif_credit,
-      notifReward: !!endUser.notif_reward,
-      notifPromo: !!endUser.notif_promo,
-      notifBirthday: !!endUser.notif_birthday,
+      // Create voucher
+      db.prepare(`
+        INSERT INTO point_vouchers (token, merchant_id, sender_mc_id, sender_eu_id, points, status, expires_at)
+        VALUES (?, ?, ?, ?, ?, 'pending', ?)
+      `).run(token, merchantId, mc.id, endUser.id, points, expiresAt);
     });
-  } catch (error) {
-    console.error('Notif prefs error:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-});
 
+    trx();
 
-// ═══════════════════════════════════════════════════════
-// PUT /api/me/notifications/preferences — Update notification prefs
-// ═══════════════════════════════════════════════════════
-
-router.put('/notifications/preferences', authenticateClient, (req, res) => {
-  try {
-    const endUser = endUserQueries.findById.get(req.endUserId);
-    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
-
-    const {
-      notifCredit = endUser.notif_credit,
-      notifReward = endUser.notif_reward,
-      notifPromo = endUser.notif_promo,
-      notifBirthday = endUser.notif_birthday,
-    } = req.body;
-
-    endUserQueries.updateNotifPrefs.run(
-      notifCredit ? 1 : 0,
-      notifReward ? 1 : 0,
-      notifPromo ? 1 : 0,
-      notifBirthday ? 1 : 0,
-      endUser.id
-    );
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const giftUrl = `${baseUrl}/app?gift=${token}`;
 
     res.json({
       ok: true,
-      message: 'Préférences mises à jour',
-      notifCredit: !!notifCredit,
-      notifReward: !!notifReward,
-      notifPromo: !!notifPromo,
-      notifBirthday: !!notifBirthday,
+      token,
+      points,
+      giftUrl,
+      expiresAt,
     });
   } catch (error) {
-    console.error('Notif prefs update error:', error);
+    console.error('Gift create error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/me/gift/:token — Get gift voucher info (public-ish)
+// ═══════════════════════════════════════════════════════
+
+router.get('/gift/:token', (req, res) => {
+  try {
+    const voucher = db.prepare(`
+      SELECT pv.*, m.business_name
+      FROM point_vouchers pv
+      JOIN merchants m ON pv.merchant_id = m.id
+      WHERE pv.token = ?
+    `).get(req.params.token);
+
+    if (!voucher) return res.status(404).json({ error: 'Lien cadeau introuvable' });
+    if (voucher.status === 'claimed') return res.status(400).json({ error: 'Ce cadeau a déjà été récupéré' });
+    if (voucher.status === 'expired' || new Date(voucher.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Ce lien cadeau a expiré' });
+    }
+    if (voucher.status === 'cancelled') return res.status(400).json({ error: 'Ce cadeau a été annulé' });
+
+    res.json({
+      points: voucher.points,
+      merchantName: voucher.business_name,
+      merchantId: voucher.merchant_id,
+      expiresAt: voucher.expires_at,
+    });
+  } catch (error) {
+    console.error('Gift info error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// POST /api/me/gift/:token/claim — Claim gift voucher
+// Credits points to the authenticated user
+// ═══════════════════════════════════════════════════════
+
+router.post('/gift/:token/claim', authenticateClient, (req, res) => {
+  try {
+    const endUser = endUserQueries.findById.get(req.endUserId);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
+
+    const voucher = db.prepare('SELECT * FROM point_vouchers WHERE token = ?').get(req.params.token);
+    if (!voucher) return res.status(404).json({ error: 'Lien cadeau introuvable' });
+    if (voucher.status !== 'pending') return res.status(400).json({ error: 'Ce cadeau a déjà été utilisé' });
+    if (new Date(voucher.expires_at) < new Date()) {
+      return res.status(400).json({ error: 'Ce lien cadeau a expiré' });
+    }
+
+    // Prevent self-claim
+    if (voucher.sender_eu_id === endUser.id) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas récupérer votre propre cadeau' });
+    }
+
+    // Check claimer has a card at this merchant — auto-create if not
+    let mc = merchantClientQueries.find.get(voucher.merchant_id, endUser.id);
+    if (!mc) {
+      db.prepare('INSERT INTO merchant_clients (merchant_id, end_user_id) VALUES (?, ?)').run(voucher.merchant_id, endUser.id);
+      mc = merchantClientQueries.find.get(voucher.merchant_id, endUser.id);
+    }
+
+    const trx = db.transaction(() => {
+      // Credit claimer
+      db.prepare(`
+        UPDATE merchant_clients
+        SET points_balance = points_balance + ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).run(voucher.points, mc.id);
+
+      // Record transaction
+      db.prepare(`
+        INSERT INTO transactions (merchant_id, merchant_client_id, staff_id, amount, points_delta, transaction_type, notes, created_at)
+        VALUES (?, ?, NULL, NULL, ?, 'gift_in', ?, datetime('now'))
+      `).run(voucher.merchant_id, mc.id, voucher.points, `Cadeau reçu — voucher ${voucher.token.substring(0, 8)}`);
+
+      // Mark voucher claimed
+      db.prepare(`
+        UPDATE point_vouchers
+        SET status = 'claimed', claimer_mc_id = ?, claimer_eu_id = ?, claimed_at = datetime('now')
+        WHERE id = ?
+      `).run(mc.id, endUser.id, voucher.id);
+    });
+
+    trx();
+
+    res.json({
+      ok: true,
+      points: voucher.points,
+      merchantId: voucher.merchant_id,
+    });
+  } catch (error) {
+    console.error('Gift claim error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
