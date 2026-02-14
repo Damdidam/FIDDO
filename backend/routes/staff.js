@@ -225,6 +225,7 @@ router.put('/:id/password', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
+    db.prepare('UPDATE transactions SET staff_id = NULL WHERE staff_id = ?').run(staffId);
     staffQueries.updatePassword.run(hashed, staffId);
 
     // Reset failed login count in case account was locked
