@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO API Client — V4 (single-token, matches backend)
+   FIDDO API Client — V4.1 (single-token, PIN support)
    ═══════════════════════════════════════════════════════ */
 
 const API = (() => {
@@ -28,6 +28,9 @@ const API = (() => {
   }
 
   return {
+    // Generic (used by app.js for PIN etc.)
+    call,
+
     // Auth
     login: (email) => call('/api/me/login', { method: 'POST', body: { email }, noAuth: true }),
     verify: (token) => call('/api/me/verify', { method: 'POST', body: { token }, noAuth: true }),
