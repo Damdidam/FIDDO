@@ -680,6 +680,7 @@ async function suiteAdminMessages() {
     const r = await api('POST', '/api/admin/messages/invoices', { cookies: adminCookies, body: {
       merchantId: createdMerchantId, title: `Facture ${TEST_PREFIX}`,
       amount: 29.99, description: 'Test invoice',
+      month: '2026-02',
     } });
     assertAnyStatus(r, [200, 201], 'ci'); createdAdminInvoiceId = r.data.id || r.data.invoiceId;
   });
