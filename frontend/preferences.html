@@ -43,6 +43,14 @@
     .pref-section { display: none; }
     .pref-section.active { display: block; }
 
+    /* Toggle switch */
+    .toggle-switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #CBD5E1; border-radius: 24px; transition: .25s; }
+    .toggle-slider::before { content: ''; position: absolute; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: .25s; box-shadow: 0 1px 3px rgba(0,0,0,.15); }
+    .toggle-switch input:checked + .toggle-slider { background: var(--primary, #3b82f6); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+
     /* ═══ CARDS ═══ */
     .pref-card {
       background: white; border-radius: 10px; padding: 1rem 1.1rem;
@@ -523,7 +531,95 @@
                 <input type="text" id="info-owner-name">
               </div>
 
-              <div class="save-row">
+              <hr style="border:none;border-top:1px solid #E2E8F0;margin:1rem 0">
+              <div class="pref-card-title" style="margin-bottom:0.6rem">Détails du commerce</div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="fg">
+                  <label>Type de commerce</label>
+                  <select id="info-biz-type" style="width:100%;padding:0.45rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit;background:#fff;color:#1E293B">
+                    <option value="horeca">Horeca</option>
+                    <option value="boulangerie">Boulangerie</option>
+                    <option value="coiffeur">Coiffeur</option>
+                    <option value="beaute">Beauté</option>
+                    <option value="pharmacie">Pharmacie</option>
+                    <option value="fleuriste">Fleuriste</option>
+                    <option value="boucherie">Boucherie</option>
+                    <option value="epicerie">Épicerie</option>
+                    <option value="cave">Cave à vins</option>
+                    <option value="librairie">Librairie</option>
+                    <option value="pressing">Pressing</option>
+                    <option value="fitness">Fitness</option>
+                    <option value="garage">Garage</option>
+                    <option value="veterinaire">Vétérinaire</option>
+                    <option value="autre">Autre</option>
+                  </select>
+                </div>
+                <div class="fg">
+                  <label>Site web</label>
+                  <input type="url" id="info-website" placeholder="https://...">
+                </div>
+              </div>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <div class="fg">
+                  <label>Instagram</label>
+                  <input type="url" id="info-instagram" placeholder="https://instagram.com/...">
+                </div>
+                <div class="fg">
+                  <label>Facebook</label>
+                  <input type="url" id="info-facebook" placeholder="https://facebook.com/...">
+                </div>
+              </div>
+
+              <div class="fg">
+                <label>Description courte</label>
+                <textarea id="info-description" rows="2" maxlength="500" placeholder="Décrivez votre commerce en quelques mots…" style="width:100%;padding:0.45rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit;resize:vertical"></textarea>
+              </div>
+
+              <div class="fg" style="display:flex;align-items:center;gap:0.6rem;margin:0.5rem 0">
+                <label style="margin:0;flex:1">Autoriser le transfert de points entre clients</label>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="info-allow-gifts">
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+
+              <hr style="border:none;border-top:1px solid #E2E8F0;margin:1rem 0">
+              <div class="pref-card-title" style="margin-bottom:0.6rem">Horaires d'ouverture</div>
+
+              <div class="hours-grid" style="display:grid;gap:0.4rem">
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Lundi</label>
+                  <input type="text" id="hrs-lun" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Mardi</label>
+                  <input type="text" id="hrs-mar" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Mercredi</label>
+                  <input type="text" id="hrs-mer" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Jeudi</label>
+                  <input type="text" id="hrs-jeu" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Vendredi</label>
+                  <input type="text" id="hrs-ven" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Samedi</label>
+                  <input type="text" id="hrs-sam" placeholder="ex: 12:00 - 23:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
+                  <label style="font-weight:600;font-size:0.8rem">Dimanche</label>
+                  <input type="text" id="hrs-dim" placeholder="ex: Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
+                </div>
+              </div>
+
+              <div class="save-row" style="margin-top:1rem">
                 <button type="submit" class="save-btn">Enregistrer les modifications</button>
               </div>
             </form>
@@ -535,6 +631,8 @@
             <div class="info-side-title">Informations</div>
             Toute modification sera <strong>notifiée à l'administrateur FIDDO</strong> par email pour des raisons de sécurité.<br><br>
             Le numéro de TVA doit être au format belge (BE0 suivi de 9 chiffres).<br><br>
+            <strong>Transfert de points</strong> : si activé, vos clients pourront offrir leurs points à d'autres personnes via un lien partageable.<br><br>
+            <strong>Horaires</strong> : renseignez vos heures d'ouverture, elles seront visibles dans l'app client. Laissez vide ou écrivez « Fermé » pour les jours de fermeture.<br><br>
             Votre email de connexion ne peut pas être modifié ici. Contactez le support si nécessaire.
           </div>
         </div>
@@ -976,6 +1074,20 @@
         document.getElementById('info-phone').value = data.phone || '';
         document.getElementById('info-owner-phone').value = data.ownerPhone || '';
         document.getElementById('info-owner-name').value = data.ownerName || '';
+        // V4 fields
+        document.getElementById('info-biz-type').value = data.businessType || 'horeca';
+        document.getElementById('info-website').value = data.websiteUrl || '';
+        document.getElementById('info-instagram').value = data.instagramUrl || '';
+        document.getElementById('info-facebook').value = data.facebookUrl || '';
+        document.getElementById('info-description').value = data.description || '';
+        document.getElementById('info-allow-gifts').checked = !!data.allowGifts;
+        // Opening hours
+        if (data.openingHours && typeof data.openingHours === 'object') {
+          ['lun','mar','mer','jeu','ven','sam','dim'].forEach(d => {
+            const el = document.getElementById('hrs-' + d);
+            if (el) el.value = data.openingHours[d] || '';
+          });
+        }
       } catch (err) {
         showAlert('info-alert', 'Impossible de charger les informations', 'error');
       }
@@ -984,6 +1096,13 @@
 
     document.getElementById('info-form').addEventListener('submit', async (e) => {
       e.preventDefault();
+      // Build opening hours
+      const openingHours = {};
+      ['lun','mar','mer','jeu','ven','sam','dim'].forEach(d => {
+        const val = document.getElementById('hrs-' + d).value.trim();
+        if (val) openingHours[d] = val;
+      });
+
       const payload = {
         businessName:  document.getElementById('info-business').value.trim(),
         address:       document.getElementById('info-address').value.trim(),
@@ -992,6 +1111,13 @@
         phone:         document.getElementById('info-phone').value.trim(),
         ownerPhone:    document.getElementById('info-owner-phone').value.trim(),
         ownerName:     document.getElementById('info-owner-name').value.trim(),
+        businessType:  document.getElementById('info-biz-type').value,
+        websiteUrl:    document.getElementById('info-website').value.trim(),
+        instagramUrl:  document.getElementById('info-instagram').value.trim(),
+        facebookUrl:   document.getElementById('info-facebook').value.trim(),
+        description:   document.getElementById('info-description').value.trim(),
+        allowGifts:    document.getElementById('info-allow-gifts').checked,
+        openingHours:  Object.keys(openingHours).length > 0 ? openingHours : null,
       };
 
       if (!payload.businessName || !payload.address || !payload.vatNumber || !payload.email || !payload.phone || !payload.ownerPhone) {
