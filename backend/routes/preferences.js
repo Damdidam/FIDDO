@@ -324,6 +324,15 @@ router.get('/merchant-info', requireRole('owner'), (req, res) => {
       ownerPhone: merchant.owner_phone,
       ownerName: staff?.display_name || '',
       ownerEmail: staff?.email || '',
+      // V4 — Mobile app card fields
+      websiteUrl: merchant.website_url || '',
+      description: merchant.description || '',
+      openingHours: merchant.opening_hours || '',
+      latitude: merchant.latitude || null,
+      longitude: merchant.longitude || null,
+      logoUrl: merchant.logo_url || '',
+      instagramUrl: merchant.instagram_url || '',
+      facebookUrl: merchant.facebook_url || '',
     });
   } catch (error) {
     console.error('Erreur get merchant-info:', error);
@@ -340,7 +349,8 @@ router.get('/merchant-info', requireRole('owner'), (req, res) => {
 router.put('/merchant-info', requireRole('owner'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const { businessName, address, vatNumber, email, phone, ownerPhone, ownerName } = req.body;
+    const { businessName, address, vatNumber, email, phone, ownerPhone, ownerName,
+            websiteUrl, description, openingHours, latitude, longitude, logoUrl, instagramUrl, facebookUrl } = req.body;
 
     // Validate required fields
     if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
@@ -389,11 +399,22 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     db.prepare(`
       UPDATE merchants
       SET business_name = ?, address = ?, vat_number = ?,
-          email = ?, phone = ?, owner_phone = ?
+          email = ?, phone = ?, owner_phone = ?,
+          website_url = ?, description = ?, opening_hours = ?,
+          latitude = ?, longitude = ?, logo_url = ?,
+          instagram_url = ?, facebook_url = ?
       WHERE id = ?
     `).run(
       businessName.trim(), address.trim(), normalizedVat,
       email.trim().toLowerCase(), phone.trim(), ownerPhone.trim(),
+      (websiteUrl || '').trim() || null,
+      (description || '').trim() || null,
+      (openingHours || '').trim() || null,
+      latitude ? parseFloat(latitude) : null,
+      longitude ? parseFloat(longitude) : null,
+      (logoUrl || '').trim() || null,
+      (instagramUrl || '').trim() || null,
+      (facebookUrl || '').trim() || null,
       merchantId
     );
 
