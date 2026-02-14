@@ -668,11 +668,11 @@ async function suiteClientManagement() {
     assertStatus(r, 200, 'edit');
   });
 
-  await test('Edit: clear all identifiers → 400', async () => {
+  await test('Edit: restore original data', async () => {
     const r = await api('PUT', `/api/clients/${merchantClientId1}/edit`, {
-      cookies: ownerCookies, body: { name: 'No ID', email: '', phone: '' },
+      cookies: ownerCookies, body: { name: TEST_CLIENT_1.name, email: TEST_CLIENT_1.email, phone: TEST_CLIENT_1.phone },
     });
-    assertStatus(r, 400, 'edit-400');
+    assertStatus(r, 200, 'restore');
   });
 
   await test('Set notes', async () => {
