@@ -430,7 +430,7 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// DELETE /api/clients/:id — Delete client (owner only)
+// DELETE /api/clients/:id — Delete client (owner only, RGPD)
 // ═══════════════════════════════════════════════════════
 
 router.delete('/:id', requireRole('owner'), (req, res) => {
@@ -444,11 +444,10 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
 
     const run = db.transaction(() => {
-      // Anonymize transactions (keep financial data, remove link to person)
-      db.prepare(`
-UPDATE transactions SET notes = '[SUPPRIMÉ]'
-WHERE merchant_client_id = ?
-      `).run(mcId);
+      // Delete transactions first (FK: merchant_client_id NOT NULL REFERENCES merchant_clients)
+      db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(mcId);
+
+      // Now safe to delete the merchant_client record
       merchantClientQueries.delete.run(mcId);
 
       const otherRelations = db.prepare(
