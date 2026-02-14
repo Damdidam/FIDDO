@@ -9,6 +9,7 @@ const {
   transactionQueries,
 } = require('../database');
 const { normalizeEmail, normalizePhone } = require('./normalizer');
+const { pushPointsCredited, pushRewardAvailable, pushRewardRedeemed } = require('./push');
 
 // ═══════════════════════════════════════════════════════
 // FIND OR CREATE END USER
@@ -182,7 +183,33 @@ function creditPoints({
     };
   });
 
-  return run();
+  const result = run();
+
+  // 🔔 Fire-and-forget push notifications
+  if (!result.idempotent) {
+    const merchant = merchantQueries.findById.get(merchantId);
+    // Notify: points credited
+    pushPointsCredited(
+      result.endUser.id,
+      merchant.business_name,
+      result.transaction.points_delta,
+      result.merchantClient.points_balance
+    ).catch(() => {});
+
+    // Notify: reward now available (if threshold just crossed)
+    if (result.merchantClient.points_balance >= merchant.points_for_reward) {
+      const prevBalance = result.merchantClient.points_balance - result.transaction.points_delta;
+      if (prevBalance < merchant.points_for_reward) {
+        pushRewardAvailable(
+          result.endUser.id,
+          merchant.business_name,
+          result.merchantClient.custom_reward || merchant.reward_description
+        ).catch(() => {});
+      }
+    }
+  }
+
+  return result;
 }
 
 
@@ -268,7 +295,20 @@ function redeemReward({
     };
   });
 
-  return run();
+  const result = run();
+
+  // 🔔 Fire-and-forget push: reward redeemed
+  if (!result.idempotent) {
+    const merchant = merchantQueries.findById.get(merchantId);
+    pushRewardRedeemed(
+      endUser.id,
+      merchant.business_name,
+      result.rewardLabel,
+      result.merchantClient.points_balance
+    ).catch(() => {});
+  }
+
+  return result;
 }
 
 
