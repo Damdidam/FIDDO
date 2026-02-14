@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO Mobile — Premium Design (Complete Bundle)
+   FIDDO Mobile — Premium Blue Theme
    ═══════════════════════════════════════════════════════ */
 
 :root {
-  --pri: #0d9488; --pri-l: #ccfbf1; --pri-d: #115e59; --pri-glow: rgba(13,148,136,.2);
-  --bg: #f0f5f4; --sf: #fff; --sf2: #f7faf9; --brd: #dfe8e6; --brd-l: #eef3f2;
-  --tx: #0c1f1d; --tx2: #4a6e68; --tx3: #8fada6;
+  --pri: #3b82f6; --pri-l: #dbeafe; --pri-d: #1e40af; --pri-glow: rgba(59,130,246,.2);
+  --bg: #f0f4fa; --sf: #fff; --sf2: #f7f9fc; --brd: #dfe6ef; --brd-l: #eef2f7;
+  --tx: #0f172a; --tx2: #475569; --tx3: #94a3b8;
   --ok: #059669; --ok-l: #d1fae5; --warn: #d97706; --warn-l: #fef3c7;
   --err: #dc2626; --err-l: #fee2e2; --rew: #f59e0b;
   --r-sm: 12px; --r-md: 16px; --r-lg: 22px; --r-xl: 28px; --r-full: 999px;
@@ -36,14 +36,14 @@ a{text-decoration:none;cursor:pointer}
 .tab-body,.card-body,.hist-list,.onboard-content{overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
 
 /* ═══════════════════════════════════════════════
-   LOGIN
+   LOGIN — Blue gradient
    ═══════════════════════════════════════════════ */
-#screen-login{background:linear-gradient(160deg,#0c1f1d 0%,#115e59 40%,#0d9488 100%);overflow:hidden}
+#screen-login{background:linear-gradient(160deg,#0f172a 0%,#1e3a5f 40%,#3b82f6 100%);overflow:hidden}
 .login-bg{position:absolute;inset:0;overflow:hidden}
 .login-orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:.4;animation:orbFloat 8s ease-in-out infinite}
-.orb-1{width:300px;height:300px;background:radial-gradient(circle,#2dd4bf,transparent 70%);top:-80px;right:-60px;animation-delay:0s}
-.orb-2{width:250px;height:250px;background:radial-gradient(circle,#0d9488,transparent 70%);bottom:10%;left:-40px;animation-delay:2.5s}
-.orb-3{width:180px;height:180px;background:radial-gradient(circle,#5eead4,transparent 70%);top:40%;right:20%;animation-delay:5s}
+.orb-1{width:300px;height:300px;background:radial-gradient(circle,#60a5fa,transparent 70%);top:-80px;right:-60px;animation-delay:0s}
+.orb-2{width:250px;height:250px;background:radial-gradient(circle,#3b82f6,transparent 70%);bottom:10%;left:-40px;animation-delay:2.5s}
+.orb-3{width:180px;height:180px;background:radial-gradient(circle,#93c5fd,transparent 70%);top:40%;right:20%;animation-delay:5s}
 @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(20px,-30px) scale(1.1)}66%{transform:translate(-15px,20px) scale(.95)}}
 
 .login-content{position:relative;z-index:2;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px 28px;text-align:center}
@@ -70,7 +70,7 @@ a{text-decoration:none;cursor:pointer}
 .solid .field input,.solid-field input{color:var(--tx)!important}
 .solid .field input::placeholder,.solid-field input::placeholder{color:var(--tx3)!important}
 
-.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:56px;background:linear-gradient(135deg,#14b8a6,#0d9488);color:#fff;font-size:16px;font-weight:700;border-radius:var(--r-md);box-shadow:0 4px 20px var(--pri-glow);transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
+.btn-primary{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:56px;background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff;font-size:16px;font-weight:700;border-radius:var(--r-md);box-shadow:0 4px 20px var(--pri-glow);transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden}
 .btn-primary::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);opacity:0;transition:opacity .2s}
 .btn-primary:active{transform:scale(.97);box-shadow:0 2px 10px var(--pri-glow)}
 .btn-primary:active::after{opacity:1}
@@ -83,11 +83,11 @@ a{text-decoration:none;cursor:pointer}
 
 .login-hint{font-size:12px;color:rgba(255,255,255,.4);margin-top:16px;line-height:1.5}
 .sent-anim{width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
-.sent-anim .material-symbols-rounded{font-size:40px;color:#5eead4;animation:popIn .5s var(--bounce)}
+.sent-anim .material-symbols-rounded{font-size:40px;color:#93c5fd;animation:popIn .5s var(--bounce)}
 @keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
 .login-sent h2{font-size:22px;color:#fff;margin-bottom:8px}
 .login-sent p{color:rgba(255,255,255,.6);font-size:14px;line-height:1.5}
-.sent-email{color:#5eead4!important;font-weight:700;font-size:15px!important;margin:4px 0 8px}
+.sent-email{color:#93c5fd!important;font-weight:700;font-size:15px!important;margin:4px 0 8px}
 .sent-hint{font-size:12px;color:rgba(255,255,255,.35)!important;margin-bottom:24px}
 .link-muted{display:inline-block;color:rgba(255,255,255,.45);font-size:14px;padding:12px;margin-top:4px}
 .solid .link-muted{color:var(--tx3)}
@@ -299,7 +299,7 @@ a{text-decoration:none;cursor:pointer}
    PROFILE
    ═══════════════════════════════════════════════ */
 .prof-card{background:var(--sf);border-radius:var(--r-lg);padding:24px;margin-bottom:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);text-align:center}
-.prof-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#0d9488,#14b8a6);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 16px var(--pri-glow)}
+.prof-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#60a5fa);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;box-shadow:0 4px 16px var(--pri-glow)}
 .prof-name-row{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:12px}
 .prof-name-row h2{font-size:19px;font-weight:700}
 .btn-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:var(--tx3);transition:background .2s}
@@ -357,13 +357,11 @@ a{text-decoration:none;cursor:pointer}
 .gift-merchant{font-size:15px;font-weight:600;color:var(--tx2);margin-bottom:4px}
 .gift-expires{font-size:12px;color:var(--tx3)}
 
-/* Gift confirm modal */
 .gift-confirm-card{background:var(--sf2);border-radius:var(--r-lg);padding:24px;margin:16px 0}
 .gift-confirm-pts{font-size:48px;font-weight:800;color:var(--rew);line-height:1}
 .gift-confirm-label{font-size:14px;color:var(--tx2);margin-top:6px}
 .gift-warn{font-size:12px;color:var(--tx3);line-height:1.5;margin-bottom:20px;padding:0 8px}
 
-/* Gift share modal */
 .gift-link-box{display:flex;gap:8px;margin-bottom:20px;background:var(--sf2);border-radius:var(--r-md);padding:4px 4px 4px 16px;align-items:center}
 .gift-link-input{flex:1;background:none;font-size:13px;color:var(--tx);font-weight:500;border:none;outline:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .btn-copy{width:44px;height:44px;border-radius:var(--r-sm);background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .15s}
@@ -385,9 +383,9 @@ a{text-decoration:none;cursor:pointer}
    DARK MODE
    ═══════════════════════════════════════════════ */
 html.dark{
-  --bg:#0c1a18;--sf:#152220;--sf2:#1a2b28;--brd:#243634;--brd-l:#1e2e2c;
-  --tx:#e2efec;--tx2:#8fada6;--tx3:#5a7f78;
-  --pri:#14b8a6;--pri-l:#0d322e;--pri-d:#5eead4;--pri-glow:rgba(20,184,166,.15);
+  --bg:#0c1220;--sf:#141e30;--sf2:#1a2640;--brd:#243448;--brd-l:#1e2e42;
+  --tx:#e2ecf4;--tx2:#8fadc4;--tx3:#5a7f9a;
+  --pri:#60a5fa;--pri-l:#1e2d50;--pri-d:#93c5fd;--pri-glow:rgba(96,165,250,.15);
 }
 html.dark body{background:var(--bg)}
 html.dark .search-bar{background:var(--sf)}
@@ -397,5 +395,5 @@ html.dark .modal-sheet{background:var(--sf)}
 html.dark .solid-field{background:var(--sf2)!important;border-color:var(--brd)!important}
 html.dark .solid-field input{color:var(--tx)!important}
 html.dark .qr-wrap{background:var(--sf);box-shadow:0 8px 32px rgba(0,0,0,.2)}
-html.dark #screen-login{background:linear-gradient(160deg,#0a1210 0%,#0d2c28 40%,#0d9488 100%)}
+html.dark #screen-login{background:linear-gradient(160deg,#070d18 0%,#0f1f3a 40%,#3b82f6 100%)}
 html.dark .gift-link-input{color:var(--tx)}
