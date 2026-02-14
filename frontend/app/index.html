@@ -6,7 +6,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d9488">
-  <meta name="description" content="FIDDO — Programme fidélité restaurants belges">
+  <meta name="description" content="FIDDO — Programme fidélité commerces belges">
   <title>FIDDO</title>
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="assets/icon-192.png">
@@ -63,9 +63,47 @@
     </div>
   </div>
 
+  <!-- ═══════════════════════ GIFT CLAIM ═══════════════════════ -->
+  <div id="screen-gift-claim" class="screen">
+    <div class="center-col">
+      <div id="gift-loading">
+        <div class="loader"></div>
+        <h2>Chargement du cadeau…</h2>
+      </div>
+      <div id="gift-preview" class="hidden">
+        <div class="gift-box"><span class="material-symbols-rounded">redeem</span></div>
+        <h2 id="gift-title"></h2>
+        <p id="gift-sub" class="gift-sub"></p>
+        <div class="gift-amount" id="gift-amount"></div>
+        <p class="gift-merchant" id="gift-merchant"></p>
+        <p class="gift-expires" id="gift-expires"></p>
+        <button class="btn-primary" id="btn-claim-gift" style="margin-top:24px;width:280px">
+          <span class="material-symbols-rounded">downloading</span>
+          <span>Récupérer mes points</span>
+        </button>
+        <a class="link-muted" onclick="App.show('screen-login')">Retour</a>
+      </div>
+      <div id="gift-done" class="hidden">
+        <div class="gift-box ok"><span class="material-symbols-rounded">check_circle</span></div>
+        <h2>Points reçus !</h2>
+        <p id="gift-done-msg" class="gift-sub"></p>
+        <button class="btn-primary" style="margin-top:24px;width:280px" onclick="App.showApp()">
+          <span>Voir mes cartes</span>
+          <span class="material-symbols-rounded">east</span>
+        </button>
+      </div>
+      <div id="gift-error" class="hidden">
+        <div class="gift-box err"><span class="material-symbols-rounded">error</span></div>
+        <h2 id="gift-error-title">Lien invalide</h2>
+        <p id="gift-error-msg" class="gift-sub"></p>
+        <a class="link-muted" onclick="App.show('screen-login')">Retour</a>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══════════════════════ ONBOARDING ═══════════════════════ -->
   <div id="screen-onboarding" class="screen">
-    <div class="onboard-content">
+    <div class="onboard-content solid">
       <div class="onboard-icon"><span class="material-symbols-rounded">waving_hand</span></div>
       <h1>Bienvenue !</h1>
       <p class="onboard-sub">Complétez votre profil pour que les commerces vous reconnaissent</p>
@@ -84,15 +122,32 @@
     <!-- TAB: Cards -->
     <section id="tab-cards" class="tab active">
       <header class="tab-head">
-        <div><h1 id="greeting">Bonjour 👋</h1><p id="greeting-sub" class="sub"></p></div>
+        <div class="tab-head-row">
+          <div><h1 id="greeting">Bonjour 👋</h1><p id="greeting-sub" class="sub"></p></div>
+        </div>
+        <div class="search-bar">
+          <span class="material-symbols-rounded">search</span>
+          <input type="text" id="search-input" placeholder="Rechercher un commerce…" autocomplete="off" autocapitalize="none">
+          <button class="search-clear hidden" id="search-clear" onclick="App.clearSearch()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="filter-row" id="filter-row">
+          <button class="pill active" data-type="all" onclick="App.filterType('all')">Tous</button>
+        </div>
       </header>
       <div class="tab-body" id="cards-scroll">
         <div id="cards-list"></div>
         <div id="cards-empty" class="empty hidden">
           <span class="material-symbols-rounded">wallet</span>
           <h3>Pas encore de carte</h3>
-          <p>Scannez le QR code d'un restaurant partenaire pour commencer.</p>
-          <button class="btn-secondary" onclick="App.switchTab('scanner')"><span class="material-symbols-rounded">qr_code_scanner</span><span>Scanner un QR</span></button>
+          <p>Scannez le QR code d'un commerce partenaire pour commencer.</p>
+          <button class="btn-secondary solid" onclick="App.switchTab('scanner')"><span class="material-symbols-rounded">qr_code_scanner</span><span>Scanner un QR</span></button>
+        </div>
+        <div id="cards-no-result" class="empty hidden">
+          <span class="material-symbols-rounded">search_off</span>
+          <h3>Aucun résultat</h3>
+          <p>Essayez un autre terme ou filtre.</p>
         </div>
       </div>
     </section>
@@ -127,7 +182,7 @@
           <div class="prof-avatar" id="prof-avatar">?</div>
           <div class="prof-name-row"><h2 id="prof-name">—</h2><button class="btn-icon" onclick="App.editName()"><span class="material-symbols-rounded">edit</span></button></div>
           <div class="prof-info">
-            <div class="prof-row"><span class="material-symbols-rounded">mail</span><span id="prof-email">—</span></div>
+            <div class="prof-row"><span class="material-symbols-rounded">mail</span><span id="prof-email">—</span><button class="btn-icon" onclick="App.editEmail()"><span class="material-symbols-rounded">edit</span></button></div>
             <div class="prof-row hidden" id="prof-phone-row"><span class="material-symbols-rounded">call</span><span id="prof-phone"></span></div>
             <div class="prof-row hidden" id="prof-dob-row"><span class="material-symbols-rounded">cake</span><span id="prof-dob"></span></div>
           </div>
@@ -140,13 +195,19 @@
           <label class="notif-row"><span class="material-symbols-rounded">campaign</span><span>Promotions</span><input type="checkbox" id="notif-promo" checked><span class="tog"></span></label>
           <label class="notif-row last"><span class="material-symbols-rounded">celebration</span><span>Anniversaire</span><input type="checkbox" id="notif-birthday" checked><span class="tog"></span></label>
         </div>
+        <h3 class="sec-title">Apparence</h3>
+        <button class="menu-row" onclick="App.toggleDark()">
+          <span class="material-symbols-rounded mi" id="dark-icon">dark_mode</span>
+          <span class="ml" id="dark-label">Mode sombre</span>
+          <span class="material-symbols-rounded ma">chevron_right</span>
+        </button>
         <button class="btn-danger" onclick="App.logout()"><span class="material-symbols-rounded">logout</span><span>Se déconnecter</span></button>
         <p class="version">FIDDO v1.0.0</p>
       </div>
     </section>
 
     <!-- Tab Bar -->
-    <nav class="tbar" id="tbar">
+    <nav class="tbar">
       <button class="tb active" data-tab="cards" onclick="App.switchTab('cards')"><span class="material-symbols-rounded">wallet</span><small>Cartes</small></button>
       <button class="tb" data-tab="scanner" onclick="App.switchTab('scanner')"><span class="material-symbols-rounded">qr_code_scanner</span><small>Scanner</small></button>
       <button class="tb" data-tab="profile" onclick="App.switchTab('profile')"><span class="material-symbols-rounded">person</span><small>Profil</small></button>
@@ -156,8 +217,12 @@
   <!-- ═══════════════════════ CARD DETAIL ═══════════════════════ -->
   <div id="screen-card" class="screen slide-r">
     <div class="card-hero" id="card-hero">
-      <button class="btn-back" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
+      <div class="card-hero-top">
+        <button class="btn-back" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
+        <button class="btn-fav" id="btn-fav" onclick="App.toggleFav()"><span class="material-symbols-rounded" id="fav-icon">star_outline</span></button>
+      </div>
       <h1 id="cd-name"></h1>
+      <p class="cd-type" id="cd-type"></p>
       <div class="cd-pts"><span class="cd-pts-big" id="cd-pts"></span><span class="cd-pts-tot" id="cd-pts-tot"></span></div>
       <div class="prog-lg"><div class="prog-fill" id="cd-prog"></div></div>
       <div id="cd-badge"></div>
@@ -168,6 +233,12 @@
         <div class="stat"><span class="material-symbols-rounded">payments</span><strong id="cd-spent">0€</strong><small>Dépensé</small></div>
         <div class="stat"><span class="material-symbols-rounded">speed</span><strong id="cd-ratio">0</strong><small>pts/€</small></div>
       </div>
+      <!-- Gift button (hidden if not allowed or 0 pts) -->
+      <button class="menu-row gift-row hidden" id="btn-gift" onclick="App.startGift()">
+        <span class="material-symbols-rounded mi" style="color:var(--rew)">card_giftcard</span>
+        <span class="ml">Offrir mes points</span>
+        <span class="material-symbols-rounded ma">chevron_right</span>
+      </button>
       <button class="menu-row" onclick="App.showHistory()"><span class="material-symbols-rounded mi">history</span><span class="ml">Historique</span><span class="material-symbols-rounded ma">chevron_right</span></button>
       <h3 class="sec-title">Informations</h3>
       <div class="info-card" id="cd-info"></div>
@@ -201,8 +272,62 @@
     <div class="modal-sheet sm">
       <div class="modal-pill"></div>
       <h2>Modifier le nom</h2>
-      <div class="field"><span class="material-symbols-rounded field-icon">person</span><input type="text" id="edit-name" placeholder="Votre nom"></div>
+      <div class="field solid-field"><span class="material-symbols-rounded field-icon">person</span><input type="text" id="edit-name" placeholder="Votre nom"></div>
       <button class="btn-primary" id="btn-save-name">Enregistrer</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ MODAL: EDIT EMAIL ═══════════════════════ -->
+  <div id="modal-email" class="modal">
+    <div class="modal-bg" onclick="App.closeModal()"></div>
+    <div class="modal-sheet sm">
+      <div class="modal-pill"></div>
+      <h2>Modifier l'email</h2>
+      <p class="modal-sub">Votre nouvel email sera utilisé pour la connexion</p>
+      <div class="field solid-field"><span class="material-symbols-rounded field-icon">mail</span><input type="email" id="edit-email" placeholder="nouvel@email.com" autocapitalize="none" inputmode="email"></div>
+      <button class="btn-primary" id="btn-save-email">Enregistrer</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ MODAL: GIFT CONFIRM ═══════════════════════ -->
+  <div id="modal-gift" class="modal">
+    <div class="modal-bg" onclick="App.closeModal()"></div>
+    <div class="modal-sheet">
+      <div class="modal-pill"></div>
+      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
+      <div class="gift-box" style="margin:0 auto 16px"><span class="material-symbols-rounded">card_giftcard</span></div>
+      <h2>Offrir mes points</h2>
+      <p class="modal-sub">Vos points seront convertis en un lien cadeau à partager</p>
+      <div class="gift-confirm-card">
+        <div class="gift-confirm-pts" id="gift-confirm-pts">0</div>
+        <div class="gift-confirm-label">points chez <strong id="gift-confirm-name"></strong></div>
+      </div>
+      <p class="gift-warn">⚠️ Action irréversible — vos points seront retirés de votre carte. Le lien expire dans 7 jours.</p>
+      <button class="btn-primary" id="btn-confirm-gift">
+        <span class="material-symbols-rounded">card_giftcard</span>
+        <span>Générer le lien cadeau</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════ MODAL: GIFT SHARE ═══════════════════════ -->
+  <div id="modal-gift-share" class="modal">
+    <div class="modal-bg" onclick="App.closeModal()"></div>
+    <div class="modal-sheet">
+      <div class="modal-pill"></div>
+      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
+      <div class="gift-box ok" style="margin:0 auto 16px"><span class="material-symbols-rounded">check_circle</span></div>
+      <h2>Lien cadeau créé !</h2>
+      <p class="modal-sub">Envoyez ce lien à la personne de votre choix</p>
+      <div class="gift-link-box">
+        <input type="text" id="gift-link" readonly class="gift-link-input">
+        <button class="btn-copy" onclick="App.copyGiftLink()"><span class="material-symbols-rounded">content_copy</span></button>
+      </div>
+      <div class="gift-share-btns">
+        <button class="btn-share whatsapp" onclick="App.shareGift('whatsapp')"><span>WhatsApp</span></button>
+        <button class="btn-share sms" onclick="App.shareGift('sms')"><span>SMS</span></button>
+        <button class="btn-share generic" onclick="App.shareGift('native')"><span class="material-symbols-rounded">share</span><span>Partager</span></button>
+      </div>
     </div>
   </div>
 
