@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO App — V4.1 (blue theme, PIN, gift, toast fix)
+   FIDDO App — V4.2 (QR fix, auto-identify, no dark mode)
    ═══════════════════════════════════════════════════════ */
 
 const App = (() => {
@@ -76,8 +76,6 @@ const App = (() => {
   // ═══════════════════════════════════════════
 
   async function init() {
-    if (localStorage.getItem('fiddo_dark') === '1') document.documentElement.classList.add('dark');
-
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
 
@@ -159,7 +157,6 @@ const App = (() => {
       return;
     }
 
-    // Backend returns { token, client }
     API.setToken(res.data.token);
     client = res.data.client;
 
@@ -355,12 +352,10 @@ const App = (() => {
     document.getElementById('cd-ratio').textContent = card.pointsPerEuro;
     updateFavIcon();
 
-    // Gift button
     const giftBtn = document.getElementById('btn-gift');
     if (merchant.allowGifts && card.pointsBalance > 0) giftBtn.classList.remove('hidden');
     else giftBtn.classList.add('hidden');
 
-    // Info card
     const info = document.getElementById('cd-info');
     let html = '';
     if (merchant.address) html += infoRow('location_on', merchant.address, () => openMaps());
@@ -371,7 +366,6 @@ const App = (() => {
     if (merchant.facebookUrl) html += infoRow('group', 'Facebook', () => window.open(merchant.facebookUrl));
     info.innerHTML = html;
 
-    // Hours
     const hoursWrap = document.getElementById('cd-hours-wrap');
     if (merchant.openingHours && typeof merchant.openingHours === 'object' && Object.keys(merchant.openingHours).length > 0) {
       hoursWrap.classList.remove('hidden');
@@ -455,7 +449,6 @@ const App = (() => {
   function startGift() {
     if (!currentCard || !currentMerchant) return;
     if (currentCard.pointsBalance <= 0) { toast('Aucun point à offrir'); return; }
-
     document.getElementById('gift-confirm-pts').textContent = currentCard.pointsBalance;
     document.getElementById('gift-confirm-name').textContent = currentMerchant.name;
     openModal('modal-gift');
@@ -468,7 +461,6 @@ const App = (() => {
     btn.innerHTML = '<span>Génération…</span>';
 
     const res = await API.createGift(currentMerchant.id);
-
     btn.classList.remove('loading');
     btn.innerHTML = '<span class="material-symbols-rounded">card_giftcard</span><span>Générer le lien cadeau</span>';
 
@@ -491,9 +483,7 @@ const App = (() => {
   function copyGiftLink() {
     navigator.clipboard.writeText(lastGiftLink).then(() => toast('Lien copié !')).catch(() => {
       const input = document.getElementById('gift-link');
-      input.select();
-      document.execCommand('copy');
-      toast('Lien copié !');
+      input.select(); document.execCommand('copy'); toast('Lien copié !');
     });
   }
 
@@ -505,8 +495,6 @@ const App = (() => {
     else if (navigator.share) navigator.share({ title: 'Cadeau FIDDO', text, url }).catch(() => {});
     else copyGiftLink();
   }
-
-  // ─── Gift Claim (recipient side) ──────────
 
   async function handleGiftClaim(token) {
     show('screen-gift-claim');
@@ -578,11 +566,6 @@ const App = (() => {
     if (client.dateOfBirth) { dobRow.classList.remove('hidden'); document.getElementById('prof-dob').textContent = client.dateOfBirth; }
     else dobRow.classList.add('hidden');
 
-    const isDark = document.documentElement.classList.contains('dark');
-    document.getElementById('dark-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
-    document.getElementById('dark-label').textContent = isDark ? 'Mode clair' : 'Mode sombre';
-
-    // PIN status
     const hasPin = client.hasPin;
     document.getElementById('pin-label').textContent = hasPin ? 'PIN défini ✓' : 'Aucun PIN défini';
     document.getElementById('pin-btn-label').textContent = hasPin ? 'Modifier mon PIN' : 'Créer un PIN';
@@ -651,51 +634,46 @@ const App = (() => {
   async function savePin() {
     const currentPin = document.getElementById('pin-current').value.trim();
     const newPin = document.getElementById('pin-new').value.trim();
-
     if (!/^\d{4}$/.test(newPin)) { toast('Le PIN doit être 4 chiffres'); return; }
     if (client?.hasPin && !/^\d{4}$/.test(currentPin)) { toast('PIN actuel requis'); return; }
-
     const body = { newPin };
     if (client?.hasPin) body.currentPin = currentPin;
-
     const res = await API.call('/api/me/pin', { method: 'POST', body });
-    if (res.ok) {
-      client.hasPin = true;
-      loadProfile();
-      closeModal();
-      toast('Code PIN enregistré ✓');
-    } else {
-      toast(res.data?.error || 'Erreur');
-    }
+    if (res.ok) { client.hasPin = true; loadProfile(); closeModal(); toast('Code PIN enregistré ✓'); }
+    else toast(res.data?.error || 'Erreur');
   }
 
-  function toggleDark() {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('fiddo_dark', isDark ? '1' : '0');
-    loadProfile();
-    toast(isDark ? 'Mode sombre activé' : 'Mode clair activé');
-  }
-
-  // ─── My QR ────────────────────────────────
+  // ─── My QR — uses toDataURL + img (not canvas) ────
 
   async function showMyQR() {
     openModal('modal-qr');
     document.getElementById('qr-name').textContent = client?.name || '';
+    const qrImg = document.getElementById('qr-img');
+    qrImg.src = '';
+    qrImg.alt = 'Chargement…';
+
     const res = await API.getQR();
-    if (!res.ok) return;
-    const canvas = document.getElementById('qr-canvas');
-    if (typeof QRCode !== 'undefined') {
-      QRCode.toCanvas(canvas, res.data.qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' } });
+    if (!res.ok) { qrImg.alt = 'Erreur'; return; }
+
+    try {
+      const dataUrl = await QRCode.toDataURL(res.data.qrUrl, {
+        width: 220, margin: 2,
+        color: { dark: '#0f172a', light: '#ffffff' }
+      });
+      qrImg.src = dataUrl;
+      qrImg.alt = 'Mon QR code';
+    } catch (e) {
+      console.error('QR generation error:', e);
+      qrImg.alt = 'Erreur génération QR';
     }
   }
 
-  // ─── Scanner ──────────────────────────────
+  // ─── Scanner — auto-identify at merchant ──
 
   async function startScanner() {
     const video = document.getElementById('scan-video');
     const noCam = document.getElementById('scan-no-cam');
     if (scannerStream) return;
-
     video.style.display = 'block';
 
     try {
@@ -718,12 +696,52 @@ const App = (() => {
     if (video) { video.srcObject = null; video.style.display = 'none'; }
   }
 
-  function handleScan(data) {
+  let scanBusy = false;
+  async function handleScan(data) {
+    if (scanBusy) return;
+
+    // Extract merchant qrToken from URL: fiddo.be/q/TOKEN
     const match = data.match(/fiddo\.be\/q\/([a-zA-Z0-9_-]+)/);
     if (!match) { toast('QR non reconnu'); return; }
+
+    scanBusy = true;
     stopScanner();
-    window.open(data, '_blank');
-    setTimeout(() => { if (document.querySelector('.tb.active')?.dataset.tab === 'scanner') startScanner(); }, 2000);
+
+    const merchantQrToken = match[1];
+    toast('Identification en cours…');
+
+    try {
+      // Auto-register: POST to /api/qr/register with our info
+      const res = await API.call('/api/qr/register', {
+        method: 'POST',
+        body: {
+          qrToken: merchantQrToken,
+          email: client?.email || '',
+          phone: client?.phone || '',
+          name: client?.name || '',
+        },
+        noAuth: true, // public endpoint
+      });
+
+      if (res.ok) {
+        const name = res.data.clientName || client?.name || '';
+        const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
+        toast(`✓ ${name} identifié${pts}`);
+        // Refresh cards in case new card was created
+        setTimeout(() => refreshCards(), 1500);
+      } else {
+        toast(res.data?.error || 'Erreur identification');
+      }
+    } catch (e) {
+      console.error('Auto-identify error:', e);
+      toast('Erreur réseau');
+    }
+
+    // Resume scanner after 3 seconds
+    setTimeout(() => {
+      scanBusy = false;
+      if (document.querySelector('.tb.active')?.dataset.tab === 'scanner') startScanner();
+    }, 3000);
   }
 
   // ─── Modals / Toast ───────────────────────
@@ -736,7 +754,6 @@ const App = (() => {
     const el = document.getElementById('toast');
     if (toastTimer) clearTimeout(toastTimer);
     el.classList.remove('show');
-    // Force reflow to restart animation
     void el.offsetWidth;
     el.textContent = msg;
     el.classList.add('show');
@@ -773,7 +790,6 @@ const App = (() => {
     document.getElementById('search-input').addEventListener('input', handleSearch);
     document.querySelectorAll('.notif-row input').forEach(el => el.addEventListener('change', saveNotifs));
 
-    // Pull-to-refresh
     let startY = 0;
     const scroll = document.getElementById('cards-scroll');
     if (scroll) {
@@ -795,7 +811,7 @@ const App = (() => {
     openPinModal, savePin,
     startScanner, closeModal,
     logout, saveNotifs, toast,
-    filterType, clearSearch, toggleFav, toggleDark,
+    filterType, clearSearch, toggleFav,
     startGift, confirmGift, copyGiftLink, shareGift,
   };
 })();
