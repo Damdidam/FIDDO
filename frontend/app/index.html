@@ -239,13 +239,6 @@
           <label class="notif-row last"><span class="material-symbols-rounded">cake</span><span>Anniversaire</span><input type="checkbox" id="notif-birthday" checked><span class="tog"></span></label>
         </div>
 
-        <!-- Dark mode -->
-        <button class="menu-row" onclick="App.toggleDark()">
-          <span class="material-symbols-rounded mi" id="dark-icon">dark_mode</span>
-          <span class="ml" id="dark-label">Mode sombre</span>
-          <span class="material-symbols-rounded ma">chevron_right</span>
-        </button>
-
         <!-- QR code -->
         <button class="menu-row" onclick="App.showMyQR()">
           <span class="material-symbols-rounded mi">qr_code_2</span>
@@ -256,7 +249,7 @@
         <button class="btn-danger" onclick="App.logout()">
           <span class="material-symbols-rounded">logout</span>Déconnexion
         </button>
-        <p class="version">FIDDO v4.0</p>
+        <p class="version">FIDDO v4.2</p>
       </div>
     </div>
 
@@ -274,7 +267,7 @@
     </nav>
   </div>
 
-  <!-- ═══ CARD DETAIL (slide) ═══ -->
+  <!-- ═══ CARD DETAIL ═══ -->
   <div id="screen-card" class="screen slide-r">
     <div class="card-hero theme-navy" id="card-hero">
       <div class="card-hero-top">
@@ -325,7 +318,7 @@
     </div>
   </div>
 
-  <!-- ═══ HISTORY (slide) ═══ -->
+  <!-- ═══ HISTORY ═══ -->
   <div id="screen-history" class="screen slide-r">
     <div class="sheet-head">
       <button class="btn-back-dark" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
@@ -337,7 +330,7 @@
 
   <!-- ═══ MODALS ═══ -->
 
-  <!-- QR Modal -->
+  <!-- QR Modal — uses <img> not <canvas> -->
   <div id="modal-qr" class="modal" onclick="App.closeModal()">
     <div class="modal-bg"></div>
     <div class="modal-sheet" onclick="event.stopPropagation()">
@@ -346,7 +339,7 @@
       <h2>Mon QR code</h2>
       <p class="modal-sub">À présenter au commerçant</p>
       <div class="qr-wrap">
-        <canvas id="qr-canvas" width="220" height="220"></canvas>
+        <img id="qr-img" width="220" height="220" alt="QR code" style="border-radius:8px">
         <p class="qr-name" id="qr-name"></p>
       </div>
     </div>
@@ -415,7 +408,7 @@
         <div class="gift-confirm-pts" id="gift-confirm-pts">0</div>
         <p class="gift-confirm-label">points chez <strong id="gift-confirm-name"></strong></p>
       </div>
-      <p class="gift-warn">⚠️ Tous vos points seront transférés. Le destinataire aura 7 jours pour les récupérer. Passé ce délai, les points vous seront rendus.</p>
+      <p class="gift-warn">⚠️ Tous vos points seront transférés. Le destinataire aura 7 jours pour les récupérer.</p>
       <button class="btn-primary" id="btn-confirm-gift">
         <span class="material-symbols-rounded">card_giftcard</span>
         <span>Générer le lien cadeau</span>
