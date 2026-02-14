@@ -372,7 +372,8 @@ select.form-control { appearance: auto; }
   max-width: 700px;
   width: 90%;
   max-height: 90vh;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 10px 40px rgba(0,0,0,0.3);
 }
 .modal-header {
@@ -381,10 +382,11 @@ select.form-control { appearance: auto; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 }
 .modal-header h2 { font-size: 1.2rem; }
-.modal-body { padding: 1.5rem; }
-.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; justify-content: flex-end; }
+.modal-body { padding: 1.5rem; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
+.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; gap: 0.75rem; justify-content: flex-end; flex-shrink: 0; background: white; border-radius: 0 0 12px 12px; }
 .close-modal { font-size: 1.5rem; cursor: pointer; color: var(--text-light); background: none; border: none; line-height: 1; }
 .close-modal:hover { color: var(--text); }
 
