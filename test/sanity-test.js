@@ -493,7 +493,7 @@ async function suiteMerchantSide() {
   });
 
   await test('Export CSV', async () => {
-    const r = await api('GET', '/api/clients/export/csv', { cookies: staffCookies, raw: true });
+    const r = await api('POST', '/api/clients/export/csv', { cookies: staffCookies, raw: true });
     if (!r.ok) {
       const body = await r.text();
       throw new Error(`CSV export failed: ${r.status} — ${body}`);
