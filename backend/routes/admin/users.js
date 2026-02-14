@@ -263,22 +263,39 @@ router.post('/:id/merge', (req, res) => {
         }
       }
 
-      // ── Global aliases ──
+      // ── Global aliases (skip if already exists) ──
       if (source.email_lower) {
-        aliasQueries.create.run(targetId, 'email', source.email_lower);
+        const exists = db.prepare("SELECT 1 FROM end_user_aliases WHERE end_user_id = ? AND type = 'email' AND value = ?").get(targetId, source.email_lower);
+        if (!exists) {
+          try { aliasQueries.create.run(targetId, 'email', source.email_lower); } catch (e) {
+            console.warn(`Alias email skip (duplicate): ${source.email_lower}`, e.message);
+          }
+        }
       }
       if (source.phone_e164) {
-        aliasQueries.create.run(targetId, 'phone', source.phone_e164);
+        const exists = db.prepare("SELECT 1 FROM end_user_aliases WHERE end_user_id = ? AND type = 'phone' AND value = ?").get(targetId, source.phone_e164);
+        if (!exists) {
+          try { aliasQueries.create.run(targetId, 'phone', source.phone_e164); } catch (e) {
+            console.warn(`Alias phone skip (duplicate): ${source.phone_e164}`, e.message);
+          }
+        }
       }
 
       // ── Enrich target with missing identifiers from source ──
+      // Check for UNIQUE conflicts before updating to avoid constraint errors
       if (!target.email && source.email) {
-        db.prepare("UPDATE end_users SET email = ?, email_lower = ?, updated_at = datetime('now') WHERE id = ?")
-          .run(source.email, source.email_lower, targetId);
+        const conflict = db.prepare("SELECT id FROM end_users WHERE email_lower = ? AND id != ? AND deleted_at IS NULL").get(source.email_lower, targetId);
+        if (!conflict) {
+          db.prepare("UPDATE end_users SET email = ?, email_lower = ?, updated_at = datetime('now') WHERE id = ?")
+            .run(source.email, source.email_lower, targetId);
+        }
       }
       if (!target.phone && source.phone) {
-        db.prepare("UPDATE end_users SET phone = ?, phone_e164 = ?, updated_at = datetime('now') WHERE id = ?")
-          .run(source.phone, source.phone_e164, targetId);
+        const conflict = db.prepare("SELECT id FROM end_users WHERE phone_e164 = ? AND id != ? AND deleted_at IS NULL").get(source.phone_e164, targetId);
+        if (!conflict) {
+          db.prepare("UPDATE end_users SET phone = ?, phone_e164 = ?, updated_at = datetime('now') WHERE id = ?")
+            .run(source.phone, source.phone_e164, targetId);
+        }
       }
       if (!target.name && source.name) {
         db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?")
