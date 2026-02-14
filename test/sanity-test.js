@@ -38,14 +38,15 @@ const TEST_MERCHANT = {
   pointsForReward:  100,
   rewardDescription:'Récompense test',
 };
+const TEST_SUFFIX = String(Date.now()).slice(-6);
 const TEST_CLIENT_1 = {
   email: `client1${TEST_PREFIX}@test-fiddo.be`,
-  phone: '+32400000001',
+  phone: `+324900${TEST_SUFFIX}`,
   name:  'Client Test Un',
 };
 const TEST_CLIENT_2 = {
   email: `client2${TEST_PREFIX}@test-fiddo.be`,
-  phone: '+32400000002',
+  phone: `+324901${TEST_SUFFIX}`,
   name:  'Client Test Deux',
 };
 
