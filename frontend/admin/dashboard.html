@@ -780,7 +780,7 @@
 
       // ── Backup status ──
       try {
-        const resp = await fetch(API_BASE_URL + '/admin/backup/status', { credentials: 'include' });
+        const resp = await fetch(API_BASE_URL + '/admin/backups/status', { credentials: 'include' });
         if (resp.ok) {
           const data = await resp.json();
           document.getElementById('h-backup-dot').className = 'health-dot ok';
@@ -793,7 +793,7 @@
       } catch {
         document.getElementById('h-backup-dot').className = 'health-dot warn';
         document.getElementById('h-backup-text').textContent = 'Endpoint absent';
-        document.getElementById('h-backup-sub').textContent = 'Ajouter /api/admin/backup/status';
+        document.getElementById('h-backup-sub').textContent = 'Ajouter /api/admin/backups/status';
       }
     }
 
@@ -892,7 +892,7 @@
         html += '</tbody></table>';
         container.innerHTML = html;
       } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">⚠️ ${esc(e.message)}</div>`;
+        container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
       }
     }
 
@@ -1066,7 +1066,7 @@
         }
         container.innerHTML = html;
       } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">⚠️ ${esc(e.message)}</div>`;
+        container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
       }
     }
 
@@ -1139,27 +1139,18 @@
 
         document.getElementById('um-body').innerHTML = html;
 
-        // Footer with merge + block buttons (event delegation — no inline onclick)
+        // Footer — inline onclick (same pattern as merchant modal)
+        const mergeLabel = esc(u.name || u.email || u.phone || '').replace(/'/g, "\\'");
         const footer = document.getElementById('um-footer');
         footer.innerHTML = `
           <div class="action-btns">
-            <button class="btn btn-primary btn-sm" data-action="merge" data-uid="${u.id}" data-uname="${esc(u.name || u.email || u.phone || '')}">🔀 Fusionner avec…</button>
+            <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${mergeLabel}')">🔀 Fusionner avec…</button>
             ${u.is_blocked
-              ? `<button class="btn btn-success btn-sm" data-action="unblock" data-uid="${u.id}">🔓 Débloquer</button>`
-              : `<button class="btn btn-danger btn-sm" data-action="block" data-uid="${u.id}">🔒 Bloquer globalement</button>`
+              ? `<button class="btn btn-success btn-sm" onclick="globalUnblockUser(${u.id})">🔓 Débloquer</button>`
+              : `<button class="btn btn-danger btn-sm" onclick="globalBlockUser(${u.id})">🔒 Bloquer globalement</button>`
             }
           </div>
         `;
-        footer.querySelectorAll('button[data-action]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const action = btn.dataset.action;
-            const uid = parseInt(btn.dataset.uid);
-            if (action === 'block') globalBlockUser(uid);
-            else if (action === 'unblock') globalUnblockUser(uid);
-            else if (action === 'merge') openMergeModal(uid, btn.dataset.uname);
-          });
-        });
 
         document.getElementById('user-modal').classList.add('active');
       } catch (e) {
@@ -1385,7 +1376,7 @@
 
         container.innerHTML = html;
       } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">⚠️ ${esc(e.message)}</div>`;
+        container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
       }
     }
 
