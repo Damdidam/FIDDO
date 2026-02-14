@@ -112,7 +112,7 @@ app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../fronten
 
 // Client portal
 app.get('/me', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
-app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
+app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app-redirect.html')));
 app.get('/c/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
 
 // Super admin pages
