@@ -1,60 +1,28 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO API Client (Complete Bundle)
+   FIDDO API Client — V4 (single-token, matches backend)
    ═══════════════════════════════════════════════════════ */
 
 const API = (() => {
   const BASE = window.FIDDO_API || 'https://www.fiddo.be';
-  const KEYS = { access: 'fiddo_at', refresh: 'fiddo_rt' };
+  const KEY = 'fiddo_token';
 
-  function getAT() { return localStorage.getItem(KEYS.access); }
-  function getRT() { return localStorage.getItem(KEYS.refresh); }
-  function setTokens(at, rt) { localStorage.setItem(KEYS.access, at); localStorage.setItem(KEYS.refresh, rt); }
-  function clearTokens() { localStorage.removeItem(KEYS.access); localStorage.removeItem(KEYS.refresh); }
-
-  let refreshing = null;
-  async function refreshToken() {
-    if (refreshing) return refreshing;
-    refreshing = (async () => {
-      try {
-        const rt = getRT();
-        if (!rt) return null;
-        const r = await fetch(`${BASE}/api/me/refresh`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken: rt })
-        });
-        if (!r.ok) { clearTokens(); return null; }
-        const d = await r.json();
-        localStorage.setItem(KEYS.access, d.accessToken);
-        return d.accessToken;
-      } catch { return null; }
-      finally { refreshing = null; }
-    })();
-    return refreshing;
-  }
+  function getToken() { return localStorage.getItem(KEY); }
+  function setToken(t) { localStorage.setItem(KEY, t); }
+  function clearToken() { localStorage.removeItem(KEY); }
 
   async function call(endpoint, opts = {}) {
     const { method = 'GET', body, noAuth = false } = opts;
     const headers = { 'Content-Type': 'application/json' };
 
     if (!noAuth) {
-      let token = getAT();
-      if (!token) token = await refreshToken();
+      const token = getToken();
       if (token) headers['Authorization'] = 'Bearer ' + token;
     }
 
     const cfg = { method, headers };
     if (body && method !== 'GET') cfg.body = JSON.stringify(body);
 
-    let res = await fetch(`${BASE}${endpoint}`, cfg);
-
-    if (res.status === 401 && !noAuth) {
-      const newToken = await refreshToken();
-      if (newToken) {
-        headers['Authorization'] = 'Bearer ' + newToken;
-        res = await fetch(`${BASE}${endpoint}`, { ...cfg, headers });
-      }
-    }
-
+    const res = await fetch(`${BASE}${endpoint}`, cfg);
     const data = await res.json().catch(() => ({}));
     return { ok: res.ok, status: res.status, data };
   }
@@ -62,17 +30,13 @@ const API = (() => {
   return {
     // Auth
     login: (email) => call('/api/me/login', { method: 'POST', body: { email }, noAuth: true }),
-    verify: (token) => call('/api/me/verify', { method: 'POST', body: { token, deviceName: 'PWA' }, noAuth: true }),
-    logout: () => {
-      const rt = getRT();
-      call('/api/me/logout', { method: 'POST', body: { refreshToken: rt, pushToken: null } }).catch(() => {});
-      clearTokens();
-    },
+    verify: (token) => call('/api/me/verify', { method: 'POST', body: { token }, noAuth: true }),
+    logout: () => { clearToken(); },
 
     // Session
-    hasSession: () => !!(getAT() || getRT()),
-    setTokens,
-    clearTokens,
+    hasSession: () => !!getToken(),
+    setToken,
+    clearToken,
 
     // Cards
     getCards: () => call('/api/me/cards'),
