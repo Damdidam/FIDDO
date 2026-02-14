@@ -58,13 +58,13 @@ const TEST_CLIENT_3 = {
 const TEST_CASHIER = {
   email:       `cashier${TEST_PREFIX}@test-fiddo.be`,
   password:    'Cashier123!',
-  displayName: 'Caissier Test',
+  name:        'Caissier Test',
   role:        'cashier',
 };
 const TEST_MANAGER = {
   email:       `manager${TEST_PREFIX}@test-fiddo.be`,
   password:    'Manager123!',
-  displayName: 'Manager Test',
+  name:        'Manager Test',
   role:        'manager',
 };
 
@@ -668,9 +668,9 @@ async function suiteClientManagement() {
     assertStatus(r, 200, 'edit');
   });
 
-  await test('Edit: no identifiers → 400', async () => {
+  await test('Edit: clear all identifiers → 400', async () => {
     const r = await api('PUT', `/api/clients/${merchantClientId1}/edit`, {
-      cookies: ownerCookies, body: { name: 'No ID' },
+      cookies: ownerCookies, body: { name: 'No ID', email: '', phone: '' },
     });
     assertStatus(r, 400, 'edit-400');
   });
