@@ -446,7 +446,7 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
     const run = db.transaction(() => {
       // Anonymize transactions (keep financial data, remove link to person)
       db.prepare(`
-        UPDATE transactions SET notes = '[SUPPRIMÉ]', updated_at = datetime('now')
+        UPDATE transactions SET notes = '[SUPPRIMÉ]'
         WHERE merchant_client_id = ?
       `).run(mcId);
       merchantClientQueries.delete.run(mcId);
