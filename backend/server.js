@@ -40,7 +40,7 @@ app.use(requestIdMiddleware);
 // Static files — index: false so that GET / hits our landing route, not index.html
 app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
 
-// PWA mobile app — static assets (css/, js/, assets/)
+// PWA static files (css, js, assets, manifest)
 app.use('/app', express.static(path.join(__dirname, '../frontend/app'), { index: false }));
 
 // ═══════════════════════════════════════════════════════
@@ -88,7 +88,7 @@ app.use('/api/admin/messages', require('./routes/admin/messages'));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', version: '3.5.0', timestamp: new Date().toISOString() });
+  res.json({ status: 'ok', version: '4.0.0', timestamp: new Date().toISOString() });
 });
 
 // ═══════════════════════════════════════════════════════
@@ -113,12 +113,12 @@ app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../fron
 // QR static deep link — /q/ABC123 → client portal
 app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
 
-// Client portal
+// Client portal (legacy me.html)
 app.get('/me', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
 app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app-redirect.html')));
 app.get('/c/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/me.html')));
 
-// Mobile PWA app
+// PWA client app — serves index.html for all /app routes (SPA)
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
 app.get('/app/*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
 
@@ -158,7 +158,7 @@ const { startScheduler } = require('./services/backup-db');
 startScheduler();
 
 app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V3.5 Multi-Tenant — Port ${PORT}`);
+  console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT}`);
 });
 
 module.exports = app;
