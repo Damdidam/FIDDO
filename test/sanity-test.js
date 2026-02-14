@@ -84,6 +84,7 @@ let qrIdentId = null;
 let createdBackupFilename = null;
 let createdAdminMsgId = null;
 let createdAdminInvoiceId = null;
+let clientJwt = null;  // Client JWT from QR auth — reused in client portal tests
 
 // ─── Results ─────────────────────────────────────────
 const results = { passed: 0, failed: 0, skipped: 0, errors: [] };
@@ -488,7 +489,6 @@ async function suiteQR() {
   await test('QR client-auth: no PIN → 400', async () => { assertStatus(await api('POST', '/api/qr/client-auth', { body: { qrToken: merchantQrToken, email: TEST_CLIENT_1.email } }), 400, 'ca'); });
   await test('QR client-auth: wrong PIN → 401', async () => { assertStatus(await api('POST', '/api/qr/client-auth', { body: { qrToken: merchantQrToken, email: TEST_CLIENT_1.email, pin: '9999' } }), 401, 'ca'); });
 
-  let clientJwt = null;
   await test('QR client-auth: OK', async () => {
     const r = await api('POST', '/api/qr/client-auth', { body: { qrToken: merchantQrToken, email: TEST_CLIENT_1.email, pin: TEST_PIN } });
     assertStatus(r, 200, 'ca'); assert(r.data.token, 'No JWT'); clientJwt = r.data.token;
@@ -648,13 +648,111 @@ async function suiteAdminBackups() {
 
 async function suiteClientPortal() {
   console.log('\n🪪 CLIENT PORTAL');
-  // Routes are mounted at /api/me/*
+
+  // Unauthenticated tests
   await test('Login (sends magic link)', async () => { assertAnyStatus(await api('POST', '/api/me/login', { body: { email: TEST_CLIENT_1.email } }), [200, 400, 404], 'pl'); });
   await test('Login no email → 400', async () => { assertAnyStatus(await api('POST', '/api/me/login', { body: {} }), [400, 404], 'pn'); });
   await test('Verify no token → 400/401', async () => { assertAnyStatus(await api('POST', '/api/me/verify', { body: {} }), [400, 401], 'pv'); });
+  await test('Refresh no token → 400', async () => { assertStatus(await api('POST', '/api/me/refresh', { body: {} }), 400, 'pr'); });
+  await test('Refresh bad token → 401', async () => { assertStatus(await api('POST', '/api/me/refresh', { body: { refreshToken: 'invalid_token_xxx' } }), 401, 'pr'); });
   await test('Cards no auth → 401/403', async () => { assertAnyStatus(await api('GET', '/api/me/cards'), [401, 403], 'pc'); });
   await test('QR no auth → 401/403', async () => { assertAnyStatus(await api('GET', '/api/me/qr'), [401, 403], 'pq'); });
   await test('PIN no auth → 401/403', async () => { assertAnyStatus(await api('POST', '/api/me/pin', { body: { pin: '1234' } }), [401, 403], 'pp'); });
+  await test('Profile no auth → 401', async () => { assertStatus(await api('PUT', '/api/me/profile', { body: { name: 'Test' } }), 401, 'up'); });
+  await test('Push token no auth → 401', async () => { assertStatus(await api('POST', '/api/me/push-token', { body: { token: 'x', platform: 'ios' } }), 401, 'pt'); });
+  await test('Notif prefs no auth → 401', async () => { assertStatus(await api('GET', '/api/me/notifications/preferences'), 401, 'np'); });
+
+  // Authenticated tests (using JWT from QR auth)
+  if (clientJwt) {
+    const authH = { 'Authorization': `Bearer ${clientJwt}` };
+
+    // Cards list
+    await test('Cards (auth)', async () => {
+      const r = await api('GET', '/api/me/cards', { headers: authH });
+      assertStatus(r, 200, 'cl'); assert(r.data.client, 'No client'); assert(Array.isArray(r.data.cards), 'No cards array');
+    });
+
+    // Card detail
+    if (createdMerchantId) {
+      await test('Card detail', async () => {
+        const r = await api('GET', `/api/me/cards/${createdMerchantId}`, { headers: authH });
+        assertStatus(r, 200, 'cd'); assert(r.data.card, 'No card'); assert(r.data.merchant, 'No merchant');
+      });
+      await test('Card detail unknown → 404', async () => {
+        assertStatus(await api('GET', '/api/me/cards/999999', { headers: authH }), 404, 'cd');
+      });
+
+      // Transactions
+      await test('Card transactions', async () => {
+        const r = await api('GET', `/api/me/cards/${createdMerchantId}/transactions`, { headers: authH });
+        assertStatus(r, 200, 'ct'); assert(Array.isArray(r.data.transactions), 'No tx array'); assert(typeof r.data.total === 'number', 'No total');
+      });
+      await test('Card transactions unknown → 404', async () => {
+        assertStatus(await api('GET', '/api/me/cards/999999/transactions', { headers: authH }), 404, 'ct');
+      });
+    }
+
+    // QR
+    await test('QR (auth)', async () => {
+      const r = await api('GET', '/api/me/qr', { headers: authH });
+      assertStatus(r, 200, 'qr'); assert(r.data.qrToken, 'No qrToken');
+    });
+
+    // Profile update
+    await test('Profile update name', async () => {
+      const r = await api('PUT', '/api/me/profile', { headers: authH, body: { name: 'Sanity Updated' } });
+      assertStatus(r, 200, 'pu'); assert(r.data.client.name === 'Sanity Updated', 'Name not updated');
+    });
+    await test('Profile restore name', async () => {
+      assertStatus(await api('PUT', '/api/me/profile', { headers: authH, body: { name: TEST_CLIENT_1.name } }), 200, 'pr');
+    });
+    await test('Profile set DOB', async () => {
+      const r = await api('PUT', '/api/me/profile', { headers: authH, body: { dateOfBirth: '1990-06-15' } });
+      assertStatus(r, 200, 'pd'); assert(r.data.client.dateOfBirth === '1990-06-15', 'DOB not set');
+    });
+    await test('Profile bad DOB → 400', async () => {
+      assertStatus(await api('PUT', '/api/me/profile', { headers: authH, body: { dateOfBirth: 'not-a-date' } }), 400, 'pd');
+    });
+    await test('Profile underage → 400', async () => {
+      assertStatus(await api('PUT', '/api/me/profile', { headers: authH, body: { dateOfBirth: '2020-01-01' } }), 400, 'pd');
+    });
+    await test('Profile clear DOB', async () => {
+      const r = await api('PUT', '/api/me/profile', { headers: authH, body: { dateOfBirth: null } });
+      assertStatus(r, 200, 'pd');
+    });
+
+    // Push tokens
+    await test('Push token: missing → 400', async () => {
+      assertStatus(await api('POST', '/api/me/push-token', { headers: authH, body: {} }), 400, 'pt');
+    });
+    await test('Push token: bad platform → 400', async () => {
+      assertStatus(await api('POST', '/api/me/push-token', { headers: authH, body: { token: 'ExponentPushToken[xxx]', platform: 'windows' } }), 400, 'pt');
+    });
+    await test('Push token: register', async () => {
+      assertStatus(await api('POST', '/api/me/push-token', { headers: authH, body: { token: `ExponentPushToken[test_${TEST_PREFIX}]`, platform: 'ios' } }), 200, 'pt');
+    });
+    await test('Push token: delete', async () => {
+      assertStatus(await api('DELETE', '/api/me/push-token', { headers: authH, body: { token: `ExponentPushToken[test_${TEST_PREFIX}]` } }), 200, 'pt');
+    });
+
+    // Notification preferences
+    await test('Notif prefs: get', async () => {
+      const r = await api('GET', '/api/me/notifications/preferences', { headers: authH });
+      assertStatus(r, 200, 'ng'); assert(typeof r.data.notifCredit === 'boolean', 'Bad shape');
+    });
+    await test('Notif prefs: update', async () => {
+      const r = await api('PUT', '/api/me/notifications/preferences', { headers: authH, body: { notifPromo: false } });
+      assertStatus(r, 200, 'nu'); assert(r.data.notifPromo === false, 'Promo not updated');
+    });
+    await test('Notif prefs: restore', async () => {
+      assertStatus(await api('PUT', '/api/me/notifications/preferences', { headers: authH, body: { notifPromo: true } }), 200, 'nu');
+    });
+
+    // Logout (mobile)
+    await test('Logout (mobile)', async () => {
+      assertStatus(await api('POST', '/api/me/logout', { headers: authH, body: {} }), 200, 'lo');
+    });
+  }
 }
 
 // ═══════════════════════════════════════════════════════
