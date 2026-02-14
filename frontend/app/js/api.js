@@ -1,18 +1,16 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO API Client
+   FIDDO API Client (Complete Bundle)
    ═══════════════════════════════════════════════════════ */
 
 const API = (() => {
   const BASE = window.FIDDO_API || 'https://www.fiddo.be';
   const KEYS = { access: 'fiddo_at', refresh: 'fiddo_rt' };
 
-  // ─── Token storage ────────────────────────
   function getAT() { return localStorage.getItem(KEYS.access); }
   function getRT() { return localStorage.getItem(KEYS.refresh); }
   function setTokens(at, rt) { localStorage.setItem(KEYS.access, at); localStorage.setItem(KEYS.refresh, rt); }
   function clearTokens() { localStorage.removeItem(KEYS.access); localStorage.removeItem(KEYS.refresh); }
 
-  // ─── Token refresh ────────────────────────
   let refreshing = null;
   async function refreshToken() {
     if (refreshing) return refreshing;
@@ -34,7 +32,6 @@ const API = (() => {
     return refreshing;
   }
 
-  // ─── Core fetch ───────────────────────────
   async function call(endpoint, opts = {}) {
     const { method = 'GET', body, noAuth = false } = opts;
     const headers = { 'Content-Type': 'application/json' };
@@ -50,7 +47,6 @@ const API = (() => {
 
     let res = await fetch(`${BASE}${endpoint}`, cfg);
 
-    // Auto-retry on 401
     if (res.status === 401 && !noAuth) {
       const newToken = await refreshToken();
       if (newToken) {
@@ -63,7 +59,6 @@ const API = (() => {
     return { ok: res.ok, status: res.status, data };
   }
 
-  // ─── Public API ───────────────────────────
   return {
     // Auth
     login: (email) => call('/api/me/login', { method: 'POST', body: { email }, noAuth: true }),
@@ -86,10 +81,16 @@ const API = (() => {
 
     // Profile
     updateProfile: (body) => call('/api/me/profile', { method: 'PUT', body }),
+    updateEmail: (newEmail) => call('/api/me/email', { method: 'PUT', body: { newEmail } }),
     getQR: () => call('/api/me/qr'),
 
     // Notifications
     getNotifPrefs: () => call('/api/me/notifications/preferences'),
     setNotifPrefs: (body) => call('/api/me/notifications/preferences', { method: 'PUT', body }),
+
+    // Gift
+    createGift: (merchantId) => call(`/api/me/cards/${merchantId}/gift`, { method: 'POST' }),
+    getGift: (token) => call(`/api/me/gift/${token}`, { noAuth: true }),
+    claimGift: (token) => call(`/api/me/gift/${token}/claim`, { method: 'POST' }),
   };
 })();
