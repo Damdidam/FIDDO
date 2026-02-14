@@ -521,6 +521,17 @@
         }
       }
 
+      // Hash-based verify fallback (from app-redirect page): /me#verify=TOKEN
+      const hash = window.location.hash;
+      if (hash.startsWith('#verify=')) {
+        const token = decodeURIComponent(hash.substring(8));
+        if (token) {
+          window.location.hash = '';
+          await verifyMagicLink(token);
+          return;
+        }
+      }
+
       // Check saved session
       const saved = localStorage.getItem('fiddo_me_token');
       if (saved) {
