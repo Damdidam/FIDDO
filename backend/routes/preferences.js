@@ -18,6 +18,20 @@ const VALID_THEMES = ['teal', 'navy', 'violet', 'forest', 'brick', 'amber', 'sla
 const VALID_LANGUAGES = ['fr', 'nl', 'en'];
 const VALID_BACKUP_FREQ = ['manual', 'daily', 'twice', 'thrice'];
 
+const VALID_BUSINESS_TYPES = [
+  'horeca', 'boulangerie', 'coiffeur', 'beaute', 'pharmacie',
+  'fleuriste', 'boucherie', 'epicerie', 'cave', 'librairie',
+  'pressing', 'fitness', 'garage', 'veterinaire', 'autre',
+];
+
+const BUSINESS_TYPE_LABELS = {
+  horeca: 'Horeca', boulangerie: 'Boulangerie', coiffeur: 'Coiffeur',
+  beaute: 'Beauté', pharmacie: 'Pharmacie', fleuriste: 'Fleuriste',
+  boucherie: 'Boucherie', epicerie: 'Épicerie', cave: 'Cave à vins',
+  librairie: 'Librairie', pressing: 'Pressing', fitness: 'Fitness',
+  garage: 'Garage', veterinaire: 'Vétérinaire', autre: 'Autre',
+};
+
 const DEFAULT_PREFS = {
   theme: 'teal',
   language: 'fr',
@@ -315,6 +329,9 @@ router.get('/merchant-info', requireRole('owner'), (req, res) => {
 
     const staff = staffQueries.findById.get(req.staff.id);
 
+    let openingHours = null;
+    try { openingHours = merchant.opening_hours ? JSON.parse(merchant.opening_hours) : null; } catch {}
+
     res.json({
       businessName: merchant.business_name,
       address: merchant.address,
@@ -324,15 +341,16 @@ router.get('/merchant-info', requireRole('owner'), (req, res) => {
       ownerPhone: merchant.owner_phone,
       ownerName: staff?.display_name || '',
       ownerEmail: staff?.email || '',
-      // V4 — Mobile app card fields
+      businessType: merchant.business_type || 'horeca',
       websiteUrl: merchant.website_url || '',
-      description: merchant.description || '',
-      openingHours: merchant.opening_hours || '',
-      latitude: merchant.latitude || null,
-      longitude: merchant.longitude || null,
-      logoUrl: merchant.logo_url || '',
       instagramUrl: merchant.instagram_url || '',
       facebookUrl: merchant.facebook_url || '',
+      openingHours,
+      latitude: merchant.latitude || null,
+      longitude: merchant.longitude || null,
+      description: merchant.description || '',
+      allowGifts: !!merchant.allow_gifts,
+      businessTypes: BUSINESS_TYPE_LABELS,
     });
   } catch (error) {
     console.error('Erreur get merchant-info:', error);
@@ -349,12 +367,15 @@ router.get('/merchant-info', requireRole('owner'), (req, res) => {
 router.put('/merchant-info', requireRole('owner'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
-    const { businessName, address, vatNumber, email, phone, ownerPhone, ownerName,
-            websiteUrl, description, openingHours, latitude, longitude, logoUrl, instagramUrl, facebookUrl } = req.body;
+    const {
+      businessName, address, vatNumber, email, phone, ownerPhone, ownerName,
+      businessType, websiteUrl, instagramUrl, facebookUrl,
+      openingHours, latitude, longitude, description, allowGifts,
+    } = req.body;
 
     // Validate required fields
     if (!businessName || !address || !vatNumber || !email || !phone || !ownerPhone) {
-      return res.status(400).json({ error: 'Tous les champs sont requis' });
+      return res.status(400).json({ error: 'Tous les champs obligatoires sont requis' });
     }
 
     // Input length limits (same as registration)
@@ -364,6 +385,10 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     if (phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
     if (ownerPhone.length > 20) return res.status(400).json({ error: 'Téléphone responsable trop long (max 20)' });
     if (ownerName && ownerName.length > 100) return res.status(400).json({ error: 'Nom du responsable trop long (max 100)' });
+    if (description && description.length > 500) return res.status(400).json({ error: 'Description trop longue (max 500)' });
+
+    // Validate business type
+    const validType = (businessType && VALID_BUSINESS_TYPES.includes(businessType)) ? businessType : 'horeca';
 
     // Normalize & validate VAT
     const normalizedVat = normalizeVAT(vatNumber);
@@ -382,6 +407,12 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
       }
     }
 
+    // Serialize opening_hours
+    let hoursJson = null;
+    if (openingHours && typeof openingHours === 'object') {
+      hoursJson = JSON.stringify(openingHours);
+    }
+
     // Build change log for admin notification
     const changes = [];
     if (businessName.trim() !== current.business_name) changes.push({ field: 'Nom du commerce', old: current.business_name, new: businessName.trim() });
@@ -390,31 +421,30 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     if (email.trim().toLowerCase() !== current.email) changes.push({ field: 'Email commerce', old: current.email, new: email.trim().toLowerCase() });
     if (phone.trim() !== current.phone) changes.push({ field: 'Téléphone', old: current.phone, new: phone.trim() });
     if (ownerPhone.trim() !== current.owner_phone) changes.push({ field: 'Tél. propriétaire', old: current.owner_phone, new: ownerPhone.trim() });
+    if (validType !== (current.business_type || 'horeca')) changes.push({ field: 'Type de commerce', old: current.business_type || 'horeca', new: validType });
+    if ((websiteUrl || '') !== (current.website_url || '')) changes.push({ field: 'Site web', old: current.website_url || '', new: websiteUrl || '' });
+    if ((allowGifts ? 1 : 0) !== (current.allow_gifts || 0)) changes.push({ field: 'Cadeaux points', old: current.allow_gifts ? 'Oui' : 'Non', new: allowGifts ? 'Oui' : 'Non' });
 
     if (changes.length === 0 && (!ownerName || ownerName.trim() === (staffQueries.findById.get(req.staff.id)?.display_name || ''))) {
       return res.json({ message: 'Aucune modification détectée', changes: [] });
     }
 
-    // Update merchant
+    // Update merchant (all fields)
     db.prepare(`
       UPDATE merchants
       SET business_name = ?, address = ?, vat_number = ?,
           email = ?, phone = ?, owner_phone = ?,
-          website_url = ?, description = ?, opening_hours = ?,
-          latitude = ?, longitude = ?, logo_url = ?,
-          instagram_url = ?, facebook_url = ?
+          business_type = ?, website_url = ?, instagram_url = ?, facebook_url = ?,
+          opening_hours = ?, latitude = ?, longitude = ?,
+          description = ?, allow_gifts = ?
       WHERE id = ?
     `).run(
       businessName.trim(), address.trim(), normalizedVat,
       email.trim().toLowerCase(), phone.trim(), ownerPhone.trim(),
-      (websiteUrl || '').trim() || null,
-      (description || '').trim() || null,
-      (openingHours || '').trim() || null,
-      latitude ? parseFloat(latitude) : null,
-      longitude ? parseFloat(longitude) : null,
-      (logoUrl || '').trim() || null,
-      (instagramUrl || '').trim() || null,
-      (facebookUrl || '').trim() || null,
+      validType,
+      websiteUrl || null, instagramUrl || null, facebookUrl || null,
+      hoursJson, latitude || null, longitude || null,
+      description || null, allowGifts ? 1 : 0,
       merchantId
     );
 
@@ -453,7 +483,7 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
       });
     }
 
-    // Update session data
+    // Return updated
     const updated = merchantQueries.findById.get(merchantId);
 
     res.json({
