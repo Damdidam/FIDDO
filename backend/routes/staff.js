@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { staffQueries } = require('../database');
+const { staffQueries, db } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { normalizeEmail } = require('../services/normalizer');
@@ -225,7 +225,6 @@ router.put('/:id/password', async (req, res) => {
     }
 
     const hashed = await bcrypt.hash(password, 10);
-    db.prepare('UPDATE transactions SET staff_id = NULL WHERE staff_id = ?').run(staffId);
     staffQueries.updatePassword.run(hashed, staffId);
 
     // Reset failed login count in case account was locked
@@ -272,9 +271,10 @@ router.delete('/:id', (req, res) => {
       return res.status(403).json({ error: 'Impossible de supprimer un propriétaire' });
     }
 
-// Nullify staff_id in transactions before deleting (FK constraint)
-db.prepare('UPDATE transactions SET staff_id = NULL WHERE staff_id = ?').run(staffId);
-    
+    // Nullify staff_id in transactions before deleting (FK constraint)
+    db.prepare('UPDATE transactions SET staff_id = NULL WHERE staff_id = ?').run(staffId);
+    staffQueries.delete.run(staffId, req.staff.merchant_id);
+
     logAudit({
       ...auditCtx(req),
       actorType: 'staff',
