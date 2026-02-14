@@ -346,6 +346,48 @@ router.post('/pin', authenticateClient, async (req, res) => {
 // PUT /api/me/email — Update email address
 // ═══════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════
+// PUT /api/me/profile — Update name, phone, date of birth
+// ═══════════════════════════════════════════════════════
+
+router.put('/profile', authenticateClient, (req, res) => {
+  try {
+    const endUser = endUserQueries.findById.get(req.endUserId);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const { name, phone, dateOfBirth } = req.body;
+
+    if (name !== undefined) {
+      if (!name || name.trim().length < 2) return res.status(400).json({ error: 'Nom trop court' });
+      if (name.trim().length > 100) return res.status(400).json({ error: 'Nom trop long' });
+    }
+
+    const updates = [];
+    const params = [];
+
+    if (name !== undefined) { updates.push('name = ?'); params.push(name.trim()); }
+    if (phone !== undefined) {
+      updates.push('phone = ?', 'phone_e164 = ?');
+      const p = phone.trim();
+      params.push(p, p.startsWith('+') ? p : (p ? '+32' + p.replace(/^0/, '') : null));
+    }
+    if (dateOfBirth !== undefined) { updates.push('date_of_birth = ?'); params.push(dateOfBirth || null); }
+
+    if (updates.length === 0) return res.status(400).json({ error: 'Rien à modifier' });
+
+    updates.push("updated_at = datetime('now')");
+    params.push(endUser.id);
+
+    db.prepare(`UPDATE end_users SET ${updates.join(', ')} WHERE id = ?`).run(...params);
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
 router.put('/email', authenticateClient, async (req, res) => {
   try {
     const endUser = endUserQueries.findById.get(req.endUserId);
