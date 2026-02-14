@@ -492,14 +492,10 @@ async function suiteMerchantSide() {
     assertStatus(r, 200, 'messages');
   });
 
-  await test('Export CSV', async () => {
-    const r = await api('POST', '/api/clients/export/csv', { cookies: staffCookies, raw: true });
-    if (!r.ok) {
-      const body = await r.text();
-      throw new Error(`CSV export failed: ${r.status} — ${body}`);
-    }
-    const ct = r.headers.get('content-type');
-    assert(ct && ct.includes('csv'), `Not CSV content-type: ${ct}`);
+  await test('Export CSV (email)', async () => {
+    const r = await api('POST', '/api/clients/export/csv', { cookies: staffCookies });
+    assertStatus(r, 200, 'csv');
+    assert(r.data.success === true, 'Export not successful');
   });
 }
 
