@@ -25,13 +25,18 @@ const ADMIN_PASSWORD = process.env.FIDDO_ADMIN_PASSWORD || 'CHANGE_ME';
 // Test data identifiers (unique to avoid collisions)
 const TEST_PREFIX = `_sanity_${Date.now()}`;
 const TEST_MERCHANT = {
-  business_name: `Test Sanity ${TEST_PREFIX}`,
-  email:         `sanity${TEST_PREFIX}@test-fiddo.be`,
-  password:      'TestPass123!',
-  vat_number:    'BE0999999999',
-  address:       '1 Rue du Test, 1000 Bruxelles',
-  phone:         '+32400000000',
-  owner_name:    'Sanity Tester',
+  businessName:     `Test Sanity ${TEST_PREFIX}`,
+  email:            `sanity${TEST_PREFIX}@test-fiddo.be`,
+  vatNumber:        `BE0${String(Date.now()).slice(-9)}`,
+  address:          '1 Rue du Test, 1000 Bruxelles',
+  phone:            '+32400000000',
+  ownerPhone:       '+32400000099',
+  ownerEmail:       `owner${TEST_PREFIX}@test-fiddo.be`,
+  ownerPassword:    'TestPass123!',
+  ownerName:        'Sanity Tester',
+  pointsPerEuro:    1,
+  pointsForReward:  100,
+  rewardDescription:'Récompense test',
 };
 const TEST_CLIENT_1 = {
   email: `client1${TEST_PREFIX}@test-fiddo.be`,
@@ -252,12 +257,12 @@ async function suiteMerchantRegistration() {
 
   await test('Staff login to test merchant', async () => {
     const r = await api('POST', '/api/auth/login', {
-      body: { email: TEST_MERCHANT.email, password: TEST_MERCHANT.password },
+      body: { email: TEST_MERCHANT.ownerEmail, password: TEST_MERCHANT.ownerPassword },
       raw: true,
     });
     assert(r.ok, `Staff login failed: ${r.status}`);
     staffCookies = extractCookies(r);
-    assert(staffCookies.includes('token'), 'No staff token cookie');
+    assert(staffCookies.includes('staff_token'), 'No staff token cookie');
   });
 
   await test('Staff verify', async () => {
@@ -565,7 +570,7 @@ async function cleanup() {
         cookies: adminCookies,
         body: { reason: 'Sanity test cleanup' },
       });
-      console.log(`  🗑️  Suspended test merchant #${createdMerchantId} (${TEST_MERCHANT.business_name})`);
+      console.log(`  🗑️  Suspended test merchant #${createdMerchantId} (${TEST_MERCHANT.businessName})`);
     } catch { console.log('  ⚠️  Could not suspend merchant'); }
   }
 
