@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO App — V4 Complete (blue theme, single token)
+   FIDDO App — V4.1 (blue theme, PIN, gift, toast fix)
    ═══════════════════════════════════════════════════════ */
 
 const App = (() => {
@@ -16,8 +16,8 @@ const App = (() => {
   let lastGiftLink = '';
 
   const THEMES = {
-    teal: '#0d9488', navy: '#1e40af', rose: '#e11d48',
-    amber: '#d97706', purple: '#7c3aed', green: '#059669', slate: '#475569'
+    teal: '#2563eb', navy: '#1e40af', violet: '#7c3aed',
+    forest: '#059669', brick: '#e11d48', amber: '#d97706', slate: '#475569'
   };
 
   const BIZ_TYPES = {
@@ -108,7 +108,6 @@ const App = (() => {
         showApp();
         return;
       }
-      // Token expired or invalid
       API.clearToken();
     }
 
@@ -160,7 +159,7 @@ const App = (() => {
       return;
     }
 
-    // ✅ Backend returns { token, client } — single JWT, no refresh
+    // Backend returns { token, client }
     API.setToken(res.data.token);
     client = res.data.client;
 
@@ -258,8 +257,8 @@ const App = (() => {
     });
 
     list.innerHTML = filtered.map(c => {
-      const theme = c.theme || 'teal';
-      const color = THEMES[theme] || THEMES.teal;
+      const theme = c.theme || 'navy';
+      const color = THEMES[theme] || THEMES.navy;
       const left = Math.max(c.pointsForReward - c.pointsBalance, 0);
       const pct = Math.min(c.progress || 0, 100);
       const date = c.lastVisit ? relDate(c.lastVisit) : '';
@@ -336,8 +335,8 @@ const App = (() => {
     const { card, merchant } = res.data;
     currentCard = card;
     currentMerchant = merchant;
-    const theme = merchant.theme || 'teal';
-    const color = THEMES[theme] || THEMES.teal;
+    const theme = merchant.theme || 'navy';
+    const color = THEMES[theme] || THEMES.navy;
     const biz = BIZ_TYPES[merchant.businessType || 'horeca'] || BIZ_TYPES.autre;
 
     document.getElementById('card-hero').className = 'card-hero theme-' + theme;
@@ -374,14 +373,16 @@ const App = (() => {
 
     // Hours
     const hoursWrap = document.getElementById('cd-hours-wrap');
-    if (merchant.openingHours && Object.keys(merchant.openingHours).length > 0) {
+    if (merchant.openingHours && typeof merchant.openingHours === 'object' && Object.keys(merchant.openingHours).length > 0) {
       hoursWrap.classList.remove('hidden');
       const todayKey = DAY_KEYS[new Date().getDay()];
       document.getElementById('cd-hours').innerHTML = Object.entries(merchant.openingHours).map(([day, hrs]) => {
         const isToday = day === todayKey;
         return `<div class="hour-row${isToday ? ' today' : ''}"><span class="hour-day">${DAYS[day] || day}</span><span class="hour-val">${hrs || 'Fermé'}</span></div>`;
       }).join('');
-    } else hoursWrap.classList.add('hidden');
+    } else {
+      hoursWrap.classList.add('hidden');
+    }
 
     document.getElementById('btn-maps').style.display = (merchant.latitude || merchant.address) ? 'flex' : 'none';
 
@@ -429,12 +430,12 @@ const App = (() => {
     if (txs.length === 0) { list.innerHTML = '<p style="text-align:center;padding:60px;color:var(--tx3)">Aucune transaction</p>'; return; }
 
     const TYPE_MAP = {
-      credit:   { icon: 'add_circle', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Crédit' },
-      reward:   { icon: 'redeem', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Récompense' },
+      credit:     { icon: 'add_circle', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Crédit' },
+      reward:     { icon: 'redeem', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Récompense' },
       adjustment: { icon: 'build', color: 'var(--pri)', bg: 'var(--pri-l)', label: 'Ajustement' },
-      merge:    { icon: 'merge', color: 'var(--tx3)', bg: 'var(--brd-l)', label: 'Fusion' },
-      gift_out: { icon: 'card_giftcard', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Cadeau envoyé' },
-      gift_in:  { icon: 'card_giftcard', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Cadeau reçu' },
+      merge:      { icon: 'merge', color: 'var(--tx3)', bg: 'var(--brd-l)', label: 'Fusion' },
+      gift_out:   { icon: 'card_giftcard', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Cadeau envoyé' },
+      gift_in:    { icon: 'card_giftcard', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Cadeau reçu' },
     };
 
     list.innerHTML = txs.map(tx => {
@@ -476,17 +477,14 @@ const App = (() => {
     lastGiftLink = res.data.giftUrl;
     closeModal();
 
-    // Update card balance to 0 locally
     currentCard.pointsBalance = 0;
     document.getElementById('cd-pts').textContent = '0';
     document.getElementById('cd-prog').style.width = '0%';
     document.getElementById('cd-badge').innerHTML = '<span class="cd-until">Encore ' + currentCard.pointsForReward + ' points</span>';
     document.getElementById('btn-gift').classList.add('hidden');
 
-    // Show share modal
     document.getElementById('gift-link').value = lastGiftLink;
     openModal('modal-gift-share');
-
     refreshCards();
   }
 
@@ -502,16 +500,10 @@ const App = (() => {
   function shareGift(method) {
     const text = `🎁 Cadeau ! Je t'offre mes points fidélité chez ${currentMerchant?.name || 'un commerce'}. Ouvre ce lien pour les récupérer :`;
     const url = lastGiftLink;
-
-    if (method === 'whatsapp') {
-      window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`);
-    } else if (method === 'sms') {
-      window.open(`sms:?body=${encodeURIComponent(text + ' ' + url)}`);
-    } else if (navigator.share) {
-      navigator.share({ title: 'Cadeau FIDDO', text, url }).catch(() => {});
-    } else {
-      copyGiftLink();
-    }
+    if (method === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`);
+    else if (method === 'sms') window.open(`sms:?body=${encodeURIComponent(text + ' ' + url)}`);
+    else if (navigator.share) navigator.share({ title: 'Cadeau FIDDO', text, url }).catch(() => {});
+    else copyGiftLink();
   }
 
   // ─── Gift Claim (recipient side) ──────────
@@ -523,7 +515,6 @@ const App = (() => {
     const done = document.getElementById('gift-done');
     const errorDiv = document.getElementById('gift-error');
 
-    // Need to be logged in to claim
     if (!API.hasSession()) {
       sessionStorage.setItem('fiddo_pending_gift', token);
       show('screen-login');
@@ -531,7 +522,6 @@ const App = (() => {
       return;
     }
 
-    // Load gift info
     const res = await API.getGift(token);
     loading.classList.add('hidden');
 
@@ -556,27 +546,23 @@ const App = (() => {
       const btn = document.getElementById('btn-claim-gift');
       btn.classList.add('loading');
       btn.innerHTML = '<span>Récupération…</span>';
-
       const claimRes = await API.claimGift(token);
-
       if (!claimRes.ok) {
         btn.classList.remove('loading');
         btn.innerHTML = '<span class="material-symbols-rounded">downloading</span><span>Récupérer mes points</span>';
-        toast(claimRes.data?.error || 'Erreur');
-        return;
+        toast(claimRes.data?.error || 'Erreur'); return;
       }
-
       preview.classList.add('hidden');
       done.classList.remove('hidden');
-      document.getElementById('gift-done-msg').textContent =
-        `${gift.points} points ont été ajoutés à votre carte chez ${gift.merchantName}`;
-
+      document.getElementById('gift-done-msg').textContent = `${gift.points} points ajoutés chez ${gift.merchantName}`;
       const cardsRes = await API.getCards();
       if (cardsRes.ok) { client = cardsRes.data.client; cards = cardsRes.data.cards || []; }
     };
   }
 
-  // ─── Profile ──────────────────────────────
+  // ═══════════════════════════════════════════
+  // PROFILE
+  // ═══════════════════════════════════════════
 
   function loadProfile() {
     if (!client) return;
@@ -595,6 +581,11 @@ const App = (() => {
     const isDark = document.documentElement.classList.contains('dark');
     document.getElementById('dark-icon').textContent = isDark ? 'light_mode' : 'dark_mode';
     document.getElementById('dark-label').textContent = isDark ? 'Mode clair' : 'Mode sombre';
+
+    // PIN status
+    const hasPin = client.hasPin;
+    document.getElementById('pin-label').textContent = hasPin ? 'PIN défini ✓' : 'Aucun PIN défini';
+    document.getElementById('pin-btn-label').textContent = hasPin ? 'Modifier mon PIN' : 'Créer un PIN';
   }
 
   async function loadNotifPrefs() {
@@ -643,6 +634,41 @@ const App = (() => {
     else toast(res.data?.error || 'Erreur');
   }
 
+  // ─── PIN ──────────────────────────────────
+
+  function openPinModal() {
+    const hasPin = client?.hasPin;
+    document.getElementById('pin-modal-title').textContent = hasPin ? 'Modifier le code PIN' : 'Créer un code PIN';
+    const wrap = document.getElementById('pin-current-wrap');
+    if (hasPin) wrap.classList.remove('hidden');
+    else wrap.classList.add('hidden');
+    document.getElementById('pin-current').value = '';
+    document.getElementById('pin-new').value = '';
+    openModal('modal-pin');
+    setTimeout(() => document.getElementById(hasPin ? 'pin-current' : 'pin-new').focus(), 400);
+  }
+
+  async function savePin() {
+    const currentPin = document.getElementById('pin-current').value.trim();
+    const newPin = document.getElementById('pin-new').value.trim();
+
+    if (!/^\d{4}$/.test(newPin)) { toast('Le PIN doit être 4 chiffres'); return; }
+    if (client?.hasPin && !/^\d{4}$/.test(currentPin)) { toast('PIN actuel requis'); return; }
+
+    const body = { newPin };
+    if (client?.hasPin) body.currentPin = currentPin;
+
+    const res = await API.call('/api/me/pin', { method: 'POST', body });
+    if (res.ok) {
+      client.hasPin = true;
+      loadProfile();
+      closeModal();
+      toast('Code PIN enregistré ✓');
+    } else {
+      toast(res.data?.error || 'Erreur');
+    }
+  }
+
   function toggleDark() {
     const isDark = document.documentElement.classList.toggle('dark');
     localStorage.setItem('fiddo_dark', isDark ? '1' : '0');
@@ -670,7 +696,6 @@ const App = (() => {
     const noCam = document.getElementById('scan-no-cam');
     if (scannerStream) return;
 
-    // Show video element only when scanner active
     video.style.display = 'block';
 
     try {
@@ -689,17 +714,13 @@ const App = (() => {
   function stopScanner() {
     if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
     if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
-    // Hide video element to prevent black square
     const video = document.getElementById('scan-video');
-    if (video) {
-      video.srcObject = null;
-      video.style.display = 'none';
-    }
+    if (video) { video.srcObject = null; video.style.display = 'none'; }
   }
 
   function handleScan(data) {
     const match = data.match(/fiddo\.be\/q\/([a-zA-Z0-9_-]+)/);
-    if (!match) { toast("QR non reconnu"); return; }
+    if (!match) { toast('QR non reconnu'); return; }
     stopScanner();
     window.open(data, '_blank');
     setTimeout(() => { if (document.querySelector('.tb.active')?.dataset.tab === 'scanner') startScanner(); }, 2000);
@@ -710,11 +731,16 @@ const App = (() => {
   function openModal(id) { document.getElementById(id).classList.add('open'); }
   function closeModal() { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); }
 
+  let toastTimer = null;
   function toast(msg) {
     const el = document.getElementById('toast');
+    if (toastTimer) clearTimeout(toastTimer);
+    el.classList.remove('show');
+    // Force reflow to restart animation
+    void el.offsetWidth;
     el.textContent = msg;
     el.classList.add('show');
-    setTimeout(() => el.classList.remove('show'), 2500);
+    toastTimer = setTimeout(() => { el.classList.remove('show'); toastTimer = null; }, 2500);
   }
 
   // ─── Helpers ──────────────────────────────
@@ -747,10 +773,6 @@ const App = (() => {
     document.getElementById('search-input').addEventListener('input', handleSearch);
     document.querySelectorAll('.notif-row input').forEach(el => el.addEventListener('change', saveNotifs));
 
-    // Hide video by default (prevent black square)
-    const video = document.getElementById('scan-video');
-    if (video) video.style.display = 'none';
-
     // Pull-to-refresh
     let startY = 0;
     const scroll = document.getElementById('cards-scroll');
@@ -770,6 +792,7 @@ const App = (() => {
     show, goBack, switchTab, showApp,
     openCard, showHistory, openMaps,
     showMyQR, editName, saveName, editEmail, saveEmail,
+    openPinModal, savePin,
     startScanner, closeModal,
     logout, saveNotifs, toast,
     filterType, clearSearch, toggleFav, toggleDark,
