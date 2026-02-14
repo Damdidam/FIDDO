@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO App — Complete Bundle
+   FIDDO App — V4 Complete (blue theme, single token)
    ═══════════════════════════════════════════════════════ */
 
 const App = (() => {
@@ -108,7 +108,8 @@ const App = (() => {
         showApp();
         return;
       }
-      API.clearTokens();
+      // Token expired or invalid
+      API.clearToken();
     }
 
     show('screen-login');
@@ -158,11 +159,14 @@ const App = (() => {
       document.getElementById('verify-retry').classList.remove('hidden');
       return;
     }
-    API.setTokens(res.data.accessToken, res.data.refreshToken);
+
+    // ✅ Backend returns { token, client } — single JWT, no refresh
+    API.setToken(res.data.token);
     client = res.data.client;
+
     const cardsRes = await API.getCards();
     if (cardsRes.ok) cards = cardsRes.data.cards || [];
-    if (!client.profileCompleted && !client.name) show('screen-onboarding');
+    if (!client.name) show('screen-onboarding');
     else showApp();
   }
 
@@ -352,7 +356,7 @@ const App = (() => {
     document.getElementById('cd-ratio').textContent = card.pointsPerEuro;
     updateFavIcon();
 
-    // Gift button: show only if merchant allows gifts AND balance > 0
+    // Gift button
     const giftBtn = document.getElementById('btn-gift');
     if (merchant.allowGifts && card.pointsBalance > 0) giftBtn.classList.remove('hidden');
     else giftBtn.classList.add('hidden');
@@ -483,13 +487,11 @@ const App = (() => {
     document.getElementById('gift-link').value = lastGiftLink;
     openModal('modal-gift-share');
 
-    // Also refresh cards list
     refreshCards();
   }
 
   function copyGiftLink() {
     navigator.clipboard.writeText(lastGiftLink).then(() => toast('Lien copié !')).catch(() => {
-      // Fallback
       const input = document.getElementById('gift-link');
       input.select();
       document.execCommand('copy');
@@ -523,7 +525,6 @@ const App = (() => {
 
     // Need to be logged in to claim
     if (!API.hasSession()) {
-      // Store gift token and redirect to login
       sessionStorage.setItem('fiddo_pending_gift', token);
       show('screen-login');
       toast('Connectez-vous pour récupérer votre cadeau');
@@ -551,7 +552,6 @@ const App = (() => {
     const expDate = new Date(gift.expiresAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long' });
     document.getElementById('gift-expires').textContent = 'Expire le ' + expDate;
 
-    // Claim button
     document.getElementById('btn-claim-gift').onclick = async () => {
       const btn = document.getElementById('btn-claim-gift');
       btn.classList.add('loading');
@@ -571,7 +571,6 @@ const App = (() => {
       document.getElementById('gift-done-msg').textContent =
         `${gift.points} points ont été ajoutés à votre carte chez ${gift.merchantName}`;
 
-      // Refresh cards
       const cardsRes = await API.getCards();
       if (cardsRes.ok) { client = cardsRes.data.client; cards = cardsRes.data.cards || []; }
     };
@@ -601,10 +600,10 @@ const App = (() => {
   async function loadNotifPrefs() {
     const res = await API.getNotifPrefs();
     if (!res.ok) return;
-    document.getElementById('notif-credit').checked = res.data.notifCredit;
-    document.getElementById('notif-reward').checked = res.data.notifReward;
-    document.getElementById('notif-promo').checked = res.data.notifPromo;
-    document.getElementById('notif-birthday').checked = res.data.notifBirthday;
+    if (res.data.notifCredit !== undefined) document.getElementById('notif-credit').checked = res.data.notifCredit;
+    if (res.data.notifReward !== undefined) document.getElementById('notif-reward').checked = res.data.notifReward;
+    if (res.data.notifPromo !== undefined) document.getElementById('notif-promo').checked = res.data.notifPromo;
+    if (res.data.notifBirthday !== undefined) document.getElementById('notif-birthday').checked = res.data.notifBirthday;
   }
 
   async function saveNotifs() {
@@ -660,7 +659,7 @@ const App = (() => {
     if (!res.ok) return;
     const canvas = document.getElementById('qr-canvas');
     if (typeof QRCode !== 'undefined') {
-      QRCode.toCanvas(canvas, res.data.qrUrl, { width: 220, margin: 2, color: { dark: '#0c1f1d', light: '#ffffff' } });
+      QRCode.toCanvas(canvas, res.data.qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' } });
     }
   }
 
@@ -670,6 +669,10 @@ const App = (() => {
     const video = document.getElementById('scan-video');
     const noCam = document.getElementById('scan-no-cam');
     if (scannerStream) return;
+
+    // Show video element only when scanner active
+    video.style.display = 'block';
+
     try {
       scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       video.srcObject = scannerStream;
@@ -686,6 +689,12 @@ const App = (() => {
   function stopScanner() {
     if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
     if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
+    // Hide video element to prevent black square
+    const video = document.getElementById('scan-video');
+    if (video) {
+      video.srcObject = null;
+      video.style.display = 'none';
+    }
   }
 
   function handleScan(data) {
@@ -738,6 +747,10 @@ const App = (() => {
     document.getElementById('search-input').addEventListener('input', handleSearch);
     document.querySelectorAll('.notif-row input').forEach(el => el.addEventListener('change', saveNotifs));
 
+    // Hide video by default (prevent black square)
+    const video = document.getElementById('scan-video');
+    if (video) video.style.display = 'none';
+
     // Pull-to-refresh
     let startY = 0;
     const scroll = document.getElementById('cards-scroll');
@@ -747,9 +760,6 @@ const App = (() => {
         if (scroll.scrollTop === 0 && e.changedTouches[0].pageY - startY > 80) { refreshCards(); toast('Actualisation…'); }
       });
     }
-
-    // Check for pending gift after login
-    const originalShowApp = showApp;
 
     init();
   });
