@@ -807,19 +807,8 @@ const App = (() => {
 
   // ─── Modals / Toast ───────────────────────
 
-  function openModal(id) {
-    document.getElementById(id).classList.add('open');
-    // Stop camera when any modal opens over scanner
-    if (scannerStream) stopScanner();
-  }
-
-  function closeModal() {
-    document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open'));
-    // Restart camera if we're on scanner tab
-    if (document.querySelector('.tb.active')?.dataset.tab === 'scanner') {
-      setTimeout(() => startScanner(), 300);
-    }
-  }
+  function openModal(id) { document.getElementById(id).classList.add('open'); }
+  function closeModal() { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); }
 
   let toastTimer = null;
   function toast(msg) {
