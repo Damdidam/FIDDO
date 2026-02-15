@@ -130,10 +130,10 @@ router.get('/activity', (req, res) => {
     let where = 'WHERE t.merchant_id = ?';
     const params = [mid];
 
-    if (type && ['credit', 'reward', 'adjustment', 'merge', 'gift_out', 'gift_in', 'gift'].includes(type)) {
+    if (type && ['credit', 'reward', 'adjustment', 'merge', 'gift_out', 'gift_in', 'gift_refund', 'gift'].includes(type)) {
       if (type === 'gift') {
-        where += ' AND t.transaction_type IN (?, ?)';
-        params.push('gift_out', 'gift_in');
+        where += ' AND t.transaction_type IN (?, ?, ?)';
+        params.push('gift_out', 'gift_in', 'gift_refund');
       } else {
         where += ' AND t.transaction_type = ?';
         params.push(type);
