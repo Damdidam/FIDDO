@@ -160,23 +160,22 @@
     .toggle-switch input:checked + .toggle-track { background: var(--primary); }
     .toggle-switch input:checked + .toggle-track::after { transform: translateX(16px); }
 
-    /* ═══ LANGUAGE PILLS ═══ */
-    .lang-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
-    .lang-pill {
-      padding: 0.35rem 0.7rem; border: 1.5px solid #E2E8F0; border-radius: 8px;
-      background: white; font-family: inherit; font-size: 0.72rem; font-weight: 500;
-      color: #64748B; cursor: pointer; transition: all 0.12s;
-    }
-    .lang-pill.active {
-      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
-      color: var(--primary-dark); font-weight: 600;
-    }
-    .lang-pill:hover:not(.active) { border-color: #CBD5E1; }
-
     /* ═══ PASSWORD STRENGTH ═══ */
     .pw-bar { height: 3px; border-radius: 2px; background: #E2E8F0; margin-top: 0.4rem; overflow: hidden; }
     .pw-bar-fill { height: 100%; border-radius: 2px; transition: all 0.3s; width: 0; }
     .pw-bar-text { font-size: 0.62rem; margin-top: 2px; }
+
+    /* ═══ HOUR EDITOR ═══ */
+    .hour-day-lbl { font-weight: 600; font-size: 0.75rem; color: #475569; }
+    .hour-input {
+      width: 100%; padding: 0.38rem 0.55rem; border: 1.5px solid #E2E8F0;
+      border-radius: 6px; font-family: inherit; font-size: 0.78rem;
+      color: #334155; background: white; transition: border-color 0.12s;
+    }
+    .hour-input:focus { outline: none; border-color: var(--primary); }
+    @media (max-width: 768px) {
+      .hour-input { font-size: 1rem; }
+    }
 
     /* ═══ BACKUP ═══ */
     .backup-drop {
@@ -323,18 +322,6 @@
               </div>
             </form>
           </div>
-
-          <!-- Language default -->
-          <div class="pref-card">
-            <div class="pref-card-title">Langue par défaut (formulaire client)</div>
-            <div id="lang-alert"></div>
-            <div class="help" style="margin-bottom: 0.5rem;">Langue affichée par défaut sur le formulaire QR code client</div>
-            <div class="lang-grid" id="lang-grid"></div>
-            <div class="save-row">
-              <button type="button" class="save-btn" onclick="saveLang()">Enregistrer</button>
-            </div>
-          </div>
-        </div>
 
         <div>
           <div class="reward-preview" id="reward-preview" style="background: var(--gradient);"></div>
@@ -490,153 +477,120 @@
          TAB 4: MON COMMERCE
          ═══════════════════════════════════════════════════════ -->
     <div id="tab-info" class="pref-section">
-      <div class="pref-grid">
-        <div>
-          <div class="pref-card">
-            <div class="pref-card-title">Informations du commerce</div>
-            <div id="info-alert"></div>
+      <div id="info-alert"></div>
 
-            <form id="info-form">
-              <div class="fg">
-                <label>Nom du commerce *</label>
-                <input type="text" id="info-business" required>
-              </div>
-              <div class="fg">
-                <label>Adresse *</label>
-                <input type="text" id="info-address" required>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <div class="fg">
-                  <label>N° TVA *</label>
-                  <input type="text" id="info-vat" required>
-                  <div class="help">Format : BE0123456789</div>
-                </div>
-                <div class="fg">
-                  <label>Email commerce *</label>
-                  <input type="email" id="info-email" required>
-                </div>
-              </div>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <div class="fg">
-                  <label>Téléphone commerce *</label>
-                  <input type="tel" id="info-phone" required>
-                </div>
-                <div class="fg">
-                  <label>Téléphone propriétaire *</label>
-                  <input type="tel" id="info-owner-phone" required>
-                </div>
-              </div>
-              <div class="fg">
-                <label>Nom du propriétaire</label>
-                <input type="text" id="info-owner-name">
-              </div>
-
-              <hr style="border:none;border-top:1px solid #E2E8F0;margin:1rem 0">
-              <div class="pref-card-title" style="margin-bottom:0.6rem">Détails du commerce</div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <div class="fg">
-                  <label>Type de commerce</label>
-                  <select id="info-biz-type" style="width:100%;padding:0.45rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit;background:#fff;color:#1E293B">
-                    <option value="horeca">Horeca</option>
-                    <option value="boulangerie">Boulangerie</option>
-                    <option value="coiffeur">Coiffeur</option>
-                    <option value="beaute">Beauté</option>
-                    <option value="pharmacie">Pharmacie</option>
-                    <option value="fleuriste">Fleuriste</option>
-                    <option value="boucherie">Boucherie</option>
-                    <option value="epicerie">Épicerie</option>
-                    <option value="cave">Cave à vins</option>
-                    <option value="librairie">Librairie</option>
-                    <option value="pressing">Pressing</option>
-                    <option value="fitness">Fitness</option>
-                    <option value="garage">Garage</option>
-                    <option value="veterinaire">Vétérinaire</option>
-                    <option value="autre">Autre</option>
-                  </select>
-                </div>
-                <div class="fg">
-                  <label>Site web</label>
-                  <input type="url" id="info-website" placeholder="https://...">
-                </div>
-              </div>
-
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <div class="fg">
-                  <label>Instagram</label>
-                  <input type="url" id="info-instagram" placeholder="https://instagram.com/...">
-                </div>
-                <div class="fg">
-                  <label>Facebook</label>
-                  <input type="url" id="info-facebook" placeholder="https://facebook.com/...">
-                </div>
-              </div>
-
-              <div class="fg">
-                <label>Description courte</label>
-                <textarea id="info-description" rows="2" maxlength="500" placeholder="Décrivez votre commerce en quelques mots…" style="width:100%;padding:0.45rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit;resize:vertical"></textarea>
-              </div>
-
-              <div class="fg" style="display:flex;align-items:center;gap:0.6rem;margin:0.5rem 0">
-                <label style="margin:0;flex:1">Autoriser le transfert de points entre clients</label>
-                <label class="toggle-switch">
-                  <input type="checkbox" id="info-allow-gifts">
-                  <span class="toggle-slider"></span>
-                </label>
-              </div>
-
-              <hr style="border:none;border-top:1px solid #E2E8F0;margin:1rem 0">
-              <div class="pref-card-title" style="margin-bottom:0.6rem">Horaires d'ouverture</div>
-
-              <div class="hours-grid" style="display:grid;gap:0.4rem">
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Lundi</label>
-                  <input type="text" id="hrs-lun" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Mardi</label>
-                  <input type="text" id="hrs-mar" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Mercredi</label>
-                  <input type="text" id="hrs-mer" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Jeudi</label>
-                  <input type="text" id="hrs-jeu" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Vendredi</label>
-                  <input type="text" id="hrs-ven" placeholder="ex: 11:30 - 22:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Samedi</label>
-                  <input type="text" id="hrs-sam" placeholder="ex: 12:00 - 23:00 ou Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-                <div class="hour-line" style="display:grid;grid-template-columns:80px 1fr;align-items:center;gap:0.5rem">
-                  <label style="font-weight:600;font-size:0.8rem">Dimanche</label>
-                  <input type="text" id="hrs-dim" placeholder="ex: Fermé" style="padding:0.4rem 0.6rem;border:1.5px solid #E2E8F0;border-radius:8px;font-size:0.82rem;font-family:inherit">
-                </div>
-              </div>
-
-              <div class="save-row" style="margin-top:1rem">
-                <button type="submit" class="save-btn">Enregistrer les modifications</button>
-              </div>
-            </form>
+      <form id="info-form">
+        <!-- Identité -->
+        <div class="pref-card">
+          <div class="pref-card-title">🏪 Identité</div>
+          <div class="fg">
+            <label>Nom du commerce *</label>
+            <input type="text" id="info-business" required maxlength="150">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <div class="fg">
+              <label>Type de commerce</label>
+              <select id="info-biz-type"></select>
+            </div>
+            <div class="fg">
+              <label>N° TVA *</label>
+              <input type="text" id="info-vat" required placeholder="BE0123456789">
+            </div>
+          </div>
+          <div class="fg">
+            <label>Description courte</label>
+            <textarea id="info-description" rows="2" maxlength="500" placeholder="Décrivez votre commerce en quelques mots…"></textarea>
+            <div class="help">Visible par vos clients dans l'app FIDDO (max 500 car.)</div>
           </div>
         </div>
 
-        <div>
-          <div class="info-side">
-            <div class="info-side-title">Informations</div>
-            Toute modification sera <strong>notifiée à l'administrateur FIDDO</strong> par email pour des raisons de sécurité.<br><br>
-            Le numéro de TVA doit être au format belge (BE0 suivi de 9 chiffres).<br><br>
-            <strong>Transfert de points</strong> : si activé, vos clients pourront offrir leurs points à d'autres personnes via un lien partageable.<br><br>
-            <strong>Horaires</strong> : renseignez vos heures d'ouverture, elles seront visibles dans l'app client. Laissez vide ou écrivez « Fermé » pour les jours de fermeture.<br><br>
-            Votre email de connexion ne peut pas être modifié ici. Contactez le support si nécessaire.
+        <!-- Coordonnées -->
+        <div class="pref-card">
+          <div class="pref-card-title">📍 Coordonnées</div>
+          <div class="fg">
+            <label>Adresse *</label>
+            <input type="text" id="info-address" required maxlength="300">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <div class="fg">
+              <label>Email commerce *</label>
+              <input type="email" id="info-email" required>
+            </div>
+            <div class="fg">
+              <label>Téléphone commerce *</label>
+              <input type="tel" id="info-phone" required>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <div class="fg">
+              <label>Nom du propriétaire</label>
+              <input type="text" id="info-owner-name" maxlength="100">
+            </div>
+            <div class="fg">
+              <label>Téléphone propriétaire *</label>
+              <input type="tel" id="info-owner-phone" required>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- Présence en ligne -->
+        <div class="pref-card">
+          <div class="pref-card-title">🌐 En ligne</div>
+          <div class="help" style="margin-bottom:0.5rem">Liens affichés sur votre fiche dans l'app client</div>
+          <div class="fg">
+            <label>Site web</label>
+            <input type="url" id="info-website" placeholder="https://www.moncommerce.be">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+            <div class="fg">
+              <label>Instagram</label>
+              <input type="url" id="info-instagram" placeholder="https://instagram.com/…">
+            </div>
+            <div class="fg">
+              <label>Facebook</label>
+              <input type="url" id="info-facebook" placeholder="https://facebook.com/…">
+            </div>
+          </div>
+        </div>
+
+        <!-- Horaires -->
+        <div class="pref-card">
+          <div class="pref-card-title">🕐 Horaires d'ouverture</div>
+          <div class="help" style="margin-bottom:0.5rem">Visibles dans l'app. Laissez vide ou écrivez « Fermé » pour les jours fermés.</div>
+          <div style="display:grid;gap:0.3rem">
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Lundi</label><input type="text" id="hrs-lun" class="hour-input" placeholder="ex: 9h–18h"></div>
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Mardi</label><input type="text" id="hrs-mar" class="hour-input" placeholder="ex: 9h–18h"></div>
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Mercredi</label><input type="text" id="hrs-mer" class="hour-input" placeholder="ex: 9h–18h"></div>
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Jeudi</label><input type="text" id="hrs-jeu" class="hour-input" placeholder="ex: 9h–18h"></div>
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Vendredi</label><input type="text" id="hrs-ven" class="hour-input" placeholder="ex: 9h–18h"></div>
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Samedi</label><input type="text" id="hrs-sam" class="hour-input" placeholder="ex: 10h–16h"></div>
+            <div style="display:grid;grid-template-columns:76px 1fr;align-items:center;gap:0.4rem"><label class="hour-day-lbl">Dimanche</label><input type="text" id="hrs-dim" class="hour-input" placeholder="Fermé"></div>
+          </div>
+        </div>
+
+        <!-- Options -->
+        <div class="pref-card">
+          <div class="pref-card-title">⚙️ Options</div>
+          <div class="toggle-row" style="border:none">
+            <div>
+              <div class="toggle-label">Cadeaux de points</div>
+              <div class="toggle-desc">Vos clients pourront offrir leurs points à d'autres personnes via un lien partageable</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="info-allow-gifts">
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="save-row" style="margin-bottom:0.6rem">
+          <button type="submit" class="save-btn">Enregistrer les modifications</button>
+        </div>
+
+        <div class="pref-alert pref-alert-info" style="font-size:0.65rem">
+          Toute modification est <strong>notifiée à l'administrateur FIDDO</strong>. Le N° TVA doit être au format belge (BE0 + 9 chiffres).
+        </div>
+      </form>
     </div>
 
     <!-- ═══════════════════════════════════════════════════════
@@ -864,14 +818,9 @@
           }
         }
 
-        // Language
-        if (currentPrefs.language) currentLang = currentPrefs.language;
-
         renderThemes();
-        renderLangs();
       } catch (e) {
         renderThemes();
-        renderLangs();
       }
     })();
 
@@ -926,41 +875,6 @@
         showAlert('reward-alert', err.message, 'error');
       }
     });
-
-    // ═══ LANGUAGE ═══
-
-    const LANGS = [
-      { id: 'fr', label: 'Français' },
-      { id: 'en', label: 'English' },
-      { id: 'nl', label: 'Nederlands' },
-      { id: 'tr', label: 'Türkçe' },
-      { id: 'zh', label: '中文' },
-      { id: 'ar', label: 'العربية' },
-    ];
-    let currentLang = 'fr';
-
-    function renderLangs() {
-      const grid = document.getElementById('lang-grid');
-      grid.innerHTML = LANGS.map(l =>
-        '<button type="button" class="lang-pill' + (l.id === currentLang ? ' active' : '') + '" onclick="pickLang(\'' + l.id + '\')">' + l.label + '</button>'
-      ).join('');
-    }
-
-    function pickLang(id) {
-      currentLang = id;
-      renderLangs();
-    }
-
-    async function saveLang() {
-      try {
-        await API.preferences.update({ language: currentLang });
-        currentPrefs.language = currentLang;
-        showAlert('lang-alert', 'Langue par défaut enregistrée', 'success');
-        setTimeout(() => clearAlert('lang-alert'), 3000);
-      } catch (err) {
-        showAlert('lang-alert', err.message, 'error');
-      }
-    }
 
     // ═══════════════════════════════════════════════════════
     // TAB 2: THEME
@@ -1063,6 +977,20 @@
     // ═══════════════════════════════════════════════════════
     // TAB 4: MERCHANT INFO
     // ═══════════════════════════════════════════════════════
+
+    // Populate business type select
+    const BIZ_TYPES_MAP = {
+      horeca: 'Horeca', boulangerie: 'Boulangerie', coiffeur: 'Coiffeur',
+      beaute: 'Beauté', pharmacie: 'Pharmacie', fleuriste: 'Fleuriste',
+      boucherie: 'Boucherie', epicerie: 'Épicerie', cave: 'Cave à vins',
+      librairie: 'Librairie', pressing: 'Pressing', fitness: 'Fitness',
+      garage: 'Garage', veterinaire: 'Vétérinaire', autre: 'Autre',
+    };
+    const bizSelect = document.getElementById('info-biz-type');
+    Object.entries(BIZ_TYPES_MAP).forEach(([k, v]) => {
+      const o = document.createElement('option'); o.value = k; o.textContent = v;
+      bizSelect.appendChild(o);
+    });
 
     async function loadMerchantInfo() {
       try {
