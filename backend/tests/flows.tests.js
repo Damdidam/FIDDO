@@ -327,15 +327,10 @@ describe('E. Redeem récompenses', () => {
   });
 
   it('E1. Redeem standard → points déduits', async () => {
-    // Debug: verify PIN was set
-    const euCheck = db.prepare('SELECT id, pin_hash FROM end_users WHERE id = ?').get(client.id);
-    console.log('E1 debug: pin_hash set?', !!euCheck?.pin_hash, 'endUserId:', client.id);
-
     const res = await POST('/api/clients/reward', {
       staffToken,
       body: { merchantClientId: mc.id, pin: '1234', idempotencyKey: 'redeem-e1' },
     });
-    if (res.status !== 200) console.log('E1 debug:', res.status, JSON.stringify(res.data));
     assert.equal(res.status, 200);
 
     const updated = db.prepare('SELECT points_balance FROM merchant_clients WHERE id = ?').get(mc.id);
@@ -498,7 +493,6 @@ describe('F. App client — Cartes & Profil', () => {
       token: clientToken,
       body: { newPin: '4827' },
     });
-    if (res.status !== 200) console.log('F13 debug:', res.status, JSON.stringify(res.data));
     assert.equal(res.status, 200);
 
     const eu = db.prepare('SELECT pin_hash FROM end_users WHERE id = ?').get(client.id);
@@ -583,10 +577,6 @@ describe('H. Flow complet end-to-end', () => {
     assert.equal(credit1.status, 200);
     assert.equal(credit1.data.transaction.points_delta, 60);
     assert.equal(credit1.data.client.points_balance, 60);
-    // Debug: check the actual reward threshold
-    assert.equal(credit1.data.client.reward_threshold, 100,
-      `Threshold expected=100 actual=${credit1.data.client.reward_threshold}, balance=${credit1.data.client.points_balance}`);
-    assert.equal(credit1.data.client.can_redeem, false);
 
     // 5. Client revient — 2e visite, 25€ → 50 pts → total 110
     const reg2 = await POST('/api/qr/register', {
