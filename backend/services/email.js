@@ -72,12 +72,12 @@ function sendValidationEmail(clientEmail, validationToken, businessName) {
     subject: `Bienvenue chez ${businessName} - Validez votre compte fidélité`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">Bienvenue chez ${escHtml(businessName)} ! 🎉</h2>
+        <h2 style="color: #3b82f6;">Bienvenue chez ${escHtml(businessName)} ! 🎉</h2>
         <p>Vous êtes inscrit(e) à notre programme de fidélité.</p>
         <p>Cliquez ci-dessous pour valider votre compte :</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${validationUrl}"
-             style="background-color: #0891B2; color: white; padding: 15px 30px;
+             style="background-color: #3b82f6; color: white; padding: 15px 30px;
                     text-decoration: none; border-radius: 5px; font-weight: bold;">
             Valider mon compte
           </a>
@@ -114,7 +114,7 @@ function sendPointsCreditedEmail(clientEmail, pointsEarned, newBalance, business
       <div style="background-color: #f5f5f5; padding: 15px; border-radius: 10px; margin: 20px 0;">
         <p style="margin: 0;">Plus que <strong>${pointsRemaining} points</strong> avant votre récompense !</p>
         <div style="background-color: #ddd; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 10px;">
-          <div style="background-color: #0891B2; height: 100%; width: ${progressPercent}%;"></div>
+          <div style="background-color: #3b82f6; height: 100%; width: ${progressPercent}%;"></div>
         </div>
       </div>
     `;
@@ -125,8 +125,8 @@ function sendPointsCreditedEmail(clientEmail, pointsEarned, newBalance, business
     subject: `${businessName} - +${pointsEarned} points gagnés ! 🌟`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">Merci de votre visite ! ✨</h2>
-        <div style="background-color: #0891B2; color: white; padding: 20px; border-radius: 10px; text-align: center;">
+        <h2 style="color: #3b82f6;">Merci de votre visite ! ✨</h2>
+        <div style="background-color: #3b82f6; color: white; padding: 20px; border-radius: 10px; text-align: center;">
           <p style="margin: 0; font-size: 16px;">Vous avez gagné</p>
           <p style="margin: 10px 0; font-size: 48px; font-weight: bold;">+${pointsEarned}</p>
           <p style="margin: 0; font-size: 16px;">points</p>
@@ -153,12 +153,12 @@ function sendMerchantValidatedEmail(merchantEmail, businessName) {
     subject: `FIDDO - Votre compte ${businessName} est activé ! 🎉`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">Félicitations ! 🎉</h2>
+        <h2 style="color: #3b82f6;">Félicitations ! 🎉</h2>
         <p>Votre commerce <strong>${escHtml(businessName)}</strong> a été validé sur FIDDO.</p>
         <p>Vous pouvez maintenant vous connecter et commencer à fidéliser vos clients.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${process.env.BASE_URL || 'http://localhost:3000'}"
-             style="background-color: #0891B2; color: white; padding: 15px 30px;
+             style="background-color: #3b82f6; color: white; padding: 15px 30px;
                     text-decoration: none; border-radius: 5px; font-weight: bold;">
             Se connecter
           </a>
@@ -228,7 +228,7 @@ function sendPasswordChangedEmail(staffEmail, displayName) {
     subject: 'FIDDO — Votre mot de passe a été modifié',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">Mot de passe modifié 🔒</h2>
+        <h2 style="color: #3b82f6;">Mot de passe modifié 🔒</h2>
         <p>Bonjour ${escHtml(displayName)},</p>
         <p>Votre mot de passe FIDDO a été modifié avec succès.</p>
         <p>Si vous n'êtes pas à l'origine de cette modification, contactez immédiatement <strong>support@fiddo.be</strong>.</p>
@@ -248,7 +248,7 @@ function sendPinChangedEmail(clientEmail, businessName) {
     subject: `Votre code PIN a été modifié — ${businessName}`,
     html: `
       <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
-        <h2 style="color: #0891B2;">🔒 Code PIN modifié</h2>
+        <h2 style="color: #3b82f6;">🔒 Code PIN modifié</h2>
         <p>Bonjour,</p>
         <p>Votre code PIN pour <strong>${escHtml(businessName)}</strong> a été mis à jour.</p>
         <div style="background: #FEF3C7; border-left: 3px solid #F59E0B; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
@@ -269,13 +269,13 @@ function sendMagicLinkEmail(clientEmail, magicUrl) {
     subject: 'Votre lien de connexion FIDDO',
     html: `
       <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-        <h1 style="color: #0891B2; font-size: 24px; margin-bottom: 8px;">FIDDO</h1>
+        <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 8px;">FIDDO</h1>
         <p style="color: #64748B; font-size: 14px; margin-bottom: 24px;">Votre espace fidélité</p>
         <p style="color: #1E293B; font-size: 16px; line-height: 1.5;">
           Cliquez sur le bouton ci-dessous pour accéder à vos cartes de fidélité :
         </p>
         <div style="text-align: center; margin: 32px 0;">
-          <a href="${magicUrl}" style="background: linear-gradient(135deg, #0891B2, #0E7490); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
+          <a href="${magicUrl}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
             Accéder à mon compte
           </a>
         </div>
@@ -297,7 +297,7 @@ function sendExportEmail(ownerEmail, businessName, filename, content, mimeType) 
     subject: `FIDDO — ${isCSV ? 'Export clients' : 'Backup'} ${businessName}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #0891B2;">${isCSV ? '📥 Export clients' : '💾 Backup'}</h2>
+        <h2 style="color: #3b82f6;">${isCSV ? '📥 Export clients' : '💾 Backup'}</h2>
         <p>Bonjour,</p>
         <p>Vous trouverez ci-joint ${isCSV ? "l'export CSV de vos clients" : 'le backup complet de vos données'} pour <strong>${escHtml(businessName)}</strong>.</p>
         <p style="background: #F1F5F9; padding: 12px 16px; border-radius: 8px; font-size: 14px;">
@@ -331,10 +331,10 @@ function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sour
     subject: `[FIDDO] Fusion de comptes client — ${businessName}`,
     html: `
       <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
-        <h2 style="color: #0891B2;">🔀 Fusion de comptes client</h2>
+        <h2 style="color: #3b82f6;">🔀 Fusion de comptes client</h2>
         <p>Bonjour,</p>
         <p>L'équipe FIDDO a effectué une fusion de comptes client qui concerne <strong>${escHtml(businessName)}</strong>.</p>
-        <div style="background: #f8fafc; border-left: 3px solid #0891B2; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
+        <div style="background: #f8fafc; border-left: 3px solid #3b82f6; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
           <p style="margin: 0;"><strong>Action :</strong> Fiche client ${actionLabel}</p>
           <p style="margin: 0.5rem 0 0;"><strong>Client concerné :</strong> ${escHtml(sourceName) || '—'}</p>
           <p style="margin: 0.5rem 0 0;"><strong>Motif :</strong> ${escHtml(reason)}</p>
@@ -347,6 +347,86 @@ function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sour
     `,
   });
 }
+
+/**
+ * Welcome email — sent after first identification at a merchant via QR landing.
+ * Includes points info and app download link.
+ */
+function sendWelcomeEmail(clientEmail, merchantName, pointsBalance, appUrl) {
+  sendMail({
+    to: clientEmail,
+    subject: `Bienvenue chez ${merchantName} — FIDDO`,
+    html: `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+        <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 4px;">FIDDO</h1>
+        <p style="color: #64748B; font-size: 14px; margin-bottom: 28px;">Votre fidélité récompensée</p>
+
+        <h2 style="color: #1E293B; font-size: 20px; margin-bottom: 16px;">Bienvenue chez ${escHtml(merchantName)} ! 🎉</h2>
+
+        <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
+          Votre carte de fidélité est activée. Vous cumulez des points à chaque visite et
+          débloquez des récompenses exclusives.
+        </p>
+
+        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; color: white;">
+          <div style="font-size: 36px; font-weight: 800;">${pointsBalance || 0}</div>
+          <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">points chez ${escHtml(merchantName)}</div>
+        </div>
+
+        <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
+          Téléchargez l'app FIDDO pour suivre vos points, recevoir des notifications
+          et vous identifier plus rapidement :
+        </p>
+
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${appUrl || 'https://www.fiddo.be/app/'}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
+            Télécharger l'app
+          </a>
+        </div>
+
+        <p style="color: #94A3B8; font-size: 12px; line-height: 1.5;">
+          Pas besoin de l'app pour accumuler des points — elle est 100% optionnelle.
+          Votre carte fonctionne avec votre adresse email.
+        </p>
+      </div>
+    `,
+  });
+}
+
+
+/**
+ * App reminder — sent 3 days after first identification if user hasn't opened the app.
+ */
+function sendAppReminderEmail(clientEmail, merchantName, pointsBalance, appUrl) {
+  sendMail({
+    to: clientEmail,
+    subject: `Vos ${pointsBalance} points vous attendent — FIDDO`,
+    html: `
+      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
+        <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 4px;">FIDDO</h1>
+        <p style="color: #64748B; font-size: 14px; margin-bottom: 28px;">Votre fidélité récompensée</p>
+
+        <h2 style="color: #1E293B; font-size: 20px; margin-bottom: 16px;">Vos points vous attendent ! 📱</h2>
+
+        <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
+          Vous avez <strong>${pointsBalance} points</strong> chez <strong>${escHtml(merchantName)}</strong>.
+          Téléchargez l'app pour suivre votre progression et ne manquer aucune récompense.
+        </p>
+
+        <div style="text-align: center; margin: 28px 0;">
+          <a href="${appUrl || 'https://www.fiddo.be/app/'}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
+            Télécharger l'app
+          </a>
+        </div>
+
+        <p style="color: #94A3B8; font-size: 12px; line-height: 1.5;">
+          L'app est gratuite et ne prend que quelques secondes à installer.
+        </p>
+      </div>
+    `,
+  });
+}
+
 
 module.exports = {
   sendMail,
@@ -361,4 +441,6 @@ module.exports = {
   sendMagicLinkEmail,
   sendExportEmail,
   sendGlobalMergeNotificationEmail,
+  sendWelcomeEmail,
+  sendAppReminderEmail,
 };
