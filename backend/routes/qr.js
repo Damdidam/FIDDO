@@ -518,8 +518,9 @@ router.post('/register', (req, res) => {
       );
       if (result.lastInsertRowid) {
         endUserQueries.setQrToken.run(qrToken2, result.lastInsertRowid);
-        // Track first merchant for reminder emails
-        db.prepare('UPDATE end_users SET first_merchant_id = ? WHERE id = ?').run(merchant.id, result.lastInsertRowid);
+        // Implicit consent: user provided their own email → validated
+        db.prepare("UPDATE end_users SET email_validated = 1, consent_date = datetime('now'), consent_method = 'qr_landing', first_merchant_id = ? WHERE id = ?")
+          .run(merchant.id, result.lastInsertRowid);
         existing = endUserQueries.findById.get(result.lastInsertRowid);
       }
     }
