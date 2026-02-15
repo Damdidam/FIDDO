@@ -177,6 +177,9 @@
     .tl-dot.reward { background: #10B981; }
     .tl-dot.adjustment { background: #F59E0B; }
     .tl-dot.merge { background: #8B5CF6; }
+    .tl-dot.gift_out { background: #BE185D; }
+    .tl-dot.gift_in { background: #0F766E; }
+    .tl-dot.gift_refund { background: #D97706; }
     .tl-body { flex: 1; }
     .tl-top { display: flex; justify-content: space-between; align-items: baseline; }
     .tl-pts { font-weight: 700; }
@@ -184,6 +187,9 @@
     .tl-pts.reward { color: #059669; }
     .tl-pts.adjustment { color: #D97706; }
     .tl-pts.merge { color: #7C3AED; }
+    .tl-pts.gift_out { color: #BE185D; }
+    .tl-pts.gift_in { color: #0F766E; }
+    .tl-pts.gift_refund { color: #D97706; }
     .tl-date { font-size: 0.66rem; color: #94A3B8; }
     .tl-detail { font-size: 0.68rem; color: #94A3B8; margin-top: 1px; }
     .tl-empty { font-size: 0.78rem; color: #94A3B8; text-align: center; padding: 1rem; }
@@ -594,15 +600,17 @@
           h += '<div class="tl-empty">Aucune transaction</div>';
         } else {
           h += '<div class="tl">';
+          const typeLabels = { credit: 'crédit', reward: 'récompense', adjustment: 'ajustement', merge: 'fusion', gift_out: 'transfert ↗', gift_in: 'transfert ↙', gift_refund: 'remboursé ↩' };
           txs.forEach(t => {
             const type = t.transaction_type;
             const sign = t.points_delta >= 0 ? '+' : '';
+            const label = typeLabels[type] || type;
             h += '<div class="tl-item"><div class="tl-dot ' + type + '"></div><div class="tl-body">';
             h += '<div class="tl-top"><span class="tl-pts ' + type + '">' + sign + t.points_delta + ' pts</span>';
             h += '<span class="tl-date">' + Format.datetime(t.created_at) + '</span></div>';
             h += '<div class="tl-detail">';
             if (t.amount) h += Format.currency(t.amount) + ' · ';
-            h += type;
+            h += label;
             if (t.staff_name) h += ' · ' + esc(t.staff_name);
             if (t.notes) h += '<br>' + esc(t.notes);
             h += '</div></div></div>';
