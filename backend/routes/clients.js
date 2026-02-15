@@ -4,7 +4,7 @@ const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQ
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendValidationEmail, sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
+const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
@@ -177,8 +177,10 @@ router.post('/credit', async (req, res) => {
         targetType: 'merchant_client', targetId: result.merchantClient.id,
         details: { amount: parseFloat(amount), pointsDelta: result.transaction.points_delta, isNewClient: result.isNewClient } });
 
-      if (result.isNewClient && result.endUser.email)
-        sendValidationEmail(result.endUser.email, result.endUser.validation_token, merchant.business_name);
+      if (result.isNewClient && result.endUser.email) {
+        // No validation email needed — client consented by providing their email
+        // Welcome email is sent from /api/qr/register
+      }
       if (result.endUser.email && result.endUser.email_validated)
         sendPointsCreditedEmail(result.endUser.email, result.transaction.points_delta, result.merchantClient.points_balance,
           merchant.business_name, { points_for_reward: merchant.points_for_reward, reward_description: merchant.reward_description });
@@ -359,9 +361,8 @@ router.post('/:id/resend-email', requireRole('owner', 'manager'), (req, res) => 
     const pointsEarned = lastCredit ? lastCredit.points_delta : 0;
 
     if (!endUser.email_validated) {
-      // Resend validation email
-      sendValidationEmail(endUser.email, endUser.validation_token, merchant.business_name);
-      return res.json({ message: 'Email de validation renvoyé', type: 'validation' });
+      // Mark as validated (consent given by providing email) and send points summary
+      db.prepare("UPDATE end_users SET email_validated = 1, consent_date = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(endUser.id);
     }
 
     // Resend points summary
