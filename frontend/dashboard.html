@@ -191,6 +191,8 @@
     .tx-badge.reward { background: #D1FAE5; color: #047857; }
     .tx-badge.adjustment { background: #FEF3C7; color: #92400E; }
     .tx-badge.merge { background: #EDE9FE; color: #6D28D9; }
+    .tx-badge.gift_out { background: #FCE7F3; color: #BE185D; }
+    .tx-badge.gift_in { background: #CCFBF1; color: #0F766E; }
 
     .tx-pts { font-weight: 700; font-size: 0.85rem; text-align: right; white-space: nowrap; }
     .tx-pts.credit { color: var(--primary); }
@@ -294,6 +296,7 @@
         <button class="feed-tab" onclick="setType('credit',this)">Crédits <span class="cnt" id="cnt-credit"></span></button>
         <button class="feed-tab" onclick="setType('reward',this)">Récompenses <span class="cnt" id="cnt-reward"></span></button>
         <button class="feed-tab" onclick="setType('adjustment',this)">Ajustements <span class="cnt" id="cnt-adj"></span></button>
+        <button class="feed-tab" onclick="setType('gift',this)">Transferts <span class="cnt" id="cnt-gift"></span></button>
       </div>
 
       <!-- Sortable column headers -->
@@ -506,9 +509,10 @@
         if (dates.to) qs.set('to', dates.to);
         const all = await API.call('/dashboard/activity?' + qs.toString() + '&limit=0');
         document.getElementById('cnt-all').textContent = all.total;
-        for (const t of ['credit', 'reward', 'adjustment']) {
+        for (const t of ['credit', 'reward', 'adjustment', 'gift']) {
           const r = await API.call('/dashboard/activity?' + qs.toString() + '&type=' + t + '&limit=0');
-          document.getElementById(t === 'adjustment' ? 'cnt-adj' : 'cnt-' + t).textContent = r.total;
+          const elId = t === 'adjustment' ? 'cnt-adj' : 'cnt-' + t;
+          document.getElementById(elId).textContent = r.total;
         }
       } catch (e) {}
     }
@@ -544,8 +548,17 @@
         const sign = tx.points_delta >= 0 ? '+' : '';
         const metaParts = [tx.staff_name, tx.notes ? truncate(tx.notes, 30) : ''].filter(Boolean).join(' · ');
 
-        const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion' };
+        const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion', gift_out: 'transfert ↗', gift_in: 'transfert ↙' };
         const amountStr = tx.amount ? Format.currency(tx.amount) : '–';
+
+        // Gift display: show sender → receiver
+        let giftMeta = '';
+        if (type === 'gift_out') {
+          const to = tx.gift_to || (tx.gift_status === 'pending' ? 'en attente…' : tx.gift_status === 'expired' ? 'expiré' : '?');
+          giftMeta = '→ ' + to;
+        } else if (type === 'gift_in') {
+          giftMeta = '← ' + (tx.gift_from || '?');
+        }
 
         html += '<div class="tx-row">';
 
@@ -558,7 +571,11 @@
         // Col 2: Client + meta
         html += '<div class="tx-info">';
         html += '<div class="tx-client">' + esc(clientLabel) + '</div>';
-        if (metaParts) html += '<div class="tx-meta">' + esc(metaParts) + '</div>';
+        if (giftMeta) {
+          html += '<div class="tx-meta" style="color:' + (type === 'gift_out' ? '#BE185D' : '#0F766E') + ';">' + esc(giftMeta) + '</div>';
+        } else if (metaParts) {
+          html += '<div class="tx-meta">' + esc(metaParts) + '</div>';
+        }
         html += '</div>';
 
         // Col 3: Type badge
