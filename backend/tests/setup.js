@@ -75,16 +75,16 @@ function createStaff(merchantId, overrides = {}) {
   const hash = bcrypt.hashSync(data.password, 10);
 
   const result = db.prepare(`
-    INSERT INTO staff_accounts (merchant_id, email, display_name, password_hash, role)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(merchantId, data.email, data.display_name, hash, data.role);
+    INSERT INTO staff_accounts (merchant_id, email, password, display_name, role, is_active)
+    VALUES (?, ?, ?, ?, ?, 1)
+  `).run(merchantId, data.email, hash, data.display_name, data.role);
 
   return db.prepare('SELECT * FROM staff_accounts WHERE id = ?').get(result.lastInsertRowid);
 }
 
 function getStaffToken(staff) {
   return jwt.sign(
-    { staffId: staff.id, merchantId: staff.merchant_id, role: staff.role },
+    { id: staff.id, email: staff.email, merchant_id: staff.merchant_id, role: staff.role },
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
   );
@@ -125,15 +125,16 @@ function createMerchantClient(merchantId, endUserId, points = 0) {
 
 function cleanup() {
   try {
-    // Delete all data in reverse dependency order
-    db.exec('DELETE FROM transactions');
-    db.exec('DELETE FROM merchant_clients');
-    db.exec('DELETE FROM staff_accounts');
-    db.exec('DELETE FROM end_users');
-    db.exec('DELETE FROM merchants');
-    db.exec('DELETE FROM super_admins');
+    db.pragma('foreign_keys = OFF');
+    const tables = db.prepare(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
+    ).all();
+    for (const t of tables) {
+      db.exec(`DELETE FROM "${t.name}"`);
+    }
+    db.pragma('foreign_keys = ON');
   } catch (e) {
-    // ignore
+    console.error('Cleanup error:', e.message);
   }
 }
 
