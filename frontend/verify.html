@@ -39,7 +39,6 @@
     .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;background:linear-gradient(135deg,#60a5fa,#3b82f6);color:#fff;font-size:16px;font-weight:700;border-radius:16px;border:none;cursor:pointer;margin-top:24px;box-shadow:0 4px 20px rgba(59,130,246,.3);text-decoration:none;transition:transform .15s}
     .btn:active{transform:scale(.97)}
     .btn .material-symbols-rounded{font-size:20px}
-    .btn-secondary{background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.2);box-shadow:none;margin-top:12px}
 
     .hint{margin-top:16px;font-size:12px;color:rgba(255,255,255,.35);line-height:1.5}
 
@@ -68,15 +67,14 @@
       <div class="check"><span class="material-symbols-rounded">check_circle</span></div>
       <h2>Connexion réussie !</h2>
       <p id="welcome-name"></p>
-      <a class="btn" href="#" id="btn-open-app" style="display:none">
-        <span class="material-symbols-rounded">phone_android</span>
-        Ouvrir l'app FIDDO
-      </a>
-      <a class="btn" href="/app/" id="btn-open-web" style="display:none">
+      <p class="hint" id="hint-app" style="display:none;color:rgba(52,211,153,.8);font-weight:600;font-size:15px;margin-top:20px">
+        ✓ L'app FIDDO se connecte automatiquement.<br>Vous pouvez fermer cette page.
+      </p>
+      <a class="btn" href="/app/" id="btn-open-web">
         <span class="material-symbols-rounded">open_in_new</span>
         Ouvrir FIDDO
       </a>
-      <p class="hint" id="hint-text"></p>
+      <p class="hint">Si vous avez installé l'app, ouvrez-la depuis votre écran d'accueil — vous serez connecté automatiquement.</p>
     </div>
 
     <!-- Error -->
@@ -131,30 +129,9 @@
 
         setState('success');
 
-        // Detect Android → show "Open in app" button with custom scheme
-        var isAndroid = /android/i.test(navigator.userAgent);
-        var appUrl = 'be.fiddo.app://auth?token=' + encodeURIComponent(jwt);
-
-        if (isAndroid) {
-          // Show app button (primary) + web fallback (secondary)
-          var btnApp = document.getElementById('btn-open-app');
-          var btnWeb = document.getElementById('btn-open-web');
-          btnApp.href = appUrl;
-          btnApp.style.display = 'flex';
-          btnWeb.style.display = 'flex';
-          btnWeb.classList.add('btn-secondary');
-          document.getElementById('hint-text').textContent =
-            'Si l\'app FIDDO est installée, cliquez sur "Ouvrir l\'app". Sinon, utilisez la version web.';
-
-          // Auto-try to open the app after 500ms
-          setTimeout(function() {
-            window.location.href = appUrl;
-          }, 500);
-        } else {
-          // iOS / Desktop: show web button only
-          document.getElementById('btn-open-web').style.display = 'flex';
-          document.getElementById('hint-text').textContent =
-            'Si vous avez installé l\'app, ouvrez-la depuis votre écran d\'accueil — vous serez connecté automatiquement.';
+        // On Android: the native app is polling — show hint
+        if (/android/i.test(navigator.userAgent)) {
+          document.getElementById('hint-app').style.display = 'block';
         }
 
       } catch (e) {
