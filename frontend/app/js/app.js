@@ -12,7 +12,29 @@ const App = (() => {
   let scanInterval = null;
   let searchQuery = '';
   let activeFilter = 'all';
-  let favorites = JSON.parse(localStorage.getItem('fiddo_favs') || '[]');
+  let favorites = loadFavorites();
+
+  function loadFavorites() {
+    try {
+      const stored = localStorage.getItem('fiddo_favs');
+      if (stored) return JSON.parse(stored);
+    } catch (e) {}
+    // Fallback: try cookie
+    try {
+      const match = document.cookie.match(/(?:^|;\s*)fiddo_favs=([^;]+)/);
+      if (match) return JSON.parse(decodeURIComponent(match[1]));
+    } catch (e) {}
+    return [];
+  }
+
+  function saveFavorites() {
+    try {
+      const json = JSON.stringify(favorites);
+      localStorage.setItem('fiddo_favs', json);
+      // Also save as cookie (persists better in Capacitor remote WebView)
+      document.cookie = 'fiddo_favs=' + encodeURIComponent(json) + ';path=/;max-age=31536000;SameSite=Lax;Secure';
+    } catch (e) {}
+  }
   let lastGiftLink = '';
   let pollTimer = null;
 
@@ -306,6 +328,7 @@ const App = (() => {
 
   function showApp() {
     stopPolling();
+    favorites = loadFavorites();
     show('screen-app');
     renderCards();
     buildFilterPills();
@@ -457,7 +480,7 @@ const App = (() => {
     const idx = favorites.indexOf(id);
     if (idx >= 0) { favorites.splice(idx, 1); toast('Retiré des favoris'); }
     else { favorites.push(id); toast('Ajouté aux favoris ⭐'); }
-    localStorage.setItem('fiddo_favs', JSON.stringify(favorites));
+    saveFavorites();
     updateFavIcon();
     renderFilteredCards();
   }
@@ -837,14 +860,28 @@ const App = (() => {
     const video = document.getElementById('scan-video');
     const noCam = document.getElementById('scan-no-cam');
     if (scannerStream) return;
-    video.style.display = 'block';
+
+    // Show loading state instead of black video with play button
+    video.style.display = 'none';
+    noCam.classList.remove('hidden');
+    noCam.innerHTML = '<div style="text-align:center;padding:40px;color:#64748b"><div class="loader" style="margin:0 auto 16px"></div><p style="font-size:14px">Initialisation de la caméra…</p></div>';
 
     try {
       scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       video.srcObject = scannerStream;
-      noCam.classList.add('hidden');
+      video.setAttribute('playsinline', '');
+      video.setAttribute('autoplay', '');
+      video.muted = true;
 
-      video.addEventListener('loadedmetadata', () => { video.play(); }, { once: true });
+      video.addEventListener('loadedmetadata', () => {
+        video.play();
+        // Only show video once actually playing
+        video.addEventListener('playing', () => {
+          video.style.display = 'block';
+          noCam.classList.add('hidden');
+          noCam.innerHTML = '';
+        }, { once: true });
+      }, { once: true });
 
       if ('BarcodeDetector' in window) {
         const detector = new BarcodeDetector({ formats: ['qr_code'] });
@@ -865,9 +902,13 @@ const App = (() => {
           if (code && code.data) handleScan(code.data);
         }, 300);
       } else {
+        noCam.innerHTML = '<p style="text-align:center;padding:40px;color:#64748b">Scanner non disponible sur cet appareil</p>';
         noCam.classList.remove('hidden');
       }
-    } catch { noCam.classList.remove('hidden'); }
+    } catch (e) {
+      noCam.innerHTML = '<p style="text-align:center;padding:40px;color:#64748b">Caméra indisponible.<br>Autorisez l\'accès à la caméra dans les réglages.</p>';
+      noCam.classList.remove('hidden');
+    }
   }
 
   function stopScanner() {
