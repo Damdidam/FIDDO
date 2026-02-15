@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "be.fiddo.app",
+    "sha256_cert_fingerprints": ["3A:1F:39:AF:86:74:ED:4A:18:94:CF:B8:DD:ED:17:30:B3:C6:37:07:B9:4E:9F:01:49:1C:CA:78:76:B0:B0:9B"]
+  }
+}]
