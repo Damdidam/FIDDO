@@ -13,16 +13,30 @@ const { generateClientToken, authenticateClient } = require('../middleware/clien
 // CONFIG
 // ═══════════════════════════════════════════════════════
 
-const MAGIC_LINK_TTL_MS = 5 * 60 * 1000; // 5 min (reduced from 15 for security)
+const MAGIC_LINK_TTL_MS = 5 * 60 * 1000; // 5 min
+const POLL_SESSION_TTL_MS = 10 * 60 * 1000; // 10 min
 
 // Rate limiting: Map<ip, { count, lastAttempt }>
 const loginAttempts = new Map();
+
+// Polling sessions: Map<sessionId, { endUserId, jwt, createdAt }>
+const pendingSessions = new Map();
+
+// Reverse lookup: Map<endUserId, sessionId> (to link verify → poll session)
+const userToSession = new Map();
 
 // Cleanup every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [key, data] of loginAttempts) {
     if (now - data.lastAttempt > 3600000) loginAttempts.delete(key);
+  }
+  // Cleanup expired poll sessions
+  for (const [sid, data] of pendingSessions) {
+    if (now - data.createdAt > POLL_SESSION_TTL_MS) {
+      pendingSessions.delete(sid);
+      if (userToSession.get(data.endUserId) === sid) userToSession.delete(data.endUserId);
+    }
   }
 }, 5 * 60 * 1000);
 
@@ -38,7 +52,7 @@ function getClientIP(req) {
 
 
 // ═══════════════════════════════════════════════════════
-// POST /api/me/login — Send magic link email
+// POST /api/me/login — Send magic link email + return sessionId for polling
 // ═══════════════════════════════════════════════════════
 
 router.post('/login', (req, res) => {
@@ -59,6 +73,9 @@ router.post('/login', (req, res) => {
     attempts.lastAttempt = Date.now();
     loginAttempts.set(ip, attempts);
 
+    // Generate poll sessionId (always — even if account doesn't exist, to prevent enumeration)
+    const sessionId = crypto.randomBytes(16).toString('base64url');
+
     // Always respond OK to prevent account enumeration
     let endUser = endUserQueries.findByEmailLower.get(emailLower);
 
@@ -73,6 +90,10 @@ router.post('/login', (req, res) => {
     }
 
     if (endUser && !endUser.is_blocked) {
+      // Store polling session
+      pendingSessions.set(sessionId, { endUserId: endUser.id, jwt: null, createdAt: Date.now() });
+      userToSession.set(endUser.id, sessionId);
+
       // Generate magic token
       const magicToken = crypto.randomBytes(32).toString('base64url');
       const expires = new Date(Date.now() + MAGIC_LINK_TTL_MS).toISOString();
@@ -85,10 +106,42 @@ router.post('/login', (req, res) => {
       sendMagicLinkEmail(endUser.email, magicUrl);
     }
 
-    // Always return success (no account enumeration)
-    res.json({ ok: true, message: 'Si un compte existe, un email de connexion a été envoyé.' });
+    // Always return success + sessionId (no account enumeration)
+    res.json({ ok: true, sessionId, message: 'Si un compte existe, un email de connexion a été envoyé.' });
   } catch (error) {
     console.error('Magic link error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/me/login/poll/:sessionId — Poll for auth completion
+// ═══════════════════════════════════════════════════════
+
+router.get('/login/poll/:sessionId', (req, res) => {
+  try {
+    const session = pendingSessions.get(req.params.sessionId);
+
+    if (!session) {
+      return res.json({ status: 'expired' });
+    }
+
+    if (session.jwt) {
+      // Auth complete! Return JWT and clean up
+      const jwt = session.jwt;
+      const client = session.client || null;
+      pendingSessions.delete(req.params.sessionId);
+      if (userToSession.get(session.endUserId) === req.params.sessionId) {
+        userToSession.delete(session.endUserId);
+      }
+      return res.json({ status: 'ok', token: jwt, client });
+    }
+
+    // Still waiting
+    res.json({ status: 'waiting' });
+  } catch (error) {
+    console.error('Poll error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
@@ -124,14 +177,24 @@ router.post('/verify', (req, res) => {
     // Generate JWT
     const clientToken = generateClientToken(endUser.id);
 
+    const clientData = {
+      name: endUser.name,
+      email: endUser.email,
+      phone: endUser.phone,
+      qrToken: endUser.qr_token,
+    };
+
+    // ── Notify polling session (for native app) ──
+    const sessionId = userToSession.get(endUser.id);
+    if (sessionId && pendingSessions.has(sessionId)) {
+      const session = pendingSessions.get(sessionId);
+      session.jwt = clientToken;
+      session.client = clientData;
+    }
+
     res.json({
       token: clientToken,
-      client: {
-        name: endUser.name,
-        email: endUser.email,
-        phone: endUser.phone,
-        qrToken: endUser.qr_token,
-      },
+      client: clientData,
     });
   } catch (error) {
     console.error('Verify error:', error);
@@ -356,10 +419,6 @@ router.post('/pin', authenticateClient, async (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// PUT /api/me/email — Update email address
-// ═══════════════════════════════════════════════════════
-
-// ═══════════════════════════════════════════════════════
 // PUT /api/me/profile — Update name, phone, date of birth
 // ═══════════════════════════════════════════════════════
 
@@ -400,6 +459,10 @@ router.put('/profile', authenticateClient, (req, res) => {
   }
 });
 
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/me/email — Update email address
+// ═══════════════════════════════════════════════════════
 
 router.put('/email', authenticateClient, async (req, res) => {
   try {
@@ -462,7 +525,6 @@ router.get('/qr', authenticateClient, (req, res) => {
 
 // ═══════════════════════════════════════════════════════
 // POST /api/me/cards/:merchantId/gift — Create gift voucher
-// Debits ALL points from sender, creates a shareable link
 // ═══════════════════════════════════════════════════════
 
 router.post('/cards/:merchantId/gift', authenticateClient, (req, res) => {
@@ -566,7 +628,6 @@ router.get('/gift/:token', (req, res) => {
 
 // ═══════════════════════════════════════════════════════
 // POST /api/me/gift/:token/claim — Claim gift voucher
-// Credits points to the authenticated user
 // ═══════════════════════════════════════════════════════
 
 router.post('/gift/:token/claim', authenticateClient, (req, res) => {
