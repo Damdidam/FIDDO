@@ -62,6 +62,22 @@ function initMessageTables() {
   // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
+  // ───────────────────────────────────────────
+  // ANNOUNCEMENTS (super admin broadcasts)
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS announcements (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      title           TEXT NOT NULL,
+      content         TEXT NOT NULL,
+      target_type     TEXT NOT NULL DEFAULT 'all',
+      priority        TEXT NOT NULL DEFAULT 'normal',
+      created_by      INTEGER REFERENCES super_admins(id),
+      expires_at      TEXT,
+      created_at      TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
   db.exec(`
     CREATE INDEX IF NOT EXISTS ix_msg_created     ON admin_messages(created_at);
     CREATE INDEX IF NOT EXISTS ix_msg_type         ON admin_messages(msg_type);
