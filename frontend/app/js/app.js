@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO App — V4.3 (polling auth for native app)
+   FIDDO App — V4.3-debug (polling auth + debug toasts)
    ═══════════════════════════════════════════════════════ */
 
 const App = (() => {
@@ -84,7 +84,6 @@ const App = (() => {
     const merchantParam = params.get('merchant');
     if (merchantParam) {
       sessionStorage.setItem('fiddo_pending_merchant', merchantParam);
-      // Clean URL
       const url = new URL(window.location);
       url.searchParams.delete('merchant');
       window.history.replaceState({}, '', url.pathname + url.search);
@@ -135,6 +134,9 @@ const App = (() => {
     try {
       const res = await API.login(email);
 
+      // ── DEBUG ──
+      toast('🔧 login: ok=' + res.ok + ' sid=' + (res.data?.sessionId ? res.data.sessionId.substring(0, 8) + '…' : 'NONE'));
+
       document.getElementById('sent-email').textContent = email;
       document.getElementById('login-form').classList.add('hidden');
       document.getElementById('login-sent').classList.remove('hidden');
@@ -143,7 +145,9 @@ const App = (() => {
       if (res.ok && res.data && res.data.sessionId) {
         startPolling(res.data.sessionId);
       }
-    } catch { toast('Erreur réseau'); }
+    } catch (e) {
+      toast('Erreur réseau: ' + e.message);
+    }
     finally {
       btn.classList.remove('loading');
       btn.innerHTML = '<span>Recevoir mon lien</span><span class="material-symbols-rounded">east</span>';
@@ -163,8 +167,15 @@ const App = (() => {
 
       try {
         const res = await API.call('/api/me/login/poll/' + sessionId, { noAuth: true });
+
+        // ── DEBUG: show first 3 poll results ──
+        if (attempts <= 3) {
+          toast('🔧 poll#' + attempts + ': ' + (res.data?.status || 'ERR'));
+        }
+
         if (res.ok && res.data.status === 'ok' && res.data.token) {
           stopPolling();
+          toast('✅ Token reçu!');
           API.setToken(res.data.token);
           client = res.data.client || null;
 
@@ -175,9 +186,12 @@ const App = (() => {
           }
           showApp();
         } else if (res.data.status === 'expired') {
+          toast('🔧 session expired');
           stopPolling();
         }
-      } catch { /* network error, keep polling */ }
+      } catch (e) {
+        if (attempts <= 2) toast('🔧 poll err: ' + e.message);
+      }
     }, 3000);
   }
 
@@ -238,7 +252,6 @@ const App = (() => {
     loadProfile();
     loadNotifPrefs();
 
-    // Auto-register at merchant if we came from a QR scan
     const pendingMerchant = sessionStorage.getItem('fiddo_pending_merchant');
     if (pendingMerchant) {
       sessionStorage.removeItem('fiddo_pending_merchant');
@@ -263,7 +276,6 @@ const App = (() => {
       if (res.ok) {
         const name = res.data.clientName || client?.name || '';
         toast(`✓ ${name} identifié avec succès !`);
-        // Refresh cards to show the new/updated card
         setTimeout(() => refreshCards(), 1500);
       } else {
         toast(res.data?.error || 'Erreur identification');
@@ -427,14 +439,9 @@ const App = (() => {
     document.getElementById('cd-ratio').textContent = card.pointsPerEuro;
     updateFavIcon();
 
-    // Description
     const descEl = document.getElementById('cd-desc');
-    if (merchant.description) {
-      descEl.textContent = merchant.description;
-      descEl.style.display = '';
-    } else {
-      descEl.style.display = 'none';
-    }
+    if (merchant.description) { descEl.textContent = merchant.description; descEl.style.display = ''; }
+    else { descEl.style.display = 'none'; }
 
     const giftBtn = document.getElementById('btn-gift');
     if (merchant.allowGifts && card.pointsBalance > 0) giftBtn.classList.remove('hidden');
@@ -644,7 +651,6 @@ const App = (() => {
     document.getElementById('prof-name').textContent = client.name || client.email || 'Sans nom';
     document.getElementById('prof-email').textContent = client.email || '—';
 
-    // Profile completion prompt
     const banner = document.getElementById('prof-complete');
     if (banner) banner.classList.toggle('hidden', !!client.name);
 
@@ -733,7 +739,7 @@ const App = (() => {
     else toast(res.data?.error || 'Erreur');
   }
 
-  // ─── My QR — with fallback ────────────────
+  // ─── My QR ────────────────────────────────
 
   async function showMyQR() {
     openModal('modal-qr');
@@ -744,8 +750,6 @@ const App = (() => {
 
     const res = await API.getQR();
     if (!res.ok) {
-      console.error('QR API error:', res.status, res.data);
-      // Fallback: generate QR from client email directly
       const fallbackUrl = `https://www.fiddo.be/c/${client?.qrToken || 'unknown'}`;
       qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fallbackUrl)}`;
       qrImg.alt = 'Mon QR code';
@@ -754,27 +758,20 @@ const App = (() => {
 
     const qrUrl = res.data.qrUrl;
 
-    // Method 1: Use qrcode lib if loaded
     if (typeof QRCode !== 'undefined' && QRCode.toDataURL) {
       try {
-        const dataUrl = await QRCode.toDataURL(qrUrl, {
-          width: 220, margin: 2,
-          color: { dark: '#0f172a', light: '#ffffff' }
-        });
+        const dataUrl = await QRCode.toDataURL(qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' } });
         qrImg.src = dataUrl;
         qrImg.alt = 'Mon QR code';
         return;
-      } catch (e) {
-        console.error('QRCode lib error:', e);
-      }
+      } catch (e) { console.error('QRCode lib error:', e); }
     }
 
-    // Method 2: Fallback to external QR API
     qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrl)}`;
     qrImg.alt = 'Mon QR code';
   }
 
-  // ─── Scanner — auto-identify at merchant ──
+  // ─── Scanner ──────────────────────────────
 
   async function startScanner() {
     const video = document.getElementById('scan-video');
@@ -787,18 +784,15 @@ const App = (() => {
       video.srcObject = scannerStream;
       noCam.classList.add('hidden');
 
-      // Wait for video to be ready before scanning
       video.addEventListener('loadedmetadata', () => { video.play(); }, { once: true });
 
       if ('BarcodeDetector' in window) {
-        // Method 1: Native BarcodeDetector (Chrome/Edge Android)
         const detector = new BarcodeDetector({ formats: ['qr_code'] });
         scanInterval = setInterval(async () => {
           if (video.readyState < 2 || video.videoWidth === 0) return;
           try { const bc = await detector.detect(video); if (bc.length > 0) handleScan(bc[0].rawValue); } catch {}
         }, 300);
       } else if (typeof jsQR !== 'undefined') {
-        // Method 2: jsQR fallback (iOS Safari, Firefox, etc.)
         const canvas = document.getElementById('scan-canvas');
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         scanInterval = setInterval(() => {
@@ -811,7 +805,6 @@ const App = (() => {
           if (code && code.data) handleScan(code.data);
         }, 300);
       } else {
-        console.warn('No QR scanning library available');
         noCam.classList.remove('hidden');
       }
     } catch { noCam.classList.remove('hidden'); }
@@ -828,7 +821,6 @@ const App = (() => {
   async function handleScan(data) {
     if (scanBusy) return;
 
-    // Extract merchant qrToken from URL: .../q/TOKEN (works on any domain)
     const match = data.match(/\/q\/([a-zA-Z0-9_-]+)/);
     if (!match) { toast('QR non reconnu'); return; }
 
@@ -839,33 +831,22 @@ const App = (() => {
     toast('Identification en cours…');
 
     try {
-      // Auto-register: POST to /api/qr/register with our info
       const res = await API.call('/api/qr/register', {
         method: 'POST',
-        body: {
-          qrToken: merchantQrToken,
-          email: client?.email || '',
-          phone: client?.phone || '',
-          name: client?.name || '',
-        },
-        noAuth: true, // public endpoint
+        body: { qrToken: merchantQrToken, email: client?.email || '', phone: client?.phone || '', name: client?.name || '' },
+        noAuth: true,
       });
 
       if (res.ok) {
         const name = res.data.clientName || client?.name || '';
         const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
         toast(`✓ ${name} identifié${pts}`);
-        // Refresh cards in case new card was created
         setTimeout(() => refreshCards(), 1500);
       } else {
         toast(res.data?.error || 'Erreur identification');
       }
-    } catch (e) {
-      console.error('Auto-identify error:', e);
-      toast('Erreur réseau');
-    }
+    } catch (e) { toast('Erreur réseau'); }
 
-    // Resume scanner after 3 seconds
     setTimeout(() => {
       scanBusy = false;
       if (document.querySelector('.tb.active')?.dataset.tab === 'scanner') startScanner();
