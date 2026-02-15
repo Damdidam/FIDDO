@@ -115,7 +115,7 @@ app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../fronten
 
 // Client portal (legacy me.html)
 app.get('/me', (req, res) => res.redirect(301, '/app/'));
-app.get('/me/verify/:token', (req, res) => res.redirect(301, '/app/?token=' + encodeURIComponent(req.params.token)));
+app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/verify.html')));
 app.get('/c/:token', (req, res) => res.redirect(301, '/app/'));
 
 // PWA client app — serves index.html for all /app routes (SPA)
