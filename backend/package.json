@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "test": "node --test tests/flows.tests.js"
+    "test": "node --test --test-force-exit tests/flows.tests.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
