@@ -17,30 +17,30 @@
 </head>
 <body>
 
-  <!-- ═══ LOGIN ═══ -->
+  <!-- ═══ LOGIN / ONBOARDING — email only ═══ -->
   <div id="screen-login" class="screen active">
     <div class="login-bg"><div class="login-orb orb-1"></div><div class="login-orb orb-2"></div><div class="login-orb orb-3"></div></div>
     <div class="login-content">
       <div class="login-logo"><span>F</span></div>
       <h1 class="login-title">FIDDO</h1>
-      <p class="login-tagline">Votre fidélité récompensée</p>
+      <p class="login-tagline">Vos cartes fidélité, simplifiées</p>
       <div id="login-form" class="login-form">
         <div class="field">
           <span class="material-symbols-rounded field-icon">mail</span>
           <input type="email" id="login-email" placeholder="Votre adresse email" autocomplete="email" inputmode="email">
         </div>
         <button class="btn-primary" id="btn-login">
-          <span>Recevoir mon lien</span>
+          <span>Continuer</span>
           <span class="material-symbols-rounded">east</span>
         </button>
-        <p class="login-hint">Un lien de connexion sécurisé vous sera envoyé par email</p>
+        <p class="login-hint">Nouveau ou déjà inscrit ? Un lien sécurisé vous sera envoyé</p>
       </div>
       <div id="login-sent" class="login-sent hidden">
         <div class="sent-anim"><span class="material-symbols-rounded">mark_email_read</span></div>
-        <h2>Email envoyé !</h2>
+        <h2>Vérifiez vos emails</h2>
         <p class="sent-email" id="sent-email"></p>
-        <p>Cliquez sur le lien dans l'email pour vous connecter</p>
-        <p class="sent-hint">Vérifiez vos spams si vous ne trouvez pas l'email</p>
+        <p>Cliquez sur le lien reçu pour activer votre compte</p>
+        <p class="sent-hint">Pensez à vérifier vos spams</p>
         <button class="btn-secondary" id="btn-resend"><span class="material-symbols-rounded">refresh</span>Renvoyer</button>
         <a class="link-muted" id="btn-change-email">Changer d'email</a>
       </div>
@@ -99,32 +99,7 @@
     </div>
   </div>
 
-  <!-- ═══ ONBOARDING ═══ -->
-  <div id="screen-onboarding" class="screen">
-    <div class="onboard-content solid">
-      <div class="onboard-icon"><span class="material-symbols-rounded">waving_hand</span></div>
-      <h1>Bienvenue !</h1>
-      <p class="onboard-sub">Dites-nous comment vous vous appelez</p>
-      <div class="field solid-field">
-        <span class="material-symbols-rounded field-icon">person</span>
-        <input type="text" id="onboard-name" placeholder="Prénom et nom" autocomplete="name">
-      </div>
-      <div class="field solid-field">
-        <span class="material-symbols-rounded field-icon">phone</span>
-        <input type="tel" id="onboard-phone" placeholder="Téléphone (optionnel)" autocomplete="tel">
-      </div>
-      <div class="field solid-field">
-        <span class="material-symbols-rounded field-icon">cake</span>
-        <input type="date" id="onboard-dob" placeholder="Date de naissance">
-      </div>
-      <p class="field-hint">🎂 Recevez un cadeau le jour de votre anniversaire</p>
-      <button class="btn-primary btn-full" id="btn-onboard">
-        <span>Continuer</span>
-        <span class="material-symbols-rounded">east</span>
-      </button>
-      <a class="link-muted" id="btn-skip-onboard" style="text-align:center;display:block;margin-top:12px;color:var(--tx3)">Plus tard</a>
-    </div>
-  </div>
+  <!-- ═══ ONBOARDING (removed — email-only flow, profile completion is optional via Profile tab) ═══ -->
 
   <!-- ═══ MAIN APP ═══ -->
   <div id="screen-app" class="screen">
@@ -189,6 +164,16 @@
     <div id="tab-profile" class="tab">
       <div class="tab-head"><h1>Profil</h1></div>
       <div class="tab-body">
+        <!-- Profile completion prompt (shown if no name) -->
+        <div id="prof-complete" class="prof-complete hidden">
+          <span class="material-symbols-rounded" style="font-size:20px;color:var(--pri)">tips_and_updates</span>
+          <div>
+            <strong>Complétez votre profil</strong>
+            <p style="font-size:12px;color:var(--tx2);margin-top:2px">Ajoutez votre nom pour être reconnu chez les commerçants</p>
+          </div>
+          <button class="btn-icon" onclick="App.editName()" style="margin-left:auto"><span class="material-symbols-rounded">east</span></button>
+        </div>
+
         <div class="prof-card">
           <div class="prof-avatar" id="prof-avatar">?</div>
           <div class="prof-name-row">
@@ -289,6 +274,8 @@
         <div class="stat"><span class="material-symbols-rounded">payments</span><strong id="cd-spent">0€</strong><small>Dépensé</small></div>
         <div class="stat"><span class="material-symbols-rounded">speed</span><strong id="cd-ratio">1</strong><small>pts/€</small></div>
       </div>
+
+      <p class="cd-desc" id="cd-desc"></p>
 
       <button class="menu-row" onclick="App.showHistory()">
         <span class="material-symbols-rounded mi">receipt_long</span>
