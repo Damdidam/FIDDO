@@ -13,13 +13,16 @@ const dbPath = path.join(tmpDir, 'test.db');
 
 // Set env BEFORE requiring any app modules
 process.env.DB_PATH = dbPath;
+process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET = 'test-secret-key-12345';
 process.env.ADMIN_JWT_SECRET = 'test-admin-secret-12345';
+process.env.CLIENT_JWT_SECRET = 'test-client-secret-12345';
 process.env.SMTP_USER = ''; // Disable emails in tests
 
 // Now require app modules
 const app = require('../server');
 const { db, merchantQueries, endUserQueries, merchantClientQueries } = require('../database');
+const { generateClientToken } = require('../middleware/client-auth');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
@@ -88,11 +91,8 @@ function getStaffToken(staff) {
 }
 
 function getClientToken(endUserId) {
-  return jwt.sign(
-    { endUserId },
-    process.env.JWT_SECRET,
-    { expiresIn: '90d' }
-  );
+  const eu = endUserQueries.findById.get(endUserId);
+  return generateClientToken(endUserId, eu?.email_lower, eu?.phone_e164);
 }
 
 function createEndUser(overrides = {}) {
