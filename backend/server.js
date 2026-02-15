@@ -37,6 +37,9 @@ app.use('/api/preferences/backup', express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(requestIdMiddleware);
 
+// Android App Links verification
+app.use('/.well-known', express.static(path.join(__dirname, '../frontend/.well-known')));
+
 // Static files — index: false so that GET / hits our landing route, not index.html
 app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
 
