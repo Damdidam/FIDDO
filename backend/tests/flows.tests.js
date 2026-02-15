@@ -322,15 +322,20 @@ describe('E. Redeem récompenses', () => {
     merchant = createMerchant({ points_for_reward: 50 });
     staff = createStaff(merchant.id);
     staffToken = getStaffToken(staff);
-    client = createEndUser({ email: 'redeem@test.be', name: 'Redeem Client' });
+    client = createEndUser({ email: 'redeem@test.be', name: 'Redeem Client', pin: '1234' });
     mc = createMerchantClient(merchant.id, client.id, 60);
   });
 
   it('E1. Redeem standard → points déduits', async () => {
+    // Debug: verify PIN was set
+    const euCheck = db.prepare('SELECT id, pin_hash FROM end_users WHERE id = ?').get(client.id);
+    console.log('E1 debug: pin_hash set?', !!euCheck?.pin_hash, 'endUserId:', client.id);
+
     const res = await POST('/api/clients/reward', {
       staffToken,
-      body: { merchantClientId: mc.id, idempotencyKey: 'redeem-e1' },
+      body: { merchantClientId: mc.id, pin: '1234', idempotencyKey: 'redeem-e1' },
     });
+    if (res.status !== 200) console.log('E1 debug:', res.status, JSON.stringify(res.data));
     assert.equal(res.status, 200);
 
     const updated = db.prepare('SELECT points_balance FROM merchant_clients WHERE id = ?').get(mc.id);
@@ -340,7 +345,7 @@ describe('E. Redeem récompenses', () => {
   it('E2. Redeem impossible — pas assez de points', async () => {
     const res = await POST('/api/clients/reward', {
       staffToken,
-      body: { merchantClientId: mc.id, idempotencyKey: 'redeem-e2' },
+      body: { merchantClientId: mc.id, pin: '1234', idempotencyKey: 'redeem-e2' },
     });
     assert.equal(res.status, 400);
   });
@@ -491,8 +496,9 @@ describe('F. App client — Cartes & Profil', () => {
   it('F13. POST /api/me/pin — définir un PIN', async () => {
     const res = await POST('/api/me/pin', {
       token: clientToken,
-      body: { pin: '4827' },
+      body: { newPin: '4827' },
     });
+    if (res.status !== 200) console.log('F13 debug:', res.status, JSON.stringify(res.data));
     assert.equal(res.status, 200);
 
     const eu = db.prepare('SELECT pin_hash FROM end_users WHERE id = ?').get(client.id);
@@ -577,6 +583,9 @@ describe('H. Flow complet end-to-end', () => {
     assert.equal(credit1.status, 200);
     assert.equal(credit1.data.transaction.points_delta, 60);
     assert.equal(credit1.data.client.points_balance, 60);
+    // Debug: check the actual reward threshold
+    assert.equal(credit1.data.client.reward_threshold, 100,
+      `Threshold expected=100 actual=${credit1.data.client.reward_threshold}, balance=${credit1.data.client.points_balance}`);
     assert.equal(credit1.data.client.can_redeem, false);
 
     // 5. Client revient — 2e visite, 25€ → 50 pts → total 110
@@ -593,21 +602,26 @@ describe('H. Flow complet end-to-end', () => {
     assert.equal(credit2.data.client.points_balance, 110);
     assert.equal(credit2.data.client.can_redeem, true);
 
-    // 6. Redeem !
+    // 6. Set PIN on client (required for redeem)
+    const eu = db.prepare("SELECT * FROM end_users WHERE email_lower = 'e2e@test.be'").get();
+    db.prepare("UPDATE end_users SET pin_hash = ? WHERE id = ?")
+      .run(require('bcryptjs').hashSync('9999', 10), eu.id);
+
+    // 7. Redeem !
     const mcId = credit2.data.client.id;
     const redeem = await POST('/api/clients/reward', {
       staffToken,
-      body: { merchantClientId: mcId, idempotencyKey: 'e2e-r1' },
+      body: { merchantClientId: mcId, pin: '9999', idempotencyKey: 'e2e-r1' },
     });
     assert.equal(redeem.status, 200);
 
-    // 7. Vérifier le solde final
+    // 8. Vérifier le solde final
     const mc = db.prepare('SELECT points_balance FROM merchant_clients WHERE id = ?').get(mcId);
     assert.equal(mc.points_balance, 10); // 110 - 100
 
-    // 8. Le client ouvre l'app
-    const eu = db.prepare("SELECT * FROM end_users WHERE email_lower = 'e2e@test.be'").get();
-    const clientToken = getClientToken(eu.id);
+    // 9. Le client ouvre l'app
+    const euFinal = db.prepare("SELECT * FROM end_users WHERE email_lower = 'e2e@test.be'").get();
+    const clientToken = getClientToken(euFinal.id);
     const cards = await GET('/api/me/cards', { token: clientToken });
     assert.equal(cards.data.cards.length, 1);
     assert.equal(cards.data.cards[0].pointsBalance, 10);
