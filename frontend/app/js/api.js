@@ -1,10 +1,26 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO API Client — V4.1 (single-token, PIN support)
+   FIDDO API Client — V4.2 (cookie bridge for iOS PWA)
    ═══════════════════════════════════════════════════════ */
 
 const API = (() => {
   const BASE = window.FIDDO_API || 'https://www.fiddo.be';
   const KEY = 'fiddo_token';
+
+  // On boot: check if a JWT was set via cookie (iOS magic link flow)
+  // Transfer it to localStorage and clear the cookie
+  (function migrateCookie() {
+    try {
+      const match = document.cookie.match(/(?:^|;\s*)fiddo_jwt=([^;]+)/);
+      if (match) {
+        const jwt = decodeURIComponent(match[1]);
+        if (jwt && jwt.length > 20) {
+          localStorage.setItem(KEY, jwt);
+        }
+        // Clear the cookie after migration
+        document.cookie = 'fiddo_jwt=;path=/;max-age=0;SameSite=Lax;Secure';
+      }
+    } catch (e) { /* ignore */ }
+  })();
 
   function getToken() { return localStorage.getItem(KEY); }
   function setToken(t) { localStorage.setItem(KEY, t); }
@@ -28,13 +44,15 @@ const API = (() => {
   }
 
   return {
-    // Generic (used by app.js for PIN etc.)
     call,
 
     // Auth
     login: (email) => call('/api/me/login', { method: 'POST', body: { email }, noAuth: true }),
     verify: (token) => call('/api/me/verify', { method: 'POST', body: { token }, noAuth: true }),
-    logout: () => { clearToken(); },
+    logout: () => {
+      clearToken();
+      document.cookie = 'fiddo_jwt=;path=/;max-age=0;SameSite=Lax;Secure';
+    },
 
     // Session
     hasSession: () => !!getToken(),
