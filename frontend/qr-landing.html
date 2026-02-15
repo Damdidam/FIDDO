@@ -257,16 +257,13 @@
         var pts = data.pointsBalance || 0;
         var mName = merchantInfo ? merchantInfo.businessName : 'ce commerce';
 
-        // Existing user → redirect to app (they might have forgotten they have it)
+        // Existing user → identified, show success with app link + stores
         if (!data.isNew) {
           document.getElementById('success-title').textContent = 'Content de vous revoir' + (name ? ', ' + name.split(' ')[0] : '') + ' !';
-          document.getElementById('success-sub').textContent = 'Redirection vers l\'app…';
+          document.getElementById('success-sub').textContent = 'Vous êtes identifié';
           document.getElementById('success-pts').textContent = pts;
           document.getElementById('success-merchant').textContent = mName;
           showStep('success');
-          setTimeout(function() {
-            window.location.href = '/app/?merchant=' + encodeURIComponent(qrToken);
-          }, 1500);
           return;
         }
 
