@@ -16,7 +16,7 @@ function sendAppReminders() {
   try {
     const users = db.prepare(`
       SELECT eu.id, eu.email, eu.first_merchant_id,
-             mc.points_balance
+             COALESCE(mc.points_balance, 0) as points_balance
       FROM end_users eu
       LEFT JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = eu.first_merchant_id
       WHERE eu.deleted_at IS NULL
@@ -24,6 +24,7 @@ function sendAppReminders() {
         AND eu.email IS NOT NULL
         AND eu.last_app_login IS NULL
         AND eu.created_at BETWEEN datetime('now', '-3.5 days') AND datetime('now', '-2.5 days')
+        AND COALESCE(mc.points_balance, 0) > 0
     `).all();
 
     if (users.length === 0) {
