@@ -177,6 +177,19 @@
       .hour-input { font-size: 1rem; }
     }
 
+    /* ═══ LANGUAGE PILLS ═══ */
+    .lang-grid { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+    .lang-pill {
+      padding: 0.35rem 0.7rem; border: 1.5px solid #E2E8F0; border-radius: 8px;
+      background: white; font-family: inherit; font-size: 0.72rem; font-weight: 500;
+      color: #64748B; cursor: pointer; transition: all 0.12s;
+    }
+    .lang-pill.active {
+      border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 45%, white);
+      color: var(--primary-dark); font-weight: 600;
+    }
+    .lang-pill:hover:not(.active) { border-color: #CBD5E1; }
+
     /* ═══ BACKUP ═══ */
     .backup-drop {
       border: 2px dashed #CBD5E1; border-radius: 10px; padding: 1.5rem 1rem;
@@ -322,6 +335,18 @@
               </div>
             </form>
           </div>
+
+          <!-- Language default -->
+          <div class="pref-card">
+            <div class="pref-card-title">Langue par défaut (formulaire client)</div>
+            <div id="lang-alert"></div>
+            <div class="help" style="margin-bottom: 0.5rem;">Langue affichée par défaut sur le formulaire QR code client</div>
+            <div class="lang-grid" id="lang-grid"></div>
+            <div class="save-row">
+              <button type="button" class="save-btn" onclick="saveLang()">Enregistrer</button>
+            </div>
+          </div>
+        </div>
 
         <div>
           <div class="reward-preview" id="reward-preview" style="background: var(--gradient);"></div>
@@ -818,9 +843,14 @@
           }
         }
 
+        // Language
+        if (currentPrefs.language) currentLang = currentPrefs.language;
+
         renderThemes();
+        renderLangs();
       } catch (e) {
         renderThemes();
+        renderLangs();
       }
     })();
 
@@ -926,6 +956,41 @@
     // ═══════════════════════════════════════════════════════
     // TAB 3: NOTIFICATIONS
     // ═══════════════════════════════════════════════════════
+
+    // ═══ LANGUAGE ═══
+
+    const LANGS = [
+      { id: 'fr', label: 'Français' },
+      { id: 'en', label: 'English' },
+      { id: 'nl', label: 'Nederlands' },
+      { id: 'tr', label: 'Türkçe' },
+      { id: 'zh', label: '中文' },
+      { id: 'ar', label: 'العربية' },
+    ];
+    let currentLang = 'fr';
+
+    function renderLangs() {
+      const grid = document.getElementById('lang-grid');
+      grid.innerHTML = LANGS.map(l =>
+        '<button type="button" class="lang-pill' + (l.id === currentLang ? ' active' : '') + '" onclick="pickLang(\'' + l.id + '\')">' + l.label + '</button>'
+      ).join('');
+    }
+
+    function pickLang(id) {
+      currentLang = id;
+      renderLangs();
+    }
+
+    async function saveLang() {
+      try {
+        await API.preferences.update({ language: currentLang });
+        currentPrefs.language = currentLang;
+        showAlert('lang-alert', 'Langue par défaut enregistrée', 'success');
+        setTimeout(() => clearAlert('lang-alert'), 3000);
+      } catch (err) {
+        showAlert('lang-alert', err.message, 'error');
+      }
+    }
 
     async function saveNotif() {
       try {
