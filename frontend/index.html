@@ -741,6 +741,17 @@
 
     if (Auth.isAuthenticated()) {
       window.location.href = '/credit';
+    } else {
+      // Auto-verify cookie (Android app: sessionStorage cleared on restart, but cookie persists)
+      (async () => {
+        try {
+          var data = await API.auth.verify();
+          if (data && data.staff && data.merchant) {
+            Auth.setSession(data.staff, data.merchant);
+            window.location.href = '/credit';
+          }
+        } catch (e) { /* cookie expired or missing — show login form */ }
+      })();
     }
 
     function showRegister() {
