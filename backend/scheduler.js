@@ -2,7 +2,7 @@
 // FIDDO — Scheduled Tasks (runs daily)
 // ═══════════════════════════════════════════════════════
 
-const { db, merchantQueries } = require('./database');
+const { db, merchantQueries, voucherQueries } = require('./database');
 const { sendAppReminderEmail } = require('./services/email');
 
 /**
@@ -52,6 +52,48 @@ function sendAppReminders() {
 }
 
 /**
+ * Expire pending gift vouchers and refund points to sender.
+ * Runs every hour. If a voucher is past its expires_at and still 'pending',
+ * the sender gets their points back + a gift_refund transaction is created.
+ */
+function refundExpiredGifts() {
+  try {
+    const expired = voucherQueries.findExpiredPending.all();
+
+    if (expired.length === 0) return;
+
+    console.log(`🎁 Refunding ${expired.length} expired gift voucher(s)…`);
+
+    const refundTx = db.transaction(() => {
+      for (const v of expired) {
+        // Refund points to sender
+        db.prepare(`
+          UPDATE merchant_clients
+          SET points_balance = points_balance + ?, updated_at = datetime('now')
+          WHERE id = ?
+        `).run(v.points, v.sender_mc_id);
+
+        // Create refund transaction
+        db.prepare(`
+          INSERT INTO transactions (merchant_id, merchant_client_id, staff_id, amount, points_delta, transaction_type, notes, created_at)
+          VALUES (?, ?, NULL, NULL, ?, 'gift_refund', ?, datetime('now'))
+        `).run(v.merchant_id, v.sender_mc_id, v.points, `Transfert expiré — ${v.points} pts remboursés (voucher ${v.token.substring(0, 8)})`);
+
+        // Mark voucher expired
+        db.prepare(`
+          UPDATE point_vouchers SET status = 'expired' WHERE id = ?
+        `).run(v.id);
+      }
+    });
+
+    refundTx();
+    console.log(`✅ ${expired.length} gift voucher(s) expired & refunded`);
+  } catch (error) {
+    console.error('❌ Gift refund error:', error);
+  }
+}
+
+/**
  * Start the daily scheduler.
  * Runs at 10:00 AM every day (Belgian business hours).
  */
@@ -60,15 +102,21 @@ function startScheduler() {
   setTimeout(() => {
     console.log('⏰ Scheduler: initial check…');
     sendAppReminders();
+    refundExpiredGifts();
   }, 30000);
 
-  // Then run every 24 hours
+  // App reminders — every 24 hours
   setInterval(() => {
     console.log('⏰ Scheduler: daily check…');
     sendAppReminders();
   }, 24 * 60 * 60 * 1000);
 
-  console.log('⏰ Scheduler started (daily app reminders)');
+  // Gift refunds — every hour
+  setInterval(() => {
+    refundExpiredGifts();
+  }, 60 * 60 * 1000);
+
+  console.log('⏰ Scheduler started (daily app reminders + hourly gift refunds)');
 }
 
-module.exports = { startScheduler, sendAppReminders };
+module.exports = { startScheduler, sendAppReminders, refundExpiredGifts };
