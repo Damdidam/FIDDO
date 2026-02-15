@@ -315,8 +315,8 @@ const App = (() => {
   }
 
   function renderCards() {
-    const firstName = client?.name?.split(' ')[0] || '';
-    document.getElementById('greeting').textContent = firstName ? `Bonjour ${firstName} 👋` : 'Bienvenue 👋';
+    const displayName = client?.name || '';
+    document.getElementById('greeting').textContent = displayName ? `Bonjour ${displayName} 👋` : 'Bienvenue 👋';
     document.getElementById('greeting-sub').textContent = cards.length > 0 ? `${cards.length} carte${cards.length > 1 ? 's' : ''} fidélité` : 'Scannez un QR pour commencer';
     renderFilteredCards();
   }
