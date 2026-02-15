@@ -15,7 +15,7 @@ router.use(authenticateStaff);
 // ─── Theme defaults ──────────────────────────────────
 
 const VALID_THEMES = ['teal', 'navy', 'violet', 'forest', 'brick', 'amber', 'slate'];
-const VALID_LANGUAGES = ['fr', 'nl', 'en'];
+const VALID_LANGUAGES = ['fr', 'nl', 'en', 'tr', 'zh', 'ar'];
 const VALID_BACKUP_FREQ = ['manual', 'daily', 'twice', 'thrice'];
 
 const VALID_BUSINESS_TYPES = [
@@ -423,7 +423,15 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     if (ownerPhone.trim() !== current.owner_phone) changes.push({ field: 'Tél. propriétaire', old: current.owner_phone, new: ownerPhone.trim() });
     if (validType !== (current.business_type || 'horeca')) changes.push({ field: 'Type de commerce', old: current.business_type || 'horeca', new: validType });
     if ((websiteUrl || '') !== (current.website_url || '')) changes.push({ field: 'Site web', old: current.website_url || '', new: websiteUrl || '' });
+    if ((instagramUrl || '') !== (current.instagram_url || '')) changes.push({ field: 'Instagram', old: current.instagram_url || '', new: instagramUrl || '' });
+    if ((facebookUrl || '') !== (current.facebook_url || '')) changes.push({ field: 'Facebook', old: current.facebook_url || '', new: facebookUrl || '' });
+    if ((description || '') !== (current.description || '')) changes.push({ field: 'Description', old: current.description || '', new: description || '' });
     if ((allowGifts ? 1 : 0) !== (current.allow_gifts || 0)) changes.push({ field: 'Cadeaux points', old: current.allow_gifts ? 'Oui' : 'Non', new: allowGifts ? 'Oui' : 'Non' });
+
+    // Compare opening hours
+    const currentHoursJson = current.opening_hours || null;
+    const newHoursJson = (openingHours && typeof openingHours === 'object' && Object.keys(openingHours).length > 0) ? JSON.stringify(openingHours) : null;
+    if (currentHoursJson !== newHoursJson) changes.push({ field: 'Horaires', old: currentHoursJson || '(vide)', new: newHoursJson || '(vide)' });
 
     if (changes.length === 0 && (!ownerName || ownerName.trim() === (staffQueries.findById.get(req.staff.id)?.display_name || ''))) {
       return res.json({ message: 'Aucune modification détectée', changes: [] });
