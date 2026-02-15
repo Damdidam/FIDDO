@@ -75,7 +75,6 @@ function initDatabase() {
 
   // ───────────────────────────────────────────
   // 3. STAFF ACCOUNTS
-  //    email = globalement unique (un humain = un login)
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS staff_accounts (
@@ -99,10 +98,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 4. END USERS (identité globale)
-  //    email/phone   = valeurs brutes (affichage)
-  //    email_lower/phone_e164 = normalisées (unicité + recherche)
-  //    CHECK : au moins un identifiant, sauf si soft-deleted
+  // 4. END USERS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_users (
@@ -138,8 +134,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 5. END USER ALIASES (identifiants historiques post-fusion)
-  //    UNIQUE(alias_type, alias_value) → un alias ne peut pointer que vers un seul end_user
+  // 5. END USER ALIASES
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_user_aliases (
@@ -152,7 +147,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 6. MERCHANT CLIENTS (relation merchant ↔ end_user, points isolés)
+  // 6. MERCHANT CLIENTS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS merchant_clients (
@@ -177,10 +172,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 7. TRANSACTIONS (ledger — source de vérité comptable)
-  //    points_delta : signé (+credit, -reward, +/-adjustment, 0 merge-trace)
-  //    amount : nullable (merge/adjustment n'ont pas de montant)
-  //    idempotency_key : unique par merchant pour éviter les double-crédits
+  // 7. TRANSACTIONS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS transactions (
@@ -202,7 +194,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 8. AUDIT LOGS (immuable)
+  // 8. AUDIT LOGS
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS audit_logs (
@@ -222,7 +214,7 @@ function initDatabase() {
   `);
 
   // ───────────────────────────────────────────
-  // 9. END USER MERGES (traçabilité des fusions)
+  // 9. END USER MERGES
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS end_user_merges (
@@ -262,8 +254,7 @@ function initDatabase() {
   }
 
   // ───────────────────────────────────────────
-  // 10. MERCHANT PREFERENCES (theme, notifications, backup)
-  //     Missing from initial schema — needed by preferences route
+  // 10. MERCHANT PREFERENCES
   // ───────────────────────────────────────────
   db.exec(`
     CREATE TABLE IF NOT EXISTS merchant_preferences (
@@ -289,6 +280,20 @@ function initDatabase() {
   } catch (_) { /* column already exists */ }
 
   // ───────────────────────────────────────────
+  // 11. POLL SESSIONS (native app auth via polling)
+  //     Persisted in SQLite so it survives server restarts
+  // ───────────────────────────────────────────
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS poll_sessions (
+      session_id   TEXT PRIMARY KEY,
+      end_user_id  INTEGER NOT NULL,
+      jwt          TEXT,
+      client_json  TEXT,
+      created_at   TEXT NOT NULL DEFAULT (datetime('now'))
+    )
+  `);
+
+  // ───────────────────────────────────────────
   // INDEXES
   // ───────────────────────────────────────────
   db.exec(`
@@ -296,15 +301,15 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_merchants_status ON merchants(status);
     CREATE INDEX IF NOT EXISTS ix_merchants_vat    ON merchants(vat_number);
 
-    -- staff_accounts (email already has implicit UNIQUE index)
+    -- staff_accounts
     CREATE INDEX IF NOT EXISTS ix_staff_merchant ON staff_accounts(merchant_id);
 
-    -- end_users (normalized columns for lookup)
+    -- end_users
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_email_lower ON end_users(email_lower);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_phone_e164  ON end_users(phone_e164);
     CREATE UNIQUE INDEX IF NOT EXISTS ux_eu_qr_token    ON end_users(qr_token);
 
-    -- end_user_aliases (unique alias → one owner only)
+    -- end_user_aliases
     CREATE UNIQUE INDEX IF NOT EXISTS ux_alias_type_value ON end_user_aliases(alias_type, alias_value);
     CREATE INDEX IF NOT EXISTS ix_alias_end_user          ON end_user_aliases(end_user_id);
 
@@ -312,7 +317,7 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_mc_merchant ON merchant_clients(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_mc_enduser  ON merchant_clients(end_user_id);
 
-    -- transactions (idempotency: unique per merchant, only when key is present)
+    -- transactions
     CREATE UNIQUE INDEX IF NOT EXISTS ux_tx_idempotency
       ON transactions(merchant_id, idempotency_key)
       WHERE idempotency_key IS NOT NULL;
@@ -323,6 +328,9 @@ function initDatabase() {
     CREATE INDEX IF NOT EXISTS ix_audit_merchant ON audit_logs(merchant_id);
     CREATE INDEX IF NOT EXISTS ix_audit_actor    ON audit_logs(actor_type, actor_id);
     CREATE INDEX IF NOT EXISTS ix_audit_request  ON audit_logs(request_id);
+
+    -- poll_sessions
+    CREATE INDEX IF NOT EXISTS ix_poll_end_user ON poll_sessions(end_user_id);
   `);
 
   console.log('✅ Database V3.4 initialized');
@@ -384,7 +392,6 @@ initDatabase();
   `);
 
   // Update transaction_type CHECK for existing tables
-  // SQLite can't ALTER CHECK constraints, so we must recreate the table
   const hasOldCheck = db.prepare(`
     SELECT sql FROM sqlite_master WHERE type='table' AND name='transactions'
   `).get();
@@ -413,7 +420,6 @@ initDatabase();
       DROP TABLE transactions_old;
     `);
 
-    // Recreate indexes that were on the old table
     db.exec(`
       CREATE INDEX IF NOT EXISTS ix_tx_merchant_created ON transactions(merchant_id, created_at);
       CREATE INDEX IF NOT EXISTS ix_tx_mc_created ON transactions(merchant_client_id, created_at);
@@ -423,7 +429,6 @@ initDatabase();
     console.log('✅ Transactions table migrated');
   }
 
-  // Migration: add gift_refund support
   if (hasOldCheck && hasOldCheck.sql && hasOldCheck.sql.includes('gift_out') && !hasOldCheck.sql.includes('gift_refund')) {
     console.log('🔄 Migrating transactions table to support gift_refund...');
     db.exec(`
@@ -729,7 +734,6 @@ const mergeQueries = {
   getAll: db.prepare('SELECT * FROM end_user_merges ORDER BY created_at DESC'),
 };
 
-
 // ─── Point Vouchers (gift system) ────────────────────
 
 const voucherQueries = {
@@ -752,6 +756,29 @@ const voucherQueries = {
   `),
 };
 
+// ─── Poll Sessions (native app auth) ────────────────
+
+const pollQueries = {
+  create: db.prepare(
+    "INSERT INTO poll_sessions (session_id, end_user_id, created_at) VALUES (?, ?, datetime('now'))"
+  ),
+  findBySessionId: db.prepare(
+    'SELECT * FROM poll_sessions WHERE session_id = ?'
+  ),
+  findPendingByUser: db.prepare(
+    'SELECT session_id FROM poll_sessions WHERE end_user_id = ? AND jwt IS NULL ORDER BY created_at DESC LIMIT 1'
+  ),
+  setJwt: db.prepare(
+    'UPDATE poll_sessions SET jwt = ?, client_json = ? WHERE session_id = ?'
+  ),
+  delete: db.prepare(
+    'DELETE FROM poll_sessions WHERE session_id = ?'
+  ),
+  cleanup: db.prepare(
+    "DELETE FROM poll_sessions WHERE created_at < datetime('now', '-10 minutes')"
+  ),
+};
+
 
 // ═══════════════════════════════════════════════════════
 // EXPORTS
@@ -770,4 +797,5 @@ module.exports = {
   auditQueries,
   mergeQueries,
   voucherQueries,
+  pollQueries,
 };
