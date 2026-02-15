@@ -9,6 +9,7 @@ const { generateClientToken, verifyClientToken } = require('../middleware/client
 const { db, merchantQueries, endUserQueries, merchantClientQueries, aliasQueries } = require('../database');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 const { logAudit, auditCtx } = require('../middleware/audit');
+const { sendWelcomeEmail } = require('../services/email');
 
 // ═══════════════════════════════════════════════════════
 // CONFIG
@@ -501,9 +502,29 @@ router.post('/register', (req, res) => {
     }
 
     // Check if client already exists
-    const existing = findEndUser(emailLower, phoneE164);
+    let existing = findEndUser(emailLower, phoneE164);
+    let isNew = !existing;
+
+    // Auto-create end_user if new (zero-friction: account exists from first scan)
+    if (!existing && emailLower) {
+      const qrToken2 = crypto.randomBytes(8).toString('base64url');
+      const result = endUserQueries.create.run(
+        email ? email.trim() : null,
+        phone || null,
+        emailLower,
+        phoneE164,
+        name || null,
+        null // validation_token
+      );
+      if (result.lastInsertRowid) {
+        endUserQueries.setQrToken.run(qrToken2, result.lastInsertRowid);
+        // Track first merchant for reminder emails
+        db.prepare('UPDATE end_users SET first_merchant_id = ? WHERE id = ?').run(merchant.id, result.lastInsertRowid);
+        existing = endUserQueries.findById.get(result.lastInsertRowid);
+      }
+    }
+
     const mc = existing ? merchantClientQueries.find.get(merchant.id, existing.id) : null;
-    const isNew = !existing;
 
     // Hash PIN if provided
     let pinHash = null;
@@ -543,7 +564,7 @@ router.post('/register', (req, res) => {
       pointsBalance: mc?.points_balance || 0,
       visitCount: mc?.visit_count || 0,
       isNew,
-      pinHash: isNew ? pinHash : null,
+      pinHash: isNew && !existing ? pinHash : null,
       createdAt: Date.now(),
     });
 
@@ -565,6 +586,12 @@ router.post('/register', (req, res) => {
     });
 
     res.json(responseData);
+
+    // Send welcome email for new users (fire-and-forget, after response)
+    if (isNew && emailLower) {
+      const appUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/app/';
+      sendWelcomeEmail(email, merchant.business_name, 0, appUrl);
+    }
   } catch (error) {
     console.error('Register error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
