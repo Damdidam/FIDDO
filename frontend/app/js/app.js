@@ -113,7 +113,6 @@ const App = (() => {
       if (res.ok) {
         client = res.data.client;
         cards = res.data.cards || [];
-        if (!client.name) { show('screen-onboarding'); return; }
         showApp();
         return;
       }
@@ -173,24 +172,8 @@ const App = (() => {
 
     const cardsRes = await API.getCards();
     if (cardsRes.ok) cards = cardsRes.data.cards || [];
-    if (!client.name) show('screen-onboarding');
-    else showApp();
+    showApp();
   }
-
-  async function submitOnboarding() {
-    const name = document.getElementById('onboard-name').value.trim();
-    const phone = document.getElementById('onboard-phone').value.trim();
-    const dob = document.getElementById('onboard-dob').value;
-    if (!name) { toast('Entrez votre nom'); return; }
-    const body = { name };
-    if (phone) body.phone = phone;
-    if (dob) body.dateOfBirth = dob;
-    const res = await API.updateProfile(body);
-    if (res.ok) { client.name = name; if (phone) client.phone = phone; showApp(); }
-    else toast(res.data?.error || 'Erreur');
-  }
-
-  function skipOnboarding() { showApp(); }
 
   async function logout() {
     if (!confirm('Voulez-vous vous déconnecter ?')) return;
@@ -333,8 +316,8 @@ const App = (() => {
 
   function renderCards() {
     const firstName = client?.name?.split(' ')[0] || '';
-    document.getElementById('greeting').textContent = firstName ? `Bonjour ${firstName} 👋` : 'Bonjour 👋';
-    document.getElementById('greeting-sub').textContent = cards.length > 0 ? `${cards.length} carte${cards.length > 1 ? 's' : ''} fidélité` : 'Vos cartes fidélité';
+    document.getElementById('greeting').textContent = firstName ? `Bonjour ${firstName} 👋` : 'Bienvenue 👋';
+    document.getElementById('greeting-sub').textContent = cards.length > 0 ? `${cards.length} carte${cards.length > 1 ? 's' : ''} fidélité` : 'Scannez un QR pour commencer';
     renderFilteredCards();
   }
 
@@ -397,6 +380,15 @@ const App = (() => {
     document.getElementById('cd-spent').textContent = card.totalSpent + '€';
     document.getElementById('cd-ratio').textContent = card.pointsPerEuro;
     updateFavIcon();
+
+    // Description
+    const descEl = document.getElementById('cd-desc');
+    if (merchant.description) {
+      descEl.textContent = merchant.description;
+      descEl.style.display = '';
+    } else {
+      descEl.style.display = 'none';
+    }
 
     const giftBtn = document.getElementById('btn-gift');
     if (merchant.allowGifts && card.pointsBalance > 0) giftBtn.classList.remove('hidden');
@@ -600,9 +592,14 @@ const App = (() => {
 
   function loadProfile() {
     if (!client) return;
-    document.getElementById('prof-avatar').textContent = (client.name || '?')[0].toUpperCase();
-    document.getElementById('prof-name').textContent = client.name || 'Sans nom';
+    const initial = (client.name || client.email || '?')[0].toUpperCase();
+    document.getElementById('prof-avatar').textContent = initial;
+    document.getElementById('prof-name').textContent = client.name || client.email || 'Sans nom';
     document.getElementById('prof-email').textContent = client.email || '—';
+
+    // Profile completion prompt
+    const banner = document.getElementById('prof-complete');
+    if (banner) banner.classList.toggle('hidden', !!client.name);
 
     const phoneRow = document.getElementById('prof-phone-row');
     if (client.phone) { phoneRow.classList.remove('hidden'); document.getElementById('prof-phone').textContent = client.phone; }
@@ -842,8 +839,6 @@ const App = (() => {
     document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
     document.getElementById('btn-resend').addEventListener('click', resendLogin);
     document.getElementById('btn-change-email').addEventListener('click', resetLogin);
-    document.getElementById('btn-onboard').addEventListener('click', submitOnboarding);
-    document.getElementById('btn-skip-onboard').addEventListener('click', skipOnboarding);
     document.getElementById('btn-save-name').addEventListener('click', saveName);
     document.getElementById('edit-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
     document.getElementById('btn-save-email').addEventListener('click', saveEmail);
@@ -866,7 +861,6 @@ const App = (() => {
 
   return {
     handleLogin, resendLogin, resetLogin,
-    submitOnboarding, skipOnboarding,
     show, goBack, switchTab, showApp,
     openCard, showHistory, openMaps,
     showMyQR, editName, saveName, editEmail, saveEmail,
