@@ -771,7 +771,7 @@
     // ═══════════════════════════════════════════════════════
     async function redeemReward(mcId) {
       let pin = null;
-      if (!qrVerifiedFlag) {
+      if (!qrVerifyTokenValue) {
         pin = prompt('Code PIN du client (4 chiffres) :');
         if (!pin) return; // cancelled
         if (!/^\d{4}$/.test(pin)) {
@@ -783,7 +783,7 @@
         const r = await API.clients.reward({
           merchantClientId: mcId,
           pin: pin || undefined,
-          qrVerified: qrVerifiedFlag || undefined,
+          qrVerifyToken: qrVerifyTokenValue || undefined,
         });
         UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
         triggerLookup();
@@ -872,7 +872,7 @@
 
       // PIN required if not QR-verified
       let pin = null;
-      if (!qrVerifiedFlag) {
+      if (!qrVerifyTokenValue) {
         pin = prompt('Code PIN du client (4 chiffres) :');
         if (!pin) return; // cancelled
         if (!/^\d{4}$/.test(pin)) {
@@ -889,7 +889,7 @@
         const r = await API.clients.reward({
           merchantClientId: mcId,
           pin: pin || undefined,
-          qrVerified: qrVerifiedFlag || undefined,
+          qrVerifyToken: qrVerifyTokenValue || undefined,
         });
         btn.textContent = '✓ Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
         btn.style.background = '#047857';
@@ -918,7 +918,7 @@
 
       // Full form reset
       lastCreditKey = null;
-      qrVerifiedFlag = false;
+      qrVerifyTokenValue = null;
       qrPinToken = null;
       document.querySelectorAll('#credit-form .form-control').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
       document.getElementById('pts-badge').textContent = '0 pts';
@@ -1022,6 +1022,9 @@
       try {
         const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
 
+        // Client authenticated via their device — store server token for PIN bypass
+        if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
+
         // Store pre-hashed PIN from QR registration (for new clients)
         if (d.pinToken) qrPinToken = d.pinToken;
 
@@ -1119,7 +1122,7 @@
     // ═══════════════════════════════════════════════════════
 
     let html5QrScanner = null;
-    let qrVerifiedFlag = false;  // true if client was identified by QR scan
+    let qrVerifyTokenValue = null;  // server-issued token for PIN bypass on redeem
     let qrPinToken = null;        // server-side PIN token from QR registration
     let scannerBusy = false;     // debounce scan results
 
@@ -1211,8 +1214,8 @@
       try {
         const d = await API.call('/qr/client-lookup/' + clientQrToken);
 
-        // Set QR verified flag (for PIN bypass on redeem)
-        qrVerifiedFlag = true;
+        // Store server-issued verify token for PIN bypass on redeem
+        if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
 
         // Pre-fill credit form
         if (d.email) {
