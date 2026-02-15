@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 
 const router = express.Router();
 
-const { db, endUserQueries, merchantClientQueries, merchantQueries } = require('../database');
+const { db, endUserQueries, merchantClientQueries, merchantQueries, pollQueries } = require('../database');
 const { normalizeEmail } = require('../services/normalizer');
 const { sendMagicLinkEmail } = require('../services/email');
 const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
@@ -14,16 +14,9 @@ const { generateClientToken, authenticateClient } = require('../middleware/clien
 // ═══════════════════════════════════════════════════════
 
 const MAGIC_LINK_TTL_MS = 5 * 60 * 1000; // 5 min
-const POLL_SESSION_TTL_MS = 10 * 60 * 1000; // 10 min
 
 // Rate limiting: Map<ip, { count, lastAttempt }>
 const loginAttempts = new Map();
-
-// Polling sessions: Map<sessionId, { endUserId, jwt, createdAt }>
-const pendingSessions = new Map();
-
-// Reverse lookup: Map<endUserId, sessionId> (to link verify → poll session)
-const userToSession = new Map();
 
 // Cleanup every 5 minutes
 setInterval(() => {
@@ -31,13 +24,8 @@ setInterval(() => {
   for (const [key, data] of loginAttempts) {
     if (now - data.lastAttempt > 3600000) loginAttempts.delete(key);
   }
-  // Cleanup expired poll sessions
-  for (const [sid, data] of pendingSessions) {
-    if (now - data.createdAt > POLL_SESSION_TTL_MS) {
-      pendingSessions.delete(sid);
-      if (userToSession.get(data.endUserId) === sid) userToSession.delete(data.endUserId);
-    }
-  }
+  // Cleanup expired poll sessions from SQLite
+  try { pollQueries.cleanup.run(); } catch (e) { /* ignore */ }
 }, 5 * 60 * 1000);
 
 
@@ -73,7 +61,7 @@ router.post('/login', (req, res) => {
     attempts.lastAttempt = Date.now();
     loginAttempts.set(ip, attempts);
 
-    // Generate poll sessionId (always — even if account doesn't exist, to prevent enumeration)
+    // Generate poll sessionId
     const sessionId = crypto.randomBytes(16).toString('base64url');
 
     // Always respond OK to prevent account enumeration
@@ -90,9 +78,8 @@ router.post('/login', (req, res) => {
     }
 
     if (endUser && !endUser.is_blocked) {
-      // Store polling session
-      pendingSessions.set(sessionId, { endUserId: endUser.id, jwt: null, createdAt: Date.now() });
-      userToSession.set(endUser.id, sessionId);
+      // Store polling session in SQLite (survives server restarts)
+      pollQueries.create.run(sessionId, endUser.id);
 
       // Generate magic token
       const magicToken = crypto.randomBytes(32).toString('base64url');
@@ -121,21 +108,25 @@ router.post('/login', (req, res) => {
 
 router.get('/login/poll/:sessionId', (req, res) => {
   try {
-    const session = pendingSessions.get(req.params.sessionId);
+    const session = pollQueries.findBySessionId.get(req.params.sessionId);
 
     if (!session) {
       return res.json({ status: 'expired' });
     }
 
+    // Check if session is too old (10 min)
+    const createdMs = new Date(session.created_at + 'Z').getTime();
+    if (Date.now() - createdMs > 10 * 60 * 1000) {
+      pollQueries.delete.run(req.params.sessionId);
+      return res.json({ status: 'expired' });
+    }
+
     if (session.jwt) {
       // Auth complete! Return JWT and clean up
-      const jwt = session.jwt;
-      const client = session.client || null;
-      pendingSessions.delete(req.params.sessionId);
-      if (userToSession.get(session.endUserId) === req.params.sessionId) {
-        userToSession.delete(session.endUserId);
-      }
-      return res.json({ status: 'ok', token: jwt, client });
+      let client = null;
+      try { client = JSON.parse(session.client_json); } catch {}
+      pollQueries.delete.run(req.params.sessionId);
+      return res.json({ status: 'ok', token: session.jwt, client });
     }
 
     // Still waiting
@@ -184,12 +175,10 @@ router.post('/verify', (req, res) => {
       qrToken: endUser.qr_token,
     };
 
-    // ── Notify polling session (for native app) ──
-    const sessionId = userToSession.get(endUser.id);
-    if (sessionId && pendingSessions.has(sessionId)) {
-      const session = pendingSessions.get(sessionId);
-      session.jwt = clientToken;
-      session.client = clientData;
+    // ── Notify polling session in SQLite (for native app) ──
+    const pollSession = pollQueries.findPendingByUser.get(endUser.id);
+    if (pollSession) {
+      pollQueries.setJwt.run(clientToken, JSON.stringify(clientData), pollSession.session_id);
     }
 
     res.json({
@@ -392,12 +381,10 @@ router.post('/pin', authenticateClient, async (req, res) => {
 
     const { currentPin, newPin } = req.body;
 
-    // Validate new PIN
     if (!newPin || !/^\d{4}$/.test(newPin)) {
       return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
     }
 
-    // If user already has a PIN, verify current one
     if (endUser.pin_hash) {
       if (!currentPin) {
         return res.status(400).json({ error: 'Code PIN actuel requis' });
@@ -503,7 +490,6 @@ router.get('/qr', authenticateClient, (req, res) => {
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
-    // Generate qr_token if missing (legacy users)
     let qrToken = endUser.qr_token;
     if (!qrToken) {
       qrToken = require('crypto').randomBytes(8).toString('base64url');
@@ -535,7 +521,6 @@ router.post('/cards/:merchantId/gift', authenticateClient, (req, res) => {
 
     const merchantId = parseInt(req.params.merchantId);
 
-    // Check merchant allows gifts
     const merchant = merchantQueries.findById.get(merchantId);
     if (!merchant || merchant.status !== 'active') {
       return res.status(404).json({ error: 'Commerce non trouvé' });
@@ -544,7 +529,6 @@ router.post('/cards/:merchantId/gift', authenticateClient, (req, res) => {
       return res.status(400).json({ error: 'Ce commerce n\'autorise pas les transferts de points' });
     }
 
-    // Check sender has points
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
     if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
     if (mc.points_balance <= 0) {
@@ -555,19 +539,15 @@ router.post('/cards/:merchantId/gift', authenticateClient, (req, res) => {
     const token = crypto.randomBytes(16).toString('base64url');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Transaction: debit sender + create voucher
     const trx = db.transaction(() => {
-      // Debit sender
       db.prepare('UPDATE merchant_clients SET points_balance = 0, updated_at = datetime(\'now\') WHERE id = ?')
         .run(mc.id);
 
-      // Record transaction
       db.prepare(`
         INSERT INTO transactions (merchant_id, merchant_client_id, staff_id, amount, points_delta, transaction_type, notes, created_at)
         VALUES (?, ?, NULL, NULL, ?, 'gift_out', ?, datetime('now'))
       `).run(merchantId, mc.id, -points, `Cadeau de ${points} pts — voucher ${token.substring(0, 8)}`);
 
-      // Create voucher
       db.prepare(`
         INSERT INTO point_vouchers (token, merchant_id, sender_mc_id, sender_eu_id, points, status, expires_at)
         VALUES (?, ?, ?, ?, ?, 'pending', ?)
@@ -594,7 +574,7 @@ router.post('/cards/:merchantId/gift', authenticateClient, (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
-// GET /api/me/gift/:token — Get gift voucher info (public-ish)
+// GET /api/me/gift/:token — Get gift voucher info
 // ═══════════════════════════════════════════════════════
 
 router.get('/gift/:token', (req, res) => {
@@ -643,12 +623,10 @@ router.post('/gift/:token/claim', authenticateClient, (req, res) => {
       return res.status(400).json({ error: 'Ce lien cadeau a expiré' });
     }
 
-    // Prevent self-claim
     if (voucher.sender_eu_id === endUser.id) {
       return res.status(400).json({ error: 'Vous ne pouvez pas récupérer votre propre cadeau' });
     }
 
-    // Check claimer has a card at this merchant — auto-create if not
     let mc = merchantClientQueries.find.get(voucher.merchant_id, endUser.id);
     if (!mc) {
       db.prepare('INSERT INTO merchant_clients (merchant_id, end_user_id) VALUES (?, ?)').run(voucher.merchant_id, endUser.id);
@@ -656,20 +634,17 @@ router.post('/gift/:token/claim', authenticateClient, (req, res) => {
     }
 
     const trx = db.transaction(() => {
-      // Credit claimer
       db.prepare(`
         UPDATE merchant_clients
         SET points_balance = points_balance + ?, updated_at = datetime('now')
         WHERE id = ?
       `).run(voucher.points, mc.id);
 
-      // Record transaction
       db.prepare(`
         INSERT INTO transactions (merchant_id, merchant_client_id, staff_id, amount, points_delta, transaction_type, notes, created_at)
         VALUES (?, ?, NULL, NULL, ?, 'gift_in', ?, datetime('now'))
       `).run(voucher.merchant_id, mc.id, voucher.points, `Cadeau reçu — voucher ${voucher.token.substring(0, 8)}`);
 
-      // Mark voucher claimed
       db.prepare(`
         UPDATE point_vouchers
         SET status = 'claimed', claimer_mc_id = ?, claimer_eu_id = ?, claimed_at = datetime('now')
