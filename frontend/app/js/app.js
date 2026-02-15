@@ -76,6 +76,32 @@ const App = (() => {
   // AUTH
   // ═══════════════════════════════════════════
 
+  // Capacitor: intercept verify URLs opened by Android (App Links)
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      window.Capacitor.Plugins.App.addListener('appUrlOpen', function(event) {
+        try {
+          var url = event.url || '';
+          // Match /me/verify/{token}
+          var match = url.match(/\/me\/verify\/([a-zA-Z0-9_-]+)/);
+          if (match && match[1]) {
+            handleVerify(match[1]);
+            return;
+          }
+          // Also check for ?token= (legacy deep link)
+          var tokenMatch = url.match(/[?&]token=([^&]+)/);
+          if (tokenMatch) {
+            var jwt = decodeURIComponent(tokenMatch[1]);
+            if (jwt && jwt.length > 20) {
+              API.setToken(jwt);
+              window.location.reload();
+            }
+          }
+        } catch (e) { console.error('appUrlOpen error:', e); }
+      });
+    }
+  } catch (e) { /* not in Capacitor */ }
+
   async function init() {
     const params = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
@@ -226,6 +252,7 @@ const App = (() => {
   }
 
   async function handleVerify(token) {
+    stopPolling();
     show('screen-verify');
     const res = await API.verify(token);
     if (!res.ok) {
