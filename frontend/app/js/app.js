@@ -468,6 +468,7 @@ const App = (() => {
       merge:      { icon: 'merge', color: 'var(--tx3)', bg: 'var(--brd-l)', label: 'Fusion' },
       gift_out:   { icon: 'card_giftcard', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Cadeau envoyé' },
       gift_in:    { icon: 'card_giftcard', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Cadeau reçu' },
+      gift_refund:{ icon: 'undo', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Transfert expiré — remboursé' },
     };
 
     list.innerHTML = txs.map(tx => {
