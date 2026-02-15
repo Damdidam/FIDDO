@@ -153,16 +153,19 @@ app.get('/validate', (req, res) => {
 // START
 // ═══════════════════════════════════════════════════════
 
-// Start backup scheduler
-const { startScheduler } = require('./services/backup-db');
-startScheduler();
+// Only auto-start when run directly (not when required by tests)
+if (require.main === module) {
+  // Start backup scheduler
+  const { startScheduler } = require('./services/backup-db');
+  startScheduler();
 
-// Start email reminder scheduler (J+3 app download reminders)
-const { startScheduler: startEmailScheduler } = require('./scheduler');
-startEmailScheduler();
+  // Start email reminder scheduler (J+3 app download reminders)
+  const { startScheduler: startEmailScheduler } = require('./scheduler');
+  startEmailScheduler();
 
-app.listen(PORT, () => {
-  console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT}`);
-});
+  app.listen(PORT, () => {
+    console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT}`);
+  });
+}
 
 module.exports = app;
