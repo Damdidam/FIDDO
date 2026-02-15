@@ -130,9 +130,14 @@ router.get('/activity', (req, res) => {
     let where = 'WHERE t.merchant_id = ?';
     const params = [mid];
 
-    if (type && ['credit', 'reward', 'adjustment', 'merge'].includes(type)) {
-      where += ' AND t.transaction_type = ?';
-      params.push(type);
+    if (type && ['credit', 'reward', 'adjustment', 'merge', 'gift_out', 'gift_in', 'gift'].includes(type)) {
+      if (type === 'gift') {
+        where += ' AND t.transaction_type IN (?, ?)';
+        params.push('gift_out', 'gift_in');
+      } else {
+        where += ' AND t.transaction_type = ?';
+        params.push(type);
+      }
     }
     if (from) {
       where += ' AND t.created_at >= ?';
@@ -167,6 +172,30 @@ router.get('/activity', (req, res) => {
       ORDER BY t.created_at DESC
       LIMIT ? OFFSET ?
     `).all(...params, limit, offset);
+
+    // Enrich gift transactions with counterpart info
+    const giftRows = rows.filter(r => r.transaction_type === 'gift_out' || r.transaction_type === 'gift_in');
+    for (const row of giftRows) {
+      const match = row.notes && row.notes.match(/voucher\s+(\S+)/);
+      if (!match) continue;
+      const voucher = db.prepare(`
+        SELECT pv.status,
+               sender_eu.email AS sender_email, sender_eu.name AS sender_name, sender_eu.phone AS sender_phone,
+               claimer_eu.email AS claimer_email, claimer_eu.name AS claimer_name, claimer_eu.phone AS claimer_phone
+        FROM point_vouchers pv
+        LEFT JOIN end_users sender_eu ON pv.sender_eu_id = sender_eu.id
+        LEFT JOIN end_users claimer_eu ON pv.claimer_eu_id = claimer_eu.id
+        WHERE pv.token LIKE ? AND pv.merchant_id = ?
+        LIMIT 1
+      `).get(match[1] + '%', mid);
+      if (!voucher) continue;
+      if (row.transaction_type === 'gift_out') {
+        row.gift_to = voucher.claimer_name || voucher.claimer_email || voucher.claimer_phone || null;
+        row.gift_status = voucher.status; // pending, claimed, expired
+      } else {
+        row.gift_from = voucher.sender_name || voucher.sender_email || voucher.sender_phone || '?';
+      }
+    }
 
     res.json({
       transactions: rows,
