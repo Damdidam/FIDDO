@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO App — V4.2 (QR fix, auto-identify, no dark mode)
+   FIDDO App — V4.3 (polling auth for native app)
    ═══════════════════════════════════════════════════════ */
 
 const App = (() => {
@@ -14,6 +14,7 @@ const App = (() => {
   let activeFilter = 'all';
   let favorites = JSON.parse(localStorage.getItem('fiddo_favs') || '[]');
   let lastGiftLink = '';
+  let pollTimer = null;
 
   const THEMES = {
     teal: '#2563eb', navy: '#1e40af', violet: '#7c3aed',
@@ -132,10 +133,16 @@ const App = (() => {
     btn.innerHTML = '<span>Envoi en cours…</span>';
 
     try {
-      await API.login(email);
+      const res = await API.login(email);
+
       document.getElementById('sent-email').textContent = email;
       document.getElementById('login-form').classList.add('hidden');
       document.getElementById('login-sent').classList.remove('hidden');
+
+      // Start polling for auth completion (native app flow)
+      if (res.ok && res.data && res.data.sessionId) {
+        startPolling(res.data.sessionId);
+      }
     } catch { toast('Erreur réseau'); }
     finally {
       btn.classList.remove('loading');
@@ -143,13 +150,50 @@ const App = (() => {
     }
   }
 
+  // ─── Polling ──────────────────────────────
+
+  function startPolling(sessionId) {
+    stopPolling();
+    let attempts = 0;
+    const maxAttempts = 120; // 120 × 3s = 6 minutes
+
+    pollTimer = setInterval(async () => {
+      attempts++;
+      if (attempts > maxAttempts) { stopPolling(); return; }
+
+      try {
+        const res = await API.call('/api/me/login/poll/' + sessionId, { noAuth: true });
+        if (res.ok && res.data.status === 'ok' && res.data.token) {
+          stopPolling();
+          API.setToken(res.data.token);
+          client = res.data.client || null;
+
+          const cardsRes = await API.getCards();
+          if (cardsRes.ok) {
+            client = cardsRes.data.client || client;
+            cards = cardsRes.data.cards || [];
+          }
+          showApp();
+        } else if (res.data.status === 'expired') {
+          stopPolling();
+        }
+      } catch { /* network error, keep polling */ }
+    }, 3000);
+  }
+
+  function stopPolling() {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  }
+
   function resendLogin() {
+    stopPolling();
     document.getElementById('login-form').classList.remove('hidden');
     document.getElementById('login-sent').classList.add('hidden');
     handleLogin();
   }
 
   function resetLogin() {
+    stopPolling();
     document.getElementById('login-form').classList.remove('hidden');
     document.getElementById('login-sent').classList.add('hidden');
     document.getElementById('login-email').focus();
@@ -177,6 +221,7 @@ const App = (() => {
 
   async function logout() {
     if (!confirm('Voulez-vous vous déconnecter ?')) return;
+    stopPolling();
     API.logout(); client = null; cards = [];
     show('screen-login'); resetLogin();
   }
@@ -186,6 +231,7 @@ const App = (() => {
   // ═══════════════════════════════════════════
 
   function showApp() {
+    stopPolling();
     show('screen-app');
     renderCards();
     buildFilterPills();
