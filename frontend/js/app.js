@@ -478,6 +478,22 @@ async function loadUnreadBadge() {
 
 document.addEventListener('DOMContentLoaded', setupNavbar);
 
+// ─── Capacitor: Android back button ─────────────────
+
+try {
+  if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    window.Capacitor.Plugins.App.addListener('backButton', function() {
+      // If there's browser history, go back
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        // On the main page — minimize app
+        window.Capacitor.Plugins.App.minimizeApp();
+      }
+    });
+  }
+} catch (e) { /* not in Capacitor */ }
+
 // ─── PWA Service Worker ──────────────────────────────
 
 if ('serviceWorker' in navigator) {
