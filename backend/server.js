@@ -157,6 +157,10 @@ app.get('/validate', (req, res) => {
 const { startScheduler } = require('./services/backup-db');
 startScheduler();
 
+// Start email reminder scheduler (J+3 app download reminders)
+const { startScheduler: startEmailScheduler } = require('./scheduler');
+startEmailScheduler();
+
 app.listen(PORT, () => {
   console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT}`);
 });
