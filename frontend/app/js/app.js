@@ -1,874 +1,435 @@
-/* ═══════════════════════════════════════════════════════
-   FIDDO App — V4.2 (QR fix, auto-identify, no dark mode)
-   ═══════════════════════════════════════════════════════ */
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#3b82f6">
+  <title>FIDDO</title>
+  <link rel="manifest" href="/app/manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="/app/assets/icon-192.png">
+  <link rel="apple-touch-icon" href="/app/assets/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/app/css/app.css">
+</head>
+<body>
 
-const App = (() => {
-  let client = null;
-  let cards = [];
-  let currentCard = null;
-  let currentMerchant = null;
-  let screenStack = [];
-  let scannerStream = null;
-  let scanInterval = null;
-  let searchQuery = '';
-  let activeFilter = 'all';
-  let favorites = JSON.parse(localStorage.getItem('fiddo_favs') || '[]');
-  let lastGiftLink = '';
+  <!-- ═══ LOGIN / ONBOARDING — email only ═══ -->
+  <div id="screen-login" class="screen active">
+    <div class="login-bg"><div class="login-orb orb-1"></div><div class="login-orb orb-2"></div><div class="login-orb orb-3"></div></div>
+    <div class="login-content">
+      <div class="login-logo"><span>F</span></div>
+      <h1 class="login-title">FIDDO</h1>
+      <p class="login-tagline">Vos cartes fidélité, simplifiées</p>
+      <div id="login-form" class="login-form">
+        <div class="field">
+          <span class="material-symbols-rounded field-icon">mail</span>
+          <input type="email" id="login-email" placeholder="Votre adresse email" autocomplete="email" inputmode="email">
+        </div>
+        <button class="btn-primary" id="btn-login">
+          <span>Continuer</span>
+          <span class="material-symbols-rounded">east</span>
+        </button>
+        <p class="login-hint">Nouveau ou déjà inscrit ? Un lien sécurisé vous sera envoyé</p>
+      </div>
+      <div id="login-sent" class="login-sent hidden">
+        <div class="sent-anim"><span class="material-symbols-rounded">mark_email_read</span></div>
+        <h2>Vérifiez vos emails</h2>
+        <p class="sent-email" id="sent-email"></p>
+        <p>Cliquez sur le lien reçu pour activer votre compte</p>
+        <p class="sent-hint">Pensez à vérifier vos spams</p>
+        <button class="btn-secondary" id="btn-resend"><span class="material-symbols-rounded">refresh</span>Renvoyer</button>
+        <a class="link-muted" id="btn-change-email">Changer d'email</a>
+      </div>
+    </div>
+  </div>
 
-  const THEMES = {
-    teal: '#2563eb', navy: '#1e40af', violet: '#7c3aed',
-    forest: '#059669', brick: '#e11d48', amber: '#d97706', slate: '#475569'
-  };
+  <!-- ═══ VERIFY ═══ -->
+  <div id="screen-verify" class="screen">
+    <div class="center-col">
+      <div class="loader"></div>
+      <h2>Connexion en cours…</h2>
+      <p id="verify-error" class="error-text hidden"></p>
+      <button class="btn-secondary solid hidden" id="verify-retry" onclick="App.show('screen-login')">
+        <span class="material-symbols-rounded">arrow_back</span>Retour
+      </button>
+    </div>
+  </div>
 
-  const BIZ_TYPES = {
-    horeca: { label: 'Horeca', icon: 'restaurant' },
-    boulangerie: { label: 'Boulangerie', icon: 'bakery_dining' },
-    coiffeur: { label: 'Coiffeur', icon: 'content_cut' },
-    beaute: { label: 'Beauté', icon: 'spa' },
-    pharmacie: { label: 'Pharmacie', icon: 'local_pharmacy' },
-    fleuriste: { label: 'Fleuriste', icon: 'local_florist' },
-    boucherie: { label: 'Boucherie', icon: 'set_meal' },
-    epicerie: { label: 'Épicerie', icon: 'grocery' },
-    cave: { label: 'Cave', icon: 'wine_bar' },
-    librairie: { label: 'Librairie', icon: 'auto_stories' },
-    pressing: { label: 'Pressing', icon: 'local_laundry_service' },
-    fitness: { label: 'Fitness', icon: 'fitness_center' },
-    garage: { label: 'Garage', icon: 'garage_home' },
-    veterinaire: { label: 'Véto', icon: 'pets' },
-    autre: { label: 'Autre', icon: 'storefront' },
-  };
+  <!-- ═══ GIFT CLAIM ═══ -->
+  <div id="screen-gift-claim" class="screen">
+    <div class="center-col">
+      <div id="gift-loading">
+        <div class="loader"></div>
+        <h2>Chargement du cadeau…</h2>
+      </div>
+      <div id="gift-preview" class="hidden">
+        <div class="gift-box"><span class="material-symbols-rounded">redeem</span></div>
+        <h2 id="gift-title"></h2>
+        <p id="gift-sub" class="gift-sub"></p>
+        <div class="gift-amount" id="gift-amount"></div>
+        <p class="gift-merchant" id="gift-merchant"></p>
+        <p class="gift-expires" id="gift-expires"></p>
+        <button class="btn-primary" id="btn-claim-gift" style="margin-top:24px;width:280px">
+          <span class="material-symbols-rounded">downloading</span>
+          <span>Récupérer mes points</span>
+        </button>
+      </div>
+      <div id="gift-done" class="hidden">
+        <div class="gift-box ok"><span class="material-symbols-rounded">check_circle</span></div>
+        <h2>Cadeau récupéré !</h2>
+        <p id="gift-done-msg" class="gift-sub"></p>
+        <button class="btn-primary" style="margin-top:24px;width:240px" onclick="App.showApp()">
+          <span class="material-symbols-rounded">loyalty</span>
+          <span>Voir mes cartes</span>
+        </button>
+      </div>
+      <div id="gift-error" class="hidden">
+        <div class="gift-box err"><span class="material-symbols-rounded">error</span></div>
+        <h2 id="gift-error-title">Lien invalide</h2>
+        <p id="gift-error-msg" class="gift-sub"></p>
+        <button class="btn-primary" style="margin-top:24px;width:240px" onclick="App.show('screen-login')">
+          <span class="material-symbols-rounded">arrow_back</span>
+          <span>Retour</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
-  const DAYS = { lun: 'Lundi', mar: 'Mardi', mer: 'Mercredi', jeu: 'Jeudi', ven: 'Vendredi', sam: 'Samedi', dim: 'Dimanche' };
-  const DAY_KEYS = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
+  <!-- ═══ ONBOARDING (removed — email-only flow, profile completion is optional via Profile tab) ═══ -->
 
-  // ═══════════════════════════════════════════
-  // NAVIGATION
-  // ═══════════════════════════════════════════
+  <!-- ═══ MAIN APP ═══ -->
+  <div id="screen-app" class="screen">
 
-  function show(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    screenStack = [id];
-  }
+    <!-- Tab: Cards -->
+    <div id="tab-cards" class="tab active">
+      <div class="tab-head">
+        <h1 id="greeting">Bonjour 👋</h1>
+        <p class="sub" id="greeting-sub">Vos cartes fidélité</p>
+        <div class="search-bar">
+          <span class="material-symbols-rounded">search</span>
+          <input type="text" id="search-input" placeholder="Rechercher un commerce…">
+          <button class="search-clear hidden" id="search-clear" onclick="App.clearSearch()">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div class="filter-row" id="filter-row"></div>
+      </div>
+      <div class="tab-body" id="cards-scroll">
+        <div id="cards-list"></div>
+        <div id="cards-empty" class="empty hidden">
+          <span class="material-symbols-rounded">credit_card_off</span>
+          <h3>Aucune carte</h3>
+          <p>Scannez un QR code chez un commerçant pour commencer à cumuler des points</p>
+        </div>
+        <div id="cards-no-result" class="empty hidden">
+          <span class="material-symbols-rounded">search_off</span>
+          <h3>Aucun résultat</h3>
+          <p>Essayez un autre terme de recherche</p>
+        </div>
+      </div>
+    </div>
 
-  function goBack() {
-    if (screenStack.length > 0) {
-      const topId = screenStack.pop();
-      const el = document.getElementById(topId);
-      el.style.transform = 'translateX(100%)';
-      setTimeout(() => { el.classList.remove('active'); el.style.transform = ''; }, 350);
-    }
-  }
-
-  function switchTab(name) {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.tb').forEach(b => b.classList.remove('active'));
-    document.getElementById('tab-' + name).classList.add('active');
-    document.querySelector(`.tb[data-tab="${name}"]`).classList.add('active');
-    if (name === 'scanner') startScanner();
-    else stopScanner();
-    if (name === 'profile') loadProfile();
-    if (name === 'cards') refreshCards();
-  }
-
-  // ═══════════════════════════════════════════
-  // AUTH
-  // ═══════════════════════════════════════════
-
-  async function init() {
-    const params = new URLSearchParams(window.location.search);
-    const hash = window.location.hash;
-
-    // Save merchant QR token if present (from /q/TOKEN redirect)
-    const merchantParam = params.get('merchant');
-    if (merchantParam) {
-      sessionStorage.setItem('fiddo_pending_merchant', merchantParam);
-      // Clean URL
-      const url = new URL(window.location);
-      url.searchParams.delete('merchant');
-      window.history.replaceState({}, '', url.pathname + url.search);
-    }
-
-    // 1) Magic link verify token
-    let verifyToken = params.get('token');
-    if (!verifyToken && hash.startsWith('#verify=')) verifyToken = decodeURIComponent(hash.substring(8));
-
-    if (verifyToken) {
-      window.history.replaceState({}, '', window.location.pathname);
-      await handleVerify(verifyToken);
-      return;
-    }
-
-    // 2) Gift claim token
-    const giftToken = params.get('gift');
-    if (giftToken) {
-      window.history.replaceState({}, '', window.location.pathname);
-      await handleGiftClaim(giftToken);
-      return;
-    }
-
-    // 3) Existing session
-    if (API.hasSession()) {
-      const res = await API.getCards();
-      if (res.ok) {
-        client = res.data.client;
-        cards = res.data.cards || [];
-        showApp();
-        return;
-      }
-      API.clearToken();
-    }
-
-    show('screen-login');
-  }
-
-  async function handleLogin() {
-    const input = document.getElementById('login-email');
-    const email = input.value.trim().toLowerCase();
-    if (!email || !email.includes('@')) { toast('Email invalide'); return; }
-
-    const btn = document.getElementById('btn-login');
-    btn.classList.add('loading');
-    btn.innerHTML = '<span>Envoi en cours…</span>';
-
-    try {
-      await API.login(email);
-      document.getElementById('sent-email').textContent = email;
-      document.getElementById('login-form').classList.add('hidden');
-      document.getElementById('login-sent').classList.remove('hidden');
-    } catch { toast('Erreur réseau'); }
-    finally {
-      btn.classList.remove('loading');
-      btn.innerHTML = '<span>Recevoir mon lien</span><span class="material-symbols-rounded">east</span>';
-    }
-  }
-
-  function resendLogin() {
-    document.getElementById('login-form').classList.remove('hidden');
-    document.getElementById('login-sent').classList.add('hidden');
-    handleLogin();
-  }
-
-  function resetLogin() {
-    document.getElementById('login-form').classList.remove('hidden');
-    document.getElementById('login-sent').classList.add('hidden');
-    document.getElementById('login-email').focus();
-  }
-
-  async function handleVerify(token) {
-    show('screen-verify');
-    const res = await API.verify(token);
-    if (!res.ok) {
-      document.querySelector('#screen-verify .loader').style.display = 'none';
-      document.querySelector('#screen-verify h2').textContent = 'Connexion échouée';
-      document.getElementById('verify-error').textContent = res.data?.error || 'Lien expiré ou invalide';
-      document.getElementById('verify-error').classList.remove('hidden');
-      document.getElementById('verify-retry').classList.remove('hidden');
-      return;
-    }
-
-    API.setToken(res.data.token);
-    client = res.data.client;
-
-    const cardsRes = await API.getCards();
-    if (cardsRes.ok) cards = cardsRes.data.cards || [];
-    showApp();
-  }
-
-  async function logout() {
-    if (!confirm('Voulez-vous vous déconnecter ?')) return;
-    API.logout(); client = null; cards = [];
-    show('screen-login'); resetLogin();
-  }
-
-  // ═══════════════════════════════════════════
-  // MAIN APP
-  // ═══════════════════════════════════════════
-
-  function showApp() {
-    show('screen-app');
-    renderCards();
-    buildFilterPills();
-    loadProfile();
-    loadNotifPrefs();
-
-    // Auto-register at merchant if we came from a QR scan
-    const pendingMerchant = sessionStorage.getItem('fiddo_pending_merchant');
-    if (pendingMerchant) {
-      sessionStorage.removeItem('fiddo_pending_merchant');
-      autoRegisterAtMerchant(pendingMerchant);
-    }
-  }
-
-  async function autoRegisterAtMerchant(merchantQrToken) {
-    toast('Identification en cours…');
-    try {
-      const res = await API.call('/api/qr/register', {
-        method: 'POST',
-        body: {
-          qrToken: merchantQrToken,
-          email: client?.email || '',
-          phone: client?.phone || '',
-          name: client?.name || '',
-        },
-        noAuth: true,
-      });
-
-      if (res.ok) {
-        const name = res.data.clientName || client?.name || '';
-        toast(`✓ ${name} identifié avec succès !`);
-        // Refresh cards to show the new/updated card
-        setTimeout(() => refreshCards(), 1500);
-      } else {
-        toast(res.data?.error || 'Erreur identification');
-      }
-    } catch (e) {
-      console.error('Auto-register error:', e);
-      toast('Erreur réseau');
-    }
-  }
-
-  // ─── Search & Filter ──────────────────────
-
-  function handleSearch(e) {
-    searchQuery = e.target.value.toLowerCase().trim();
-    document.getElementById('search-clear').classList.toggle('hidden', !searchQuery);
-    renderFilteredCards();
-  }
-
-  function clearSearch() {
-    document.getElementById('search-input').value = '';
-    searchQuery = '';
-    document.getElementById('search-clear').classList.add('hidden');
-    renderFilteredCards();
-  }
-
-  function filterType(type) {
-    activeFilter = type;
-    document.querySelectorAll('.pill').forEach(p => p.classList.toggle('active', p.dataset.type === type));
-    renderFilteredCards();
-  }
-
-  function buildFilterPills() {
-    const types = new Set(cards.map(c => c.businessType || 'horeca'));
-    const row = document.getElementById('filter-row');
-    let html = '<button class="pill active" data-type="all" onclick="App.filterType(\'all\')">Tous</button>';
-    types.forEach(t => {
-      const biz = BIZ_TYPES[t] || BIZ_TYPES.autre;
-      html += `<button class="pill" data-type="${t}" onclick="App.filterType('${t}')">${biz.label}</button>`;
-    });
-    row.innerHTML = html;
-    row.style.display = types.size > 1 ? 'flex' : 'none';
-  }
-
-  function renderFilteredCards() {
-    let filtered = cards;
-    if (activeFilter !== 'all') filtered = filtered.filter(c => (c.businessType || 'horeca') === activeFilter);
-    if (searchQuery) filtered = filtered.filter(c => c.merchantName.toLowerCase().includes(searchQuery));
-
-    const list = document.getElementById('cards-list');
-    const empty = document.getElementById('cards-empty');
-    const noResult = document.getElementById('cards-no-result');
-
-    if (cards.length === 0) { list.innerHTML = ''; empty.classList.remove('hidden'); noResult.classList.add('hidden'); return; }
-    empty.classList.add('hidden');
-    if (filtered.length === 0) { list.innerHTML = ''; noResult.classList.remove('hidden'); return; }
-    noResult.classList.add('hidden');
-
-    filtered.sort((a, b) => {
-      const af = favorites.includes(a.merchantId) ? 0 : 1;
-      const bf = favorites.includes(b.merchantId) ? 0 : 1;
-      if (af !== bf) return af - bf;
-      return new Date(b.lastVisit || 0) - new Date(a.lastVisit || 0);
-    });
-
-    list.innerHTML = filtered.map(c => {
-      const theme = c.theme || 'navy';
-      const color = THEMES[theme] || THEMES.navy;
-      const left = Math.max(c.pointsForReward - c.pointsBalance, 0);
-      const pct = Math.min(c.progress || 0, 100);
-      const date = c.lastVisit ? relDate(c.lastVisit) : '';
-      const biz = BIZ_TYPES[c.businessType || 'horeca'] || BIZ_TYPES.autre;
-      const isFav = favorites.includes(c.merchantId);
-
-      return `
-        <div class="loyalty-card theme-${theme}" onclick="App.openCard(${c.merchantId})">
-          ${isFav ? '<div class="lc-fav"><span class="material-symbols-rounded">star</span></div>' : ''}
-          <div class="lc-head">
-            <div class="lc-icon"><span class="material-symbols-rounded">${biz.icon}</span></div>
-            <span class="lc-name">${esc(c.merchantName)}</span>
-            <span class="material-symbols-rounded lc-arrow">chevron_right</span>
+    <!-- Tab: Scanner -->
+    <div id="tab-scanner" class="tab">
+      <div class="scanner-wrap">
+        <video id="scan-video" autoplay playsinline muted></video>
+        <canvas id="scan-canvas" style="display:none;"></canvas>
+        <div class="scan-ui">
+          <div style="text-align:center">
+            <h2>Scanner un QR</h2>
+            <p>Pointez vers le QR du commerçant</p>
           </div>
-          <div class="lc-pts">
-            <span class="lc-pts-big">${c.pointsBalance}</span>
-            <span class="lc-pts-tot">/ ${c.pointsForReward} pts</span>
+          <div class="scan-frame">
+            <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
+            <div class="scan-beam"></div>
           </div>
-          <div class="lc-prog"><div class="lc-prog-fill" style="width:${pct}%"></div></div>
-          <div class="lc-foot">
-            ${c.canRedeem
-              ? `<span class="lc-reward" style="color:${color}"><span class="material-symbols-rounded">redeem</span>Récompense dispo !</span>`
-              : `<span class="lc-left">Encore ${left} pts</span>`}
-            <span class="lc-date">${date}</span>
+          <button class="btn-glass" onclick="App.showMyQR()">
+            <span class="material-symbols-rounded">qr_code_2</span>
+            Mon QR code
+          </button>
+        </div>
+        <div class="scan-no-cam hidden" id="scan-no-cam">
+          <span class="material-symbols-rounded">no_photography</span>
+          <h3>Caméra indisponible</h3>
+          <p>Autorisez l'accès à la caméra dans les réglages de votre navigateur</p>
+          <button class="btn-primary" style="width:200px" onclick="App.startScanner()">Réessayer</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab: Profile -->
+    <div id="tab-profile" class="tab">
+      <div class="tab-head"><h1>Profil</h1></div>
+      <div class="tab-body">
+        <!-- Profile completion prompt (shown if no name) -->
+        <div id="prof-complete" class="prof-complete hidden">
+          <span class="material-symbols-rounded" style="font-size:20px;color:var(--pri)">tips_and_updates</span>
+          <div>
+            <strong>Complétez votre profil</strong>
+            <p style="font-size:12px;color:var(--tx2);margin-top:2px">Ajoutez votre nom pour être reconnu chez les commerçants</p>
           </div>
-        </div>`;
-    }).join('');
-  }
-
-  function renderCards() {
-    const firstName = client?.name?.split(' ')[0] || '';
-    document.getElementById('greeting').textContent = firstName ? `Bonjour ${firstName} 👋` : 'Bienvenue 👋';
-    document.getElementById('greeting-sub').textContent = cards.length > 0 ? `${cards.length} carte${cards.length > 1 ? 's' : ''} fidélité` : 'Scannez un QR pour commencer';
-    renderFilteredCards();
-  }
-
-  async function refreshCards() {
-    const res = await API.getCards();
-    if (res.ok) {
-      client = res.data.client || client;
-      cards = res.data.cards || [];
-      renderCards();
-      buildFilterPills();
-    }
-  }
-
-  // ─── Favorites ────────────────────────────
-
-  function toggleFav() {
-    if (!currentMerchant) return;
-    const id = currentMerchant.id;
-    const idx = favorites.indexOf(id);
-    if (idx >= 0) { favorites.splice(idx, 1); toast('Retiré des favoris'); }
-    else { favorites.push(id); toast('Ajouté aux favoris ⭐'); }
-    localStorage.setItem('fiddo_favs', JSON.stringify(favorites));
-    updateFavIcon();
-    renderFilteredCards();
-  }
-
-  function updateFavIcon() {
-    if (!currentMerchant) return;
-    const icon = document.getElementById('fav-icon');
-    const isFav = favorites.includes(currentMerchant.id);
-    icon.textContent = isFav ? 'star' : 'star_outline';
-    if (isFav) icon.classList.add('filled'); else icon.classList.remove('filled');
-  }
-
-  // ─── Card detail ──────────────────────────
-
-  async function openCard(merchantId) {
-    const res = await API.getCard(merchantId);
-    if (!res.ok) { toast('Erreur chargement'); return; }
-
-    const { card, merchant } = res.data;
-    currentCard = card;
-    currentMerchant = merchant;
-    const theme = merchant.theme || 'navy';
-    const color = THEMES[theme] || THEMES.navy;
-    const biz = BIZ_TYPES[merchant.businessType || 'horeca'] || BIZ_TYPES.autre;
-
-    document.getElementById('card-hero').className = 'card-hero theme-' + theme;
-    document.getElementById('cd-name').textContent = merchant.name;
-    document.getElementById('cd-type').textContent = biz.label;
-    document.getElementById('cd-pts').textContent = card.pointsBalance;
-    document.getElementById('cd-pts-tot').textContent = '/ ' + card.pointsForReward + ' pts';
-    document.getElementById('cd-prog').style.width = Math.min(card.progress || 0, 100) + '%';
-
-    const badge = document.getElementById('cd-badge');
-    if (card.canRedeem) badge.innerHTML = `<span class="cd-reward-pill" style="color:${color}"><span class="material-symbols-rounded">redeem</span>${esc(card.rewardDescription)}</span>`;
-    else badge.innerHTML = `<span class="cd-until">Encore ${card.pointsUntilReward} points</span>`;
-
-    document.getElementById('cd-visits').textContent = card.visitCount;
-    document.getElementById('cd-spent').textContent = card.totalSpent + '€';
-    document.getElementById('cd-ratio').textContent = card.pointsPerEuro;
-    updateFavIcon();
-
-    // Description
-    const descEl = document.getElementById('cd-desc');
-    if (merchant.description) {
-      descEl.textContent = merchant.description;
-      descEl.style.display = '';
-    } else {
-      descEl.style.display = 'none';
-    }
-
-    const giftBtn = document.getElementById('btn-gift');
-    if (merchant.allowGifts && card.pointsBalance > 0) giftBtn.classList.remove('hidden');
-    else giftBtn.classList.add('hidden');
-
-    const info = document.getElementById('cd-info');
-    let html = '';
-    if (merchant.address) html += infoRow('location_on', merchant.address, () => openMaps());
-    if (merchant.phone) html += infoRow('call', merchant.phone, () => window.open('tel:' + merchant.phone));
-    if (merchant.email) html += infoRow('mail', merchant.email, () => window.open('mailto:' + merchant.email));
-    if (merchant.websiteUrl) html += infoRow('language', cleanUrl(merchant.websiteUrl), () => window.open(merchant.websiteUrl));
-    if (merchant.instagramUrl) html += infoRow('photo_camera', 'Instagram', () => window.open(merchant.instagramUrl));
-    if (merchant.facebookUrl) html += infoRow('group', 'Facebook', () => window.open(merchant.facebookUrl));
-    info.innerHTML = html;
-
-    const hoursWrap = document.getElementById('cd-hours-wrap');
-    if (merchant.openingHours && typeof merchant.openingHours === 'object' && Object.keys(merchant.openingHours).length > 0) {
-      hoursWrap.classList.remove('hidden');
-      const todayKey = DAY_KEYS[new Date().getDay()];
-      document.getElementById('cd-hours').innerHTML = Object.entries(merchant.openingHours).map(([day, hrs]) => {
-        const isToday = day === todayKey;
-        return `<div class="hour-row${isToday ? ' today' : ''}"><span class="hour-day">${DAYS[day] || day}</span><span class="hour-val">${hrs || 'Fermé'}</span></div>`;
-      }).join('');
-    } else {
-      hoursWrap.classList.add('hidden');
-    }
-
-    document.getElementById('btn-maps').style.display = (merchant.latitude || merchant.address) ? 'flex' : 'none';
-
-    const el = document.getElementById('screen-card');
-    el.classList.add('active');
-    el.style.transform = 'translateX(0)';
-    screenStack.push('screen-card');
-    document.getElementById('card-body').scrollTop = 0;
-  }
-
-  function infoRow(icon, text, onclick) {
-    const id = 'ir_' + Math.random().toString(36).substr(2, 6);
-    setTimeout(() => { const el = document.getElementById(id); if (el && onclick) el.onclick = onclick; }, 50);
-    return `<div class="info-row" id="${id}"><span class="material-symbols-rounded">${icon}</span><span>${esc(text)}</span><span class="material-symbols-rounded">open_in_new</span></div>`;
-  }
-
-  function cleanUrl(url) { return (url || '').replace(/^https?:\/\//, '').replace(/\/$/, ''); }
-
-  function openMaps() {
-    if (!currentMerchant) return;
-    if (currentMerchant.latitude && currentMerchant.longitude)
-      window.open(`https://maps.google.com/?q=${currentMerchant.latitude},${currentMerchant.longitude}`);
-    else if (currentMerchant.address)
-      window.open(`https://maps.google.com/?q=${encodeURIComponent(currentMerchant.address)}`);
-  }
-
-  // ─── History ──────────────────────────────
-
-  async function showHistory() {
-    if (!currentMerchant) return;
-    const el = document.getElementById('screen-history');
-    el.classList.add('active');
-    el.style.transform = 'translateX(0)';
-    screenStack.push('screen-history');
-
-    const list = document.getElementById('hist-list');
-    list.innerHTML = '<div style="text-align:center;padding:40px"><div class="loader"></div></div>';
-
-    const res = await API.getHistory(currentMerchant.id, 100, 0);
-    if (!res.ok) { list.innerHTML = '<p style="text-align:center;padding:40px;color:var(--tx3)">Erreur chargement</p>'; return; }
-
-    const txs = res.data.transactions || [];
-    document.getElementById('hist-count').textContent = res.data.total + ' transaction' + (res.data.total !== 1 ? 's' : '');
-
-    if (txs.length === 0) { list.innerHTML = '<p style="text-align:center;padding:60px;color:var(--tx3)">Aucune transaction</p>'; return; }
-
-    const TYPE_MAP = {
-      credit:     { icon: 'add_circle', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Crédit' },
-      reward:     { icon: 'redeem', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Récompense' },
-      adjustment: { icon: 'build', color: 'var(--pri)', bg: 'var(--pri-l)', label: 'Ajustement' },
-      merge:      { icon: 'merge', color: 'var(--tx3)', bg: 'var(--brd-l)', label: 'Fusion' },
-      gift_out:   { icon: 'card_giftcard', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Cadeau envoyé' },
-      gift_in:    { icon: 'card_giftcard', color: 'var(--ok)', bg: 'var(--ok-l)', label: 'Cadeau reçu' },
-      gift_refund:{ icon: 'undo', color: 'var(--rew)', bg: 'var(--warn-l)', label: 'Transfert expiré — remboursé' },
-    };
-
-    list.innerHTML = txs.map(tx => {
-      const t = TYPE_MAP[tx.type] || TYPE_MAP.credit;
-      const sign = tx.pointsDelta > 0 ? '+' : '';
-      const cls = tx.pointsDelta > 0 ? 'pos' : 'neg';
-      const detail = [tx.amount ? tx.amount + '€' : '', tx.staffName].filter(Boolean).join(' · ') || tx.notes || '';
-      const date = new Date(tx.createdAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'short' });
-      return `<div class="tx-row"><div class="tx-icon" style="background:${t.bg}"><span class="material-symbols-rounded" style="color:${t.color}">${t.icon}</span></div><div class="tx-body"><div class="tx-top"><span class="tx-type">${t.label}</span><span class="tx-pts ${cls}">${sign}${tx.pointsDelta} pts</span></div><div class="tx-bot"><span class="tx-detail">${esc(detail)}</span><span class="tx-date">${date}</span></div></div></div>`;
-    }).join('');
-  }
-
-  // ═══════════════════════════════════════════
-  // GIFT SYSTEM
-  // ═══════════════════════════════════════════
-
-  function startGift() {
-    if (!currentCard || !currentMerchant) return;
-    if (currentCard.pointsBalance <= 0) { toast('Aucun point à offrir'); return; }
-    document.getElementById('gift-confirm-pts').textContent = currentCard.pointsBalance;
-    document.getElementById('gift-confirm-name').textContent = currentMerchant.name;
-    openModal('modal-gift');
-  }
-
-  async function confirmGift() {
-    if (!currentMerchant) return;
-    const btn = document.getElementById('btn-confirm-gift');
-    btn.classList.add('loading');
-    btn.innerHTML = '<span>Génération…</span>';
-
-    const res = await API.createGift(currentMerchant.id);
-    btn.classList.remove('loading');
-    btn.innerHTML = '<span class="material-symbols-rounded">card_giftcard</span><span>Générer le lien cadeau</span>';
-
-    if (!res.ok) { toast(res.data?.error || 'Erreur'); return; }
-
-    lastGiftLink = res.data.giftUrl;
-    closeModal();
-
-    currentCard.pointsBalance = 0;
-    document.getElementById('cd-pts').textContent = '0';
-    document.getElementById('cd-prog').style.width = '0%';
-    document.getElementById('cd-badge').innerHTML = '<span class="cd-until">Encore ' + currentCard.pointsForReward + ' points</span>';
-    document.getElementById('btn-gift').classList.add('hidden');
-
-    document.getElementById('gift-link').value = lastGiftLink;
-    openModal('modal-gift-share');
-    refreshCards();
-  }
-
-  function copyGiftLink() {
-    navigator.clipboard.writeText(lastGiftLink).then(() => toast('Lien copié !')).catch(() => {
-      const input = document.getElementById('gift-link');
-      input.select(); document.execCommand('copy'); toast('Lien copié !');
-    });
-  }
-
-  function shareGift(method) {
-    const text = `🎁 Cadeau ! Je t'offre mes points fidélité chez ${currentMerchant?.name || 'un commerce'}. Ouvre ce lien pour les récupérer :`;
-    const url = lastGiftLink;
-    if (method === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`);
-    else if (method === 'sms') window.open(`sms:?body=${encodeURIComponent(text + ' ' + url)}`);
-    else if (navigator.share) navigator.share({ title: 'Cadeau FIDDO', text, url }).catch(() => {});
-    else copyGiftLink();
-  }
-
-  async function handleGiftClaim(token) {
-    show('screen-gift-claim');
-    const loading = document.getElementById('gift-loading');
-    const preview = document.getElementById('gift-preview');
-    const done = document.getElementById('gift-done');
-    const errorDiv = document.getElementById('gift-error');
-
-    if (!API.hasSession()) {
-      sessionStorage.setItem('fiddo_pending_gift', token);
-      show('screen-login');
-      toast('Connectez-vous pour récupérer votre cadeau');
-      return;
-    }
-
-    const res = await API.getGift(token);
-    loading.classList.add('hidden');
-
-    if (!res.ok) {
-      errorDiv.classList.remove('hidden');
-      document.getElementById('gift-error-title').textContent = 'Lien invalide';
-      document.getElementById('gift-error-msg').textContent = res.data?.error || 'Ce lien cadeau est expiré ou a déjà été utilisé.';
-      return;
-    }
-
-    const gift = res.data;
-    preview.classList.remove('hidden');
-    document.getElementById('gift-title').textContent = 'Un cadeau pour vous !';
-    document.getElementById('gift-sub').textContent = 'Quelqu\'un vous offre des points fidélité';
-    document.getElementById('gift-amount').textContent = gift.points + ' pts';
-    document.getElementById('gift-merchant').textContent = 'chez ' + gift.merchantName;
-
-    const expDate = new Date(gift.expiresAt).toLocaleDateString('fr-BE', { day: 'numeric', month: 'long' });
-    document.getElementById('gift-expires').textContent = 'Expire le ' + expDate;
-
-    document.getElementById('btn-claim-gift').onclick = async () => {
-      const btn = document.getElementById('btn-claim-gift');
-      btn.classList.add('loading');
-      btn.innerHTML = '<span>Récupération…</span>';
-      const claimRes = await API.claimGift(token);
-      if (!claimRes.ok) {
-        btn.classList.remove('loading');
-        btn.innerHTML = '<span class="material-symbols-rounded">downloading</span><span>Récupérer mes points</span>';
-        toast(claimRes.data?.error || 'Erreur'); return;
-      }
-      preview.classList.add('hidden');
-      done.classList.remove('hidden');
-      document.getElementById('gift-done-msg').textContent = `${gift.points} points ajoutés chez ${gift.merchantName}`;
-      const cardsRes = await API.getCards();
-      if (cardsRes.ok) { client = cardsRes.data.client; cards = cardsRes.data.cards || []; }
-    };
-  }
-
-  // ═══════════════════════════════════════════
-  // PROFILE
-  // ═══════════════════════════════════════════
-
-  function loadProfile() {
-    if (!client) return;
-    const initial = (client.name || client.email || '?')[0].toUpperCase();
-    document.getElementById('prof-avatar').textContent = initial;
-    document.getElementById('prof-name').textContent = client.name || client.email || 'Sans nom';
-    document.getElementById('prof-email').textContent = client.email || '—';
-
-    // Profile completion prompt
-    const banner = document.getElementById('prof-complete');
-    if (banner) banner.classList.toggle('hidden', !!client.name);
-
-    const phoneRow = document.getElementById('prof-phone-row');
-    if (client.phone) { phoneRow.classList.remove('hidden'); document.getElementById('prof-phone').textContent = client.phone; }
-    else phoneRow.classList.add('hidden');
-
-    const dobRow = document.getElementById('prof-dob-row');
-    if (client.dateOfBirth) { dobRow.classList.remove('hidden'); document.getElementById('prof-dob').textContent = client.dateOfBirth; }
-    else dobRow.classList.add('hidden');
-
-    const hasPin = client.hasPin;
-    document.getElementById('pin-label').textContent = hasPin ? 'PIN défini ✓' : 'Aucun PIN défini';
-    document.getElementById('pin-btn-label').textContent = hasPin ? 'Modifier mon PIN' : 'Créer un PIN';
-  }
-
-  async function loadNotifPrefs() {
-    const res = await API.getNotifPrefs();
-    if (!res.ok) return;
-    if (res.data.notifCredit !== undefined) document.getElementById('notif-credit').checked = res.data.notifCredit;
-    if (res.data.notifReward !== undefined) document.getElementById('notif-reward').checked = res.data.notifReward;
-    if (res.data.notifPromo !== undefined) document.getElementById('notif-promo').checked = res.data.notifPromo;
-    if (res.data.notifBirthday !== undefined) document.getElementById('notif-birthday').checked = res.data.notifBirthday;
-  }
-
-  async function saveNotifs() {
-    await API.setNotifPrefs({
-      notifCredit: document.getElementById('notif-credit').checked,
-      notifReward: document.getElementById('notif-reward').checked,
-      notifPromo: document.getElementById('notif-promo').checked,
-      notifBirthday: document.getElementById('notif-birthday').checked,
-    });
-  }
-
-  function editName() {
-    document.getElementById('edit-name').value = client?.name || '';
-    openModal('modal-edit');
-    setTimeout(() => document.getElementById('edit-name').focus(), 400);
-  }
-
-  async function saveName() {
-    const name = document.getElementById('edit-name').value.trim();
-    if (!name) return;
-    const res = await API.updateProfile({ name });
-    if (res.ok) { client.name = name; loadProfile(); renderCards(); closeModal(); toast('Nom mis à jour'); }
-    else toast(res.data?.error || 'Erreur');
-  }
-
-  function editEmail() {
-    document.getElementById('edit-email').value = client?.email || '';
-    openModal('modal-email');
-    setTimeout(() => document.getElementById('edit-email').focus(), 400);
-  }
-
-  async function saveEmail() {
-    const email = document.getElementById('edit-email').value.trim().toLowerCase();
-    if (!email || !email.includes('@')) { toast('Email invalide'); return; }
-    const res = await API.updateEmail(email);
-    if (res.ok) { client.email = email; loadProfile(); closeModal(); toast('Email mis à jour'); }
-    else toast(res.data?.error || 'Erreur');
-  }
-
-  // ─── PIN ──────────────────────────────────
-
-  function openPinModal() {
-    const hasPin = client?.hasPin;
-    document.getElementById('pin-modal-title').textContent = hasPin ? 'Modifier le code PIN' : 'Créer un code PIN';
-    const wrap = document.getElementById('pin-current-wrap');
-    if (hasPin) wrap.classList.remove('hidden');
-    else wrap.classList.add('hidden');
-    document.getElementById('pin-current').value = '';
-    document.getElementById('pin-new').value = '';
-    openModal('modal-pin');
-    setTimeout(() => document.getElementById(hasPin ? 'pin-current' : 'pin-new').focus(), 400);
-  }
-
-  async function savePin() {
-    const currentPin = document.getElementById('pin-current').value.trim();
-    const newPin = document.getElementById('pin-new').value.trim();
-    if (!/^\d{4}$/.test(newPin)) { toast('Le PIN doit être 4 chiffres'); return; }
-    if (client?.hasPin && !/^\d{4}$/.test(currentPin)) { toast('PIN actuel requis'); return; }
-    const body = { newPin };
-    if (client?.hasPin) body.currentPin = currentPin;
-    const res = await API.call('/api/me/pin', { method: 'POST', body });
-    if (res.ok) { client.hasPin = true; loadProfile(); closeModal(); toast('Code PIN enregistré ✓'); }
-    else toast(res.data?.error || 'Erreur');
-  }
-
-  // ─── My QR — with fallback ────────────────
-
-  async function showMyQR() {
-    openModal('modal-qr');
-    document.getElementById('qr-name').textContent = client?.name || '';
-    const qrImg = document.getElementById('qr-img');
-    qrImg.src = '';
-    qrImg.alt = 'Chargement…';
-
-    const res = await API.getQR();
-    if (!res.ok) {
-      console.error('QR API error:', res.status, res.data);
-      // Fallback: generate QR from client email directly
-      const fallbackUrl = `https://www.fiddo.be/c/${client?.qrToken || 'unknown'}`;
-      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(fallbackUrl)}`;
-      qrImg.alt = 'Mon QR code';
-      return;
-    }
-
-    const qrUrl = res.data.qrUrl;
-
-    // Method 1: Use qrcode lib if loaded
-    if (typeof QRCode !== 'undefined' && QRCode.toDataURL) {
-      try {
-        const dataUrl = await QRCode.toDataURL(qrUrl, {
-          width: 220, margin: 2,
-          color: { dark: '#0f172a', light: '#ffffff' }
-        });
-        qrImg.src = dataUrl;
-        qrImg.alt = 'Mon QR code';
-        return;
-      } catch (e) {
-        console.error('QRCode lib error:', e);
-      }
-    }
-
-    // Method 2: Fallback to external QR API
-    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(qrUrl)}`;
-    qrImg.alt = 'Mon QR code';
-  }
-
-  // ─── Scanner — auto-identify at merchant ──
-
-  async function startScanner() {
-    const video = document.getElementById('scan-video');
-    const noCam = document.getElementById('scan-no-cam');
-    if (scannerStream) return;
-    video.style.display = 'block';
-
-    try {
-      scannerStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      video.srcObject = scannerStream;
-      noCam.classList.add('hidden');
-      if ('BarcodeDetector' in window) {
-        const detector = new BarcodeDetector({ formats: ['qr_code'] });
-        scanInterval = setInterval(async () => {
-          try { const bc = await detector.detect(video); if (bc.length > 0) handleScan(bc[0].rawValue); } catch {}
-        }, 300);
-      }
-    } catch { noCam.classList.remove('hidden'); }
-  }
-
-  function stopScanner() {
-    if (scannerStream) { scannerStream.getTracks().forEach(t => t.stop()); scannerStream = null; }
-    if (scanInterval) { clearInterval(scanInterval); scanInterval = null; }
-    const video = document.getElementById('scan-video');
-    if (video) { video.srcObject = null; video.style.display = 'none'; }
-  }
-
-  let scanBusy = false;
-  async function handleScan(data) {
-    if (scanBusy) return;
-
-    // Extract merchant qrToken from URL: fiddo.be/q/TOKEN
-    const match = data.match(/fiddo\.be\/q\/([a-zA-Z0-9_-]+)/);
-    if (!match) { toast('QR non reconnu'); return; }
-
-    scanBusy = true;
-    stopScanner();
-
-    const merchantQrToken = match[1];
-    toast('Identification en cours…');
-
-    try {
-      // Auto-register: POST to /api/qr/register with our info
-      const res = await API.call('/api/qr/register', {
-        method: 'POST',
-        body: {
-          qrToken: merchantQrToken,
-          email: client?.email || '',
-          phone: client?.phone || '',
-          name: client?.name || '',
-        },
-        noAuth: true, // public endpoint
-      });
-
-      if (res.ok) {
-        const name = res.data.clientName || client?.name || '';
-        const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
-        toast(`✓ ${name} identifié${pts}`);
-        // Refresh cards in case new card was created
-        setTimeout(() => refreshCards(), 1500);
-      } else {
-        toast(res.data?.error || 'Erreur identification');
-      }
-    } catch (e) {
-      console.error('Auto-identify error:', e);
-      toast('Erreur réseau');
-    }
-
-    // Resume scanner after 3 seconds
-    setTimeout(() => {
-      scanBusy = false;
-      if (document.querySelector('.tb.active')?.dataset.tab === 'scanner') startScanner();
-    }, 3000);
-  }
-
-  // ─── Modals / Toast ───────────────────────
-
-  function openModal(id) { document.getElementById(id).classList.add('open'); }
-  function closeModal() { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); }
-
-  let toastTimer = null;
-  function toast(msg) {
-    const el = document.getElementById('toast');
-    if (toastTimer) clearTimeout(toastTimer);
-    el.classList.remove('show');
-    void el.offsetWidth;
-    el.textContent = msg;
-    el.classList.add('show');
-    toastTimer = setTimeout(() => { el.classList.remove('show'); toastTimer = null; }, 2500);
-  }
-
-  // ─── Helpers ──────────────────────────────
-
-  function relDate(d) {
-    const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
-    if (days === 0) return "Aujourd'hui";
-    if (days === 1) return 'Hier';
-    if (days < 7) return `Il y a ${days}j`;
-    if (days < 30) return `Il y a ${Math.floor(days / 7)} sem.`;
-    return `Il y a ${Math.floor(days / 30)} mois`;
-  }
-
-  function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-
-  // ─── Boot ─────────────────────────────────
-
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btn-login').addEventListener('click', handleLogin);
-    document.getElementById('login-email').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
-    document.getElementById('btn-resend').addEventListener('click', resendLogin);
-    document.getElementById('btn-change-email').addEventListener('click', resetLogin);
-    document.getElementById('btn-save-name').addEventListener('click', saveName);
-    document.getElementById('edit-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
-    document.getElementById('btn-save-email').addEventListener('click', saveEmail);
-    document.getElementById('edit-email').addEventListener('keydown', e => { if (e.key === 'Enter') saveEmail(); });
-    document.getElementById('btn-confirm-gift').addEventListener('click', confirmGift);
-    document.getElementById('search-input').addEventListener('input', handleSearch);
-    document.querySelectorAll('.notif-row input').forEach(el => el.addEventListener('change', saveNotifs));
-
-    let startY = 0;
-    const scroll = document.getElementById('cards-scroll');
-    if (scroll) {
-      scroll.addEventListener('touchstart', e => { startY = e.touches[0].pageY; });
-      scroll.addEventListener('touchend', e => {
-        if (scroll.scrollTop === 0 && e.changedTouches[0].pageY - startY > 80) { refreshCards(); toast('Actualisation…'); }
-      });
-    }
-
-    init();
-  });
-
-  return {
-    handleLogin, resendLogin, resetLogin,
-    show, goBack, switchTab, showApp,
-    openCard, showHistory, openMaps,
-    showMyQR, editName, saveName, editEmail, saveEmail,
-    openPinModal, savePin,
-    startScanner, closeModal,
-    logout, saveNotifs, toast,
-    filterType, clearSearch, toggleFav,
-    startGift, confirmGift, copyGiftLink, shareGift,
-  };
-})();
+          <button class="btn-icon" onclick="App.editName()" style="margin-left:auto"><span class="material-symbols-rounded">east</span></button>
+        </div>
+
+        <div class="prof-card">
+          <div class="prof-avatar" id="prof-avatar">?</div>
+          <div class="prof-name-row">
+            <h2 id="prof-name">—</h2>
+            <button class="btn-icon" onclick="App.editName()"><span class="material-symbols-rounded">edit</span></button>
+          </div>
+          <div class="prof-info">
+            <div class="prof-row" onclick="App.editEmail()" style="cursor:pointer">
+              <span class="material-symbols-rounded">mail</span>
+              <span id="prof-email">—</span>
+              <span class="material-symbols-rounded" style="font-size:16px;color:var(--tx3)">edit</span>
+            </div>
+            <div class="prof-row hidden" id="prof-phone-row">
+              <span class="material-symbols-rounded">phone</span>
+              <span id="prof-phone">—</span>
+            </div>
+            <div class="prof-row hidden" id="prof-dob-row">
+              <span class="material-symbols-rounded">cake</span>
+              <span id="prof-dob">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PIN -->
+        <div class="prof-card" style="text-align:left">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <span class="material-symbols-rounded" style="font-size:22px;color:var(--pri)">pin</span>
+            <h3 style="font-size:16px;font-weight:700">Mon code PIN</h3>
+          </div>
+          <p style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:14px">
+            À donner chez le commerçant si vous oubliez votre smartphone
+          </p>
+          <div id="pin-status">
+            <p style="font-size:13px;color:var(--tx3)" id="pin-label">Aucun PIN défini</p>
+          </div>
+          <button class="btn-primary" style="height:44px;font-size:14px;margin-top:12px" onclick="App.openPinModal()">
+            <span class="material-symbols-rounded" style="font-size:18px">lock</span>
+            <span id="pin-btn-label">Créer un PIN</span>
+          </button>
+        </div>
+
+        <!-- Notifications -->
+        <h3 class="sec-title" style="margin-top:8px">Notifications</h3>
+        <div class="notif-card">
+          <label class="notif-row"><span class="material-symbols-rounded">add_circle</span><span>Crédit de points</span><input type="checkbox" id="notif-credit" checked><span class="tog"></span></label>
+          <label class="notif-row"><span class="material-symbols-rounded">redeem</span><span>Récompense disponible</span><input type="checkbox" id="notif-reward" checked><span class="tog"></span></label>
+          <label class="notif-row"><span class="material-symbols-rounded">campaign</span><span>Promotions</span><input type="checkbox" id="notif-promo"><span class="tog"></span></label>
+          <label class="notif-row last"><span class="material-symbols-rounded">cake</span><span>Anniversaire</span><input type="checkbox" id="notif-birthday" checked><span class="tog"></span></label>
+        </div>
+
+        <!-- QR code -->
+        <button class="menu-row" onclick="App.showMyQR()">
+          <span class="material-symbols-rounded mi">qr_code_2</span>
+          <span class="ml">Mon QR code</span>
+          <span class="material-symbols-rounded ma">chevron_right</span>
+        </button>
+
+        <button class="btn-danger" onclick="App.logout()">
+          <span class="material-symbols-rounded">logout</span>Déconnexion
+        </button>
+        <p class="version">FIDDO v4.2</p>
+      </div>
+    </div>
+
+    <!-- Tab bar -->
+    <nav class="tbar">
+      <button class="tb active" data-tab="cards" onclick="App.switchTab('cards')">
+        <span class="material-symbols-rounded">loyalty</span><small>Cartes</small>
+      </button>
+      <button class="tb" data-tab="scanner" onclick="App.switchTab('scanner')">
+        <span class="material-symbols-rounded">qr_code_scanner</span><small>Scanner</small>
+      </button>
+      <button class="tb" data-tab="profile" onclick="App.switchTab('profile')">
+        <span class="material-symbols-rounded">person</span><small>Profil</small>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ═══ CARD DETAIL ═══ -->
+  <div id="screen-card" class="screen slide-r">
+    <div class="card-hero theme-navy" id="card-hero">
+      <div class="card-hero-top">
+        <button class="btn-back" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
+        <button class="btn-fav" onclick="App.toggleFav()"><span class="material-symbols-rounded" id="fav-icon">star_outline</span></button>
+      </div>
+      <h1 id="cd-name"></h1>
+      <p class="cd-type" id="cd-type"></p>
+      <div class="cd-pts">
+        <span class="cd-pts-big" id="cd-pts">0</span>
+        <span class="cd-pts-tot" id="cd-pts-tot">/ 100 pts</span>
+      </div>
+      <div class="prog-lg"><div class="prog-fill" id="cd-prog" style="width:0%"></div></div>
+      <div id="cd-badge"></div>
+    </div>
+    <div class="card-body" id="card-body">
+      <div class="stats-row">
+        <div class="stat"><span class="material-symbols-rounded">storefront</span><strong id="cd-visits">0</strong><small>Visites</small></div>
+        <div class="stat"><span class="material-symbols-rounded">payments</span><strong id="cd-spent">0€</strong><small>Dépensé</small></div>
+        <div class="stat"><span class="material-symbols-rounded">speed</span><strong id="cd-ratio">1</strong><small>pts/€</small></div>
+      </div>
+
+      <p class="cd-desc" id="cd-desc"></p>
+
+      <button class="menu-row" onclick="App.showHistory()">
+        <span class="material-symbols-rounded mi">receipt_long</span>
+        <span class="ml">Historique</span>
+        <span class="material-symbols-rounded ma">chevron_right</span>
+      </button>
+
+      <button class="menu-row gift-row hidden" id="btn-gift" onclick="App.startGift()">
+        <span class="material-symbols-rounded mi" style="color:var(--rew)">card_giftcard</span>
+        <span class="ml">Offrir mes points</span>
+        <span class="material-symbols-rounded ma">chevron_right</span>
+      </button>
+
+      <button class="menu-row" id="btn-maps" onclick="App.openMaps()">
+        <span class="material-symbols-rounded mi">map</span>
+        <span class="ml">Itinéraire</span>
+        <span class="material-symbols-rounded ma">open_in_new</span>
+      </button>
+
+      <h3 class="sec-title">Infos</h3>
+      <div class="info-card" id="cd-info"></div>
+
+      <div id="cd-hours-wrap" class="hidden">
+        <h3 class="sec-title">Horaires</h3>
+        <div class="info-card" id="cd-hours"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ HISTORY ═══ -->
+  <div id="screen-history" class="screen slide-r">
+    <div class="sheet-head">
+      <button class="btn-back-dark" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
+      <h1>Historique</h1>
+      <span class="badge" id="hist-count"></span>
+    </div>
+    <div class="hist-list" id="hist-list"></div>
+  </div>
+
+  <!-- ═══ MODALS ═══ -->
+
+  <!-- QR Modal — uses <img> not <canvas> -->
+  <div id="modal-qr" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
+      <h2>Mon QR code</h2>
+      <p class="modal-sub">À présenter au commerçant</p>
+      <div class="qr-wrap">
+        <img id="qr-img" width="220" height="220" alt="QR code" style="border-radius:8px">
+        <p class="qr-name" id="qr-name"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Name Modal -->
+  <div id="modal-edit" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet sm" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <h2>Modifier le nom</h2>
+      <p class="modal-sub">Votre nom affiché chez les commerçants</p>
+      <div class="field solid-field" style="margin-bottom:16px">
+        <span class="material-symbols-rounded field-icon">person</span>
+        <input type="text" id="edit-name" placeholder="Prénom et nom">
+      </div>
+      <button class="btn-primary" id="btn-save-name"><span>Enregistrer</span></button>
+    </div>
+  </div>
+
+  <!-- Edit Email Modal -->
+  <div id="modal-email" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet sm" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <h2>Modifier l'email</h2>
+      <p class="modal-sub">L'email utilisé pour la connexion</p>
+      <div class="field solid-field" style="margin-bottom:16px">
+        <span class="material-symbols-rounded field-icon">mail</span>
+        <input type="email" id="edit-email" placeholder="Nouvel email" inputmode="email">
+      </div>
+      <button class="btn-primary" id="btn-save-email"><span>Enregistrer</span></button>
+    </div>
+  </div>
+
+  <!-- PIN Modal -->
+  <div id="modal-pin" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet sm" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <h2 id="pin-modal-title">Créer un code PIN</h2>
+      <p class="modal-sub">4 chiffres, à communiquer au commerçant si besoin</p>
+      <div id="pin-current-wrap" class="hidden" style="margin-bottom:12px">
+        <div class="field solid-field">
+          <span class="material-symbols-rounded field-icon">lock_open</span>
+          <input type="tel" id="pin-current" placeholder="PIN actuel" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+        </div>
+      </div>
+      <div class="field solid-field" style="margin-bottom:16px">
+        <span class="material-symbols-rounded field-icon">lock</span>
+        <input type="tel" id="pin-new" placeholder="Nouveau PIN (4 chiffres)" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+      </div>
+      <button class="btn-primary" id="btn-save-pin" onclick="App.savePin()"><span>Enregistrer</span></button>
+    </div>
+  </div>
+
+  <!-- Gift Confirm Modal -->
+  <div id="modal-gift" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
+      <h2>Offrir mes points</h2>
+      <p class="modal-sub">Générez un lien à partager</p>
+      <div class="gift-confirm-card">
+        <div class="gift-confirm-pts" id="gift-confirm-pts">0</div>
+        <p class="gift-confirm-label">points chez <strong id="gift-confirm-name"></strong></p>
+      </div>
+      <p class="gift-warn">⚠️ Tous vos points seront transférés. Le destinataire aura 7 jours pour les récupérer.</p>
+      <button class="btn-primary" id="btn-confirm-gift">
+        <span class="material-symbols-rounded">card_giftcard</span>
+        <span>Générer le lien cadeau</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Gift Share Modal -->
+  <div id="modal-gift-share" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
+      <div class="gift-box" style="margin:0 auto 16px"><span class="material-symbols-rounded">check_circle</span></div>
+      <h2>Lien généré !</h2>
+      <p class="modal-sub">Partagez-le avec la personne de votre choix</p>
+      <div class="gift-link-box">
+        <input type="text" class="gift-link-input" id="gift-link" readonly>
+        <button class="btn-copy" onclick="App.copyGiftLink()"><span class="material-symbols-rounded">content_copy</span></button>
+      </div>
+      <div class="gift-share-btns">
+        <button class="btn-share whatsapp" onclick="App.shareGift('whatsapp')"><span class="material-symbols-rounded">chat</span>WhatsApp</button>
+        <button class="btn-share sms" onclick="App.shareGift('sms')"><span class="material-symbols-rounded">sms</span>SMS</button>
+        <button class="btn-share generic" onclick="App.shareGift('share')"><span class="material-symbols-rounded">share</span>Autre</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+  <script src="/app/js/api.js"></script>
+  <script src="/app/js/app.js"></script>
+</body>
+</html>
