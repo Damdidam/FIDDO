@@ -79,6 +79,25 @@ function initMessageTables() {
   `);
 
   db.exec(`
+    CREATE TABLE IF NOT EXISTS announcement_targets (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      announcement_id INTEGER NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+      merchant_id     INTEGER NOT NULL REFERENCES merchants(id),
+      UNIQUE(announcement_id, merchant_id)
+    )
+  `);
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS announcement_reads (
+      id              INTEGER PRIMARY KEY AUTOINCREMENT,
+      announcement_id INTEGER NOT NULL REFERENCES announcements(id) ON DELETE CASCADE,
+      staff_id        INTEGER NOT NULL,
+      read_at         TEXT NOT NULL DEFAULT (datetime('now')),
+      UNIQUE(announcement_id, staff_id)
+    )
+  `);
+
+  db.exec(`
     CREATE INDEX IF NOT EXISTS ix_msg_created     ON admin_messages(created_at);
     CREATE INDEX IF NOT EXISTS ix_msg_type         ON admin_messages(msg_type);
     CREATE INDEX IF NOT EXISTS ix_msg_read_msg     ON admin_message_reads(message_id);
