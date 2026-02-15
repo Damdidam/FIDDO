@@ -780,9 +780,9 @@
     function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
 
     // ═══ ALERT HELPER ═══
-    function showAlert(id, msg, type) {
+    function showAlert(id, msg, type, raw) {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = '<div class="pref-alert pref-alert-' + type + '">' + esc(msg) + '</div>';
+      if (el) el.innerHTML = '<div class="pref-alert pref-alert-' + type + '">' + (raw ? msg : esc(msg)) + '</div>';
     }
     function clearAlert(id) {
       const el = document.getElementById(id);
@@ -1125,7 +1125,7 @@
           const changeList = result.changes.map(c => '<strong>' + esc(c.field) + '</strong> : ' + esc(c.old) + ' → ' + esc(c.new)).join('<br>');
           showAlert('info-alert',
             'Informations mises à jour<br><small>' + changeList + '</small><br><small style="color:#94A3B8;">L\'administrateur a été notifié par email.</small>',
-            'success'
+            'success', true
           );
         } else {
           showAlert('info-alert', 'Aucune modification détectée', 'info');
