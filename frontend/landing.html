@@ -589,6 +589,36 @@
     /* ═══════════════════════════════════════════════
        FOOTER
        ═══════════════════════════════════════════════ */
+    /* ═══════════════════════════════════════════════
+       DOWNLOAD APPS
+       ═══════════════════════════════════════════════ */
+    .downloads { text-align: center; background: var(--bg-raised); }
+    .dl-cards { display: flex; gap: 2rem; justify-content: center; margin-top: 2.5rem; flex-wrap: wrap; }
+    .dl-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      padding: 2.5rem 2rem; width: 280px; text-align: center; transition: all 0.3s;
+    }
+    .dl-card:hover { border-color: var(--border-hover); transform: translateY(-4px); }
+    .dl-icon {
+      width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 1.2rem;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 800; color: #fff;
+    }
+    .dl-icon-client { background: #0891B2; }
+    .dl-icon-merchant { background: #1e3a5f; }
+    .dl-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.3rem; }
+    .dl-desc { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5; }
+    .dl-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 28px; border-radius: 10px; text-decoration: none;
+      font-weight: 700; font-size: 0.9rem; transition: all 0.3s;
+    }
+    .dl-btn-client { background: #0891B2; color: #fff; }
+    .dl-btn-client:hover { background: #0e7490; }
+    .dl-btn-merchant { background: #1e3a5f; color: #fff; }
+    .dl-btn-merchant:hover { background: #162d4a; }
+    .dl-badge { display: inline-block; margin-top: 1rem; font-size: 0.75rem; color: var(--text-muted); }
+
     .footer {
       background: var(--bg);
       border-top: 1px solid var(--border);
@@ -672,6 +702,7 @@
         <a href="#features" class="nav-link">Fonctionnalités</a>
         <a href="#pricing" class="nav-link">Tarifs</a>
         <a href="#how" class="nav-link">Comment ça marche</a>
+        <a href="#apps" class="nav-link">Apps</a>
         <a href="/login" class="nav-login">Se connecter</a>
         <a href="/login#register" class="nav-cta">Essai gratuit</a>
       </div>
@@ -866,6 +897,31 @@
     </div>
   </section>
 
+  <!-- DOWNLOAD APPS -->
+  <section id="apps" class="downloads">
+    <div class="si rv">
+      <span class="stag">Applications Android</span>
+      <h2 class="sh">Téléchargez les apps FIDDO</h2>
+      <p class="ss" style="margin: 0 auto; text-align: center;">Version beta — testeurs bienvenus !</p>
+      <div class="dl-cards">
+        <div class="dl-card">
+          <div class="dl-icon dl-icon-client">F</div>
+          <div class="dl-name">FIDDO</div>
+          <div class="dl-desc">L'app pour les clients.<br>Vos cartes de fidélité, vos points, vos récompenses.</div>
+          <a href="/downloads/FIDDO-Client.apk" class="dl-btn dl-btn-client">⬇ Télécharger l'APK</a>
+          <div class="dl-badge">Android uniquement · v1.0 beta</div>
+        </div>
+        <div class="dl-card">
+          <div class="dl-icon dl-icon-merchant">F<span style="font-size:0.7em;opacity:0.7">PRO</span></div>
+          <div class="dl-name">FIDDO Pro</div>
+          <div class="dl-desc">L'app pour les commerçants.<br>Créditez des points, scannez, gérez vos clients.</div>
+          <a href="/downloads/FIDDO-Pro.apk" class="dl-btn dl-btn-merchant">⬇ Télécharger l'APK</a>
+          <div class="dl-badge">Android uniquement · v1.0 beta</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-in">
@@ -873,6 +929,7 @@
       <div class="footer-l">
         <a href="#features" class="footer-a">Fonctionnalités</a>
         <a href="#pricing" class="footer-a">Tarifs</a>
+        <a href="#apps" class="footer-a">Apps</a>
         <a href="mailto:support@fiddo.be" class="footer-a">Contact</a>
       </div>
       <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · support@fiddo.be</div>
