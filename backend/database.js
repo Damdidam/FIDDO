@@ -5,9 +5,15 @@ const path = require('path');
 // DATABASE INIT
 // ═══════════════════════════════════════════════════════
 
-const DB_PATH = process.env.NODE_ENV === 'production'
-  ? '/data/fiddo.db'
-  : path.join(__dirname, 'fiddo.db');
+const DB_PATH = process.env.DB_PATH
+  || (process.env.NODE_ENV === 'production'
+    ? '/data/fiddo.db'
+    : path.join(__dirname, 'fiddo.db'));
+
+//BEFORE TESTS YML
+//const DB_PATH = process.env.NODE_ENV === 'production'
+//  ? '/data/fiddo.db'
+//  : path.join(__dirname, 'fiddo.db');
 
 const db = new Database(DB_PATH);
 
