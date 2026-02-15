@@ -113,6 +113,7 @@ const App = (() => {
       if (res.ok) {
         client = res.data.client;
         cards = res.data.cards || [];
+        if (!client.name) { show('screen-onboarding'); return; }
         showApp();
         return;
       }
