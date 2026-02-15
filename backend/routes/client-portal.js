@@ -60,7 +60,17 @@ router.post('/login', (req, res) => {
     loginAttempts.set(ip, attempts);
 
     // Always respond OK to prevent account enumeration
-    const endUser = endUserQueries.findByEmailLower.get(emailLower);
+    let endUser = endUserQueries.findByEmailLower.get(emailLower);
+
+    // Auto-create account if new user
+    if (!endUser) {
+      const qrToken = crypto.randomBytes(8).toString('base64url');
+      const result = db.prepare(`
+        INSERT INTO end_users (email, email_lower, email_validated, qr_token, created_at, updated_at)
+        VALUES (?, ?, 0, ?, datetime('now'), datetime('now'))
+      `).run(email.trim(), emailLower, qrToken);
+      endUser = endUserQueries.findById.get(result.lastInsertRowid);
+    }
 
     if (endUser && !endUser.is_blocked) {
       // Generate magic token
