@@ -353,6 +353,16 @@ function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sour
  * Includes points info and app download link.
  */
 function sendWelcomeEmail(clientEmail, merchantName, pointsBalance, appUrl) {
+  const pointsSection = pointsBalance > 0
+    ? `<div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; color: white;">
+          <div style="font-size: 36px; font-weight: 800;">${pointsBalance}</div>
+          <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">points chez ${escHtml(merchantName)}</div>
+        </div>`
+    : `<div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; color: white;">
+          <div style="font-size: 24px; font-weight: 800;">✓ Carte activée</div>
+          <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">chez ${escHtml(merchantName)}</div>
+        </div>`;
+
   sendMail({
     to: clientEmail,
     subject: `Bienvenue chez ${merchantName} — FIDDO`,
@@ -368,10 +378,7 @@ function sendWelcomeEmail(clientEmail, merchantName, pointsBalance, appUrl) {
           débloquez des récompenses exclusives.
         </p>
 
-        <div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; color: white;">
-          <div style="font-size: 36px; font-weight: 800;">${pointsBalance || 0}</div>
-          <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">points chez ${escHtml(merchantName)}</div>
-        </div>
+        ${pointsSection}
 
         <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
           Téléchargez l'app FIDDO pour suivre vos points, recevoir des notifications
