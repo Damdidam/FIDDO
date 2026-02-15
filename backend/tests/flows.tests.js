@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════════════════
 // FIDDO — Automated Flow Tests
-// Run: node --test tests/flows.test.js
+// Run: node --test tests/flows.tests.js
 // ═══════════════════════════════════════════════════════
 
-const { describe, it, before, after, beforeEach } = require('node:test');
+const { describe, it, before, after } = require('node:test');
 const assert = require('node:assert/strict');
 const http = require('http');
 
@@ -13,7 +13,6 @@ const {
   createMerchantClient, getStaffToken, getClientToken, cleanup,
 } = require('./setup');
 
-// Simple HTTP request helper (no supertest dependency needed)
 let server;
 let baseUrl;
 
@@ -27,7 +26,6 @@ function req(method, path, { body, token, staffToken } = {}) {
       path: url.pathname + url.search,
       headers: { 'Content-Type': 'application/json' },
     };
-    // Staff auth = cookie, Client auth = Bearer header
     if (staffToken) opts.headers['Cookie'] = 'staff_token=' + staffToken;
     if (token) opts.headers['Authorization'] = 'Bearer ' + token;
 
@@ -85,7 +83,7 @@ describe('A. Nouveau client — Landing page', () => {
   it('A1. GET /api/qr/info/:token — retourne les infos du marchand', async () => {
     const res = await GET(`/api/qr/info/${merchant.qr_token}`);
     assert.equal(res.status, 200);
-    assert.equal(res.data.businessName, 'Café Test');
+    assert.equal(res.data.merchantName, 'Café Test');
   });
 
   it('A2. QR token invalide → 404', async () => {
@@ -102,10 +100,9 @@ describe('A. Nouveau client — Landing page', () => {
     assert.equal(res.data.isNew, true);
     assert.equal(res.data.pointsBalance, 0);
 
-    // end_user created in DB
     const eu = db.prepare("SELECT * FROM end_users WHERE email_lower = 'nouveau@test.be'").get();
     assert.ok(eu, 'end_user should exist in DB');
-    assert.equal(eu.email_validated, 1, 'email should be validated (implicit consent)');
+    assert.equal(eu.email_validated, 1);
     assert.equal(eu.consent_method, 'qr_landing');
     assert.equal(eu.first_merchant_id, merchant.id);
     assert.ok(eu.qr_token, 'should have a QR token');
@@ -121,8 +118,8 @@ describe('A. Nouveau client — Landing page', () => {
   it('A5. Client apparaît dans la pending queue', async () => {
     const res = await GET(`/api/qr/pending?t=${Date.now()}`, { staffToken });
     assert.equal(res.status, 200);
-    assert.ok(res.data.pending.length >= 1);
-    const found = res.data.pending.find(p => p.email === 'nouveau@test.be');
+    assert.ok(res.data.clients.length >= 1);
+    const found = res.data.clients.find(p => p.email === 'nouveau@test.be');
     assert.ok(found, 'nouveau@test.be should be in pending queue');
     assert.equal(found.isNew, true);
   });
@@ -174,7 +171,7 @@ describe('B. Client existant', () => {
   it('B3. Client existant dans pending queue', async () => {
     const res = await GET(`/api/qr/pending?t=${Date.now()}`, { staffToken });
     assert.equal(res.status, 200);
-    const found = res.data.pending.find(p => p.email === 'jean@test.be');
+    const found = res.data.clients.find(p => p.email === 'jean@test.be');
     assert.ok(found);
     assert.equal(found.isNew, false);
     assert.equal(found.pointsBalance, 35);
@@ -197,9 +194,6 @@ describe('C. Edge cases', () => {
     const res = await POST('/api/qr/register', {
       body: { qrToken: merchant.qr_token, email: 'pasunemail' },
     });
-    // normalizeEmail retourne null → email requis
-    // The register endpoint accepts it but emailLower will be null
-    // Let's check the behavior
     assert.ok(res.status === 200 || res.status === 400);
   });
 
@@ -256,9 +250,9 @@ describe('D. Crédit de points', () => {
       body: { email: 'credit-test@test.be', amount: 25, idempotencyKey: 'test-d1' },
     });
     assert.equal(res.status, 200);
-    assert.equal(res.data.points_delta, 25); // 25€ × 1pt/€
-    assert.equal(res.data.new_balance, 25);
-    assert.equal(res.data.can_redeem, false); // 25 < 50
+    assert.equal(res.data.transaction.points_delta, 25);
+    assert.equal(res.data.client.points_balance, 25);
+    assert.equal(res.data.client.can_redeem, false);
   });
 
   it('D2. Deuxième crédit → cumul + récompense disponible', async () => {
@@ -267,8 +261,8 @@ describe('D. Crédit de points', () => {
       body: { email: 'credit-test@test.be', amount: 30, idempotencyKey: 'test-d2' },
     });
     assert.equal(res.status, 200);
-    assert.equal(res.data.new_balance, 55); // 25 + 30
-    assert.equal(res.data.can_redeem, true); // 55 >= 50
+    assert.equal(res.data.client.points_balance, 55);
+    assert.equal(res.data.client.can_redeem, true);
   });
 
   it('D3. Idempotency — même clé ne re-crédite pas', async () => {
@@ -277,7 +271,7 @@ describe('D. Crédit de points', () => {
       body: { email: 'credit-test@test.be', amount: 30, idempotencyKey: 'test-d2' },
     });
     assert.equal(res.status, 200);
-    assert.equal(res.data.new_balance, 55); // inchangé
+    assert.equal(res.data.client.points_balance, 55);
   });
 
   it('D4. Caissier — max 200€', async () => {
@@ -295,7 +289,7 @@ describe('D. Crédit de points', () => {
       body: { email: 'credit-test@test.be', amount: 150, idempotencyKey: 'test-d5' },
     });
     assert.equal(res.status, 200);
-    assert.equal(res.data.points_delta, 150);
+    assert.equal(res.data.transaction.points_delta, 150);
   });
 
   it('D6. Montant invalide', async () => {
@@ -333,22 +327,20 @@ describe('E. Redeem récompenses', () => {
   });
 
   it('E1. Redeem standard → points déduits', async () => {
-    const res = await POST(`/api/clients/${mc.id}/redeem`, {
+    const res = await POST('/api/clients/reward', {
       staffToken,
-      body: { idempotencyKey: 'redeem-e1' },
+      body: { merchantClientId: mc.id, idempotencyKey: 'redeem-e1' },
     });
     assert.equal(res.status, 200);
 
-    // Check points after redeem
     const updated = db.prepare('SELECT points_balance FROM merchant_clients WHERE id = ?').get(mc.id);
     assert.equal(updated.points_balance, 10); // 60 - 50
   });
 
   it('E2. Redeem impossible — pas assez de points', async () => {
-    // Balance is now 10, threshold is 50
-    const res = await POST(`/api/clients/${mc.id}/redeem`, {
+    const res = await POST('/api/clients/reward', {
       staffToken,
-      body: { idempotencyKey: 'redeem-e2' },
+      body: { merchantClientId: mc.id, idempotencyKey: 'redeem-e2' },
     });
     assert.equal(res.status, 400);
   });
@@ -390,7 +382,6 @@ describe('F. App client — Auth', () => {
   });
 
   it('F3. POST /api/me/verify — magic token valide → JWT retourné', async () => {
-    // Set a magic token manually
     const token = 'test-magic-token-12345';
     const expires = new Date(Date.now() + 300000).toISOString();
     db.prepare('UPDATE end_users SET magic_token = ?, magic_token_expires = ? WHERE id = ?')
@@ -444,7 +435,6 @@ describe('F. App client — Cartes & Profil', () => {
     assert.equal(res.data.cards[0].pointsBalance, 42);
     assert.equal(res.data.cards[0].merchantName, 'Café Test');
 
-    // last_app_login should be tracked
     const eu = db.prepare('SELECT last_app_login FROM end_users WHERE id = ?').get(client.id);
     assert.ok(eu.last_app_login, 'last_app_login should be set');
   });
@@ -533,7 +523,7 @@ describe('G. Consent & validation tracking', () => {
     assert.equal(eu.consent_method, 'qr_landing');
   });
 
-  it('G2. last_app_login NULL pour un nouveau client (pas encore sur l\'app)', async () => {
+  it('G2. last_app_login NULL pour un nouveau client', async () => {
     const eu = db.prepare("SELECT * FROM end_users WHERE email_lower = 'consent@test.be'").get();
     assert.equal(eu.last_app_login, null);
   });
@@ -571,7 +561,7 @@ describe('H. Flow complet end-to-end', () => {
 
     // 2. Marchand voit le client dans la queue
     const pending = await GET(`/api/qr/pending?t=${Date.now()}`, { staffToken });
-    const ident = pending.data.pending.find(p => p.email === 'e2e@test.be');
+    const ident = pending.data.clients.find(p => p.email === 'e2e@test.be');
     assert.ok(ident, 'Client in pending queue');
 
     // 3. Marchand consomme l'identification
@@ -585,9 +575,9 @@ describe('H. Flow complet end-to-end', () => {
       body: { email: 'e2e@test.be', amount: 30, idempotencyKey: 'e2e-c1' },
     });
     assert.equal(credit1.status, 200);
-    assert.equal(credit1.data.points_delta, 60);
-    assert.equal(credit1.data.new_balance, 60);
-    assert.equal(credit1.data.can_redeem, false);
+    assert.equal(credit1.data.transaction.points_delta, 60);
+    assert.equal(credit1.data.client.points_balance, 60);
+    assert.equal(credit1.data.client.can_redeem, false);
 
     // 5. Client revient — 2e visite, 25€ → 50 pts → total 110
     const reg2 = await POST('/api/qr/register', {
@@ -600,14 +590,14 @@ describe('H. Flow complet end-to-end', () => {
       staffToken,
       body: { email: 'e2e@test.be', amount: 25, idempotencyKey: 'e2e-c2' },
     });
-    assert.equal(credit2.data.new_balance, 110);
-    assert.equal(credit2.data.can_redeem, true);
+    assert.equal(credit2.data.client.points_balance, 110);
+    assert.equal(credit2.data.client.can_redeem, true);
 
     // 6. Redeem !
-    const mcId = credit2.data.merchant_client_id;
-    const redeem = await POST(`/api/clients/${mcId}/redeem`, {
+    const mcId = credit2.data.client.id;
+    const redeem = await POST('/api/clients/reward', {
       staffToken,
-      body: { idempotencyKey: 'e2e-r1' },
+      body: { merchantClientId: mcId, idempotencyKey: 'e2e-r1' },
     });
     assert.equal(redeem.status, 200);
 
