@@ -150,6 +150,9 @@ router.get('/cards', authenticateClient, (req, res) => {
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
+    // Track app usage (for J+3 reminder logic)
+    db.prepare("UPDATE end_users SET last_app_login = datetime('now') WHERE id = ?").run(endUser.id);
+
     // Get all merchant_client relationships
     const cards = db.prepare(`
       SELECT mc.merchant_id, mc.points_balance, mc.total_spent, mc.visit_count,
