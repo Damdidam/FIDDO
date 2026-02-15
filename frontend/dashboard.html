@@ -545,6 +545,7 @@
         }
 
         const clientLabel = tx.client_name || tx.client_email || tx.client_phone || 'Client';
+        const clientEmail = tx.client_name && tx.client_email ? tx.client_email : '';
         const sign = tx.points_delta >= 0 ? '+' : '';
         const metaParts = [tx.staff_name, tx.notes ? truncate(tx.notes, 30) : ''].filter(Boolean).join(' · ');
 
@@ -571,6 +572,7 @@
         // Col 2: Client + meta
         html += '<div class="tx-info">';
         html += '<div class="tx-client">' + esc(clientLabel) + '</div>';
+        if (clientEmail) html += '<div class="tx-meta">' + esc(clientEmail) + '</div>';
         if (giftMeta) {
           html += '<div class="tx-meta" style="color:' + (type === 'gift_out' ? '#BE185D' : '#0F766E') + ';">' + esc(giftMeta) + '</div>';
         } else if (metaParts) {
