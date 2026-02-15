@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════
-   FIDDO API Client — V4.2 (cookie bridge for iOS PWA)
+   FIDDO API Client — V4.3 (Capacitor deep link auth)
    ═══════════════════════════════════════════════════════ */
 
 const API = (() => {
@@ -20,6 +20,43 @@ const API = (() => {
         document.cookie = 'fiddo_jwt=;path=/;max-age=0;SameSite=Lax;Secure';
       }
     } catch (e) { /* ignore */ }
+  })();
+
+  // On boot: check URL for deep link token (Capacitor custom scheme redirect)
+  (function checkDeepLinkToken() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const token = params.get('auth_token');
+      if (token && token.length > 20) {
+        localStorage.setItem(KEY, token);
+        // Clean URL without reload
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    } catch (e) { /* ignore */ }
+  })();
+
+  // Capacitor App plugin: listen for deep link opens (be.fiddo.app://auth?token=XYZ)
+  (function listenCapacitorDeepLink() {
+    try {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.addListener('appUrlOpen', function(event) {
+          try {
+            var url = event.url || '';
+            // Parse token from be.fiddo.app://auth?token=XYZ
+            var match = url.match(/[?&]token=([^&]+)/);
+            if (match) {
+              var jwt = decodeURIComponent(match[1]);
+              if (jwt && jwt.length > 20) {
+                localStorage.setItem(KEY, jwt);
+                // Reload to trigger authenticated state
+                window.location.reload();
+              }
+            }
+          } catch (e) { console.error('Deep link parse error:', e); }
+        });
+      }
+    } catch (e) { /* Capacitor not available — web mode */ }
   })();
 
   function getToken() { return localStorage.getItem(KEY); }
