@@ -192,7 +192,7 @@ function initDatabase() {
       amount             REAL,
       points_delta       INTEGER NOT NULL,
       transaction_type   TEXT NOT NULL
-                         CHECK(transaction_type IN ('credit','reward','merge','adjustment','gift_out','gift_in')),
+                         CHECK(transaction_type IN ('credit','reward','merge','adjustment','gift_out','gift_in','gift_refund')),
       idempotency_key    TEXT,
       source             TEXT,
       notes              TEXT,
@@ -402,7 +402,7 @@ initDatabase();
         amount             REAL,
         points_delta       INTEGER NOT NULL,
         transaction_type   TEXT NOT NULL
-                           CHECK(transaction_type IN ('credit','reward','merge','adjustment','gift_out','gift_in')),
+                           CHECK(transaction_type IN ('credit','reward','merge','adjustment','gift_out','gift_in','gift_refund')),
         idempotency_key    TEXT,
         source             TEXT,
         notes              TEXT,
@@ -421,6 +421,40 @@ initDatabase();
     `);
 
     console.log('✅ Transactions table migrated');
+  }
+
+  // Migration: add gift_refund support
+  if (hasOldCheck && hasOldCheck.sql && hasOldCheck.sql.includes('gift_out') && !hasOldCheck.sql.includes('gift_refund')) {
+    console.log('🔄 Migrating transactions table to support gift_refund...');
+    db.exec(`
+      ALTER TABLE transactions RENAME TO transactions_old;
+
+      CREATE TABLE transactions (
+        id                 INTEGER PRIMARY KEY AUTOINCREMENT,
+        merchant_id        INTEGER NOT NULL REFERENCES merchants(id),
+        merchant_client_id INTEGER NOT NULL REFERENCES merchant_clients(id),
+        staff_id           INTEGER REFERENCES staff_accounts(id),
+        amount             REAL,
+        points_delta       INTEGER NOT NULL,
+        transaction_type   TEXT NOT NULL
+                           CHECK(transaction_type IN ('credit','reward','merge','adjustment','gift_out','gift_in','gift_refund')),
+        idempotency_key    TEXT,
+        source             TEXT,
+        notes              TEXT,
+        created_at         TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+
+      INSERT INTO transactions SELECT * FROM transactions_old;
+      DROP TABLE transactions_old;
+    `);
+
+    db.exec(`
+      CREATE INDEX IF NOT EXISTS ix_tx_merchant_created ON transactions(merchant_id, created_at);
+      CREATE INDEX IF NOT EXISTS ix_tx_mc_created ON transactions(merchant_client_id, created_at);
+      CREATE UNIQUE INDEX IF NOT EXISTS ix_tx_idempotency ON transactions(idempotency_key);
+    `);
+
+    console.log('✅ Transactions table migrated (gift_refund)');
   }
 
   console.log('✅ Database V4 migration complete');
@@ -709,6 +743,12 @@ const voucherQueries = {
   `),
   expirePending: db.prepare(`
     UPDATE point_vouchers SET status = 'expired' WHERE status = 'pending' AND expires_at < datetime('now')
+  `),
+  findExpiredPending: db.prepare(`
+    SELECT pv.*, mc.points_balance AS sender_balance
+    FROM point_vouchers pv
+    JOIN merchant_clients mc ON pv.sender_mc_id = mc.id
+    WHERE pv.status = 'pending' AND pv.expires_at < datetime('now')
   `),
 };
 
