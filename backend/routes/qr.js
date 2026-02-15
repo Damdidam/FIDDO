@@ -791,6 +791,10 @@ router.post('/consume/:identId', authenticateStaff, (req, res) => {
       consumedPinHashes.set(pinToken, { pinHash: ident.pinHash, createdAt: Date.now() });
     }
 
+    // Generate server-side verify token (for PIN bypass on redeem)
+    const qrVerifyToken = crypto.randomBytes(16).toString('hex');
+    qrVerifyTokens.set(qrVerifyToken, { createdAt: Date.now() });
+
     res.json({
       email: ident.email,
       phone: ident.phone,
@@ -798,6 +802,7 @@ router.post('/consume/:identId', authenticateStaff, (req, res) => {
       pointsBalance: ident.pointsBalance,
       isNew: ident.isNew,
       pinToken,
+      qrVerifyToken,
     });
   } catch (error) {
     console.error('Consume error:', error);
