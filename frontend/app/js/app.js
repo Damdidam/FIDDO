@@ -79,6 +79,7 @@ const App = (() => {
   // Capacitor: intercept verify URLs opened by Android (App Links)
   try {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      // ── Handle magic link URLs ──
       window.Capacitor.Plugins.App.addListener('appUrlOpen', function(event) {
         try {
           var url = event.url || '';
@@ -98,6 +99,26 @@ const App = (() => {
             }
           }
         } catch (e) { console.error('appUrlOpen error:', e); }
+      });
+
+      // ── Handle Android back button ──
+      window.Capacitor.Plugins.App.addListener('backButton', function() {
+        // 1. Close any open modal first
+        var openModal = document.querySelector('.modal.open');
+        if (openModal) { closeModal(); return; }
+
+        // 2. If on a detail screen (card, history, gift), go back
+        if (screenStack.length > 1) { goBack(); return; }
+
+        // 3. If on a non-cards tab, go back to cards
+        var activeTab = document.querySelector('.tb.active');
+        if (activeTab && activeTab.dataset.tab !== 'cards') {
+          switchTab('cards');
+          return;
+        }
+
+        // 4. On main cards screen — minimize app
+        window.Capacitor.Plugins.App.minimizeApp();
       });
     }
   } catch (e) { /* not in Capacitor */ }
