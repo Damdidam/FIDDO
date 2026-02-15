@@ -17,7 +17,7 @@ const {
 let server;
 let baseUrl;
 
-function req(method, path, { body, token, noAuth } = {}) {
+function req(method, path, { body, token, staffToken } = {}) {
   return new Promise((resolve, reject) => {
     const url = new URL(path, baseUrl);
     const opts = {
@@ -27,7 +27,9 @@ function req(method, path, { body, token, noAuth } = {}) {
       path: url.pathname + url.search,
       headers: { 'Content-Type': 'application/json' },
     };
-    if (token && !noAuth) opts.headers['Authorization'] = 'Bearer ' + token;
+    // Staff auth = cookie, Client auth = Bearer header
+    if (staffToken) opts.headers['Cookie'] = 'staff_token=' + staffToken;
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
 
     const req = http.request(opts, (res) => {
       let data = '';
@@ -117,7 +119,7 @@ describe('A. Nouveau client — Landing page', () => {
   });
 
   it('A5. Client apparaît dans la pending queue', async () => {
-    const res = await GET(`/api/qr/pending?t=${Date.now()}`, { token: staffToken });
+    const res = await GET(`/api/qr/pending?t=${Date.now()}`, { staffToken });
     assert.equal(res.status, 200);
     assert.ok(res.data.pending.length >= 1);
     const found = res.data.pending.find(p => p.email === 'nouveau@test.be');
@@ -170,7 +172,7 @@ describe('B. Client existant', () => {
   });
 
   it('B3. Client existant dans pending queue', async () => {
-    const res = await GET(`/api/qr/pending?t=${Date.now()}`, { token: staffToken });
+    const res = await GET(`/api/qr/pending?t=${Date.now()}`, { staffToken });
     assert.equal(res.status, 200);
     const found = res.data.pending.find(p => p.email === 'jean@test.be');
     assert.ok(found);
@@ -250,7 +252,7 @@ describe('D. Crédit de points', () => {
 
   it('D1. Crédit standard → points corrects', async () => {
     const res = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'credit-test@test.be', amount: 25, idempotencyKey: 'test-d1' },
     });
     assert.equal(res.status, 200);
@@ -261,7 +263,7 @@ describe('D. Crédit de points', () => {
 
   it('D2. Deuxième crédit → cumul + récompense disponible', async () => {
     const res = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'credit-test@test.be', amount: 30, idempotencyKey: 'test-d2' },
     });
     assert.equal(res.status, 200);
@@ -271,7 +273,7 @@ describe('D. Crédit de points', () => {
 
   it('D3. Idempotency — même clé ne re-crédite pas', async () => {
     const res = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'credit-test@test.be', amount: 30, idempotencyKey: 'test-d2' },
     });
     assert.equal(res.status, 200);
@@ -280,7 +282,7 @@ describe('D. Crédit de points', () => {
 
   it('D4. Caissier — max 200€', async () => {
     const res = await POST('/api/clients/credit', {
-      token: cashierToken,
+      staffToken: cashierToken,
       body: { email: 'credit-test@test.be', amount: 250, idempotencyKey: 'test-d4' },
     });
     assert.equal(res.status, 403);
@@ -289,7 +291,7 @@ describe('D. Crédit de points', () => {
 
   it('D5. Caissier — 150€ passe', async () => {
     const res = await POST('/api/clients/credit', {
-      token: cashierToken,
+      staffToken: cashierToken,
       body: { email: 'credit-test@test.be', amount: 150, idempotencyKey: 'test-d5' },
     });
     assert.equal(res.status, 200);
@@ -298,7 +300,7 @@ describe('D. Crédit de points', () => {
 
   it('D6. Montant invalide', async () => {
     const res = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'credit-test@test.be', amount: 0 },
     });
     assert.equal(res.status, 400);
@@ -306,7 +308,7 @@ describe('D. Crédit de points', () => {
 
   it('D7. Crédit crée un nouveau client si inconnu', async () => {
     const res = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'brand-new@test.be', amount: 10, idempotencyKey: 'test-d7' },
     });
     assert.equal(res.status, 200);
@@ -332,7 +334,7 @@ describe('E. Redeem récompenses', () => {
 
   it('E1. Redeem standard → points déduits', async () => {
     const res = await POST(`/api/clients/${mc.id}/redeem`, {
-      token: staffToken,
+      staffToken,
       body: { idempotencyKey: 'redeem-e1' },
     });
     assert.equal(res.status, 200);
@@ -345,7 +347,7 @@ describe('E. Redeem récompenses', () => {
   it('E2. Redeem impossible — pas assez de points', async () => {
     // Balance is now 10, threshold is 50
     const res = await POST(`/api/clients/${mc.id}/redeem`, {
-      token: staffToken,
+      staffToken,
       body: { idempotencyKey: 'redeem-e2' },
     });
     assert.equal(res.status, 400);
@@ -568,18 +570,18 @@ describe('H. Flow complet end-to-end', () => {
     assert.equal(reg.data.isNew, true);
 
     // 2. Marchand voit le client dans la queue
-    const pending = await GET(`/api/qr/pending?t=${Date.now()}`, { token: staffToken });
+    const pending = await GET(`/api/qr/pending?t=${Date.now()}`, { staffToken });
     const ident = pending.data.pending.find(p => p.email === 'e2e@test.be');
     assert.ok(ident, 'Client in pending queue');
 
     // 3. Marchand consomme l'identification
-    const consume = await POST(`/api/qr/consume/${ident.identId}`, { token: staffToken });
+    const consume = await POST(`/api/qr/consume/${ident.identId}`, { staffToken });
     assert.equal(consume.status, 200);
     assert.equal(consume.data.isNew, true);
 
     // 4. Marchand crédite 30€ → 60 pts (2 pts/€)
     const credit1 = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'e2e@test.be', amount: 30, idempotencyKey: 'e2e-c1' },
     });
     assert.equal(credit1.status, 200);
@@ -595,7 +597,7 @@ describe('H. Flow complet end-to-end', () => {
     assert.equal(reg2.data.pointsBalance, 60);
 
     const credit2 = await POST('/api/clients/credit', {
-      token: staffToken,
+      staffToken,
       body: { email: 'e2e@test.be', amount: 25, idempotencyKey: 'e2e-c2' },
     });
     assert.equal(credit2.data.new_balance, 110);
@@ -604,7 +606,7 @@ describe('H. Flow complet end-to-end', () => {
     // 6. Redeem !
     const mcId = credit2.data.merchant_client_id;
     const redeem = await POST(`/api/clients/${mcId}/redeem`, {
-      token: staffToken,
+      staffToken,
       body: { idempotencyKey: 'e2e-r1' },
     });
     assert.equal(redeem.status, 200);
