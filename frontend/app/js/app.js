@@ -134,9 +134,6 @@ const App = (() => {
     try {
       const res = await API.login(email);
 
-      // ── DEBUG ──
-      toast('🔧 login: ok=' + res.ok + ' sid=' + (res.data?.sessionId ? res.data.sessionId.substring(0, 8) + '…' : 'NONE'));
-
       document.getElementById('sent-email').textContent = email;
       document.getElementById('login-form').classList.add('hidden');
       document.getElementById('login-sent').classList.remove('hidden');
@@ -156,48 +153,63 @@ const App = (() => {
 
   // ─── Polling ──────────────────────────────
 
+  let activeSessionId = null;
+
   function startPolling(sessionId) {
     stopPolling();
+    activeSessionId = sessionId;
     let attempts = 0;
-    const maxAttempts = 120; // 120 × 3s = 6 minutes
+    const maxAttempts = 120;
 
-    pollTimer = setInterval(async () => {
-      attempts++;
-      if (attempts > maxAttempts) { stopPolling(); return; }
+    pollTimer = setInterval(() => doPoll(sessionId, ++attempts, maxAttempts), 3000);
+  }
 
-      try {
-        const res = await API.call('/api/me/login/poll/' + sessionId, { noAuth: true });
+  async function doPoll(sessionId, attempt, maxAttempts) {
+    if (attempt > maxAttempts) { stopPolling(); return; }
 
-        // ── DEBUG: show first 3 poll results ──
-        if (attempts <= 3) {
-          toast('🔧 poll#' + attempts + ': ' + (res.data?.status || 'ERR'));
+    try {
+      const res = await API.call('/api/me/login/poll/' + sessionId, { noAuth: true });
+
+      if (res.ok && res.data.status === 'ok' && res.data.token) {
+        stopPolling();
+        toast('✅ Connexion réussie !');
+        API.setToken(res.data.token);
+        client = res.data.client || null;
+
+        const cardsRes = await API.getCards();
+        if (cardsRes.ok) {
+          client = cardsRes.data.client || client;
+          cards = cardsRes.data.cards || [];
         }
-
-        if (res.ok && res.data.status === 'ok' && res.data.token) {
-          stopPolling();
-          toast('✅ Token reçu!');
-          API.setToken(res.data.token);
-          client = res.data.client || null;
-
-          const cardsRes = await API.getCards();
-          if (cardsRes.ok) {
-            client = cardsRes.data.client || client;
-            cards = cardsRes.data.cards || [];
-          }
-          showApp();
-        } else if (res.data.status === 'expired') {
-          toast('🔧 session expired');
-          stopPolling();
-        }
-      } catch (e) {
-        if (attempts <= 2) toast('🔧 poll err: ' + e.message);
+        showApp();
+      } else if (res.data.status === 'expired') {
+        stopPolling();
       }
-    }, 3000);
+    } catch (e) { /* network error, keep polling */ }
   }
 
   function stopPolling() {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    activeSessionId = null;
   }
+
+  // ── Resume polling when app returns to foreground ──
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && activeSessionId) {
+      // App came back to foreground — poll immediately
+      doPoll(activeSessionId, 1, 120);
+    }
+  });
+  // Capacitor-specific: also listen for app state changes
+  try {
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      window.Capacitor.Plugins.App.addListener('appStateChange', (state) => {
+        if (state.isActive && activeSessionId) {
+          doPoll(activeSessionId, 1, 120);
+        }
+      });
+    }
+  } catch (e) { /* not in Capacitor */ }
 
   function resendLogin() {
     stopPolling();
