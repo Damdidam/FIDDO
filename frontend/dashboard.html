@@ -193,6 +193,7 @@
     .tx-badge.merge { background: #EDE9FE; color: #6D28D9; }
     .tx-badge.gift_out { background: #FCE7F3; color: #BE185D; }
     .tx-badge.gift_in { background: #CCFBF1; color: #0F766E; }
+    .tx-badge.gift_refund { background: #FEF3C7; color: #92400E; }
 
     .tx-pts { font-weight: 700; font-size: 0.85rem; text-align: right; white-space: nowrap; }
     .tx-pts.credit { color: var(--primary); }
@@ -549,7 +550,7 @@
         const sign = tx.points_delta >= 0 ? '+' : '';
         const metaParts = [tx.staff_name, tx.notes ? truncate(tx.notes, 30) : ''].filter(Boolean).join(' · ');
 
-        const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion', gift_out: 'transfert ↗', gift_in: 'transfert ↙' };
+        const badges = { credit: 'crédit', reward: 'récompense', adjustment: 'ajust.', merge: 'fusion', gift_out: 'transfert ↗', gift_in: 'transfert ↙', gift_refund: 'remboursé ↩' };
         const amountStr = tx.amount ? Format.currency(tx.amount) : '–';
 
         // Gift display: show sender → receiver
