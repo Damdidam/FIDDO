@@ -105,11 +105,12 @@ function createEndUser(overrides = {}) {
   const data = { ...defaults, ...overrides };
   const emailLower = data.email ? data.email.toLowerCase() : null;
   const qrToken = crypto.randomBytes(8).toString('base64url');
+  const pinHash = data.pin ? bcrypt.hashSync(data.pin, 10) : null;
 
   const result = db.prepare(`
-    INSERT INTO end_users (email, phone, email_lower, phone_e164, name, email_validated, qr_token, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, 1, ?, datetime('now'), datetime('now'))
-  `).run(data.email, data.phone, emailLower, data.phone, data.name, qrToken);
+    INSERT INTO end_users (email, phone, email_lower, phone_e164, name, email_validated, qr_token, pin_hash, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, 1, ?, ?, datetime('now'), datetime('now'))
+  `).run(data.email, data.phone, emailLower, data.phone, data.name, qrToken, pinHash);
 
   return endUserQueries.findById.get(result.lastInsertRowid);
 }
