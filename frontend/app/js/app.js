@@ -514,15 +514,14 @@ const App = (() => {
       // Store current state for next comparison
       saveCardStates(newCards);
 
-      // Only re-render if data actually changed
-      const newJson = JSON.stringify(newCards);
-      const oldJson = JSON.stringify(cards);
-      if (newJson !== oldJson) {
-        cards = newCards;
+      // Only re-render if display-relevant data changed
+      const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.totalSpent}`;
+      const newFp = newCards.map(fingerprint).join('|');
+      const oldFp = cards.map(fingerprint).join('|');
+      cards = newCards;
+      if (newFp !== oldFp) {
         renderCards();
         buildFilterPills();
-      } else {
-        cards = newCards;
       }
     }
   }
