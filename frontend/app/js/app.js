@@ -268,17 +268,20 @@ const App = (() => {
 
   // ── Resume polling when app returns to foreground ──
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && activeSessionId) {
-      // App came back to foreground — poll immediately
-      doPoll(activeSessionId, 1, 120);
+    if (!document.hidden) {
+      // Auth polling
+      if (activeSessionId) doPoll(activeSessionId, 1, 120);
+      // Points polling — refresh immediately on foreground
+      if (client) refreshCards();
     }
   });
   // Capacitor-specific: also listen for app state changes
   try {
     if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
       window.Capacitor.Plugins.App.addListener('appStateChange', (state) => {
-        if (state.isActive && activeSessionId) {
-          doPoll(activeSessionId, 1, 120);
+        if (state.isActive) {
+          if (activeSessionId) doPoll(activeSessionId, 1, 120);
+          if (client) refreshCards();
         }
       });
     }
@@ -468,21 +471,42 @@ const App = (() => {
     renderFilteredCards();
   }
 
+  let animating = false;
+
   async function refreshCards() {
     const res = await API.getCards();
     if (res.ok) {
       client = res.data.client || client;
       const newCards = res.data.cards || [];
 
-      // Detect points changes for animation
-      for (const card of newCards) {
-        const prev = previousCardStates[card.merchantId];
-        if (prev) {
-          if (card.pointsBalance > prev.points) {
-            const diff = card.pointsBalance - prev.points;
-            showAnimation('credit', `+${diff} pts`, card.merchantName || 'Points crédités');
-          } else if (card.canRedeem && !prev.canRedeem) {
-            showAnimation('reward', '🎉 Récompense !', card.rewardDescription || 'Félicitations !');
+      // Detect points changes for animation (skip if already animating)
+      if (!animating) {
+        for (const card of newCards) {
+          const prev = previousCardStates[card.merchantId];
+          if (prev) {
+            if (card.pointsBalance > prev.points) {
+              const diff = card.pointsBalance - prev.points;
+              animating = true;
+              // Save state BEFORE switching to prevent re-detection
+              saveCardStates(newCards);
+              closeModal();
+              switchTab('cards');
+              setTimeout(() => {
+                showAnimation('credit', `+${diff} pts`, card.merchantName || 'Points crédités');
+                setTimeout(() => { animating = false; }, 3000);
+              }, 300);
+              break;
+            } else if (card.canRedeem && !prev.canRedeem) {
+              animating = true;
+              saveCardStates(newCards);
+              closeModal();
+              switchTab('cards');
+              setTimeout(() => {
+                showAnimation('reward', '🎉 Récompense !', card.rewardDescription || 'Félicitations !');
+                setTimeout(() => { animating = false; }, 3000);
+              }, 300);
+              break;
+            }
           }
         }
       }
@@ -1007,7 +1031,7 @@ const App = (() => {
 
   function startPointsPolling() {
     stopPointsPolling();
-    pointsPollTimer = setInterval(() => refreshCards(), 30000);
+    pointsPollTimer = setInterval(() => refreshCards(), 5000);
   }
 
   function stopPointsPolling() {
