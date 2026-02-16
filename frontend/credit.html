@@ -764,6 +764,8 @@
       hideLookup();
       if (mode === 'qr') startPendingPoll();
       if (mode === 'scan') startScanner();
+      // Animate segment pill
+      requestAnimationFrame(updateSegPill);
     }
 
     // ═══════════════════════════════════════════════════════
@@ -1375,12 +1377,6 @@
       pill.style.left = (btnRect.left - barRect.left) + 'px';
       pill.style.width = btnRect.width + 'px';
     }
-
-    const _origSwitchMode = switchMode;
-    switchMode = function(mode) {
-      _origSwitchMode(mode);
-      requestAnimationFrame(updateSegPill);
-    };
 
     setTimeout(updateSegPill, 250);
     window.addEventListener('resize', updateSegPill);
