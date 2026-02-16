@@ -340,7 +340,7 @@ function setupNavbar() {
       <div class="navbar-menu">${linksHTML}</div>
       <div class="navbar-user">
         <span class="navbar-user-name">${staff.display_name}</span>
-        <div class="navbar-avatar" onclick="Auth.logout()" title="Déconnexion">${initials}</div>
+        <div class="navbar-avatar" onclick="Auth.logout()" title="Déconnexion"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
       </div>
     </div>
   `;
