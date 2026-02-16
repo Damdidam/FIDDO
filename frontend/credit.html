@@ -628,6 +628,8 @@
       document.getElementById('field-scan').style.display = mode === 'scan' ? '' : 'none';
       if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
       if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
+      document.getElementById('client-name').value = ''; document.getElementById('client-name').classList.remove('has-value');
+      qrVerifyTokenValue = null;
       hideLookup();
       if (mode === 'qr') startPendingPoll();
       if (mode === 'scan') startScanner();
