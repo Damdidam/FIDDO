@@ -1200,11 +1200,13 @@ const App = (() => {
     document.querySelectorAll('.notif-row input').forEach(el => el.addEventListener('change', saveNotifs));
 
     let startY = 0;
+    let startScrollTop = 0;
     const scroll = document.getElementById('cards-scroll');
     if (scroll) {
-      scroll.addEventListener('touchstart', e => { startY = e.touches[0].pageY; });
+      scroll.addEventListener('touchstart', e => { startY = e.touches[0].pageY; startScrollTop = scroll.scrollTop; });
       scroll.addEventListener('touchend', e => {
-        if (scroll.scrollTop === 0 && e.changedTouches[0].pageY - startY > 80) { refreshCards(); toast('Actualisation…'); }
+        // Only trigger if started AND ended at scroll top, with a strong pull (>150px)
+        if (startScrollTop === 0 && scroll.scrollTop === 0 && e.changedTouches[0].pageY - startY > 150) { refreshCards(); toast('Actualisation…'); }
       });
     }
 
