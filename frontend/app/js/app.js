@@ -19,7 +19,7 @@ const App = (() => {
   let pollTimer = null;
 
   const THEMES = {
-    teal: '#2563eb', navy: '#1e40af', violet: '#7c3aed',
+    teal: '#0891B2', navy: '#0e7490', violet: '#7c3aed',
     forest: '#059669', brick: '#e11d48', amber: '#d97706', slate: '#475569'
   };
 
