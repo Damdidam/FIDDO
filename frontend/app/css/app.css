@@ -387,6 +387,9 @@ a{text-decoration:none;cursor:pointer}
    DELETE ACCOUNT
    ═══════════════════════════════════════════════ */
 .prof-danger-zone{margin-top:32px;padding-top:24px;border-top:1px solid var(--brd)}
+.btn-hide-card{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:44px;margin-top:24px;border-radius:var(--r-md);border:none;background:transparent;color:var(--tx3);font-size:13px;font-weight:600;cursor:pointer;transition:color .2s}
+.btn-hide-card:active{color:var(--err)}
+.btn-hide-card .material-symbols-rounded{font-size:18px}
 .btn-danger-outline{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border-radius:var(--r-md);border:1.5px solid var(--err);background:transparent;color:var(--err);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
 .btn-danger-outline:active{background:rgba(239,68,68,.1)}
 .btn-danger-outline .material-symbols-rounded{font-size:20px}
