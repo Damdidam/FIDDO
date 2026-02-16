@@ -497,6 +497,20 @@ const App = (() => {
               refreshing = false;
               return;
             }
+          } else if (card.pointsBalance > 0) {
+            // Card was hidden and just reappeared after a credit
+            animating = true;
+            saveCardStates(newCards);
+            cards = newCards;
+            closeModal();
+            switchTab('cards');
+            renderCards();
+            setTimeout(() => {
+              showAnimation('credit', `+${card.pointsBalance} pts`, card.merchantName || 'Points crédités');
+              setTimeout(() => { animating = false; lastRenderTime = Date.now(); }, 3000);
+            }, 300);
+            refreshing = false;
+            return;
           }
         }
 
