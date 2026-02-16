@@ -9,53 +9,65 @@
   <meta name="apple-mobile-web-app-title" content="FIDDO">
   <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
   <meta name="theme-color" content="#0891B2">
-  <title>FIDDO — Connexion</title>
+  <title>FIDDO — Espace Commerçant</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Satoshi:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
-      --brand: #0891B2;
-      --brand-dark: #065A73;
-      --brand-glow: #0ED3FF;
-      --surface: #FAFBFC;
-      --card: #FFFFFF;
-      --text-primary: #0F1419;
-      --text-secondary: #536471;
-      --text-hint: #8899A6;
-      --border: #E1E8ED;
-      --border-focus: #0891B2;
-      --error: #C62828;
-      --error-bg: #FFF5F5;
-      --error-border: #EF9A9A;
-      --success: #0A8754;
-      --success-bg: #F0FFF7;
-      --info-bg: #F0FAFF;
+      --bg: #0a0c10;
+      --bg-raised: #0f1219;
+      --bg-card: #141820;
+      --bg-input: #181d27;
+      --border: rgba(255,255,255,0.06);
+      --border-hover: rgba(255,255,255,0.12);
+      --border-focus: rgba(8,145,178,0.5);
+      --teal: #0891B2;
+      --teal-glow: rgba(8,145,178,0.15);
+      --teal-deep: #0e7490;
+      --teal-bright: #22d3ee;
+      --amber: #f59e0b;
+      --green: #10b981;
+      --error: #f87171;
+      --error-bg: rgba(248,113,113,0.08);
+      --error-border: rgba(248,113,113,0.25);
+      --success: #34d399;
+      --success-bg: rgba(52,211,153,0.08);
+      --text: #f1f5f9;
+      --text-secondary: rgba(255,255,255,0.55);
+      --text-muted: rgba(255,255,255,0.3);
+      --text-faint: rgba(255,255,255,0.15);
       --radius: 10px;
       --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-display: 'Instrument Serif', Georgia, serif;
+      --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
     }
 
     body {
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: var(--surface);
-      color: var(--text-primary);
+      font-family: var(--font-body);
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.6;
       min-height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ═══ LAYOUT ═══ */
+    /* ═══════════════════════════════════════════════
+       LAYOUT
+       ═══════════════════════════════════════════════ */
     .auth-layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
       min-height: 100vh;
     }
 
-    /* ═══ LEFT PANEL ═══ */
+    /* ═══════════════════════════════════════════════
+       LEFT PANEL — Brand
+       ═══════════════════════════════════════════════ */
     .brand-panel {
-      background: #0A1A24;
+      background: #060810;
       position: relative;
       display: flex;
       flex-direction: column;
@@ -64,14 +76,13 @@
       overflow: hidden;
     }
 
-    /* Animated gradient orbs */
     .brand-panel::before {
       content: '';
       position: absolute;
       top: -15%; right: -10%;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(8,145,178,0.18) 0%, transparent 65%);
-      animation: orbFloat 12s ease-in-out infinite;
+      width: 550px; height: 550px;
+      background: radial-gradient(circle, rgba(8,145,178,0.12) 0%, transparent 60%);
+      animation: orbFloat 14s ease-in-out infinite;
       pointer-events: none;
     }
 
@@ -80,99 +91,99 @@
       position: absolute;
       bottom: -10%; left: -15%;
       width: 450px; height: 450px;
-      background: radial-gradient(circle, rgba(14,211,255,0.08) 0%, transparent 60%);
-      animation: orbFloat 15s ease-in-out infinite reverse;
+      background: radial-gradient(circle, rgba(8,145,178,0.06) 0%, transparent 55%);
+      animation: orbFloat 18s ease-in-out infinite reverse;
       pointer-events: none;
     }
 
     @keyframes orbFloat {
       0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(25px, -15px) scale(1.05); }
-      66% { transform: translate(-15px, 20px) scale(0.95); }
+      33% { transform: translate(20px, -12px) scale(1.04); }
+      66% { transform: translate(-12px, 18px) scale(0.96); }
     }
 
-    /* Subtle dot pattern */
-    .brand-dots {
-      position: absolute;
-      inset: 0;
-      background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
-      background-size: 32px 32px;
+    .brand-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 60px 60px;
+      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
       pointer-events: none;
     }
 
     .brand-inner {
       position: relative;
       z-index: 2;
-      max-width: 460px;
+      max-width: 420px;
+      animation: fadeUp 0.6s ease-out 0.1s both;
     }
 
-    /* Logo */
     .brand-logo {
       margin-bottom: 3.5rem;
     }
 
     .brand-logo .wordmark {
-      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: var(--font-body);
       font-size: 1.5rem;
       font-weight: 800;
-      color: var(--brand);
+      color: var(--teal);
       letter-spacing: -0.5px;
     }
 
-    /* Headline */
     .brand-headline {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 3rem;
-      font-weight: 600;
+      font-family: var(--font-display);
+      font-size: 2.8rem;
+      font-weight: 400;
       line-height: 1.15;
       color: #FFFFFF;
       margin-bottom: 1.25rem;
-      letter-spacing: -0.5px;
     }
 
     .brand-headline em {
       font-style: italic;
-      color: var(--brand-glow);
-      font-weight: 500;
+      background: linear-gradient(135deg, var(--teal-bright), var(--teal));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
 
     .brand-desc {
       font-size: 1rem;
-      line-height: 1.75;
-      color: #8A9BAA;
+      line-height: 1.8;
+      color: var(--text-secondary);
       margin-bottom: 3rem;
     }
 
-    /* Stats row */
     .brand-stats {
       display: flex;
       gap: 2.5rem;
       padding-top: 2.5rem;
-      border-top: 1px solid rgba(255,255,255,0.07);
+      border-top: 1px solid var(--border);
     }
 
     .brand-stat-value {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.6rem;
-      font-weight: 600;
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 400;
       color: #FFFFFF;
       line-height: 1;
     }
 
     .brand-stat-value span {
-      color: var(--brand-glow);
-      font-size: 1rem;
+      color: var(--teal-bright);
+      font-size: 0.95rem;
     }
 
     .brand-stat-label {
-      font-size: 0.72rem;
-      color: #5C7080;
+      font-size: 0.7rem;
+      color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 1.5px;
       margin-top: 0.4rem;
     }
 
-    /* Bottom line */
     .brand-footer {
       position: absolute;
       bottom: 2.5rem;
@@ -190,49 +201,51 @@
     }
 
     .brand-footer span {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.2);
+      font-size: 0.68rem;
+      color: var(--text-faint);
       letter-spacing: 0.5px;
     }
 
     .brand-footer .powered-by {
-      font-size: 0.65rem;
-      color: rgba(255,255,255,0.18);
-      letter-spacing: 0.3px;
+      font-size: 0.62rem;
+      color: var(--text-faint);
     }
 
     .brand-footer .powered-by strong {
-      color: rgba(255,255,255,0.3);
+      color: var(--text-muted);
       font-weight: 700;
     }
 
-    /* ═══ RIGHT PANEL ═══ */
+    /* ═══════════════════════════════════════════════
+       RIGHT PANEL — Form
+       ═══════════════════════════════════════════════ */
     .form-panel {
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 2rem;
       overflow-y: auto;
-      background: var(--surface);
+      background: var(--bg);
+      background-image: radial-gradient(ellipse 80% 60% at 80% 20%, rgba(8,145,178,0.04), transparent 50%);
     }
 
     .form-wrapper {
       width: 100%;
       max-width: 420px;
       padding: 2rem 0;
+      animation: fadeUp 0.5s ease-out;
     }
 
     /* Mobile brand (hidden on desktop) */
     .mobile-brand { display: none; }
 
-    /* Header */
     .form-header { margin-bottom: 2.25rem; }
 
     .form-header h1 {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: 1.85rem;
-      font-weight: 600;
-      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 400;
+      color: var(--text);
       margin-bottom: 0.4rem;
     }
 
@@ -241,41 +254,59 @@
       font-size: 0.92rem;
     }
 
-    /* Fields */
+    /* ═══════════════════════════════════════════════
+       FORM FIELDS
+       ═══════════════════════════════════════════════ */
     .field { margin-bottom: 1.35rem; }
 
     .field-label {
       display: block;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 600;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       margin-bottom: 0.45rem;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
     }
 
-    .field-input {
+    .field-input,
+    .field-select {
       width: 100%;
       padding: 0.8rem 1rem;
       border: 1.5px solid var(--border);
       border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-body);
       font-size: 0.95rem;
-      color: var(--text-primary);
-      background: var(--card);
+      color: var(--text);
+      background: var(--bg-input);
       transition: var(--transition);
       outline: none;
     }
 
-    .field-input::placeholder { color: var(--text-hint); }
+    .field-input::placeholder { color: var(--text-faint); }
 
-    .field-input:focus {
+    .field-input:focus,
+    .field-select:focus {
       border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
+      box-shadow: 0 0 0 3px var(--teal-glow);
+      background: var(--bg-card);
     }
 
     .field-input.has-error { border-color: var(--error-border); background: var(--error-bg); }
-    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(198,40,40,0.06); }
+    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113,0.1); }
+
+    .field-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2367738a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.85rem center;
+      padding-right: 2.5rem;
+      cursor: pointer;
+    }
+    .field-select option {
+      background: var(--bg-card);
+      color: var(--text);
+    }
 
     .field-error {
       font-size: 0.78rem;
@@ -286,8 +317,8 @@
     .field-error.visible { display: block; }
 
     .field-hint {
-      font-size: 0.78rem;
-      color: var(--text-hint);
+      font-size: 0.75rem;
+      color: var(--text-faint);
       margin-top: 0.35rem;
     }
 
@@ -314,36 +345,39 @@
     }
 
     .section-divider span {
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 1.8px;
-      color: var(--text-hint);
+      letter-spacing: 2px;
+      color: var(--text-muted);
       white-space: nowrap;
     }
 
     /* Reward preview */
     .reward-preview {
       display: none;
-      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      background: linear-gradient(135deg, var(--teal-deep), #0c5e72);
+      border: 1px solid rgba(8,145,178,0.2);
       color: white;
       border-radius: var(--radius);
       padding: 1rem 1.25rem;
       margin-top: 0.75rem;
       font-size: 0.85rem;
-      line-height: 1.6;
+      line-height: 1.65;
     }
     .reward-preview strong { font-weight: 600; }
 
-    /* Button */
+    /* ═══════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════ */
     .btn-submit {
       width: 100%;
       padding: 0.9rem 1.5rem;
       border: none;
       border-radius: var(--radius);
-      font-family: 'DM Sans', sans-serif;
+      font-family: var(--font-body);
       font-size: 0.95rem;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
       transition: var(--transition);
       letter-spacing: 0.3px;
@@ -355,18 +389,18 @@
     .btn-submit:active:not(:disabled) { transform: scale(0.985); }
 
     .btn-primary-action {
-      background: var(--brand);
+      background: var(--teal);
       color: #FFFFFF;
-      box-shadow: 0 2px 8px rgba(8,145,178,0.2);
+      box-shadow: 0 0 20px var(--teal-glow), 0 2px 8px rgba(8,145,178,0.2);
     }
 
     .btn-primary-action:hover:not(:disabled) {
-      background: var(--brand-dark);
-      box-shadow: 0 4px 20px rgba(8,145,178,0.3);
+      background: var(--teal-deep);
+      box-shadow: 0 0 30px rgba(8,145,178,0.25), 0 4px 20px rgba(8,145,178,0.3);
       transform: translateY(-1px);
     }
 
-    .btn-submit:disabled { opacity: 0.7; cursor: wait; }
+    .btn-submit:disabled { opacity: 0.6; cursor: wait; }
     .btn-submit .btn-text { transition: opacity 0.15s; }
     .btn-submit .btn-loader {
       position: absolute;
@@ -406,13 +440,13 @@
     }
 
     .form-toggle a {
-      color: var(--brand);
+      color: var(--teal-bright);
       font-weight: 600;
       text-decoration: none;
       cursor: pointer;
       transition: var(--transition);
     }
-    .form-toggle a:hover { color: var(--brand-dark); text-decoration: underline; }
+    .form-toggle a:hover { color: var(--teal); text-decoration: underline; }
 
     /* Alerts */
     .page-alert {
@@ -425,9 +459,9 @@
       animation: alertIn 0.25s ease-out;
     }
     .page-alert.visible { display: block; }
-    .page-alert.error  { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
-    .page-alert.success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
-    .page-alert.info   { background: var(--info-bg); color: var(--brand-dark); border-left: 3px solid var(--brand); }
+    .page-alert.error   { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
+    .page-alert.success  { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
+    .page-alert.info     { background: rgba(8,145,178,0.08); color: var(--teal-bright); border-left: 3px solid var(--teal); }
 
     @keyframes alertIn {
       from { opacity: 0; transform: translateY(-6px); }
@@ -436,16 +470,63 @@
 
     #register-form { display: none; }
 
-    /* Entry animations */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .form-wrapper { animation: fadeUp 0.5s ease-out; }
-    .brand-inner { animation: fadeUp 0.6s ease-out 0.1s both; }
+    /* Back to site link */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.8rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--text-secondary); }
+    .back-link svg { width: 14px; height: 14px; }
 
-    /* ═══ RESPONSIVE ═══ */
+    /* Portal note */
+    .portal-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      margin-top: 2.5rem;
+      padding: 1rem 1.15rem;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+    .portal-note svg { flex-shrink: 0; margin-top: 1px; color: var(--text-faint); }
+    .portal-note a { color: var(--teal-bright); text-decoration: none; font-weight: 500; }
+    .portal-note a:hover { text-decoration: underline; }
+
+    /* Merchant app badge */
+    .brand-app-note {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 2rem;
+      padding: 0.55rem 1rem;
+      border-radius: 100px;
+      background: rgba(8,145,178,0.08);
+      border: 1px solid rgba(8,145,178,0.12);
+      font-size: 0.75rem;
+      color: var(--teal-bright);
+      letter-spacing: 0.2px;
+    }
+    .brand-app-note svg { flex-shrink: 0; }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════ */
     @media (max-width: 960px) {
       .auth-layout { grid-template-columns: 1fr; }
       .brand-panel { display: none; }
@@ -457,10 +538,10 @@
         margin-bottom: 2.5rem;
       }
       .mobile-brand .wordmark {
-        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: var(--font-body);
         font-size: 1.75rem;
         font-weight: 800;
-        color: var(--brand);
+        color: var(--teal);
         letter-spacing: -0.5px;
       }
       .mobile-brand p {
@@ -468,9 +549,8 @@
         font-size: 0.88rem;
         margin-top: 0.4rem;
       }
-
-      /* Prevent iOS zoom + bigger tap targets */
-      .field-input { font-size: 1rem; padding: 0.85rem 1rem; }
+      .back-link { justify-content: center; width: 100%; margin-bottom: 1.5rem; }
+      .field-input, .field-select { font-size: 1rem; padding: 0.85rem 1rem; }
       .btn-submit { min-height: 48px; font-size: 1rem; padding: 0.9rem 1.5rem; }
     }
 
@@ -481,7 +561,7 @@
 
     .form-panel::-webkit-scrollbar { width: 5px; }
     .form-panel::-webkit-scrollbar-track { background: transparent; }
-    .form-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .form-panel::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -490,7 +570,7 @@
 
     <!-- ═══ LEFT ═══ -->
     <div class="brand-panel">
-      <div class="brand-dots"></div>
+      <div class="brand-grid"></div>
 
       <div class="brand-inner">
         <div class="brand-logo">
@@ -498,12 +578,13 @@
         </div>
 
         <h2 class="brand-headline">
-          Fidélisez vos clients.<br><em>Simplement.</em>
+          Votre espace<br><em>commerçant.</em>
         </h2>
 
         <p class="brand-desc">
-          La plateforme de fidélité conçue pour les commerçants belges.
-          Gestion multi-équipe, QR code intégré, zéro engagement.
+          Gérez votre programme de fidélité, suivez vos clients
+          et pilotez vos récompenses depuis votre tableau de bord.
+          Une application mobile commerçant est également en cours de développement.
         </p>
 
         <div class="brand-stats">
@@ -520,11 +601,16 @@
             <div class="brand-stat-label">RGPD</div>
           </div>
         </div>
+
+        <div class="brand-app-note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          Application mobile commerçant en cours de développement
+        </div>
       </div>
 
       <div class="brand-footer">
         <div class="brand-footer-left">
-          <span>FIDDO V3.5</span>
+          <span>FIDDO</span>
           <span>Bruxelles, Belgique</span>
         </div>
         <span class="powered-by">Powered by <strong>H3001</strong></span>
@@ -535,16 +621,21 @@
     <div class="form-panel">
       <div class="form-wrapper">
 
+        <a href="/" class="back-link">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          Retour au site
+        </a>
+
         <div class="mobile-brand">
           <div class="wordmark">FIDDO</div>
-          <p>Programme de fidélité pour commerçants</p>
+          <p>Espace commerçant</p>
         </div>
 
         <!-- ═══ LOGIN ═══ -->
         <form id="login-form" novalidate>
           <div class="form-header">
             <h1>Connexion</h1>
-            <p>Accédez à votre espace de gestion</p>
+            <p>Accédez à votre espace de gestion commerçant</p>
           </div>
 
           <div id="login-alert" class="page-alert"></div>
@@ -586,6 +677,29 @@
             <label class="field-label" for="reg-business">Nom du commerce *</label>
             <input type="text" id="reg-business" class="field-input" placeholder="Mon Commerce" required>
             <div class="field-error" id="reg-business-error"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-biz-type">Type de commerce *</label>
+            <select id="reg-biz-type" class="field-select" required>
+              <option value="" disabled selected>— Choisir un type —</option>
+              <option value="horeca">Horeca</option>
+              <option value="boulangerie">Boulangerie</option>
+              <option value="coiffeur">Coiffeur</option>
+              <option value="beaute">Beauté</option>
+              <option value="pharmacie">Pharmacie</option>
+              <option value="fleuriste">Fleuriste</option>
+              <option value="boucherie">Boucherie</option>
+              <option value="epicerie">Épicerie</option>
+              <option value="cave">Cave à vins</option>
+              <option value="librairie">Librairie</option>
+              <option value="pressing">Pressing</option>
+              <option value="fitness">Fitness</option>
+              <option value="garage">Garage</option>
+              <option value="veterinaire">Vétérinaire</option>
+              <option value="autre">Autre</option>
+            </select>
+            <div class="field-error" id="reg-biz-type-error"></div>
           </div>
 
           <div class="field">
@@ -674,6 +788,12 @@
           </div>
         </form>
 
+        <!-- Client redirect note -->
+        <div class="portal-note">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <span>Cet espace est réservé aux commerçants. Vous êtes client ? <a href="/app">Accédez à votre carte de fidélité ici.</a></span>
+        </div>
+
       </div>
     </div>
 
@@ -713,7 +833,7 @@
     }
 
     function clearAllFieldErrors(formId) {
-      document.querySelectorAll('#' + formId + ' .field-input').forEach(function(el) { el.classList.remove('has-error'); });
+      document.querySelectorAll('#' + formId + ' .field-input, #' + formId + ' .field-select').forEach(function(el) { el.classList.remove('has-error'); });
       document.querySelectorAll('#' + formId + ' .field-error').forEach(function(el) { el.textContent = ''; el.classList.remove('visible'); });
     }
 
@@ -723,8 +843,9 @@
       else { btn.classList.remove('loading'); btn.disabled = false; }
     }
 
-    document.querySelectorAll('.field-input').forEach(function(input) {
+    document.querySelectorAll('.field-input, .field-select').forEach(function(input) {
       input.addEventListener('input', function() { clearFieldError(this.id); });
+      input.addEventListener('change', function() { clearFieldError(this.id); });
     });
 
     // ═══════════════════════════════════════════════════════
@@ -742,7 +863,6 @@
     if (Auth.isAuthenticated()) {
       window.location.href = '/credit';
     } else {
-      // Auto-verify cookie (Android app: sessionStorage cleared on restart, but cookie persists)
       (async () => {
         try {
           var res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:3000' : '') + '/api/auth/verify', {
@@ -756,7 +876,7 @@
               window.location.href = '/credit';
             }
           }
-        } catch (e) { /* no cookie — show login form */ }
+        } catch (e) { /* no cookie */ }
       })();
     }
 
@@ -774,6 +894,8 @@
       document.getElementById('register-form').style.display = 'none';
       document.getElementById('login-form').style.display = 'block';
     }
+
+    if (window.location.hash === '#register') showRegister();
 
     // ═══════════════════════════════════════════════════════
     // REWARD PREVIEW
@@ -852,6 +974,7 @@
 
       var f = {
         business:   document.getElementById('reg-business').value.trim(),
+        bizType:    document.getElementById('reg-biz-type').value,
         address:    document.getElementById('reg-address').value.trim(),
         vat:        document.getElementById('reg-vat').value.trim(),
         phone:      document.getElementById('reg-phone').value.trim(),
@@ -868,6 +991,7 @@
       var errorCount = 0;
 
       if (!f.business) { setFieldError('reg-business', 'Le nom de votre commerce est requis.'); errorCount++; }
+      if (!f.bizType) { setFieldError('reg-biz-type', 'Veuillez choisir un type de commerce.'); errorCount++; }
       if (!f.address) { setFieldError('reg-address', 'L\'adresse est requise.'); errorCount++; }
       else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète.'); errorCount++; }
       if (!f.vat) { setFieldError('reg-vat', 'Le numéro de TVA est requis.'); errorCount++; }
@@ -887,7 +1011,7 @@
 
       if (errorCount > 0) {
         showPageAlert('register-alert', errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger.', 'error');
-        var firstErr = document.querySelector('#register-form .field-input.has-error');
+        var firstErr = document.querySelector('#register-form .field-input.has-error, #register-form .field-select.has-error');
         if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
       }
@@ -896,7 +1020,7 @@
 
       try {
         await API.auth.register({
-          businessName: f.business, address: f.address, vatNumber: f.vat,
+          businessName: f.business, businessType: f.bizType, address: f.address, vatNumber: f.vat,
           email: f.bizEmail, phone: f.phone, ownerPhone: f.ownerPhone,
           ownerEmail: f.ownerEmail, ownerPassword: f.password, ownerName: f.ownerName,
           pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || 100,
@@ -908,7 +1032,7 @@
           'Vous recevrez un email de confirmation à <strong>' + esc(f.ownerEmail) + '</strong> dès que votre commerce sera validé.',
           'success'
         );
-        document.querySelectorAll('#register-form .field-input').forEach(function(el) { el.disabled = true; });
+        document.querySelectorAll('#register-form .field-input, #register-form .field-select').forEach(function(el) { el.disabled = true; });
         document.getElementById('register-btn').style.display = 'none';
       } catch (err) {
         setLoading('register-btn', false);
