@@ -383,19 +383,10 @@ router.post('/pin', authenticateClient, async (req, res) => {
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
     if (endUser.is_blocked) return res.status(403).json({ error: 'Compte bloqué' });
 
-    const { currentPin, newPin } = req.body;
+    const { newPin } = req.body;
 
     if (!newPin || !/^\d{4}$/.test(newPin)) {
       return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
-    }
-
-    if (endUser.pin_hash) {
-      if (!currentPin) {
-        return res.status(400).json({ error: 'Code PIN actuel requis' });
-      }
-      if (!bcrypt.compareSync(currentPin, endUser.pin_hash)) {
-        return res.status(403).json({ error: 'Code PIN actuel incorrect' });
-      }
     }
 
     const pinHash = await bcrypt.hash(newPin, 10);
