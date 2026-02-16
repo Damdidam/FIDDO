@@ -5,6 +5,8 @@
 const App = (() => {
   let client = null;
   let cards = [];
+  let previousCardStates = {}; // { merchantId: { points, canRedeem } }
+  let pointsPollTimer = null;
   let currentCard = null;
   let currentMerchant = null;
   let screenStack = [];
@@ -182,6 +184,7 @@ const App = (() => {
       if (res.ok) {
         client = res.data.client;
         cards = res.data.cards || [];
+        saveCardStates(cards);
         showApp();
         return;
       }
@@ -249,6 +252,7 @@ const App = (() => {
         if (cardsRes.ok) {
           client = cardsRes.data.client || client;
           cards = cardsRes.data.cards || [];
+          saveCardStates(cards);
         }
         showApp();
       } else if (res.data.status === 'expired') {
@@ -318,7 +322,8 @@ const App = (() => {
   async function logout() {
     if (!confirm('Voulez-vous vous déconnecter ?')) return;
     stopPolling();
-    API.logout(); client = null; cards = [];
+    stopPointsPolling();
+    API.logout(); client = null; cards = []; previousCardStates = {};
     show('screen-login'); resetLogin();
   }
 
@@ -334,6 +339,7 @@ const App = (() => {
     buildFilterPills();
     loadProfile();
     loadNotifPrefs();
+    startPointsPolling();
 
     const pendingMerchant = sessionStorage.getItem('fiddo_pending_merchant');
     if (pendingMerchant) {
@@ -466,9 +472,34 @@ const App = (() => {
     const res = await API.getCards();
     if (res.ok) {
       client = res.data.client || client;
-      cards = res.data.cards || [];
+      const newCards = res.data.cards || [];
+
+      // Detect points changes for animation
+      for (const card of newCards) {
+        const prev = previousCardStates[card.merchantId];
+        if (prev) {
+          if (card.pointsBalance > prev.points) {
+            const diff = card.pointsBalance - prev.points;
+            showAnimation('credit', `+${diff} pts`, card.merchantName || 'Points crédités');
+          } else if (card.canRedeem && !prev.canRedeem) {
+            showAnimation('reward', '🎉 Récompense !', card.rewardDescription || 'Félicitations !');
+          }
+        }
+      }
+
+      // Store current state for next comparison
+      saveCardStates(newCards);
+
+      cards = newCards;
       renderCards();
       buildFilterPills();
+    }
+  }
+
+  function saveCardStates(cardsList) {
+    previousCardStates = {};
+    for (const c of cardsList) {
+      previousCardStates[c.merchantId] = { points: c.pointsBalance, canRedeem: !!c.canRedeem };
     }
   }
 
@@ -972,6 +1003,97 @@ const App = (() => {
 
   // ─── Helpers ──────────────────────────────
 
+  // ─── Points Polling (detect changes) ───────
+
+  function startPointsPolling() {
+    stopPointsPolling();
+    pointsPollTimer = setInterval(() => refreshCards(), 30000);
+  }
+
+  function stopPointsPolling() {
+    if (pointsPollTimer) { clearInterval(pointsPollTimer); pointsPollTimer = null; }
+  }
+
+  // ─── Animation overlay ─────────────────────
+
+  function showAnimation(type, text, sub) {
+    const overlay = document.getElementById('anim-overlay');
+    const iconEl = document.getElementById('anim-icon');
+    const textEl = document.getElementById('anim-text');
+    const subEl = document.getElementById('anim-sub');
+    const particlesEl = document.getElementById('anim-particles');
+
+    overlay.classList.remove('hidden');
+    void overlay.offsetWidth;
+    overlay.classList.add('show');
+
+    iconEl.className = 'anim-icon ' + type;
+    iconEl.innerHTML = type === 'credit'
+      ? '<span class="material-symbols-rounded" style="font-size:48px">add_circle</span>'
+      : '<span class="material-symbols-rounded" style="font-size:48px">redeem</span>';
+    textEl.textContent = text;
+    subEl.textContent = sub;
+
+    // Spawn particles
+    particlesEl.innerHTML = '';
+    const colors = type === 'credit' ? ['#34d399', '#6ee7b7', '#a7f3d0', '#10b981'] : ['#fbbf24', '#fcd34d', '#fde68a', '#f59e0b'];
+    for (let i = 0; i < 20; i++) {
+      const p = document.createElement('div');
+      p.className = 'anim-particle';
+      p.style.background = colors[i % colors.length];
+      p.style.left = '50%';
+      p.style.top = '50%';
+      p.style.setProperty('--dx', (Math.random() - 0.5) * 300 + 'px');
+      p.style.setProperty('--dy', (Math.random() - 0.5) * 400 + 'px');
+      p.style.animationDelay = (Math.random() * 0.3) + 's';
+      particlesEl.appendChild(p);
+    }
+
+    // Auto-dismiss after 2.5s
+    setTimeout(() => {
+      overlay.classList.remove('show');
+      setTimeout(() => overlay.classList.add('hidden'), 300);
+    }, 2500);
+  }
+
+  // ─── Delete Account ────────────────────────
+
+  function confirmDeleteAccount() {
+    openModal('modal-delete');
+  }
+
+  async function deleteAccount() {
+    const btn = document.getElementById('btn-confirm-delete');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-rounded">hourglass_top</span>Suppression…';
+
+    try {
+      const res = await API.call('/api/me/account', { method: 'DELETE' });
+      if (res.ok) {
+        closeModal();
+        toast('Compte supprimé. Un email de confirmation a été envoyé.');
+        setTimeout(() => {
+          API.clearToken();
+          client = null;
+          cards = [];
+          previousCardStates = {};
+          stopPointsPolling();
+          show('screen-login');
+        }, 2000);
+      } else {
+        toast(res.data?.error || 'Erreur lors de la suppression');
+        btn.disabled = false;
+        btn.innerHTML = '<span class="material-symbols-rounded">delete_forever</span>Supprimer';
+      }
+    } catch (e) {
+      toast('Erreur réseau');
+      btn.disabled = false;
+      btn.innerHTML = '<span class="material-symbols-rounded">delete_forever</span>Supprimer';
+    }
+  }
+
+  // ─── Helpers (date/esc) ────────────────────
+
   function relDate(d) {
     const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
     if (days === 0) return "Aujourd'hui";
@@ -1020,5 +1142,6 @@ const App = (() => {
     logout, saveNotifs, toast,
     filterType, clearSearch, toggleFav,
     startGift, confirmGift, copyGiftLink, shareGift,
+    confirmDeleteAccount, deleteAccount,
   };
 })();
