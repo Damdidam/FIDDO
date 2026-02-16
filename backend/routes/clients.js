@@ -416,6 +416,18 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
 
       merchantClientQueries.delete.run(sourceMcId);
 
+      // Clean up orphaned end_user if source has no remaining merchant relations
+      // (but never delete if same end_user as target!)
+      if (source.end_user_id !== target.end_user_id) {
+        const otherRelations = db.prepare(
+          'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ?'
+        ).get(source.end_user_id);
+        if (otherRelations.count === 0) {
+          aliasQueries.deleteByUser.run(source.end_user_id);
+          endUserQueries.softDelete.run(source.end_user_id);
+        }
+      }
+
       logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'clients_merged', targetType: 'merchant_client', targetId: targetMcId,
         details: { sourceMcId, targetMcId, reason, pointsTransferred: source.points_balance, spentTransferred: source.total_spent } });
 
