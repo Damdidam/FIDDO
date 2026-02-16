@@ -209,6 +209,7 @@ router.get('/cards', authenticateClient, (req, res) => {
     const cards = db.prepare(`
       SELECT mc.merchant_id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.last_visit, mc.is_blocked, mc.custom_reward,
+             mc.is_favorite, mc.is_hidden,
              m.business_name, m.points_per_euro, m.points_for_reward,
              m.reward_description, m.status, m.business_type, m.allow_gifts
       FROM merchant_clients mc
@@ -220,7 +221,9 @@ router.get('/cards', authenticateClient, (req, res) => {
     // Get theme for each merchant
     const getTheme = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?');
 
-    const result = cards.map(c => ({
+    const result = cards
+      .filter(c => !c.is_hidden)
+      .map(c => ({
       merchantId: c.merchant_id,
       merchantName: c.business_name,
       theme: getTheme.get(c.merchant_id)?.theme || 'teal',
@@ -235,6 +238,7 @@ router.get('/cards', authenticateClient, (req, res) => {
       rewardDescription: c.custom_reward || c.reward_description,
       canRedeem: c.points_balance >= c.points_for_reward,
       progress: Math.min((c.points_balance / c.points_for_reward) * 100, 100),
+      isFavorite: !!c.is_favorite,
     }));
 
     res.json({
@@ -661,6 +665,45 @@ router.post('/gift/:token/claim', authenticateClient, (req, res) => {
     });
   } catch (error) {
     console.error('Gift claim error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/me/cards/:merchantId/favorite — Toggle favorite
+// ═══════════════════════════════════════════════════════
+
+router.put('/cards/:merchantId/favorite', authenticateClient, (req, res) => {
+  try {
+    const mc = db.prepare('SELECT id, is_favorite FROM merchant_clients WHERE end_user_id = ? AND merchant_id = ?')
+      .get(req.endUserId, req.params.merchantId);
+    if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
+
+    const newVal = mc.is_favorite ? 0 : 1;
+    db.prepare('UPDATE merchant_clients SET is_favorite = ?, updated_at = datetime(\'now\') WHERE id = ?').run(newVal, mc.id);
+    res.json({ ok: true, isFavorite: !!newVal });
+  } catch (error) {
+    console.error('Favorite error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/me/cards/:merchantId/hide — Toggle hide (soft delete)
+// ═══════════════════════════════════════════════════════
+
+router.put('/cards/:merchantId/hide', authenticateClient, (req, res) => {
+  try {
+    const mc = db.prepare('SELECT id, is_hidden FROM merchant_clients WHERE end_user_id = ? AND merchant_id = ?')
+      .get(req.endUserId, req.params.merchantId);
+    if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
+
+    const newVal = mc.is_hidden ? 0 : 1;
+    db.prepare('UPDATE merchant_clients SET is_hidden = ?, is_favorite = 0, updated_at = datetime(\'now\') WHERE id = ?').run(newVal, mc.id);
+    res.json({ ok: true, isHidden: !!newVal });
+  } catch (error) {
+    console.error('Hide error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
