@@ -889,25 +889,15 @@ const App = (() => {
   // ─── PIN ──────────────────────────────────
 
   function openPinModal() {
-    const hasPin = client?.hasPin;
-    document.getElementById('pin-modal-title').textContent = hasPin ? 'Modifier le code PIN' : 'Créer un code PIN';
-    const wrap = document.getElementById('pin-current-wrap');
-    if (hasPin) wrap.classList.remove('hidden');
-    else wrap.classList.add('hidden');
-    document.getElementById('pin-current').value = '';
     document.getElementById('pin-new').value = '';
     openModal('modal-pin');
-    setTimeout(() => document.getElementById(hasPin ? 'pin-current' : 'pin-new').focus(), 400);
+    setTimeout(() => document.getElementById('pin-new').focus(), 400);
   }
 
   async function savePin() {
-    const currentPin = document.getElementById('pin-current').value.trim();
     const newPin = document.getElementById('pin-new').value.trim();
     if (!/^\d{4}$/.test(newPin)) { toast('Le PIN doit être 4 chiffres'); return; }
-    if (client?.hasPin && !/^\d{4}$/.test(currentPin)) { toast('PIN actuel requis'); return; }
-    const body = { newPin };
-    if (client?.hasPin) body.currentPin = currentPin;
-    const res = await API.call('/api/me/pin', { method: 'POST', body });
+    const res = await API.call('/api/me/pin', { method: 'POST', body: { newPin } });
     if (res.ok) { client.hasPin = true; loadProfile(); closeModal(); toast('Code PIN enregistré ✓'); }
     else toast(res.data?.error || 'Erreur');
   }
