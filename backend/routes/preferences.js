@@ -341,7 +341,7 @@ router.get('/merchant-info', requireRole('owner'), (req, res) => {
       ownerPhone: merchant.owner_phone,
       ownerName: staff?.display_name || '',
       ownerEmail: staff?.email || '',
-      businessType: merchant.business_type || 'horeca',
+      businessType: merchant.business_type || '',
       websiteUrl: merchant.website_url || '',
       instagramUrl: merchant.instagram_url || '',
       facebookUrl: merchant.facebook_url || '',
@@ -388,7 +388,7 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     if (description && description.length > 500) return res.status(400).json({ error: 'Description trop longue (max 500)' });
 
     // Validate business type
-    const validType = (businessType && VALID_BUSINESS_TYPES.includes(businessType)) ? businessType : 'horeca';
+    const validType = (businessType && VALID_BUSINESS_TYPES.includes(businessType)) ? businessType : (current.business_type || null);
 
     // Normalize & validate VAT
     const normalizedVat = normalizeVAT(vatNumber);
@@ -421,7 +421,7 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     if (email.trim().toLowerCase() !== current.email) changes.push({ field: 'Email commerce', old: current.email, new: email.trim().toLowerCase() });
     if (phone.trim() !== current.phone) changes.push({ field: 'Téléphone', old: current.phone, new: phone.trim() });
     if (ownerPhone.trim() !== current.owner_phone) changes.push({ field: 'Tél. propriétaire', old: current.owner_phone, new: ownerPhone.trim() });
-    if (validType !== (current.business_type || 'horeca')) changes.push({ field: 'Type de commerce', old: current.business_type || 'horeca', new: validType });
+    if (validType !== (current.business_type || '')) changes.push({ field: 'Type de commerce', old: current.business_type || '', new: validType });
     if ((websiteUrl || '') !== (current.website_url || '')) changes.push({ field: 'Site web', old: current.website_url || '', new: websiteUrl || '' });
     if ((instagramUrl || '') !== (current.instagram_url || '')) changes.push({ field: 'Instagram', old: current.instagram_url || '', new: instagramUrl || '' });
     if ((facebookUrl || '') !== (current.facebook_url || '')) changes.push({ field: 'Facebook', old: current.facebook_url || '', new: facebookUrl || '' });
