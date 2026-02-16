@@ -56,10 +56,12 @@
     .nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
       padding: 1.1rem 2rem;
+      background: rgba(10,12,16,0.7);
+      backdrop-filter: blur(12px) saturate(150%);
       transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .nav.scrolled {
-      background: rgba(10,12,16,0.92);
+      background: rgba(10,12,16,0.95);
       backdrop-filter: blur(20px) saturate(180%);
       border-bottom: 1px solid var(--border);
       padding: 0.7rem 2rem;
@@ -841,12 +843,31 @@
        ═══════════════════════════════════════════════ */
     .rv {
       opacity: 0; transform: translateY(28px);
-      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .rv.vis { opacity: 1; transform: translateY(0); }
     .rd1 { transition-delay: 0.12s; }
     .rd2 { transition-delay: 0.24s; }
     .rd3 { transition-delay: 0.36s; }
+
+    /* Fallback: if JS hasn't fired within 1.5s, show everything */
+    @keyframes revealFallback {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .rv {
+      animation: revealFallback 0.6s ease forwards;
+      animation-delay: 0.3s;
+    }
+    .rv.rd1 { animation-delay: 0.45s; }
+    .rv.rd2 { animation-delay: 0.6s; }
+    .rv.rd3 { animation-delay: 0.75s; }
+    /* When JS observer is active, disable CSS fallback and use observer-driven .vis */
+    .js-observer .rv {
+      animation: none;
+      opacity: 0; transform: translateY(28px);
+    }
+    .js-observer .rv.vis { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
@@ -1162,6 +1183,7 @@
     </div>
   </section>
 
+
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-in">
@@ -1170,25 +1192,41 @@
         <a href="#features" class="footer-a">Fonctionnalités</a>
         <a href="#pricing" class="footer-a">Tarifs</a>
         <a href="#apps" class="footer-a">Apps</a>
-        <a href="/cdn-cgi/l/email-protection#7c0f090c0c130e083c1a15181813521e19" class="footer-a">Contact</a>
+        <a href="mailto:support@fiddo.be" class="footer-a">Contact</a>
       </div>
-      <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="b8cbcdc8c8d7caccf8ded1dcdcd796dadd">[email&#160;protected]</a></div>
+      <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · support@fiddo.be</div>
       <div class="footer-c" style="margin-top: 0.5rem; opacity: 0.5;">Powered by <strong>H3001</strong></div>
     </div>
   </footer>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  <script>
     // Nav scroll effect
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
       nav.classList.toggle('scrolled', window.scrollY > 50);
     }, { passive: true });
 
-    // Reveal on scroll
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
-    }, { threshold: 0.12 });
-    document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+    // Reveal on scroll — progressive enhancement
+    if ('IntersectionObserver' in window) {
+      document.documentElement.classList.add('js-observer');
+      const obs = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target); }
+        });
+      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+      document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+
+      // Force-reveal elements already in viewport on load
+      requestAnimationFrame(() => {
+        document.querySelectorAll('.rv').forEach(el => {
+          const rect = el.getBoundingClientRect();
+          if (rect.top < window.innerHeight) {
+            el.classList.add('vis');
+            obs.unobserve(el);
+          }
+        });
+      });
+    }
 
     // Smooth scroll for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -1196,4 +1234,12 @@
         const t = document.querySelector(a.getAttribute('href'));
         if (t) {
           e.preventDefault();
-          t.scrollInto
+          t.scrollIntoView({ behavior: 'smooth' });
+          document.querySelector('.nav-links')?.classList.remove('open');
+        }
+      });
+    });
+  </script>
+  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
+</body>
+</html>
