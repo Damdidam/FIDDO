@@ -649,7 +649,8 @@ const merchantClientQueries = {
         total_spent = total_spent + ?,
         visit_count = visit_count + 1,
         last_visit = datetime('now'),
-        updated_at = datetime('now')
+        updated_at = datetime('now'),
+        is_hidden = 0
     WHERE id = ?
   `),
 
