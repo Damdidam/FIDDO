@@ -518,7 +518,7 @@ const App = (() => {
         saveCardStates(newCards);
 
         // Only re-render if display-relevant data changed AND not in cooldown
-        const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.isFavorite}`;
+        const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.isFavorite}:${c.businessType}:${c.theme}`;
         const newFp = newCards.map(fingerprint).sort().join('|');
         const oldFp = cards.map(fingerprint).sort().join('|');
         cards = newCards;
