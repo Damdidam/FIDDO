@@ -233,6 +233,8 @@ function initDatabase() {
   // ───────────────────────────────────────────
   try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
   try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token TEXT'); } catch (e) { /* already exists */ }
