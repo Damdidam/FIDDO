@@ -119,7 +119,8 @@ a{text-decoration:none;cursor:pointer}
 .tab-head .sub{font-size:14px;color:var(--tx2);margin-top:2px}
 .tab-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 20px 24px}
 
-.tbar{position:absolute;bottom:0;left:0;right:0;display:flex;height:calc(var(--tab-h) + var(--sab));padding-bottom:var(--sab);background:var(--sf);border-top:1px solid var(--brd);z-index:20}
+.tbar{position:fixed;bottom:0;left:0;right:0;display:flex;height:calc(var(--tab-h) + var(--sab));padding-bottom:var(--sab);background:var(--sf);border-top:1px solid var(--brd);z-index:20}
+.tbar::after{content:'';position:absolute;bottom:calc(-1 * var(--sab) - 50px);left:0;right:0;height:calc(var(--sab) + 50px);background:var(--sf)}
 .tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--tx3);transition:color .2s}
 .tb .material-symbols-rounded{font-size:22px;transition:transform .2s var(--bounce)}
 .tb small{font-size:9px;font-weight:600;letter-spacing:.3px}
