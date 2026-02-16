@@ -435,14 +435,6 @@
           </div>
 
           <!-- Amount + Notes -->
-          <div id="pin-group" class="form-group" style="display:none;">
-            <label class="form-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px;vertical-align:-1px;margin-right:3px;"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Code PIN du client (4 chiffres)</label>
-            <div class="input-wrap">
-              <input type="tel" id="client-pin" name="xfid_c4j" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
-              <button type="button" class="btn-clear" onclick="clearField('client-pin')">×</button>
-            </div>
-            <div class="form-hint">Ce code sera demandé au client pour utiliser sa récompense</div>
-          </div>
 
           <!-- Amount + Notes -->
           <div class="row-2">
@@ -498,7 +490,7 @@
     const staff = Auth.getStaff();
     let currentMode = 'email';
     let lastCreditKey = null; // anti-double-credit
-    let lookupIsNew = false;  // true when current client is new (needs PIN)
+    let lookupIsNew = false;  // true when current client is new
 
     // ═══════════════════════════════════════════════════════
     // CREDIT METHODS — filter based on merchant preferences
@@ -546,7 +538,6 @@
         lookupIsNew = true;
         el.className = 'lookup-strip show new-client';
         el.innerHTML = 'Nouveau client — sera créé au crédit.';
-        showPinField(true);
         checkNearDuplicates();
         return;
       }
@@ -559,12 +550,10 @@
           document.getElementById('client-name').value = c.name;
           document.getElementById('client-name').classList.add('has-value');
         }
-        showPinField(!c.has_pin); // only if they don't already have a PIN
         return;
       }
 
       lookupIsNew = false;
-      showPinField(false);
       el.className = 'lookup-strip show found';
       const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
       let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
@@ -591,16 +580,6 @@
       });
       document.getElementById('dup-container').innerHTML = '';
       lookupIsNew = false;
-      showPinField(false);
-    }
-
-    function showPinField(show) {
-      const g = document.getElementById('pin-group');
-      if (!g) return;
-      g.style.display = show ? 'block' : 'none';
-      if (!show) {
-        document.getElementById('client-pin').value = '';
-      }
     }
 
     // ═══════════════════════════════════════════════════════
@@ -816,14 +795,11 @@
         UI.clearAlert('credit-alert');
 
         const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-        const pinVal = document.getElementById('client-pin').value.trim();
 
         const r = await API.clients.credit({
           email: email || undefined, phone: phone || undefined,
           name: name || undefined, amount, notes: notes || undefined,
           idempotencyKey,
-          pin: pinVal || undefined,
-          pinToken: qrPinToken || undefined,
         });
 
         // ── Mark this credit as done (prevent re-submit) ──
@@ -919,7 +895,6 @@
       // Full form reset
       lastCreditKey = null;
       qrVerifyTokenValue = null;
-      qrPinToken = null;
       document.querySelectorAll('#credit-form .form-control').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
       document.getElementById('pts-badge').textContent = '0 pts';
       hideLookup();
@@ -1037,9 +1012,6 @@
         // Client authenticated via their device — store server token for PIN bypass
         if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
 
-        // Store pre-hashed PIN from QR registration (for new clients)
-        if (d.pinToken) qrPinToken = d.pinToken;
-
         // Pre-fill the credit form
         if (d.email) {
           switchMode('email');
@@ -1135,7 +1107,6 @@
 
     let html5QrScanner = null;
     let qrVerifyTokenValue = null;  // server-issued token for PIN bypass on redeem
-    let qrPinToken = null;        // server-side PIN token from QR registration
     let scannerBusy = false;     // debounce scan results
 
     function startScanner() {
