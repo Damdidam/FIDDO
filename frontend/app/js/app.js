@@ -93,7 +93,7 @@ const App = (() => {
     if (name === 'scanner') startScanner();
     else stopScanner();
     if (name === 'profile') loadProfile();
-    if (name === 'cards') refreshCards();
+    if (name === 'cards' && !animating) refreshCards();
   }
 
   // ═══════════════════════════════════════════
@@ -514,9 +514,16 @@ const App = (() => {
       // Store current state for next comparison
       saveCardStates(newCards);
 
-      cards = newCards;
-      renderCards();
-      buildFilterPills();
+      // Only re-render if data actually changed
+      const newJson = JSON.stringify(newCards);
+      const oldJson = JSON.stringify(cards);
+      if (newJson !== oldJson) {
+        cards = newCards;
+        renderCards();
+        buildFilterPills();
+      } else {
+        cards = newCards;
+      }
     }
   }
 
