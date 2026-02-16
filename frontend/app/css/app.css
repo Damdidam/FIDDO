@@ -272,7 +272,7 @@ a{text-decoration:none;cursor:pointer}
    ═══════════════════════════════════════════════ */
 .scanner-wrap{position:relative;flex:1;background:#000;overflow:hidden}
 #scan-video{width:100%;height:100%;object-fit:cover;display:none}
-.scan-ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(var(--sat) + 24px) 24px calc(32px + var(--sab))}
+.scan-ui{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px}
 .scan-ui h2{color:#fff;font-size:20px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.4)}
 .scan-ui p{color:rgba(255,255,255,.6);font-size:14px;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,.3)}
 .scan-frame{width:240px;height:240px;position:relative}
