@@ -153,8 +153,26 @@
       font-size: 1rem;
       line-height: 1.8;
       color: var(--text-secondary);
-      margin-bottom: 3rem;
+      margin-bottom: 2rem;
     }
+
+    .brand-features {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .brand-feat {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.75);
+      font-weight: 500;
+    }
+
+    .brand-feat svg { color: var(--teal-bright); flex-shrink: 0; }
 
     .brand-stats {
       display: flex;
@@ -587,10 +605,21 @@
           Une application mobile commerçant est également en cours de développement.
         </p>
 
+        <div class="brand-features">
+          <div class="brand-feat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            <span>Tableau de bord avec statistiques avancées</span>
+          </div>
+          <div class="brand-feat">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+            <span>Programme de fidélisation personnalisable par client</span>
+          </div>
+        </div>
+
         <div class="brand-stats">
           <div>
-            <div class="brand-stat-value">6<span> langues</span></div>
-            <div class="brand-stat-label">QR client</div>
+            <div class="brand-stat-value">2<span> min</span></div>
+            <div class="brand-stat-label">Pour s'inscrire</div>
           </div>
           <div>
             <div class="brand-stat-value">3<span> rôles</span></div>
