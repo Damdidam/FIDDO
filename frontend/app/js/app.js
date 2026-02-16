@@ -471,58 +471,70 @@ const App = (() => {
     renderFilteredCards();
   }
 
+  let refreshing = false;
   let animating = false;
+  let lastRenderTime = 0;
 
   async function refreshCards() {
-    const res = await API.getCards();
-    if (res.ok) {
-      client = res.data.client || client;
-      const newCards = res.data.cards || [];
+    if (refreshing || animating) return;
+    refreshing = true;
+    try {
+      const res = await API.getCards();
+      if (res.ok) {
+        client = res.data.client || client;
+        const newCards = res.data.cards || [];
 
-      // Detect points changes for animation (skip if already animating)
-      if (!animating) {
+        // Detect points changes for animation
         for (const card of newCards) {
           const prev = previousCardStates[card.merchantId];
           if (prev) {
             if (card.pointsBalance > prev.points) {
               const diff = card.pointsBalance - prev.points;
               animating = true;
-              // Save state BEFORE switching to prevent re-detection
               saveCardStates(newCards);
+              cards = newCards;
               closeModal();
               switchTab('cards');
+              renderCards();
               setTimeout(() => {
                 showAnimation('credit', `+${diff} pts`, card.merchantName || 'Points crédités');
-                setTimeout(() => { animating = false; }, 3000);
+                setTimeout(() => { animating = false; lastRenderTime = Date.now(); }, 3000);
               }, 300);
-              break;
+              refreshing = false;
+              return;
             } else if (card.canRedeem && !prev.canRedeem) {
               animating = true;
               saveCardStates(newCards);
+              cards = newCards;
               closeModal();
               switchTab('cards');
+              renderCards();
               setTimeout(() => {
                 showAnimation('reward', '🎉 Récompense !', card.rewardDescription || 'Félicitations !');
-                setTimeout(() => { animating = false; }, 3000);
+                setTimeout(() => { animating = false; lastRenderTime = Date.now(); }, 3000);
               }, 300);
-              break;
+              refreshing = false;
+              return;
             }
           }
         }
-      }
 
-      // Store current state for next comparison
-      saveCardStates(newCards);
+        // Store current state for next comparison
+        saveCardStates(newCards);
 
-      // Only re-render if display-relevant data changed
-      const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.totalSpent}`;
-      const newFp = newCards.map(fingerprint).join('|');
-      const oldFp = cards.map(fingerprint).join('|');
-      cards = newCards;
-      if (newFp !== oldFp) {
-        renderCards();
-        buildFilterPills();
+        // Only re-render if display-relevant data changed AND not in cooldown
+        const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}`;
+        const newFp = newCards.map(fingerprint).sort().join('|');
+        const oldFp = cards.map(fingerprint).sort().join('|');
+        cards = newCards;
+        if (newFp !== oldFp && Date.now() - lastRenderTime > 3000) {
+          renderCards();
+          buildFilterPills();
+          lastRenderTime = Date.now();
+        }
       }
+    } finally {
+      refreshing = false;
     }
   }
 
