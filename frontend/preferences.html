@@ -1041,6 +1041,9 @@
       garage: 'Garage', veterinaire: 'Vétérinaire', autre: 'Autre',
     };
     const bizSelect = document.getElementById('info-biz-type');
+    const placeholder = document.createElement('option');
+    placeholder.value = ''; placeholder.textContent = '— Choisir un type —'; placeholder.disabled = true;
+    bizSelect.appendChild(placeholder);
     Object.entries(BIZ_TYPES_MAP).forEach(([k, v]) => {
       const o = document.createElement('option'); o.value = k; o.textContent = v;
       bizSelect.appendChild(o);
@@ -1057,7 +1060,7 @@
         document.getElementById('info-owner-phone').value = data.ownerPhone || '';
         document.getElementById('info-owner-name').value = data.ownerName || '';
         // V4 fields
-        document.getElementById('info-biz-type').value = data.businessType || 'horeca';
+        document.getElementById('info-biz-type').value = data.businessType || '';
         document.getElementById('info-website').value = data.websiteUrl || '';
         document.getElementById('info-instagram').value = data.instagramUrl || '';
         document.getElementById('info-facebook').value = data.facebookUrl || '';
