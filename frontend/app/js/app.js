@@ -344,7 +344,11 @@ const App = (() => {
 
       if (res.ok) {
         const name = res.data.clientName || client?.name || '';
-        toast(`✓ ${name} identifié avec succès !`);
+        if (res.data.cached) {
+          toast(`⏳ Déjà identifié il y a ${res.data.minutesAgo} min`);
+        } else {
+          toast(`✓ ${name} identifié avec succès !`);
+        }
         setTimeout(() => refreshCards(), 1500);
       } else {
         toast(res.data?.error || 'Erreur identification');
@@ -1030,8 +1034,12 @@ const App = (() => {
 
       if (res.ok) {
         const name = res.data.clientName || client?.name || '';
-        const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
-        toast(`✓ ${name} identifié${pts}`);
+        if (res.data.cached) {
+          toast(`⏳ Déjà identifié il y a ${res.data.minutesAgo} min — re-crédit possible dans ${res.data.minutesLeft} min`);
+        } else {
+          const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
+          toast(`✓ ${name} identifié${pts}`);
+        }
         setTimeout(() => refreshCards(), 1500);
       } else {
         toast(res.data?.error || 'Erreur identification');
