@@ -131,6 +131,10 @@
           <p>Essayez un autre terme de recherche</p>
         </div>
       </div>
+      <!-- Floating QR button -->
+      <button class="fab-qr" onclick="App.showMyQR()">
+        <span class="material-symbols-rounded">qr_code_2</span>
+      </button>
     </div>
 
     <!-- Tab: Scanner -->
@@ -147,10 +151,6 @@
             <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
             <div class="scan-beam"></div>
           </div>
-          <button class="btn-glass" onclick="App.showMyQR()">
-            <span class="material-symbols-rounded">qr_code_2</span>
-            Mon QR code
-          </button>
         </div>
         <div class="scan-no-cam hidden" id="scan-no-cam">
           <span class="material-symbols-rounded">no_photography</span>
@@ -225,17 +225,21 @@
           <label class="notif-row last"><span class="material-symbols-rounded">cake</span><span>Anniversaire</span><input type="checkbox" id="notif-birthday" checked><span class="tog"></span></label>
         </div>
 
-        <!-- QR code -->
-        <button class="menu-row" onclick="App.showMyQR()">
-          <span class="material-symbols-rounded mi">qr_code_2</span>
-          <span class="ml">Mon QR code</span>
-          <span class="material-symbols-rounded ma">chevron_right</span>
-        </button>
+        <!-- QR code (now in floating button on cards screen) -->
 
         <button class="btn-danger" onclick="App.logout()">
           <span class="material-symbols-rounded">logout</span>Déconnexion
         </button>
-        <p class="version">FIDDO v4.2</p>
+
+        <div class="prof-danger-zone">
+          <h3 class="sec-title" style="color:var(--err)">Zone dangereuse</h3>
+          <p style="font-size:12px;color:var(--tx3);margin-bottom:12px;line-height:1.5">La suppression est irréversible. Toutes vos données seront anonymisées.</p>
+          <button class="btn-danger-outline" onclick="App.confirmDeleteAccount()">
+            <span class="material-symbols-rounded">delete_forever</span>Supprimer mon compte
+          </button>
+        </div>
+
+        <p class="version">FIDDO v4.3</p>
       </div>
     </div>
 
@@ -423,6 +427,36 @@
         <button class="btn-share generic" onclick="App.shareGift('share')"><span class="material-symbols-rounded">share</span>Autre</button>
       </div>
     </div>
+  </div>
+
+  <!-- Delete Account Confirm Modal -->
+  <div id="modal-delete" class="modal" onclick="App.closeModal()">
+    <div class="modal-bg"></div>
+    <div class="modal-sheet sm" onclick="event.stopPropagation()">
+      <div class="modal-pill"></div>
+      <div style="text-align:center;margin-bottom:16px">
+        <span class="material-symbols-rounded" style="font-size:48px;color:var(--err)">warning</span>
+      </div>
+      <h2 style="color:var(--err)">Supprimer mon compte</h2>
+      <p class="modal-sub">Cette action est irréversible. Toutes vos données seront anonymisées et vous serez déconnecté.</p>
+      <p class="modal-sub" style="margin-top:12px;font-weight:600">Un email de confirmation vous sera envoyé.</p>
+      <div style="display:flex;gap:12px;margin-top:20px">
+        <button class="btn-secondary" style="flex:1" onclick="App.closeModal()">Annuler</button>
+        <button class="btn-danger" style="flex:1" id="btn-confirm-delete" onclick="App.deleteAccount()">
+          <span class="material-symbols-rounded">delete_forever</span>Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Points animation overlay -->
+  <div id="anim-overlay" class="anim-overlay hidden">
+    <div class="anim-content">
+      <div class="anim-icon" id="anim-icon"></div>
+      <div class="anim-text" id="anim-text"></div>
+      <div class="anim-sub" id="anim-sub"></div>
+    </div>
+    <div class="anim-particles" id="anim-particles"></div>
   </div>
 
   <div id="toast" class="toast"></div>
