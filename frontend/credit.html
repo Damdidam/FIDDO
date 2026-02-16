@@ -997,8 +997,8 @@
         return;
       }
 
-      // Auto-select if only one client
-      if (clients.length === 1) {
+      // Auto-select if only one client AND not a recent credit
+      if (clients.length === 1 && !clients[0].recentCredit) {
         consumeIdent(clients[0].identId);
         return;
       }
@@ -1006,14 +1006,26 @@
       let html = '';
       clients.forEach(c => {
         const label = esc(c.name || c.email || c.phone || 'Client');
-        const badge = c.isNew
-          ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
-          : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
         const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
-        html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
-          '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
-          '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
-          '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
+
+        if (c.recentCredit) {
+          // Warning style for recent credit
+          const badge = '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
+            '<div><strong style="font-size:0.85rem;color:#92400E;">⚠️ ' + label + '</strong><br>' + badge +
+            '<br><span style="font-size:0.65rem;color:#B45309;">Déjà crédité il y a ' + c.minutesAgo + ' min</span></div>' +
+            '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+            '<span style="font-size:0.7rem;color:#B45309;font-weight:600;">Créditer quand même →</span></div></div>';
+        } else {
+          // Normal style
+          const badge = c.isNew
+            ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
+            : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
+            '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
+            '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+            '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
+        }
       });
       el.innerHTML = html;
     }
