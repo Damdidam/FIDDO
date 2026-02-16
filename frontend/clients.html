@@ -559,7 +559,6 @@
           h += '<button class="act-btn" onclick="toggleEditForm()">✏️ Modifier</button>';
           h += '<button class="act-btn" onclick="openAdjust()">📏 Ajuster</button>';
           if (isOwner) h += '<button class="act-btn" onclick="openMerge()">🔀 Fusionner</button>';
-          h += '<button class="act-btn" onclick="promptPin()">🔑 PIN</button>';
           h += c.is_blocked
             ? '<button class="act-btn success" onclick="toggleBlock(false)">🔓 Débloquer</button>'
             : '<button class="act-btn danger" onclick="toggleBlock(true)">🔒 Bloquer</button>';
@@ -676,19 +675,6 @@
         await API.clients.setCustomReward(currentClientId, value || null);
         showDetail(currentClientId);
       } catch (err) { UI.showAlert('reward-alert', err.message, 'error'); }
-    }
-
-    async function promptPin() {
-      const c = currentClientData;
-      const label = c.has_pin ? 'Modifier le code PIN (4 chiffres) :' : 'Définir un code PIN (4 chiffres) :';
-      const pin = prompt('🔑 ' + label);
-      if (!pin) return;
-      if (!/^\d{4}$/.test(pin)) { alert('Le code PIN doit contenir exactement 4 chiffres'); return; }
-      try {
-        await API.clients.setPin(currentClientId, pin);
-        alert('✓ Code PIN mis à jour');
-        showDetail(currentClientId);
-      } catch (err) { alert(err.message); }
     }
 
     // ════════════════════════════════════════
