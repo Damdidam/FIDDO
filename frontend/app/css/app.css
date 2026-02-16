@@ -12,7 +12,7 @@
  --font: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
  --sat: env(safe-area-inset-top, 0px);
  --sab: env(safe-area-inset-bottom, 0px);
- --tab-h: 72px;
+ --tab-h: 48px;
  --ease: cubic-bezier(.4, 0, .2, 1);
  --bounce: cubic-bezier(.34, 1.56, .64, 1);
 }
@@ -120,9 +120,9 @@ a{text-decoration:none;cursor:pointer}
 .tab-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px 20px 24px}
 
 .tbar{position:absolute;bottom:0;left:0;right:0;display:flex;height:calc(var(--tab-h) + var(--sab));padding-bottom:var(--sab);background:var(--sf);border-top:1px solid var(--brd);z-index:20}
-.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--tx3);transition:color .2s}
-.tb .material-symbols-rounded{font-size:26px;transition:transform .2s var(--bounce)}
-.tb small{font-size:10px;font-weight:600;letter-spacing:.3px}
+.tb{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;color:var(--tx3);transition:color .2s}
+.tb .material-symbols-rounded{font-size:22px;transition:transform .2s var(--bounce)}
+.tb small{font-size:9px;font-weight:600;letter-spacing:.3px}
 .tb.active{color:var(--pri)}
 .tb.active .material-symbols-rounded{transform:scale(1.12)}
 
