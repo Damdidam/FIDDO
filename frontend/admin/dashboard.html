@@ -1,1545 +1,1545 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Dashboard — FIDDO</title>
-  <link rel="stylesheet" href="/css/styles.css">
-  <style>
-    body { background: #0f1117; }
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Admin Dashboard — FIDDO</title>
+ <link rel="stylesheet" href="/css/styles.css">
+ <style>
+ body { background: #0f1117; }
 
-    /* ─── Admin Header Banner ─────────────────────── */
-    .admin-banner {
-      background: linear-gradient(135deg, #111827 0%, #1a2236 50%, #0f172a 100%);
-      border-bottom: 1px solid rgba(255,255,255,0.06);
-      padding: 0;
-    }
-    .admin-banner-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.65rem 2rem;
-    }
-    .admin-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      text-decoration: none;
-    }
-    .admin-brand-logo {
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #0891B2;
-      letter-spacing: -0.5px;
-    }
-    .admin-brand-divider {
-      width: 1px;
-      height: 22px;
-      background: rgba(255,255,255,0.12);
-    }
-    .admin-brand-label {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: rgba(255,255,255,0.4);
-      font-weight: 600;
-    }
-    .admin-banner-right {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-    .admin-env-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      padding: 3px 10px;
-      border-radius: 20px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      background: rgba(16,185,129,0.12);
-      color: #34d399;
-      border: 1px solid rgba(16,185,129,0.2);
-    }
-    .admin-env-badge .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: #34d399;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-    .btn-admin-logout {
-      padding: 5px 14px;
-      border-radius: 6px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.04);
-      color: rgba(255,255,255,0.5);
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-admin-logout:hover {
-      background: rgba(239,68,68,0.1);
-      border-color: rgba(239,68,68,0.3);
-      color: #f87171;
-    }
+ /* ─── Admin Header Banner ─────────────────────── */
+ .admin-banner {
+ background: linear-gradient(135deg, #111827 0%, #1a2236 50%, #0f172a 100%);
+ border-bottom: 1px solid rgba(255,255,255,0.06);
+ padding: 0;
+ }
+ .admin-banner-inner {
+ max-width: 1200px;
+ margin: 0 auto;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ padding: 0.65rem 2rem;
+ }
+ .admin-brand {
+ display: flex;
+ align-items: center;
+ gap: 0.75rem;
+ text-decoration: none;
+ }
+ .admin-brand-logo {
+ font-size: 1.4rem;
+ font-weight: 800;
+ color: #0891B2;
+ letter-spacing: -0.5px;
+ }
+ .admin-brand-divider {
+ width: 1px;
+ height: 22px;
+ background: rgba(255,255,255,0.12);
+ }
+ .admin-brand-label {
+ font-size: 0.75rem;
+ text-transform: uppercase;
+ letter-spacing: 2px;
+ color: rgba(255,255,255,0.4);
+ font-weight: 600;
+ }
+ .admin-banner-right {
+ display: flex;
+ align-items: center;
+ gap: 1rem;
+ }
+ .admin-env-badge {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.35rem;
+ padding: 3px 10px;
+ border-radius: 20px;
+ font-size: 0.65rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 0.5px;
+ background: rgba(16,185,129,0.12);
+ color: #34d399;
+ border: 1px solid rgba(16,185,129,0.2);
+ }
+ .admin-env-badge .dot {
+ width: 6px; height: 6px;
+ border-radius: 50%;
+ background: #34d399;
+ animation: pulse-dot 2s ease-in-out infinite;
+ }
+ @keyframes pulse-dot {
+ 0%, 100% { opacity: 1; }
+ 50% { opacity: 0.4; }
+ }
+ .btn-admin-logout {
+ padding: 5px 14px;
+ border-radius: 6px;
+ font-size: 0.78rem;
+ font-weight: 600;
+ border: 1px solid rgba(255,255,255,0.1);
+ background: rgba(255,255,255,0.04);
+ color: rgba(255,255,255,0.5);
+ cursor: pointer;
+ transition: all 0.2s;
+ }
+ .btn-admin-logout:hover {
+ background: rgba(239,68,68,0.1);
+ border-color: rgba(239,68,68,0.3);
+ color: #f87171;
+ }
 
-    /* ─── Welcome Hero ────────────────────────────── */
-    .admin-hero {
-      background: linear-gradient(135deg, #111827, #1e293b);
-      padding: 2rem 0 2.5rem;
-      border-bottom: 1px solid rgba(255,255,255,0.04);
-    }
-    .admin-hero-inner {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 2rem;
-    }
-    .hero-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-    }
-    .hero-greeting h1 {
-      font-size: 1.6rem;
-      font-weight: 700;
-      color: #f1f5f9;
-      margin: 0 0 0.25rem;
-    }
-    .hero-greeting p {
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.35);
-      margin: 0;
-    }
-    .hero-date {
-      text-align: right;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.3);
-      line-height: 1.6;
-    }
-    .hero-date strong {
-      color: rgba(255,255,255,0.5);
-    }
+ /* ─── Welcome Hero ────────────────────────────── */
+ .admin-hero {
+ background: linear-gradient(135deg, #111827, #1e293b);
+ padding: 2rem 0 2.5rem;
+ border-bottom: 1px solid rgba(255,255,255,0.04);
+ }
+ .admin-hero-inner {
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 0 2rem;
+ }
+ .hero-top-row {
+ display: flex;
+ justify-content: space-between;
+ align-items: flex-start;
+ margin-bottom: 1.5rem;
+ }
+ .hero-greeting h1 {
+ font-size: 1.6rem;
+ font-weight: 700;
+ color: #f1f5f9;
+ margin: 0 0 0.25rem;
+ }
+ .hero-greeting p {
+ font-size: 0.85rem;
+ color: rgba(255,255,255,0.35);
+ margin: 0;
+ }
+ .hero-date {
+ text-align: right;
+ font-size: 0.8rem;
+ color: rgba(255,255,255,0.3);
+ line-height: 1.6;
+ }
+ .hero-date strong {
+ color: rgba(255,255,255,0.5);
+ }
 
-    /* ─── Stats Row (in hero) ─────────────────────── */
-    .admin-stats-row {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 1rem;
-    }
-    .admin-stat {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 1.1rem 1.25rem;
-      transition: all 0.25s;
-    }
-    .admin-stat:hover {
-      background: rgba(255,255,255,0.05);
-      border-color: rgba(8,145,178,0.2);
-      transform: translateY(-2px);
-    }
-    .admin-stat-value {
-      font-size: 1.8rem;
-      font-weight: 800;
-      color: #f1f5f9;
-      line-height: 1;
-      margin-bottom: 0.3rem;
-    }
-    .admin-stat-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: rgba(255,255,255,0.3);
-      font-weight: 600;
-    }
-    .admin-stat-value.accent { color: #0891B2; }
-    .admin-stat-value.warning { color: #f59e0b; }
-    .admin-stat-value.success { color: #10b981; }
+ /* ─── Stats Row (in hero) ─────────────────────── */
+ .admin-stats-row {
+ display: grid;
+ grid-template-columns: repeat(5, 1fr);
+ gap: 1rem;
+ }
+ .admin-stat {
+ background: rgba(255,255,255,0.03);
+ border: 1px solid rgba(255,255,255,0.06);
+ border-radius: 10px;
+ padding: 1.1rem 1.25rem;
+ transition: all 0.25s;
+ }
+ .admin-stat:hover {
+ background: rgba(255,255,255,0.05);
+ border-color: rgba(8,145,178,0.2);
+ transform: translateY(-2px);
+ }
+ .admin-stat-value {
+ font-size: 1.8rem;
+ font-weight: 800;
+ color: #f1f5f9;
+ line-height: 1;
+ margin-bottom: 0.3rem;
+ }
+ .admin-stat-label {
+ font-size: 0.7rem;
+ text-transform: uppercase;
+ letter-spacing: 1.2px;
+ color: rgba(255,255,255,0.3);
+ font-weight: 600;
+ }
+ .admin-stat-value.accent { color: #0891B2; }
+ .admin-stat-value.warning { color: #f59e0b; }
+ .admin-stat-value.success { color: #10b981; }
 
-    /* ─── System Health Panel ─────────────────────── */
-    .health-panel {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem 0;
-    }
-    .health-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 0.75rem;
-    }
-    .health-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 1rem 1.15rem;
-      display: flex;
-      align-items: center;
-      gap: 0.85rem;
-      transition: all 0.2s;
-    }
-    .health-card:hover {
-      background: rgba(255,255,255,0.05);
-    }
-    .health-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
-    }
-    .health-icon.green  { background: rgba(16,185,129,0.12); }
-    .health-icon.blue   { background: rgba(8,145,178,0.12); }
-    .health-icon.orange  { background: rgba(245,158,11,0.12); }
-    .health-icon.red    { background: rgba(239,68,68,0.12); }
-    .health-icon.purple { background: rgba(139,92,246,0.12); }
-    .health-info { flex: 1; min-width: 0; }
-    .health-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      color: rgba(255,255,255,0.3);
-      font-weight: 600;
-      margin-bottom: 0.15rem;
-    }
-    .health-value {
-      font-size: 0.9rem;
-      font-weight: 700;
-      color: #e2e8f0;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-    .health-dot {
-      width: 7px; height: 7px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-    .health-dot.ok    { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.4); }
-    .health-dot.warn  { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.4); }
-    .health-dot.error { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.4); }
-    .health-dot.off   { background: rgba(255,255,255,0.15); }
-    .health-sub {
-      font-size: 0.7rem;
-      color: rgba(255,255,255,0.25);
-      margin-top: 0.1rem;
-    }
-    .health-section-title {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: rgba(255,255,255,0.2);
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
+ /* ─── System Health Panel ─────────────────────── */
+ .health-panel {
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 1.5rem 2rem 0;
+ }
+ .health-grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+ gap: 0.75rem;
+ }
+ .health-card {
+ background: rgba(255,255,255,0.03);
+ border: 1px solid rgba(255,255,255,0.06);
+ border-radius: 10px;
+ padding: 1rem 1.15rem;
+ display: flex;
+ align-items: center;
+ gap: 0.85rem;
+ transition: all 0.2s;
+ }
+ .health-card:hover {
+ background: rgba(255,255,255,0.05);
+ }
+ .health-icon {
+ width: 38px;
+ height: 38px;
+ border-radius: 8px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ font-size: 1.1rem;
+ flex-shrink: 0;
+ }
+ .health-icon.green { background: rgba(16,185,129,0.12); }
+ .health-icon.blue { background: rgba(8,145,178,0.12); }
+ .health-icon.orange { background: rgba(245,158,11,0.12); }
+ .health-icon.red { background: rgba(239,68,68,0.12); }
+ .health-icon.purple { background: rgba(139,92,246,0.12); }
+ .health-info { flex: 1; min-width: 0; }
+ .health-label {
+ font-size: 0.7rem;
+ text-transform: uppercase;
+ letter-spacing: 0.8px;
+ color: rgba(255,255,255,0.3);
+ font-weight: 600;
+ margin-bottom: 0.15rem;
+ }
+ .health-value {
+ font-size: 0.9rem;
+ font-weight: 700;
+ color: #e2e8f0;
+ display: flex;
+ align-items: center;
+ gap: 0.4rem;
+ }
+ .health-dot {
+ width: 7px; height: 7px;
+ border-radius: 50%;
+ flex-shrink: 0;
+ }
+ .health-dot.ok { background: #34d399; box-shadow: 0 0 6px rgba(52,211,153,0.4); }
+ .health-dot.warn { background: #fbbf24; box-shadow: 0 0 6px rgba(251,191,36,0.4); }
+ .health-dot.error { background: #f87171; box-shadow: 0 0 6px rgba(248,113,113,0.4); }
+ .health-dot.off { background: rgba(255,255,255,0.15); }
+ .health-sub {
+ font-size: 0.7rem;
+ color: rgba(255,255,255,0.25);
+ margin-top: 0.1rem;
+ }
+ .health-section-title {
+ font-size: 0.7rem;
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ color: rgba(255,255,255,0.2);
+ font-weight: 700;
+ margin-bottom: 0.75rem;
+ }
 
-    /* ─── Main Content Area ───────────────────────── */
-    .admin-main {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem 3rem;
-    }
+ /* ─── Main Content Area ───────────────────────── */
+ .admin-main {
+ max-width: 1200px;
+ margin: 0 auto;
+ padding: 1.5rem 2rem 3rem;
+ }
 
-    /* Tabs override for dark theme */
-    .admin-tabs {
-      display: flex;
-      gap: 0;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      margin-bottom: 1.5rem;
-    }
-    .admin-tab {
-      padding: 0.7rem 1.25rem;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      font-weight: 600;
-      font-size: 0.85rem;
-      color: rgba(255,255,255,0.35);
-      transition: all 0.2s;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-    }
-    .admin-tab:hover { color: rgba(255,255,255,0.6); }
-    .admin-tab.active {
-      color: #0891B2;
-      border-bottom-color: #0891B2;
-    }
+ /* Tabs override for dark theme */
+ .admin-tabs {
+ display: flex;
+ gap: 0;
+ border-bottom: 1px solid rgba(255,255,255,0.08);
+ margin-bottom: 1.5rem;
+ }
+ .admin-tab {
+ padding: 0.7rem 1.25rem;
+ cursor: pointer;
+ border-bottom: 2px solid transparent;
+ margin-bottom: -1px;
+ font-weight: 600;
+ font-size: 0.85rem;
+ color: rgba(255,255,255,0.35);
+ transition: all 0.2s;
+ background: none;
+ border-top: none;
+ border-left: none;
+ border-right: none;
+ }
+ .admin-tab:hover { color: rgba(255,255,255,0.6); }
+ .admin-tab.active {
+ color: #0891B2;
+ border-bottom-color: #0891B2;
+ }
 
-    /* Table dark override */
-    .admin-main .table { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); box-shadow: none; }
-    .admin-main .table thead { background: rgba(255,255,255,0.04); }
-    .admin-main .table thead th { color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .admin-main .table td { color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
-    .admin-main .table tbody tr:hover td { background: rgba(8,145,178,0.08); }
-    .admin-main .table tbody tr:hover { background: rgba(8,145,178,0.08); }
-    .admin-main .table tbody tr:last-child td { border-bottom: none; }
+ /* Table dark override */
+ .admin-main .table { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); box-shadow: none; }
+ .admin-main .table thead { background: rgba(255,255,255,0.04); }
+ .admin-main .table thead th { color: rgba(255,255,255,0.5); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.06); }
+ .admin-main .table td { color: #cbd5e1; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.9rem; }
+ .admin-main .table tbody tr:hover td { background: rgba(8,145,178,0.08); }
+ .admin-main .table tbody tr:hover { background: rgba(8,145,178,0.08); }
+ .admin-main .table tbody tr:last-child td { border-bottom: none; }
 
-    .merchant-row { cursor: pointer; }
-    .text-muted-dark { color: rgba(255,255,255,0.3) !important; }
+ .merchant-row { cursor: pointer; }
+ .text-muted-dark { color: rgba(255,255,255,0.3) !important; }
 
-    /* Badge dark override */
-    .badge-dark-success { background: rgba(16,185,129,0.15); color: #34d399; }
-    .badge-dark-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
-    .badge-dark-danger  { background: rgba(239,68,68,0.15); color: #f87171; }
-    .badge-dark-neutral { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
+ /* Badge dark override */
+ .badge-dark-success { background: rgba(16,185,129,0.15); color: #34d399; }
+ .badge-dark-warning { background: rgba(245,158,11,0.15); color: #fbbf24; }
+ .badge-dark-danger { background: rgba(239,68,68,0.15); color: #f87171; }
+ .badge-dark-neutral { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4); }
 
-    /* Empty state dark */
-    .admin-empty {
-      text-align: center;
-      padding: 3rem 2rem;
-      color: rgba(255,255,255,0.25);
-    }
-    .admin-empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+ /* Empty state dark */
+ .admin-empty {
+ text-align: center;
+ padding: 3rem 2rem;
+ color: rgba(255,255,255,0.25);
+ }
+ .admin-empty-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
 
-    /* Loading dark */
-    .admin-loading {
-      text-align: center;
-      padding: 3rem;
-      color: rgba(255,255,255,0.3);
-    }
-    .admin-loading .spinner {
-      border-color: rgba(255,255,255,0.08);
-      border-top-color: #0891B2;
-    }
+ /* Loading dark */
+ .admin-loading {
+ text-align: center;
+ padding: 3rem;
+ color: rgba(255,255,255,0.3);
+ }
+ .admin-loading .spinner {
+ border-color: rgba(255,255,255,0.08);
+ border-top-color: #0891B2;
+ }
 
-    /* ─── Modals (keep light for readability) ─────── */
-    .modal-content { max-width: 750px; }
-    .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+ /* ─── Modals (keep light for readability) ─────── */
+ .modal-content { max-width: 750px; }
+ .action-btns { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
-    /* Announcements */
-    .ann-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 10px;
-      padding: 1.25rem;
-      margin-bottom: 0.75rem;
-      border-left: 3px solid #0891B2;
-      transition: all 0.2s;
-    }
-    .ann-card:hover { background: rgba(255,255,255,0.05); }
-    .ann-card.priority-warning { border-left-color: #f59e0b; }
-    .ann-card.priority-urgent  { border-left-color: #ef4444; }
-    .ann-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
-    .ann-title { font-weight: 700; font-size: 0.95rem; color: #e2e8f0; }
-    .ann-meta { font-size: 0.75rem; color: rgba(255,255,255,0.3); margin-bottom: 0.5rem; }
-    .ann-content { font-size: 0.85rem; line-height: 1.6; color: rgba(255,255,255,0.55); white-space: pre-wrap; }
-    .ann-actions { display: flex; gap: 0.4rem; }
-    .ann-targets { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.5rem; }
-    .ann-target-chip {
-      background: rgba(8,145,178,0.12);
-      color: #22d3ee;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-size: 0.7rem;
-      font-weight: 600;
-    }
+ /* Announcements */
+ .ann-card {
+ background: rgba(255,255,255,0.03);
+ border: 1px solid rgba(255,255,255,0.06);
+ border-radius: 10px;
+ padding: 1.25rem;
+ margin-bottom: 0.75rem;
+ border-left: 3px solid #0891B2;
+ transition: all 0.2s;
+ }
+ .ann-card:hover { background: rgba(255,255,255,0.05); }
+ .ann-card.priority-warning { border-left-color: #f59e0b; }
+ .ann-card.priority-urgent { border-left-color: #ef4444; }
+ .ann-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; }
+ .ann-title { font-weight: 700; font-size: 0.95rem; color: #e2e8f0; }
+ .ann-meta { font-size: 0.75rem; color: rgba(255,255,255,0.3); margin-bottom: 0.5rem; }
+ .ann-content { font-size: 0.85rem; line-height: 1.6; color: rgba(255,255,255,0.55); white-space: pre-wrap; }
+ .ann-actions { display: flex; gap: 0.4rem; }
+ .ann-targets { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.5rem; }
+ .ann-target-chip {
+ background: rgba(8,145,178,0.12);
+ color: #22d3ee;
+ padding: 2px 8px;
+ border-radius: 12px;
+ font-size: 0.7rem;
+ font-weight: 600;
+ }
 
-    /* Merchant checkbox list (in modal - light bg) */
-    .merchant-checklist {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      padding: 0.75rem;
-    }
-    .merchant-check-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.3rem 0;
-    }
-    .merchant-check-item label { cursor: pointer; font-size: 0.9rem; }
+ /* Merchant checkbox list (in modal - light bg) */
+ .merchant-checklist {
+ max-height: 200px;
+ overflow-y: auto;
+ border: 2px solid var(--border);
+ border-radius: 6px;
+ padding: 0.75rem;
+ }
+ .merchant-check-item {
+ display: flex;
+ align-items: center;
+ gap: 0.5rem;
+ padding: 0.3rem 0;
+ }
+ .merchant-check-item label { cursor: pointer; font-size: 0.9rem; }
 
-    .tab-panels { min-height: 400px; }
+ .tab-panels { min-height: 400px; }
 
-    /* Users search */
-    .users-search {
-      display: flex; align-items: center; gap: 0.75rem;
-      margin-bottom: 1.25rem;
-    }
-    .users-search input {
-      flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
-      background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 0.9rem;
-    }
-    .users-search input::placeholder { color: rgba(255,255,255,0.25); }
-    .users-search input:focus { outline: none; border-color: #0891B2; background: rgba(255,255,255,0.06); }
-    .users-search .search-count { color: rgba(255,255,255,0.3); font-size: 0.8rem; white-space: nowrap; }
+ /* Users search */
+ .users-search {
+ display: flex; align-items: center; gap: 0.75rem;
+ margin-bottom: 1.25rem;
+ }
+ .users-search input {
+ flex: 1; padding: 0.6rem 1rem; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+ background: rgba(255,255,255,0.04); color: #e2e8f0; font-size: 0.9rem;
+ }
+ .users-search input::placeholder { color: rgba(255,255,255,0.25); }
+ .users-search input:focus { outline: none; border-color: #0891B2; background: rgba(255,255,255,0.06); }
+ .users-search .search-count { color: rgba(255,255,255,0.3); font-size: 0.8rem; white-space: nowrap; }
 
-    /* User cards in modal */
-    .user-cards-grid {
-      display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;
-    }
-    .user-card-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.65rem 0.85rem; border-radius: 8px;
-      background: var(--bg-card); border: 1px solid var(--border);
-    }
-    .user-card-biz { font-weight: 600; font-size: 0.9rem; }
-    .user-card-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); }
-    .user-card-stats strong { color: var(--text); }
+ /* User cards in modal */
+ .user-cards-grid {
+ display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;
+ }
+ .user-card-row {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 0.65rem 0.85rem; border-radius: 8px;
+ background: var(--bg-card); border: 1px solid var(--border);
+ }
+ .user-card-biz { font-weight: 600; font-size: 0.9rem; }
+ .user-card-stats { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--text-muted); }
+ .user-card-stats strong { color: var(--text); }
 
-    /* Merge preview */
-    .merge-result { padding: 0.5rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; }
-    .merge-result-search {
-      padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer;
-      border: 1px solid var(--border); margin-bottom: 0.3rem;
-      transition: background 0.15s;
-    }
-    .merge-result-search:hover { background: var(--primary-bg); }
-    .merge-result-search.selected { border-color: var(--primary); background: var(--primary-bg); }
-    .merge-action {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.6rem 0.75rem; border-radius: 8px; margin-bottom: 0.4rem;
-      border: 1px solid var(--border); background: var(--bg-card);
-    }
-    .merge-action .merge-label { font-weight: 600; font-size: 0.9rem; }
-    .merge-action .merge-detail { font-size: 0.8rem; color: var(--text-muted); }
-    .merge-tag-merge { display: inline-block; background: #fef3c7; color: #92400e; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
-    .merge-tag-transfer { display: inline-block; background: rgba(8,145,178,0.1); color: #0891B2; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+ /* Merge preview */
+ .merge-result { padding: 0.5rem; border-radius: 6px; margin-bottom: 0.4rem; font-size: 0.85rem; }
+ .merge-result-search {
+ padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer;
+ border: 1px solid var(--border); margin-bottom: 0.3rem;
+ transition: background 0.15s;
+ }
+ .merge-result-search:hover { background: var(--primary-bg); }
+ .merge-result-search.selected { border-color: var(--primary); background: var(--primary-bg); }
+ .merge-action {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 0.6rem 0.75rem; border-radius: 8px; margin-bottom: 0.4rem;
+ border: 1px solid var(--border); background: var(--bg-card);
+ }
+ .merge-action .merge-label { font-weight: 600; font-size: 0.9rem; }
+ .merge-action .merge-detail { font-size: 0.8rem; color: var(--text-muted); }
+ .merge-tag-merge { display: inline-block; background: #fef3c7; color: #92400e; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+ .merge-tag-transfer { display: inline-block; background: rgba(8,145,178,0.1); color: #0891B2; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
 
-    /* ─── Responsive ──────────────────────────────── */
-    @media (max-width: 768px) {
-      .admin-banner-inner { padding: 0.65rem 1rem; }
-      .admin-hero-inner, .health-panel, .admin-main { padding-left: 1rem; padding-right: 1rem; }
-      .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
-      .admin-stats-row .admin-stat:last-child { grid-column: span 2; }
-      .health-grid { grid-template-columns: repeat(2, 1fr); }
-      .hero-top-row { flex-direction: column; gap: 0.5rem; }
-      .hero-date { text-align: left; }
-      .admin-brand-label { display: none; }
-    }
-    @media (max-width: 480px) {
-      .admin-stats-row { grid-template-columns: 1fr 1fr; }
-      .health-grid { grid-template-columns: 1fr; }
-    }
-  </style>
+ /* ─── Responsive ──────────────────────────────── */
+ @media (max-width: 768px) {
+ .admin-banner-inner { padding: 0.65rem 1rem; }
+ .admin-hero-inner, .health-panel, .admin-main { padding-left: 1rem; padding-right: 1rem; }
+ .admin-stats-row { grid-template-columns: repeat(2, 1fr); }
+ .admin-stats-row .admin-stat:last-child { grid-column: span 2; }
+ .health-grid { grid-template-columns: repeat(2, 1fr); }
+ .hero-top-row { flex-direction: column; gap: 0.5rem; }
+ .hero-date { text-align: left; }
+ .admin-brand-label { display: none; }
+ }
+ @media (max-width: 480px) {
+ .admin-stats-row { grid-template-columns: 1fr 1fr; }
+ .health-grid { grid-template-columns: 1fr; }
+ }
+ </style>
 </head>
 <body>
 
-  <!-- ═══ HEADER BANNER ═══ -->
-  <header class="admin-banner">
-    <div class="admin-banner-inner">
-      <a href="/admin/dashboard" class="admin-brand">
-        <span class="admin-brand-logo">FIDDO</span>
-        <span class="admin-brand-divider"></span>
-        <span class="admin-brand-label">Super Admin</span>
-      </a>
-      <div class="admin-banner-right">
-        <span class="admin-env-badge" id="env-badge">
-          <span class="dot"></span>
-          <span id="env-label">production</span>
-        </span>
-        <button class="btn-admin-logout" onclick="adminLogout()">Déconnexion</button>
-      </div>
-    </div>
-  </header>
-
-  <!-- ═══ HERO + STATS ═══ -->
-  <section class="admin-hero">
-    <div class="admin-hero-inner">
-      <div class="hero-top-row">
-        <div class="hero-greeting">
-          <h1>Tableau de bord</h1>
-          <p>Vue d'ensemble de la plateforme FIDDO</p>
-        </div>
-        <div class="hero-date" id="hero-date"></div>
-      </div>
-
-      <div class="admin-stats-row">
-        <div class="admin-stat">
-          <div class="admin-stat-value" id="s-merchants">-</div>
-          <div class="admin-stat-label">Commerces</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value success" id="s-active">-</div>
-          <div class="admin-stat-label">Actifs</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value warning" id="s-pending">-</div>
-          <div class="admin-stat-label">En attente</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value" id="s-users">-</div>
-          <div class="admin-stat-label">Clients</div>
-        </div>
-        <div class="admin-stat">
-          <div class="admin-stat-value accent" id="s-revenue">-</div>
-          <div class="admin-stat-label">CA total</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ SYSTEM HEALTH ═══ -->
-  <section class="health-panel">
-    <div class="health-section-title">Santé du système</div>
-    <div class="health-grid">
-      <div class="health-card">
-        <div class="health-icon green">🔌</div>
-        <div class="health-info">
-          <div class="health-label">API</div>
-          <div class="health-value"><span class="health-dot off" id="h-api-dot"></span> <span id="h-api-text">Vérification…</span></div>
-          <div class="health-sub" id="h-api-version"></div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon blue">☁️</div>
-        <div class="health-info">
-          <div class="health-label">Hébergement</div>
-          <div class="health-value"><span class="health-dot off" id="h-render-dot"></span> <span id="h-render-text">Render</span></div>
-          <div class="health-sub" id="h-render-sub">Vérification…</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon purple">📧</div>
-        <div class="health-info">
-          <div class="health-label">Emails envoyés</div>
-          <div class="health-value" id="h-emails">-</div>
-          <div class="health-sub" id="h-emails-sub">Brevo SMTP</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon orange">📱</div>
-        <div class="health-info">
-          <div class="health-label">SMS envoyés</div>
-          <div class="health-value" id="h-sms">-</div>
-          <div class="health-sub" id="h-sms-sub">Non configuré</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon green">💾</div>
-        <div class="health-info">
-          <div class="health-label">Dernier backup</div>
-          <div class="health-value"><span class="health-dot off" id="h-backup-dot"></span> <span id="h-backup-text">-</span></div>
-          <div class="health-sub" id="h-backup-sub">SQLite → JSON</div>
-        </div>
-      </div>
-      <div class="health-card">
-        <div class="health-icon blue">⏱️</div>
-        <div class="health-info">
-          <div class="health-label">Uptime</div>
-          <div class="health-value" id="h-uptime">-</div>
-          <div class="health-sub" id="h-uptime-sub"></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ MAIN CONTENT ═══ -->
-  <main class="admin-main">
-    <div class="admin-tabs">
-      <button class="admin-tab active" onclick="switchTab('pending')">⏳ En attente</button>
-      <button class="admin-tab" onclick="switchTab('active')">✅ Actifs</button>
-      <button class="admin-tab" onclick="switchTab('all')">📋 Tous</button>
-      <button class="admin-tab" onclick="switchTab('users')">👤 Utilisateurs</button>
-      <button class="admin-tab" onclick="switchTab('announcements')">📢 Annonces</button>
-    </div>
-
-    <div class="tab-panels">
-      <div id="merchants-container"></div>
-      <div id="users-container" style="display: none;"></div>
-      <div id="announcements-container" style="display: none;"></div>
-    </div>
-  </main>
-
-  <footer style="text-align: center; padding: 2rem 0 1.5rem; font-size: 0.65rem; color: rgba(255,255,255,0.15); letter-spacing: 0.3px;">
-    Powered by <strong style="color: rgba(255,255,255,0.25); font-weight: 700;">H3001</strong>
-  </footer>
-
-  <!-- ═══ MERCHANT DETAIL MODAL ═══ -->
-  <div id="merchant-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="mm-title">Commerce</h2>
-        <button class="close-modal" onclick="closeModal()">×</button>
-      </div>
-      <div class="modal-body" id="mm-body"></div>
-      <div class="modal-footer" id="mm-footer"></div>
-    </div>
-  </div>
-
-  <!-- ═══ REJECT MODAL ═══ -->
-  <div id="reject-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2>Refuser le commerce</h2>
-        <button class="close-modal" onclick="closeRejectModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="reject-alert"></div>
-        <div class="form-group">
-          <label class="form-label">Raison du refus</label>
-          <input type="text" id="reject-reason" class="form-control" placeholder="Documents manquants, TVA invalide...">
-        </div>
-        <button class="btn btn-danger" onclick="submitReject()">Confirmer le refus</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ ANNOUNCEMENT MODAL ═══ -->
-  <div id="ann-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="ann-modal-title">Nouvelle annonce</h2>
-        <button class="close-modal" onclick="closeAnnModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="ann-alert"></div>
-        <div class="form-group">
-          <label class="form-label">Titre *</label>
-          <input type="text" id="ann-title" class="form-control" placeholder="Ex: Maintenance prévue ce weekend">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Contenu *</label>
-          <textarea id="ann-content" class="form-control" rows="4" placeholder="Détails de l'annonce..."></textarea>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Priorité</label>
-          <select id="ann-priority" class="form-control">
-            <option value="info">ℹ️ Info</option>
-            <option value="warning">⚠️ Important</option>
-            <option value="urgent">🚨 Urgent</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Destinataires</label>
-          <select id="ann-target" class="form-control" onchange="toggleMerchantList()">
-            <option value="all">📢 Tous les commerces</option>
-            <option value="selected">🎯 Commerces sélectionnés</option>
-          </select>
-        </div>
-        <div class="form-group" id="merchant-list-group" style="display: none;">
-          <label class="form-label">Sélectionner les commerces</label>
-          <div class="merchant-checklist" id="merchant-checklist"></div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Date d'expiration (optionnel)</label>
-          <input type="datetime-local" id="ann-expires" class="form-control">
-          <small class="form-help">L'annonce disparaîtra automatiquement après cette date</small>
-        </div>
-        <button class="btn btn-primary btn-block" id="ann-submit-btn" onclick="submitAnnouncement()">Publier l'annonce</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ═══ USER DETAIL MODAL ═══ -->
-  <div id="user-modal" class="modal">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="um-title">Utilisateur</h2>
-        <button class="close-modal" onclick="closeUserModal()">×</button>
-      </div>
-      <div class="modal-body" id="um-body"></div>
-      <div class="modal-footer" id="um-footer"></div>
-    </div>
-  </div>
-
-  <!-- ═══ USER MERGE MODAL ═══ -->
-  <div id="merge-modal" class="modal">
-    <div class="modal-content" style="max-width: 650px;">
-      <div class="modal-header">
-        <h2>🔀 Fusion globale</h2>
-        <button class="close-modal" onclick="closeMergeModal()">×</button>
-      </div>
-      <div class="modal-body">
-        <div id="merge-alert"></div>
-
-        <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border);">
-          <strong>Cible (conservé) :</strong> <span id="merge-target-label">—</span>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Rechercher l'utilisateur source (à absorber)</label>
-          <input type="text" id="merge-source-search" class="form-control" placeholder="Email, téléphone ou nom…" oninput="onMergeSearch(this.value)">
-        </div>
-        <div id="merge-source-results" style="max-height: 180px; overflow-y: auto; margin-bottom: 1rem;"></div>
-
-        <div id="merge-preview-section" style="display: none;">
-          <div id="merge-preview-content"></div>
-
-          <div class="form-group" style="margin-top: 1rem;">
-            <label class="form-label">Note (visible par les commerçants)</label>
-            <input type="text" id="merge-reason" class="form-control" placeholder="Ex : Fusion demandée par le client" value="Fusion demandée par le client">
-          </div>
-
-          <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="executeMerge()">⚠️ Confirmer la fusion (irréversible)</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <script src="/js/app.js"></script>
-  <script>
-    const ADMIN_API = API_BASE_URL + '/admin';
-    let currentMerchantId = null;
-    let currentTab = 'pending';
-    let editingAnnouncementId = null;
-    let activeMerchants = [];
-    let healthStartTime = Date.now();
-
-    // ─── Date display ───
-    function updateHeroDate() {
-      const now = new Date();
-      const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
-      const dateStr = now.toLocaleDateString('fr-FR', opts);
-      const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-      document.getElementById('hero-date').innerHTML = `<strong>${dateStr}</strong><br>${timeStr}`;
-    }
-    updateHeroDate();
-    setInterval(updateHeroDate, 30000);
-
-    // ─── Admin API call ───
-    async function adminCall(endpoint, options = {}) {
-      const config = { headers: { 'Content-Type': 'application/json' }, credentials: 'include', ...options };
-      const resp = await fetch(`${ADMIN_API}${endpoint}`, config);
-      if (resp.status === 401 || resp.status === 403) { window.location.href = '/admin'; return; }
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Erreur');
-      return data;
-    }
-
-    function adminLogout() {
-      adminCall('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/admin');
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // SYSTEM HEALTH CHECKS
-    // ═══════════════════════════════════════════════════════
-
-    async function checkHealth() {
-      // ── API Health ──
-      try {
-        const start = performance.now();
-        const resp = await fetch(API_BASE_URL + '/health', { credentials: 'include' });
-        const ping = Math.round(performance.now() - start);
-        const data = await resp.json();
-
-        document.getElementById('h-api-dot').className = 'health-dot ok';
-        document.getElementById('h-api-text').textContent = `OK — ${ping}ms`;
-        document.getElementById('h-api-version').textContent = `v${data.version || '?'}`;
-
-        // Env badge
-        const isLocal = window.location.hostname === 'localhost';
-        document.getElementById('env-label').textContent = isLocal ? 'local' : 'production';
-        if (isLocal) {
-          const badge = document.getElementById('env-badge');
-          badge.style.background = 'rgba(245,158,11,0.12)';
-          badge.style.color = '#fbbf24';
-          badge.style.borderColor = 'rgba(245,158,11,0.2)';
-          badge.querySelector('.dot').style.background = '#fbbf24';
-        }
-      } catch (e) {
-        document.getElementById('h-api-dot').className = 'health-dot error';
-        document.getElementById('h-api-text').textContent = 'Erreur connexion';
-        document.getElementById('h-api-version').textContent = '';
-      }
-
-      // ── Render/Hosting ──
-      try {
-        const resp = await fetch(API_BASE_URL + '/health', { credentials: 'include' });
-        if (resp.ok) {
-          document.getElementById('h-render-dot').className = 'health-dot ok';
-          document.getElementById('h-render-text').textContent = 'Render';
-          document.getElementById('h-render-sub').textContent = 'Service actif';
-        }
-      } catch {
-        document.getElementById('h-render-dot').className = 'health-dot error';
-        document.getElementById('h-render-sub').textContent = 'Service injoignable';
-      }
-
-      // ── Emails / SMS / Backup — from admin stats endpoint ──
-      try {
-        const s = await adminCall('/merchants/stats/global');
-        // Emails: estimate from transactions (each credit with validated email = 1 email)
-        const emailCount = s.transactions || 0;
-        document.getElementById('h-emails').textContent = emailCount.toLocaleString('fr-FR');
-        document.getElementById('h-emails-sub').textContent = 'Brevo SMTP — estimé';
-
-        // SMS: not implemented yet
-        document.getElementById('h-sms').textContent = '0';
-        document.getElementById('h-sms-sub').textContent = 'Non configuré';
-
-      } catch {
-        document.getElementById('h-emails').textContent = '?';
-        document.getElementById('h-sms').textContent = '?';
-      }
-
-      // ── Backup status ──
-      try {
-        const resp = await fetch(API_BASE_URL + '/admin/backups/status', { credentials: 'include' });
-        if (resp.ok) {
-          const data = await resp.json();
-          document.getElementById('h-backup-dot').className = 'health-dot ok';
-          document.getElementById('h-backup-text').textContent = data.lastBackup ? Format.timeSince(data.lastBackup) : 'Disponible';
-          document.getElementById('h-backup-sub').textContent = data.size ? `${data.size}` : 'SQLite → JSON';
-        } else {
-          document.getElementById('h-backup-dot').className = 'health-dot warn';
-          document.getElementById('h-backup-text').textContent = 'Non configuré';
-        }
-      } catch {
-        document.getElementById('h-backup-dot').className = 'health-dot warn';
-        document.getElementById('h-backup-text').textContent = 'Endpoint absent';
-        document.getElementById('h-backup-sub').textContent = 'Ajouter /api/admin/backups/status';
-      }
-    }
-
-    // ── Uptime counter ──
-    function updateUptime() {
-      const diff = Date.now() - healthStartTime;
-      const s = Math.floor(diff / 1000);
-      const m = Math.floor(s / 60);
-      const h = Math.floor(m / 60);
-      if (h > 0) {
-        document.getElementById('h-uptime').textContent = `${h}h ${m % 60}m`;
-      } else {
-        document.getElementById('h-uptime').textContent = `${m}m ${s % 60}s`;
-      }
-      document.getElementById('h-uptime-sub').textContent = 'Session admin active';
-    }
-    setInterval(updateUptime, 1000);
-    updateUptime();
-
-    // ═══════════════════════════════════════════════════════
-    // STATS
-    // ═══════════════════════════════════════════════════════
-
-    async function loadStats() {
-      try {
-        const s = await adminCall('/merchants/stats/global');
-        document.getElementById('s-merchants').textContent = s.merchants.total;
-        document.getElementById('s-active').textContent = s.merchants.active;
-        document.getElementById('s-pending').textContent = s.merchants.pending;
-        document.getElementById('s-users').textContent = s.endUsers;
-        document.getElementById('s-revenue').textContent = Format.currency(s.revenue);
-      } catch (e) { console.error(e); }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // TABS
-    // ═══════════════════════════════════════════════════════
-
-    function switchTab(tab) {
-      currentTab = tab;
-      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-
-      const merchantsEl = document.getElementById('merchants-container');
-      const usersEl = document.getElementById('users-container');
-      const annEl = document.getElementById('announcements-container');
-
-      merchantsEl.style.display = 'none';
-      usersEl.style.display = 'none';
-      annEl.style.display = 'none';
-
-      if (tab === 'announcements') {
-        annEl.style.display = 'block';
-        loadAnnouncements();
-      } else if (tab === 'users') {
-        usersEl.style.display = 'block';
-        loadUsers();
-      } else {
-        merchantsEl.style.display = 'block';
-        loadMerchants();
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // MERCHANTS
-    // ═══════════════════════════════════════════════════════
-
-    async function loadMerchants() {
-      const container = document.getElementById('merchants-container');
-      try {
-        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
-        const qs = currentTab === 'all' ? '' : `?status=${currentTab}`;
-        const data = await adminCall(`/merchants${qs}`);
-        const merchants = data.merchants;
-
-        if (merchants.length === 0) {
-          container.innerHTML = '<div class="admin-empty"><div class="admin-empty-icon">🏪</div><p>Aucun commerce</p></div>';
-          return;
-        }
-
-        let html = `<table class="table"><thead><tr>
-          <th>Commerce</th><th>Propriétaire</th><th>TVA</th><th>Status</th><th>Clients</th><th>Créé le</th>
-        </tr></thead><tbody>`;
-
-        merchants.forEach(m => {
-          const statusClass = m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : m.status === 'suspended' ? 'danger' : 'neutral';
-          html += `<tr class="merchant-row" onclick="showMerchant(${m.id})">
-            <td><strong>${esc(m.business_name)}</strong><br><small class="text-muted-dark">${esc(m.email)}</small></td>
-            <td>${esc(m.owner_name) || '-'}<br><small class="text-muted-dark">${esc(m.owner_email) || '-'}</small></td>
-            <td style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${esc(m.vat_number)}</td>
-            <td><span class="badge badge-dark-${statusClass}">${esc(m.status)}</span></td>
-            <td>${m.client_count}</td>
-            <td style="color: rgba(255,255,255,0.4);">${Format.date(m.created_at)}</td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // MERCHANT DETAIL MODAL
-    // ═══════════════════════════════════════════════════════
-
-    async function showMerchant(id) {
-      try {
-        currentMerchantId = id;
-        const data = await adminCall(`/merchants/${id}`);
-        const m = data.merchant;
-        const staffList = data.staff;
-        const stats = data.stats;
-
-        document.getElementById('mm-title').textContent = m.business_name;
-
-        let html = `
-          <div class="stats-grid" style="margin-bottom: 1.5rem;">
-            <div class="stat-card"><div class="stat-value">${stats.clients}</div><div class="stat-label">Clients</div></div>
-            <div class="stat-card"><div class="stat-value">${Format.currency(stats.revenue)}</div><div class="stat-label">CA</div></div>
-            <div class="stat-card"><div class="stat-value">${stats.transactions}</div><div class="stat-label">Transactions</div></div>
-          </div>
-
-          <h3 class="mb-1">Informations</h3>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-            <div><strong>Adresse :</strong> ${esc(m.address)}</div>
-            <div><strong>TVA :</strong> ${esc(m.vat_number)}</div>
-            <div><strong>Email :</strong> ${esc(m.email)}</div>
-            <div><strong>Tél :</strong> ${esc(m.phone)}</div>
-            <div><strong>Status :</strong> <span class="badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : 'danger'}">${esc(m.status)}</span></div>
-            <div><strong>Inscrit :</strong> ${Format.datetime(m.created_at)}</div>
-            <div><strong>Points/€ :</strong> ${m.points_per_euro}</div>
-            <div><strong>Récompense :</strong> ${m.points_for_reward} pts</div>
-          </div>
-          ${m.rejection_reason ? `<div class="alert alert-warning">Raison de refus : ${esc(m.rejection_reason)}</div>` : ''}
-
-          <h3 class="mb-1">Équipe (${staffList.length})</h3>
-        `;
-
-        if (staffList.length > 0) {
-          html += '<table class="table" style="margin-bottom: 0;"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actif</th></tr></thead><tbody>';
-          staffList.forEach(s => {
-            html += `<tr>
-              <td>${esc(s.display_name)}</td>
-              <td>${esc(s.email)}</td>
-              <td><span class="badge badge-info">${esc(s.role)}</span></td>
-              <td>${s.is_active ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-danger">Non</span>'}</td>
-            </tr>`;
-          });
-          html += '</tbody></table>';
-        } else {
-          html += '<p class="text-muted">Aucun membre</p>';
-        }
-
-        document.getElementById('mm-body').innerHTML = html;
-
-        let footer = '<div class="action-btns">';
-        if (m.status === 'pending') {
-          footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()">✅ Valider</button>`;
-          footer += `<button class="btn btn-danger btn-sm" onclick="showRejectModal()">❌ Refuser</button>`;
-        } else if (m.status === 'active') {
-          footer += `<button class="btn btn-danger btn-sm" onclick="suspendMerchant()">⏸️ Suspendre</button>`;
-        } else if (m.status === 'suspended') {
-          footer += `<button class="btn btn-success btn-sm" onclick="reactivateMerchant()">▶️ Réactiver</button>`;
-        }
-        footer += '</div>';
-        document.getElementById('mm-footer').innerHTML = footer;
-
-        document.getElementById('merchant-modal').classList.add('active');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
-    document.getElementById('merchant-modal').addEventListener('click', (e) => { if (e.target.id === 'merchant-modal') closeModal(); });
-
-    // ─── Merchant Actions ───
-    async function validateMerchant() {
-      if (!confirm('✅ Valider et activer ce commerce ?')) return;
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/validate`, { method: 'POST' });
-        closeModal(); loadMerchants(); loadStats();
-      } catch (e) { alert(e.message); }
-    }
-
-    function showRejectModal() { document.getElementById('reject-modal').classList.add('active'); }
-    function closeRejectModal() { document.getElementById('reject-modal').classList.remove('active'); }
-    document.getElementById('reject-modal').addEventListener('click', (e) => { if (e.target.id === 'reject-modal') closeRejectModal(); });
-
-    async function submitReject() {
-      const reason = document.getElementById('reject-reason').value.trim();
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/reject`, {
-          method: 'POST',
-          body: JSON.stringify({ reason }),
-        });
-        closeRejectModal(); closeModal(); loadMerchants(); loadStats();
-      } catch (e) { UI.showAlert('reject-alert', e.message, 'error'); }
-    }
-
-    async function suspendMerchant() {
-      if (!confirm('⏸️ Suspendre ce commerce ?')) return;
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/suspend`, { method: 'POST' });
-        closeModal(); loadMerchants(); loadStats();
-      } catch (e) { alert(e.message); }
-    }
-
-    async function reactivateMerchant() {
-      if (!confirm('▶️ Réactiver ce commerce ?')) return;
-      try {
-        await adminCall(`/merchants/${currentMerchantId}/reactivate`, { method: 'POST' });
-        closeModal(); loadMerchants(); loadStats();
-      } catch (e) { alert(e.message); }
-    }
-
-
-    // ═══════════════════════════════════════════════════════
-    // USERS (end_users global table)
-    // ═══════════════════════════════════════════════════════
-
-    let usersSearchTimeout = null;
-
-    async function loadUsers(query = '') {
-      const container = document.getElementById('users-container');
-      try {
-        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
-        const qs = query ? `?q=${encodeURIComponent(query)}` : '';
-        const data = await adminCall(`/users${qs}`);
-        const users = data.users;
-
-        let html = `
-          <div class="users-search">
-            <input type="text" id="users-search-input" placeholder="Rechercher par nom, email, téléphone…"
-              value="${query}" oninput="onUsersSearch(this.value)">
-            <span class="search-count">${data.count} utilisateur${data.count > 1 ? 's' : ''}</span>
-          </div>
-        `;
-
-        if (users.length === 0) {
-          html += '<div class="admin-empty"><div class="admin-empty-icon">👤</div><p>Aucun utilisateur trouvé</p></div>';
-          container.innerHTML = html;
-          return;
-        }
-
-        html += `<table class="table"><thead><tr>
-          <th>Nom</th><th>Email</th><th>Téléphone</th><th>Commerces</th><th>Badges</th><th>Créé le</th>
-        </tr></thead><tbody>`;
-
-        users.forEach(u => {
-          let badges = '';
-          if (u.email_validated) badges += '<span class="badge badge-dark-success" style="font-size:0.65rem;">Email ✓</span> ';
-          if (u.has_pin) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">PIN</span> ';
-          if (u.has_qr) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">QR</span> ';
-          if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
-
-          html += `<tr class="merchant-row" onclick="showUser(${u.id})">
-            <td><strong>${u.name ? esc(u.name) : '<em style=\"opacity:0.4\">—</em>'}</strong></td>
-            <td style="font-size: 0.85rem;">${u.email ? esc(u.email) : '<em style="opacity:0.3">—</em>'}</td>
-            <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone ? esc(u.phone) : '—'}</td>
-            <td style="text-align: center;"><strong>${u.merchant_count}</strong></td>
-            <td>${badges || '<span style="opacity:0.2">—</span>'}</td>
-            <td style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
-          </tr>`;
-        });
-        html += '</tbody></table>';
-        if (data.count >= 200) {
-          html += '<div style="text-align:center; padding:0.75rem; color:rgba(255,255,255,0.3); font-size:0.8rem;">Limité à 200 résultats — affinez votre recherche</div>';
-        }
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
-      }
-    }
-
-    function onUsersSearch(val) {
-      clearTimeout(usersSearchTimeout);
-      usersSearchTimeout = setTimeout(() => loadUsers(val.trim()), 300);
-    }
-
-    // ─── User Detail Modal ───
-
-    async function showUser(id) {
-      try {
-        const data = await adminCall(`/users/${id}`);
-        const u = data.user;
-        const cards = data.cards;
-        const aliases = data.aliases;
-
-        document.getElementById('um-title').textContent = u.name || u.email || u.phone || `#${u.id}`;
-
-        let html = `
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
-            <div><strong>Email :</strong> ${esc(u.email) || '—'} ${u.email_validated ? '<span class="badge badge-success">validé</span>' : ''}</div>
-            <div><strong>Téléphone :</strong> ${esc(u.phone) || '—'}</div>
-            <div><strong>PIN :</strong> ${u.has_pin ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Non défini</span>'}</div>
-            <div><strong>QR :</strong> ${u.has_qr ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-warning">Non</span>'}</div>
-            <div><strong>Bloqué :</strong> ${u.is_blocked ? '<span class="badge badge-danger">Oui</span>' : 'Non'}</div>
-            <div><strong>Inscrit :</strong> ${Format.datetime(u.created_at)}</div>
-          </div>
-        `;
-
-        // Aliases
-        if (aliases.length > 0) {
-          html += '<h3 class="mb-1">Aliases (post-fusion)</h3>';
-          html += '<div style="margin-bottom: 1.5rem; font-size: 0.85rem;">';
-          aliases.forEach(a => {
-            html += `<span class="badge badge-info" style="margin-right: 0.4rem; margin-bottom: 0.3rem;">${esc(a.alias_type)}: ${esc(a.alias_value)}</span>`;
-          });
-          html += '</div>';
-        }
-
-        // Cards across merchants
-        html += `<h3 class="mb-1">Cartes de fidélité (${cards.length})</h3>`;
-
-        if (cards.length === 0) {
-          html += '<p class="text-muted">Aucune carte de fidélité</p>';
-        } else {
-          html += '<div class="user-cards-grid">';
-          cards.forEach(c => {
-            const statusBadge = c.merchant_status === 'active'
-              ? '<span class="badge badge-success" style="font-size:0.65rem;">actif</span>'
-              : `<span class="badge badge-warning" style="font-size:0.65rem;">${esc(c.merchant_status)}</span>`;
-
-            html += `
-              <div class="user-card-row">
-                <div>
-                  <div class="user-card-biz">${esc(c.business_name)} ${statusBadge}</div>
-                  <div style="font-size:0.75rem; color: var(--text-muted);">${esc(c.merchant_email)}</div>
-                </div>
-                <div class="user-card-stats">
-                  <div><strong>${c.points_balance}</strong> pts</div>
-                  <div><strong>${c.visit_count}</strong> visites</div>
-                  <div><strong>${Format.currency(c.total_spent)}</strong></div>
-                  <div style="color: rgba(0,0,0,0.35);">${Format.date(c.last_visit)}</div>
-                </div>
-              </div>
-            `;
-          });
-          html += '</div>';
-        }
-
-        document.getElementById('um-body').innerHTML = html;
-
-        // Footer — inline onclick (same pattern as merchant modal)
-        const mergeLabel = esc(u.name || u.email || u.phone || '').replace(/'/g, "\\'");
-        const footer = document.getElementById('um-footer');
-        footer.innerHTML = `
-          <div class="action-btns">
-            <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${mergeLabel}')">🔀 Fusionner avec…</button>
-            ${u.is_blocked
-              ? `<button class="btn btn-success btn-sm" onclick="globalUnblockUser(${u.id})">🔓 Débloquer</button>`
-              : `<button class="btn btn-danger btn-sm" onclick="globalBlockUser(${u.id})">🔒 Bloquer globalement</button>`
-            }
-          </div>
-        `;
-
-        document.getElementById('user-modal').classList.add('active');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
-    document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
-
-    async function globalBlockUser(id) {
-      if (!confirm('🔒 Bloquer cet utilisateur globalement ?\n\nIl ne pourra plus être crédité ni utiliser son QR/PIN chez aucun commerce.')) return;
-      try {
-        await adminCall(`/users/${id}/block`, { method: 'POST' });
-        closeUserModal();
-        loadUsers();
-        alert('✅ Utilisateur bloqué globalement');
-      } catch (e) { alert(e.message); }
-    }
-
-    async function globalUnblockUser(id) {
-      if (!confirm('🔓 Débloquer cet utilisateur ?')) return;
-      try {
-        await adminCall(`/users/${id}/unblock`, { method: 'POST' });
-        closeUserModal();
-        loadUsers();
-        alert('✅ Utilisateur débloqué');
-      } catch (e) { alert(e.message); }
-    }
-
-    // ─── Merge Flow ───
-
-    let mergeTargetId = null;
-    let mergeSourceId = null;
-    let mergeSearchTimeout = null;
-
-    function openMergeModal(targetId, targetLabel) {
-      mergeTargetId = targetId;
-      mergeSourceId = null;
-      document.getElementById('merge-target-label').textContent = targetLabel + ` (#${targetId})`;
-      document.getElementById('merge-source-search').value = '';
-      document.getElementById('merge-source-results').innerHTML = '';
-      document.getElementById('merge-preview-section').style.display = 'none';
-      document.getElementById('merge-alert').innerHTML = '';
-      document.getElementById('merge-reason').value = 'Fusion demandée par le client';
-      document.getElementById('merge-modal').classList.add('active');
-    }
-
-    function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
-    document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
-
-    function onMergeSearch(val) {
-      clearTimeout(mergeSearchTimeout);
-      if (val.trim().length < 2) {
-        document.getElementById('merge-source-results').innerHTML = '';
-        return;
-      }
-      mergeSearchTimeout = setTimeout(async () => {
-        try {
-          const data = await adminCall(`/users?q=${encodeURIComponent(val.trim())}`);
-          const container = document.getElementById('merge-source-results');
-          // Filter out the target itself
-          const users = data.users.filter(u => u.id !== mergeTargetId);
-          if (users.length === 0) {
-            container.innerHTML = '<div style="padding:0.5rem; color:var(--text-muted); font-size:0.85rem;">Aucun résultat</div>';
-            return;
-          }
-          container.innerHTML = users.slice(0, 8).map(u => `
-            <div class="merge-result-search ${mergeSourceId === u.id ? 'selected' : ''}" onclick="selectMergeSource(${u.id})">
-              <strong>${u.name ? esc(u.name) : '<em>Sans nom</em>'}</strong>
-              <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">${esc(u.email) || ''} ${esc(u.phone) || ''}</span>
-              <span style="float:right; font-size:0.75rem; color:var(--text-muted);">${u.merchant_count} commerce${u.merchant_count > 1 ? 's' : ''}</span>
-            </div>
-          `).join('');
-        } catch (e) {
-          console.error(e);
-        }
-      }, 300);
-    }
-
-    async function selectMergeSource(sourceId) {
-      mergeSourceId = sourceId;
-      // Highlight
-      document.querySelectorAll('.merge-result-search').forEach(el => el.classList.remove('selected'));
-      event.currentTarget.classList.add('selected');
-
-      // Load preview
-      try {
-        const preview = await adminCall(`/users/${mergeTargetId}/merge-preview?sourceId=${sourceId}`);
-        const section = document.getElementById('merge-preview-section');
-        const content = document.getElementById('merge-preview-content');
-
-        let html = `<h3 style="margin-bottom:0.75rem; font-size:0.95rem;">Aperçu de la fusion</h3>`;
-
-        html += `<div style="display:flex; gap:1rem; margin-bottom:1rem; font-size:0.85rem;">
-          <div style="flex:1; padding:0.6rem; border-radius:8px; background:#fef2f2; border:1px solid #fecaca;">
-            <strong>Source (supprimé)</strong><br>
-            ${esc(preview.source.name) || '—'}<br>
-            <span style="color:#6b7280;">${esc(preview.source.email) || ''} ${esc(preview.source.phone) || ''}</span>
-          </div>
-          <div style="display:flex; align-items:center; font-size:1.3rem;">→</div>
-          <div style="flex:1; padding:0.6rem; border-radius:8px; background:#f0fdf4; border:1px solid #bbf7d0;">
-            <strong>Cible (conservé)</strong><br>
-            ${esc(preview.target.name) || '—'}<br>
-            <span style="color:#6b7280;">${esc(preview.target.email) || ''} ${esc(preview.target.phone) || ''}</span>
-          </div>
-        </div>`;
-
-        if (preview.actions.length === 0) {
-          html += '<div style="padding:0.75rem; color:var(--text-muted);">Aucune carte à transférer (source sans commerce)</div>';
-        } else {
-          preview.actions.forEach(a => {
-            const tag = a.action === 'merge'
-              ? '<span class="merge-tag-merge">FUSION</span>'
-              : '<span class="merge-tag-transfer">TRANSFERT</span>';
-
-            let detail = '';
-            if (a.action === 'merge') {
-              detail = `${a.target_before.points} + ${a.source.points} → <strong>${a.target_after.points} pts</strong>`;
-            } else {
-              detail = `<strong>${a.source.points} pts</strong>, ${a.source.visits} visites`;
-            }
-
-            html += `<div class="merge-action">
-              <div>
-                <div class="merge-label">${esc(a.business_name)} ${tag}</div>
-                <div class="merge-detail">${detail}</div>
-              </div>
-            </div>`;
-          });
-        }
-
-        if (preview.newAliases.length > 0) {
-          html += `<div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);">
-            <strong>Aliases créés :</strong> ${preview.newAliases.map(a => esc(a.value)).join(', ')}
-          </div>`;
-        }
-
-        content.innerHTML = html;
-        section.style.display = 'block';
-      } catch (e) {
-        UI.showAlert('merge-alert', e.message, 'error');
-      }
-    }
-
-    async function executeMerge() {
-      if (!mergeSourceId || !mergeTargetId) return;
-      const reason = document.getElementById('merge-reason').value.trim();
-      if (!confirm(`⚠️ IRRÉVERSIBLE\n\nFusionner l'utilisateur #${mergeSourceId} dans #${mergeTargetId} ?\n\nLe user source sera supprimé définitivement.`)) return;
-
-      try {
-        const result = await adminCall(`/users/${mergeTargetId}/merge`, {
-          method: 'POST',
-          body: JSON.stringify({ sourceId: mergeSourceId, reason }),
-        });
-        closeMergeModal();
-        closeUserModal();
-        loadUsers();
-        loadStats();
-        alert(`✅ Fusion effectuée\n${result.merged} carte(s) fusionnée(s)\n${result.transferred} carte(s) transférée(s)`);
-      } catch (e) {
-        UI.showAlert('merge-alert', e.message, 'error');
-      }
-    }
-
-
-    // ═══════════════════════════════════════════════════════
-    // ANNOUNCEMENTS
-    // ═══════════════════════════════════════════════════════
-
-    async function loadAnnouncements() {
-      const container = document.getElementById('announcements-container');
-      try {
-        container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
-
-        const data = await adminCall('/announcements');
-        const anns = data.announcements;
-
-        let html = `
-          <div class="flex-between mb-2">
-            <h2 style="margin: 0; color: #e2e8f0; font-size: 1.1rem;">📢 Annonces (${anns.length})</h2>
-            <button class="btn btn-primary btn-sm" onclick="showCreateAnn()">+ Nouvelle annonce</button>
-          </div>
-        `;
-
-        if (anns.length === 0) {
-          html += '<div class="admin-empty"><div class="admin-empty-icon">📢</div><p>Aucune annonce pour le moment</p></div>';
-          container.innerHTML = html;
-          return;
-        }
-
-        anns.forEach(a => {
-          const prioIcons = { info: 'ℹ️', warning: '⚠️', urgent: '🚨' };
-          const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
-
-          html += `
-            <div class="ann-card priority-${a.priority}" ${isExpired ? 'style="opacity: 0.4;"' : ''}>
-              <div class="ann-header">
-                <div>
-                  <span class="ann-title">${prioIcons[a.priority]} ${esc(a.title)}</span>
-                  ${isExpired ? '<span class="badge badge-dark-neutral" style="margin-left: 0.5rem;">Expirée</span>' : ''}
-                </div>
-                <div class="ann-actions">
-                  <button class="btn btn-outline btn-sm" onclick="editAnnouncement(${a.id})">✏️</button>
-                  <button class="btn btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})">🗑️</button>
-                </div>
-              </div>
-              <div class="ann-meta">
-                ${Format.datetime(a.created_at)} — par ${esc(a.author_name)}
-                · <strong>${a.read_count}</strong> lecture(s)
-                · ${a.target_type === 'all' ? '📢 Tous' : `🎯 ${a.targets.length} commerce(s)`}
-                ${a.expires_at ? ` · Expire le ${Format.datetime(a.expires_at)}` : ''}
-              </div>
-              <div class="ann-content">${esc(a.content)}</div>
-              ${a.target_type === 'selected' && a.targets.length > 0 ? `
-                <div class="ann-targets">
-                  ${a.targets.map(t => `<span class="ann-target-chip">${esc(t.business_name)}</span>`).join('')}
-                </div>
-              ` : ''}
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
-      } catch (e) {
-        container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
-      }
-    }
-
-    // ─── Announcement Modal ───
-
-    function toggleMerchantList() {
-      const val = document.getElementById('ann-target').value;
-      document.getElementById('merchant-list-group').style.display = val === 'selected' ? 'block' : 'none';
-      if (val === 'selected' && activeMerchants.length === 0) {
-        loadMerchantChecklist();
-      }
-    }
-
-    async function loadMerchantChecklist() {
-      try {
-        const data = await adminCall('/announcements/merchants');
-        activeMerchants = data.merchants;
-        const container = document.getElementById('merchant-checklist');
-        if (activeMerchants.length === 0) {
-          container.innerHTML = '<p class="text-muted text-sm">Aucun commerce actif</p>';
-          return;
-        }
-        container.innerHTML = activeMerchants.map(m => `
-          <div class="merchant-check-item">
-            <input type="checkbox" id="mc-${m.id}" value="${m.id}" class="merchant-cb">
-            <label for="mc-${m.id}">${esc(m.business_name)}</label>
-          </div>
-        `).join('');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function showCreateAnn() {
-      editingAnnouncementId = null;
-      document.getElementById('ann-modal-title').textContent = 'Nouvelle annonce';
-      document.getElementById('ann-title').value = '';
-      document.getElementById('ann-content').value = '';
-      document.getElementById('ann-priority').value = 'info';
-      document.getElementById('ann-target').value = 'all';
-      document.getElementById('ann-expires').value = '';
-      document.getElementById('merchant-list-group').style.display = 'none';
-      document.getElementById('ann-submit-btn').textContent = 'Publier l\'annonce';
-      UI.clearAlert('ann-alert');
-      document.getElementById('ann-modal').classList.add('active');
-    }
-
-    async function editAnnouncement(id) {
-      try {
-        const data = await adminCall('/announcements');
-        const ann = data.announcements.find(a => a.id === id);
-        if (!ann) return;
-
-        editingAnnouncementId = id;
-        document.getElementById('ann-modal-title').textContent = 'Modifier l\'annonce';
-        document.getElementById('ann-title').value = ann.title;
-        document.getElementById('ann-content').value = ann.content;
-        document.getElementById('ann-priority').value = ann.priority;
-        document.getElementById('ann-target').value = ann.target_type;
-        document.getElementById('ann-submit-btn').textContent = 'Mettre à jour';
-
-        if (ann.expires_at) {
-          const d = new Date(ann.expires_at + 'Z');
-          document.getElementById('ann-expires').value = d.toISOString().slice(0, 16);
-        } else {
-          document.getElementById('ann-expires').value = '';
-        }
-
-        if (ann.target_type === 'selected') {
-          document.getElementById('merchant-list-group').style.display = 'block';
-          await loadMerchantChecklist();
-          const targetIds = ann.targets.map(t => t.merchant_id);
-          document.querySelectorAll('.merchant-cb').forEach(cb => {
-            cb.checked = targetIds.includes(parseInt(cb.value));
-          });
-        } else {
-          document.getElementById('merchant-list-group').style.display = 'none';
-        }
-
-        UI.clearAlert('ann-alert');
-        document.getElementById('ann-modal').classList.add('active');
-      } catch (e) {
-        console.error(e);
-      }
-    }
-
-    function closeAnnModal() { document.getElementById('ann-modal').classList.remove('active'); }
-    document.getElementById('ann-modal').addEventListener('click', (e) => { if (e.target.id === 'ann-modal') closeAnnModal(); });
-
-    async function submitAnnouncement() {
-      const title = document.getElementById('ann-title').value.trim();
-      const content = document.getElementById('ann-content').value.trim();
-      const priority = document.getElementById('ann-priority').value;
-      const targetType = document.getElementById('ann-target').value;
-      const expiresRaw = document.getElementById('ann-expires').value;
-
-      if (!title || !content) {
-        UI.showAlert('ann-alert', 'Titre et contenu requis', 'error');
-        return;
-      }
-
-      const merchantIds = [];
-      if (targetType === 'selected') {
-        document.querySelectorAll('.merchant-cb:checked').forEach(cb => {
-          merchantIds.push(parseInt(cb.value));
-        });
-        if (merchantIds.length === 0) {
-          UI.showAlert('ann-alert', 'Sélectionnez au moins un commerce', 'error');
-          return;
-        }
-      }
-
-      const payload = {
-        title, content, priority,
-        targetType,
-        merchantIds,
-        expiresAt: expiresRaw ? new Date(expiresRaw).toISOString() : null,
-      };
-
-      try {
-        if (editingAnnouncementId) {
-          await adminCall(`/announcements/${editingAnnouncementId}`, {
-            method: 'PUT',
-            body: JSON.stringify(payload),
-          });
-          UI.showAlert('ann-alert', 'Annonce mise à jour !', 'success');
-        } else {
-          await adminCall('/announcements', {
-            method: 'POST',
-            body: JSON.stringify(payload),
-          });
-          UI.showAlert('ann-alert', 'Annonce publiée !', 'success');
-        }
-
-        setTimeout(() => {
-          closeAnnModal();
-          loadAnnouncements();
-        }, 800);
-      } catch (e) {
-        UI.showAlert('ann-alert', e.message, 'error');
-      }
-    }
-
-    async function deleteAnnouncement(id) {
-      if (!confirm('🗑️ Supprimer cette annonce ?')) return;
-      try {
-        await adminCall(`/announcements/${id}`, { method: 'DELETE' });
-        loadAnnouncements();
-      } catch (e) {
-        alert(e.message);
-      }
-    }
-
-
-    // ═══════════════════════════════════════════════════════
-    // INIT
-    // ═══════════════════════════════════════════════════════
-
-    loadStats();
-    loadMerchants();
-    checkHealth();
-    // Refresh health every 60s
-    setInterval(checkHealth, 60000);
-  </script>
+ <!-- ═══ HEADER BANNER ═══ -->
+ <header class="admin-banner">
+ <div class="admin-banner-inner">
+ <a href="/admin/dashboard" class="admin-brand">
+ <span class="admin-brand-logo">FIDDO</span>
+ <span class="admin-brand-divider"></span>
+ <span class="admin-brand-label">Super Admin</span>
+ </a>
+ <div class="admin-banner-right">
+ <span class="admin-env-badge" id="env-badge">
+ <span class="dot"></span>
+ <span id="env-label">production</span>
+ </span>
+ <button class="btn-admin-logout" onclick="adminLogout()">Déconnexion</button>
+ </div>
+ </div>
+ </header>
+
+ <!-- ═══ HERO + STATS ═══ -->
+ <section class="admin-hero">
+ <div class="admin-hero-inner">
+ <div class="hero-top-row">
+ <div class="hero-greeting">
+ <h1>Tableau de bord</h1>
+ <p>Vue d'ensemble de la plateforme FIDDO</p>
+ </div>
+ <div class="hero-date" id="hero-date"></div>
+ </div>
+
+ <div class="admin-stats-row">
+ <div class="admin-stat">
+ <div class="admin-stat-value" id="s-merchants">-</div>
+ <div class="admin-stat-label">Commerces</div>
+ </div>
+ <div class="admin-stat">
+ <div class="admin-stat-value success" id="s-active">-</div>
+ <div class="admin-stat-label">Actifs</div>
+ </div>
+ <div class="admin-stat">
+ <div class="admin-stat-value warning" id="s-pending">-</div>
+ <div class="admin-stat-label">En attente</div>
+ </div>
+ <div class="admin-stat">
+ <div class="admin-stat-value" id="s-users">-</div>
+ <div class="admin-stat-label">Clients</div>
+ </div>
+ <div class="admin-stat">
+ <div class="admin-stat-value accent" id="s-revenue">-</div>
+ <div class="admin-stat-label">CA total</div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- ═══ SYSTEM HEALTH ═══ -->
+ <section class="health-panel">
+ <div class="health-section-title">Santé du système</div>
+ <div class="health-grid">
+ <div class="health-card">
+ <div class="health-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a6 6 0 01-12 0V8z"/></svg></div>
+ <div class="health-info">
+ <div class="health-label">API</div>
+ <div class="health-value"><span class="health-dot off" id="h-api-dot"></span> <span id="h-api-text">Vérification…</span></div>
+ <div class="health-sub" id="h-api-version"></div>
+ </div>
+ </div>
+ <div class="health-card">
+ <div class="health-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z"/></svg></div>
+ <div class="health-info">
+ <div class="health-label">Hébergement</div>
+ <div class="health-value"><span class="health-dot off" id="h-render-dot"></span> <span id="h-render-text">Render</span></div>
+ <div class="health-sub" id="h-render-sub">Vérification…</div>
+ </div>
+ </div>
+ <div class="health-card">
+ <div class="health-icon purple"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+ <div class="health-info">
+ <div class="health-label">Emails envoyés</div>
+ <div class="health-value" id="h-emails">-</div>
+ <div class="health-sub" id="h-emails-sub">Brevo SMTP</div>
+ </div>
+ </div>
+ <div class="health-card">
+ <div class="health-icon orange"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+ <div class="health-info">
+ <div class="health-label">SMS envoyés</div>
+ <div class="health-value" id="h-sms">-</div>
+ <div class="health-sub" id="h-sms-sub">Non configuré</div>
+ </div>
+ </div>
+ <div class="health-card">
+ <div class="health-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></div>
+ <div class="health-info">
+ <div class="health-label">Dernier backup</div>
+ <div class="health-value"><span class="health-dot off" id="h-backup-dot"></span> <span id="h-backup-text">-</span></div>
+ <div class="health-sub" id="h-backup-sub">SQLite → JSON</div>
+ </div>
+ </div>
+ <div class="health-card">
+ <div class="health-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+ <div class="health-info">
+ <div class="health-label">Uptime</div>
+ <div class="health-value" id="h-uptime">-</div>
+ <div class="health-sub" id="h-uptime-sub"></div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- ═══ MAIN CONTENT ═══ -->
+ <main class="admin-main">
+ <div class="admin-tabs">
+ <button class="admin-tab active" onclick="switchTab('pending')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 22h14"/><path d="M5 2h14"/><path d="M17 22v-4.17a2 2 0 00-.59-1.41L12 12l-4.41 4.41A2 2 0 007 17.83V22"/><path d="M7 2v4.17a2 2 0 00.59 1.41L12 12l4.41-4.41A2 2 0 0017 6.17V2"/></svg> En attente</button>
+ <button class="admin-tab" onclick="switchTab('active')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Actifs</button>
+ <button class="admin-tab" onclick="switchTab('all')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Tous</button>
+ <button class="admin-tab" onclick="switchTab('users')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Utilisateurs</button>
+ <button class="admin-tab" onclick="switchTab('announcements')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg> Annonces</button>
+ </div>
+
+ <div class="tab-panels">
+ <div id="merchants-container"></div>
+ <div id="users-container" style="display: none;"></div>
+ <div id="announcements-container" style="display: none;"></div>
+ </div>
+ </main>
+
+ <footer style="text-align: center; padding: 2rem 0 1.5rem; font-size: 0.65rem; color: rgba(255,255,255,0.15); letter-spacing: 0.3px;">
+ Powered by <strong style="color: rgba(255,255,255,0.25); font-weight: 700;">H3001</strong>
+ </footer>
+
+ <!-- ═══ MERCHANT DETAIL MODAL ═══ -->
+ <div id="merchant-modal" class="modal">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h2 id="mm-title">Commerce</h2>
+ <button class="close-modal" onclick="closeModal()">×</button>
+ </div>
+ <div class="modal-body" id="mm-body"></div>
+ <div class="modal-footer" id="mm-footer"></div>
+ </div>
+ </div>
+
+ <!-- ═══ REJECT MODAL ═══ -->
+ <div id="reject-modal" class="modal">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h2>Refuser le commerce</h2>
+ <button class="close-modal" onclick="closeRejectModal()">×</button>
+ </div>
+ <div class="modal-body">
+ <div id="reject-alert"></div>
+ <div class="form-group">
+ <label class="form-label">Raison du refus</label>
+ <input type="text" id="reject-reason" class="form-control" placeholder="Documents manquants, TVA invalide...">
+ </div>
+ <button class="btn btn-danger" onclick="submitReject()">Confirmer le refus</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- ═══ ANNOUNCEMENT MODAL ═══ -->
+ <div id="ann-modal" class="modal">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h2 id="ann-modal-title">Nouvelle annonce</h2>
+ <button class="close-modal" onclick="closeAnnModal()">×</button>
+ </div>
+ <div class="modal-body">
+ <div id="ann-alert"></div>
+ <div class="form-group">
+ <label class="form-label">Titre *</label>
+ <input type="text" id="ann-title" class="form-control" placeholder="Ex: Maintenance prévue ce weekend">
+ </div>
+ <div class="form-group">
+ <label class="form-label">Contenu *</label>
+ <textarea id="ann-content" class="form-control" rows="4" placeholder="Détails de l'annonce..."></textarea>
+ </div>
+ <div class="form-group">
+ <label class="form-label">Priorité</label>
+ <select id="ann-priority" class="form-control">
+ <option value="info">ℹ Info</option>
+ <option value="warning"> Important</option>
+ <option value="urgent"> Urgent</option>
+ </select>
+ </div>
+ <div class="form-group">
+ <label class="form-label">Destinataires</label>
+ <select id="ann-target" class="form-control" onchange="toggleMerchantList()">
+ <option value="all"> Tous les commerces</option>
+ <option value="selected"> Commerces sélectionnés</option>
+ </select>
+ </div>
+ <div class="form-group" id="merchant-list-group" style="display: none;">
+ <label class="form-label">Sélectionner les commerces</label>
+ <div class="merchant-checklist" id="merchant-checklist"></div>
+ </div>
+ <div class="form-group">
+ <label class="form-label">Date d'expiration (optionnel)</label>
+ <input type="datetime-local" id="ann-expires" class="form-control">
+ <small class="form-help">L'annonce disparaîtra automatiquement après cette date</small>
+ </div>
+ <button class="btn btn-primary btn-block" id="ann-submit-btn" onclick="submitAnnouncement()">Publier l'annonce</button>
+ </div>
+ </div>
+ </div>
+
+ <!-- ═══ USER DETAIL MODAL ═══ -->
+ <div id="user-modal" class="modal">
+ <div class="modal-content">
+ <div class="modal-header">
+ <h2 id="um-title">Utilisateur</h2>
+ <button class="close-modal" onclick="closeUserModal()">×</button>
+ </div>
+ <div class="modal-body" id="um-body"></div>
+ <div class="modal-footer" id="um-footer"></div>
+ </div>
+ </div>
+
+ <!-- ═══ USER MERGE MODAL ═══ -->
+ <div id="merge-modal" class="modal">
+ <div class="modal-content" style="max-width: 650px;">
+ <div class="modal-header">
+ <h2> Fusion globale</h2>
+ <button class="close-modal" onclick="closeMergeModal()">×</button>
+ </div>
+ <div class="modal-body">
+ <div id="merge-alert"></div>
+
+ <div style="margin-bottom: 1rem; padding: 0.75rem; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border);">
+ <strong>Cible (conservé) :</strong> <span id="merge-target-label">—</span>
+ </div>
+
+ <div class="form-group">
+ <label class="form-label">Rechercher l'utilisateur source (à absorber)</label>
+ <input type="text" id="merge-source-search" class="form-control" placeholder="Email, téléphone ou nom…" oninput="onMergeSearch(this.value)">
+ </div>
+ <div id="merge-source-results" style="max-height: 180px; overflow-y: auto; margin-bottom: 1rem;"></div>
+
+ <div id="merge-preview-section" style="display: none;">
+ <div id="merge-preview-content"></div>
+
+ <div class="form-group" style="margin-top: 1rem;">
+ <label class="form-label">Note (visible par les commerçants)</label>
+ <input type="text" id="merge-reason" class="form-control" placeholder="Ex : Fusion demandée par le client" value="Fusion demandée par le client">
+ </div>
+
+ <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="executeMerge()"> Confirmer la fusion (irréversible)</button>
+ </div>
+ </div>
+ </div>
+ </div>
+
+ <script src="/js/app.js"></script>
+ <script>
+ const ADMIN_API = API_BASE_URL + '/admin';
+ let currentMerchantId = null;
+ let currentTab = 'pending';
+ let editingAnnouncementId = null;
+ let activeMerchants = [];
+ let healthStartTime = Date.now();
+
+ // ─── Date display ───
+ function updateHeroDate() {
+ const now = new Date();
+ const opts = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+ const dateStr = now.toLocaleDateString('fr-FR', opts);
+ const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+ document.getElementById('hero-date').innerHTML = `<strong>${dateStr}</strong><br>${timeStr}`;
+ }
+ updateHeroDate();
+ setInterval(updateHeroDate, 30000);
+
+ // ─── Admin API call ───
+ async function adminCall(endpoint, options = {}) {
+ const config = { headers: { 'Content-Type': 'application/json' }, credentials: 'include', ...options };
+ const resp = await fetch(`${ADMIN_API}${endpoint}`, config);
+ if (resp.status === 401 || resp.status === 403) { window.location.href = '/admin'; return; }
+ const data = await resp.json();
+ if (!resp.ok) throw new Error(data.error || 'Erreur');
+ return data;
+ }
+
+ function adminLogout() {
+ adminCall('/auth/logout', { method: 'POST' }).finally(() => window.location.href = '/admin');
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // SYSTEM HEALTH CHECKS
+ // ═══════════════════════════════════════════════════════
+
+ async function checkHealth() {
+ // ── API Health ──
+ try {
+ const start = performance.now();
+ const resp = await fetch(API_BASE_URL + '/health', { credentials: 'include' });
+ const ping = Math.round(performance.now() - start);
+ const data = await resp.json();
+
+ document.getElementById('h-api-dot').className = 'health-dot ok';
+ document.getElementById('h-api-text').textContent = `OK — ${ping}ms`;
+ document.getElementById('h-api-version').textContent = `v${data.version || '?'}`;
+
+ // Env badge
+ const isLocal = window.location.hostname === 'localhost';
+ document.getElementById('env-label').textContent = isLocal ? 'local' : 'production';
+ if (isLocal) {
+ const badge = document.getElementById('env-badge');
+ badge.style.background = 'rgba(245,158,11,0.12)';
+ badge.style.color = '#fbbf24';
+ badge.style.borderColor = 'rgba(245,158,11,0.2)';
+ badge.querySelector('.dot').style.background = '#fbbf24';
+ }
+ } catch (e) {
+ document.getElementById('h-api-dot').className = 'health-dot error';
+ document.getElementById('h-api-text').textContent = 'Erreur connexion';
+ document.getElementById('h-api-version').textContent = '';
+ }
+
+ // ── Render/Hosting ──
+ try {
+ const resp = await fetch(API_BASE_URL + '/health', { credentials: 'include' });
+ if (resp.ok) {
+ document.getElementById('h-render-dot').className = 'health-dot ok';
+ document.getElementById('h-render-text').textContent = 'Render';
+ document.getElementById('h-render-sub').textContent = 'Service actif';
+ }
+ } catch {
+ document.getElementById('h-render-dot').className = 'health-dot error';
+ document.getElementById('h-render-sub').textContent = 'Service injoignable';
+ }
+
+ // ── Emails / SMS / Backup — from admin stats endpoint ──
+ try {
+ const s = await adminCall('/merchants/stats/global');
+ // Emails: estimate from transactions (each credit with validated email = 1 email)
+ const emailCount = s.transactions || 0;
+ document.getElementById('h-emails').textContent = emailCount.toLocaleString('fr-FR');
+ document.getElementById('h-emails-sub').textContent = 'Brevo SMTP — estimé';
+
+ // SMS: not implemented yet
+ document.getElementById('h-sms').textContent = '0';
+ document.getElementById('h-sms-sub').textContent = 'Non configuré';
+
+ } catch {
+ document.getElementById('h-emails').textContent = '?';
+ document.getElementById('h-sms').textContent = '?';
+ }
+
+ // ── Backup status ──
+ try {
+ const resp = await fetch(API_BASE_URL + '/admin/backups/status', { credentials: 'include' });
+ if (resp.ok) {
+ const data = await resp.json();
+ document.getElementById('h-backup-dot').className = 'health-dot ok';
+ document.getElementById('h-backup-text').textContent = data.lastBackup ? Format.timeSince(data.lastBackup) : 'Disponible';
+ document.getElementById('h-backup-sub').textContent = data.size ? `${data.size}` : 'SQLite → JSON';
+ } else {
+ document.getElementById('h-backup-dot').className = 'health-dot warn';
+ document.getElementById('h-backup-text').textContent = 'Non configuré';
+ }
+ } catch {
+ document.getElementById('h-backup-dot').className = 'health-dot warn';
+ document.getElementById('h-backup-text').textContent = 'Endpoint absent';
+ document.getElementById('h-backup-sub').textContent = 'Ajouter /api/admin/backups/status';
+ }
+ }
+
+ // ── Uptime counter ──
+ function updateUptime() {
+ const diff = Date.now() - healthStartTime;
+ const s = Math.floor(diff / 1000);
+ const m = Math.floor(s / 60);
+ const h = Math.floor(m / 60);
+ if (h > 0) {
+ document.getElementById('h-uptime').textContent = `${h}h ${m % 60}m`;
+ } else {
+ document.getElementById('h-uptime').textContent = `${m}m ${s % 60}s`;
+ }
+ document.getElementById('h-uptime-sub').textContent = 'Session admin active';
+ }
+ setInterval(updateUptime, 1000);
+ updateUptime();
+
+ // ═══════════════════════════════════════════════════════
+ // STATS
+ // ═══════════════════════════════════════════════════════
+
+ async function loadStats() {
+ try {
+ const s = await adminCall('/merchants/stats/global');
+ document.getElementById('s-merchants').textContent = s.merchants.total;
+ document.getElementById('s-active').textContent = s.merchants.active;
+ document.getElementById('s-pending').textContent = s.merchants.pending;
+ document.getElementById('s-users').textContent = s.endUsers;
+ document.getElementById('s-revenue').textContent = Format.currency(s.revenue);
+ } catch (e) { console.error(e); }
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // TABS
+ // ═══════════════════════════════════════════════════════
+
+ function switchTab(tab) {
+ currentTab = tab;
+ document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+ event.target.classList.add('active');
+
+ const merchantsEl = document.getElementById('merchants-container');
+ const usersEl = document.getElementById('users-container');
+ const annEl = document.getElementById('announcements-container');
+
+ merchantsEl.style.display = 'none';
+ usersEl.style.display = 'none';
+ annEl.style.display = 'none';
+
+ if (tab === 'announcements') {
+ annEl.style.display = 'block';
+ loadAnnouncements();
+ } else if (tab === 'users') {
+ usersEl.style.display = 'block';
+ loadUsers();
+ } else {
+ merchantsEl.style.display = 'block';
+ loadMerchants();
+ }
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // MERCHANTS
+ // ═══════════════════════════════════════════════════════
+
+ async function loadMerchants() {
+ const container = document.getElementById('merchants-container');
+ try {
+ container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
+ const qs = currentTab === 'all' ? '' : `?status=${currentTab}`;
+ const data = await adminCall(`/merchants${qs}`);
+ const merchants = data.merchants;
+
+ if (merchants.length === 0) {
+ container.innerHTML = '<div class="admin-empty"><div class="admin-empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><p>Aucun commerce</p></div>';
+ return;
+ }
+
+ let html = `<table class="table"><thead><tr>
+ <th>Commerce</th><th>Propriétaire</th><th>TVA</th><th>Status</th><th>Clients</th><th>Créé le</th>
+ </tr></thead><tbody>`;
+
+ merchants.forEach(m => {
+ const statusClass = m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : m.status === 'suspended' ? 'danger' : 'neutral';
+ html += `<tr class="merchant-row" onclick="showMerchant(${m.id})">
+ <td><strong>${esc(m.business_name)}</strong><br><small class="text-muted-dark">${esc(m.email)}</small></td>
+ <td>${esc(m.owner_name) || '-'}<br><small class="text-muted-dark">${esc(m.owner_email) || '-'}</small></td>
+ <td style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${esc(m.vat_number)}</td>
+ <td><span class="badge badge-dark-${statusClass}">${esc(m.status)}</span></td>
+ <td>${m.client_count}</td>
+ <td style="color: rgba(255,255,255,0.4);">${Format.date(m.created_at)}</td>
+ </tr>`;
+ });
+ html += '</tbody></table>';
+ container.innerHTML = html;
+ } catch (e) {
+ container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ }
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // MERCHANT DETAIL MODAL
+ // ═══════════════════════════════════════════════════════
+
+ async function showMerchant(id) {
+ try {
+ currentMerchantId = id;
+ const data = await adminCall(`/merchants/${id}`);
+ const m = data.merchant;
+ const staffList = data.staff;
+ const stats = data.stats;
+
+ document.getElementById('mm-title').textContent = m.business_name;
+
+ let html = `
+ <div class="stats-grid" style="margin-bottom: 1.5rem;">
+ <div class="stat-card"><div class="stat-value">${stats.clients}</div><div class="stat-label">Clients</div></div>
+ <div class="stat-card"><div class="stat-value">${Format.currency(stats.revenue)}</div><div class="stat-label">CA</div></div>
+ <div class="stat-card"><div class="stat-value">${stats.transactions}</div><div class="stat-label">Transactions</div></div>
+ </div>
+
+ <h3 class="mb-1">Informations</h3>
+ <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
+ <div><strong>Adresse :</strong> ${esc(m.address)}</div>
+ <div><strong>TVA :</strong> ${esc(m.vat_number)}</div>
+ <div><strong>Email :</strong> ${esc(m.email)}</div>
+ <div><strong>Tél :</strong> ${esc(m.phone)}</div>
+ <div><strong>Status :</strong> <span class="badge badge-${m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : 'danger'}">${esc(m.status)}</span></div>
+ <div><strong>Inscrit :</strong> ${Format.datetime(m.created_at)}</div>
+ <div><strong>Points/€ :</strong> ${m.points_per_euro}</div>
+ <div><strong>Récompense :</strong> ${m.points_for_reward} pts</div>
+ </div>
+ ${m.rejection_reason ? `<div class="alert alert-warning">Raison de refus : ${esc(m.rejection_reason)}</div>` : ''}
+
+ <h3 class="mb-1">Équipe (${staffList.length})</h3>
+ `;
+
+ if (staffList.length > 0) {
+ html += '<table class="table" style="margin-bottom: 0;"><thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Actif</th></tr></thead><tbody>';
+ staffList.forEach(s => {
+ html += `<tr>
+ <td>${esc(s.display_name)}</td>
+ <td>${esc(s.email)}</td>
+ <td><span class="badge badge-info">${esc(s.role)}</span></td>
+ <td>${s.is_active ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-danger">Non</span>'}</td>
+ </tr>`;
+ });
+ html += '</tbody></table>';
+ } else {
+ html += '<p class="text-muted">Aucun membre</p>';
+ }
+
+ document.getElementById('mm-body').innerHTML = html;
+
+ let footer = '<div class="action-btns">';
+ if (m.status === 'pending') {
+ footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()"> Valider</button>`;
+ footer += `<button class="btn btn-danger btn-sm" onclick="showRejectModal()"> Refuser</button>`;
+ } else if (m.status === 'active') {
+ footer += `<button class="btn btn-danger btn-sm" onclick="suspendMerchant()">⏸ Suspendre</button>`;
+ } else if (m.status === 'suspended') {
+ footer += `<button class="btn btn-success btn-sm" onclick="reactivateMerchant()"> Réactiver</button>`;
+ }
+ footer += '</div>';
+ document.getElementById('mm-footer').innerHTML = footer;
+
+ document.getElementById('merchant-modal').classList.add('active');
+ } catch (e) {
+ console.error(e);
+ }
+ }
+
+ function closeModal() { document.getElementById('merchant-modal').classList.remove('active'); }
+ document.getElementById('merchant-modal').addEventListener('click', (e) => { if (e.target.id === 'merchant-modal') closeModal(); });
+
+ // ─── Merchant Actions ───
+ async function validateMerchant() {
+ if (!confirm(' Valider et activer ce commerce ?')) return;
+ try {
+ await adminCall(`/merchants/${currentMerchantId}/validate`, { method: 'POST' });
+ closeModal(); loadMerchants(); loadStats();
+ } catch (e) { alert(e.message); }
+ }
+
+ function showRejectModal() { document.getElementById('reject-modal').classList.add('active'); }
+ function closeRejectModal() { document.getElementById('reject-modal').classList.remove('active'); }
+ document.getElementById('reject-modal').addEventListener('click', (e) => { if (e.target.id === 'reject-modal') closeRejectModal(); });
+
+ async function submitReject() {
+ const reason = document.getElementById('reject-reason').value.trim();
+ try {
+ await adminCall(`/merchants/${currentMerchantId}/reject`, {
+ method: 'POST',
+ body: JSON.stringify({ reason }),
+ });
+ closeRejectModal(); closeModal(); loadMerchants(); loadStats();
+ } catch (e) { UI.showAlert('reject-alert', e.message, 'error'); }
+ }
+
+ async function suspendMerchant() {
+ if (!confirm('⏸ Suspendre ce commerce ?')) return;
+ try {
+ await adminCall(`/merchants/${currentMerchantId}/suspend`, { method: 'POST' });
+ closeModal(); loadMerchants(); loadStats();
+ } catch (e) { alert(e.message); }
+ }
+
+ async function reactivateMerchant() {
+ if (!confirm(' Réactiver ce commerce ?')) return;
+ try {
+ await adminCall(`/merchants/${currentMerchantId}/reactivate`, { method: 'POST' });
+ closeModal(); loadMerchants(); loadStats();
+ } catch (e) { alert(e.message); }
+ }
+
+
+ // ═══════════════════════════════════════════════════════
+ // USERS (end_users global table)
+ // ═══════════════════════════════════════════════════════
+
+ let usersSearchTimeout = null;
+
+ async function loadUsers(query = '') {
+ const container = document.getElementById('users-container');
+ try {
+ container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
+ const qs = query ? `?q=${encodeURIComponent(query)}` : '';
+ const data = await adminCall(`/users${qs}`);
+ const users = data.users;
+
+ let html = `
+ <div class="users-search">
+ <input type="text" id="users-search-input" placeholder="Rechercher par nom, email, téléphone…"
+ value="${query}" oninput="onUsersSearch(this.value)">
+ <span class="search-count">${data.count} utilisateur${data.count > 1 ? 's' : ''}</span>
+ </div>
+ `;
+
+ if (users.length === 0) {
+ html += '<div class="admin-empty"><div class="admin-empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><p>Aucun utilisateur trouvé</p></div>';
+ container.innerHTML = html;
+ return;
+ }
+
+ html += `<table class="table"><thead><tr>
+ <th>Nom</th><th>Email</th><th>Téléphone</th><th>Commerces</th><th>Badges</th><th>Créé le</th>
+ </tr></thead><tbody>`;
+
+ users.forEach(u => {
+ let badges = '';
+ if (u.email_validated) badges += '<span class="badge badge-dark-success" style="font-size:0.65rem;">Email </span> ';
+ if (u.has_pin) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">PIN</span> ';
+ if (u.has_qr) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">QR</span> ';
+ if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
+
+ html += `<tr class="merchant-row" onclick="showUser(${u.id})">
+ <td><strong>${u.name ? esc(u.name) : '<em style=\"opacity:0.4\">—</em>'}</strong></td>
+ <td style="font-size: 0.85rem;">${u.email ? esc(u.email) : '<em style="opacity:0.3">—</em>'}</td>
+ <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone ? esc(u.phone) : '—'}</td>
+ <td style="text-align: center;"><strong>${u.merchant_count}</strong></td>
+ <td>${badges || '<span style="opacity:0.2">—</span>'}</td>
+ <td style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
+ </tr>`;
+ });
+ html += '</tbody></table>';
+ if (data.count >= 200) {
+ html += '<div style="text-align:center; padding:0.75rem; color:rgba(255,255,255,0.3); font-size:0.8rem;">Limité à 200 résultats — affinez votre recherche</div>';
+ }
+ container.innerHTML = html;
+ } catch (e) {
+ container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ }
+ }
+
+ function onUsersSearch(val) {
+ clearTimeout(usersSearchTimeout);
+ usersSearchTimeout = setTimeout(() => loadUsers(val.trim()), 300);
+ }
+
+ // ─── User Detail Modal ───
+
+ async function showUser(id) {
+ try {
+ const data = await adminCall(`/users/${id}`);
+ const u = data.user;
+ const cards = data.cards;
+ const aliases = data.aliases;
+
+ document.getElementById('um-title').textContent = u.name || u.email || u.phone || `#${u.id}`;
+
+ let html = `
+ <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.9rem; margin-bottom: 1.5rem;">
+ <div><strong>Email :</strong> ${esc(u.email) || '—'} ${u.email_validated ? '<span class="badge badge-success">validé</span>' : ''}</div>
+ <div><strong>Téléphone :</strong> ${esc(u.phone) || '—'}</div>
+ <div><strong>PIN :</strong> ${u.has_pin ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-warning">Non défini</span>'}</div>
+ <div><strong>QR :</strong> ${u.has_qr ? '<span class="badge badge-success">Oui</span>' : '<span class="badge badge-warning">Non</span>'}</div>
+ <div><strong>Bloqué :</strong> ${u.is_blocked ? '<span class="badge badge-danger">Oui</span>' : 'Non'}</div>
+ <div><strong>Inscrit :</strong> ${Format.datetime(u.created_at)}</div>
+ </div>
+ `;
+
+ // Aliases
+ if (aliases.length > 0) {
+ html += '<h3 class="mb-1">Aliases (post-fusion)</h3>';
+ html += '<div style="margin-bottom: 1.5rem; font-size: 0.85rem;">';
+ aliases.forEach(a => {
+ html += `<span class="badge badge-info" style="margin-right: 0.4rem; margin-bottom: 0.3rem;">${esc(a.alias_type)}: ${esc(a.alias_value)}</span>`;
+ });
+ html += '</div>';
+ }
+
+ // Cards across merchants
+ html += `<h3 class="mb-1">Cartes de fidélité (${cards.length})</h3>`;
+
+ if (cards.length === 0) {
+ html += '<p class="text-muted">Aucune carte de fidélité</p>';
+ } else {
+ html += '<div class="user-cards-grid">';
+ cards.forEach(c => {
+ const statusBadge = c.merchant_status === 'active'
+ ? '<span class="badge badge-success" style="font-size:0.65rem;">actif</span>'
+ : `<span class="badge badge-warning" style="font-size:0.65rem;">${esc(c.merchant_status)}</span>`;
+
+ html += `
+ <div class="user-card-row">
+ <div>
+ <div class="user-card-biz">${esc(c.business_name)} ${statusBadge}</div>
+ <div style="font-size:0.75rem; color: var(--text-muted);">${esc(c.merchant_email)}</div>
+ </div>
+ <div class="user-card-stats">
+ <div><strong>${c.points_balance}</strong> pts</div>
+ <div><strong>${c.visit_count}</strong> visites</div>
+ <div><strong>${Format.currency(c.total_spent)}</strong></div>
+ <div style="color: rgba(0,0,0,0.35);">${Format.date(c.last_visit)}</div>
+ </div>
+ </div>
+ `;
+ });
+ html += '</div>';
+ }
+
+ document.getElementById('um-body').innerHTML = html;
+
+ // Footer — inline onclick (same pattern as merchant modal)
+ const mergeLabel = esc(u.name || u.email || u.phone || '').replace(/'/g, "\\'");
+ const footer = document.getElementById('um-footer');
+ footer.innerHTML = `
+ <div class="action-btns">
+ <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${mergeLabel}')"> Fusionner avec…</button>
+ ${u.is_blocked
+ ? `<button class="btn btn-success btn-sm" onclick="globalUnblockUser(${u.id})"> Débloquer</button>`
+ : `<button class="btn btn-danger btn-sm" onclick="globalBlockUser(${u.id})"> Bloquer globalement</button>`
+ }
+ </div>
+ `;
+
+ document.getElementById('user-modal').classList.add('active');
+ } catch (e) {
+ console.error(e);
+ }
+ }
+
+ function closeUserModal() { document.getElementById('user-modal').classList.remove('active'); }
+ document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
+
+ async function globalBlockUser(id) {
+ if (!confirm(' Bloquer cet utilisateur globalement ?\n\nIl ne pourra plus être crédité ni utiliser son QR/PIN chez aucun commerce.')) return;
+ try {
+ await adminCall(`/users/${id}/block`, { method: 'POST' });
+ closeUserModal();
+ loadUsers();
+ alert(' Utilisateur bloqué globalement');
+ } catch (e) { alert(e.message); }
+ }
+
+ async function globalUnblockUser(id) {
+ if (!confirm(' Débloquer cet utilisateur ?')) return;
+ try {
+ await adminCall(`/users/${id}/unblock`, { method: 'POST' });
+ closeUserModal();
+ loadUsers();
+ alert(' Utilisateur débloqué');
+ } catch (e) { alert(e.message); }
+ }
+
+ // ─── Merge Flow ───
+
+ let mergeTargetId = null;
+ let mergeSourceId = null;
+ let mergeSearchTimeout = null;
+
+ function openMergeModal(targetId, targetLabel) {
+ mergeTargetId = targetId;
+ mergeSourceId = null;
+ document.getElementById('merge-target-label').textContent = targetLabel + ` (#${targetId})`;
+ document.getElementById('merge-source-search').value = '';
+ document.getElementById('merge-source-results').innerHTML = '';
+ document.getElementById('merge-preview-section').style.display = 'none';
+ document.getElementById('merge-alert').innerHTML = '';
+ document.getElementById('merge-reason').value = 'Fusion demandée par le client';
+ document.getElementById('merge-modal').classList.add('active');
+ }
+
+ function closeMergeModal() { document.getElementById('merge-modal').classList.remove('active'); }
+ document.getElementById('merge-modal').addEventListener('click', (e) => { if (e.target.id === 'merge-modal') closeMergeModal(); });
+
+ function onMergeSearch(val) {
+ clearTimeout(mergeSearchTimeout);
+ if (val.trim().length < 2) {
+ document.getElementById('merge-source-results').innerHTML = '';
+ return;
+ }
+ mergeSearchTimeout = setTimeout(async () => {
+ try {
+ const data = await adminCall(`/users?q=${encodeURIComponent(val.trim())}`);
+ const container = document.getElementById('merge-source-results');
+ // Filter out the target itself
+ const users = data.users.filter(u => u.id !== mergeTargetId);
+ if (users.length === 0) {
+ container.innerHTML = '<div style="padding:0.5rem; color:var(--text-muted); font-size:0.85rem;">Aucun résultat</div>';
+ return;
+ }
+ container.innerHTML = users.slice(0, 8).map(u => `
+ <div class="merge-result-search ${mergeSourceId === u.id ? 'selected' : ''}" onclick="selectMergeSource(${u.id})">
+ <strong>${u.name ? esc(u.name) : '<em>Sans nom</em>'}</strong>
+ <span style="color:var(--text-muted); font-size:0.8rem; margin-left:0.5rem;">${esc(u.email) || ''} ${esc(u.phone) || ''}</span>
+ <span style="float:right; font-size:0.75rem; color:var(--text-muted);">${u.merchant_count} commerce${u.merchant_count > 1 ? 's' : ''}</span>
+ </div>
+ `).join('');
+ } catch (e) {
+ console.error(e);
+ }
+ }, 300);
+ }
+
+ async function selectMergeSource(sourceId) {
+ mergeSourceId = sourceId;
+ // Highlight
+ document.querySelectorAll('.merge-result-search').forEach(el => el.classList.remove('selected'));
+ event.currentTarget.classList.add('selected');
+
+ // Load preview
+ try {
+ const preview = await adminCall(`/users/${mergeTargetId}/merge-preview?sourceId=${sourceId}`);
+ const section = document.getElementById('merge-preview-section');
+ const content = document.getElementById('merge-preview-content');
+
+ let html = `<h3 style="margin-bottom:0.75rem; font-size:0.95rem;">Aperçu de la fusion</h3>`;
+
+ html += `<div style="display:flex; gap:1rem; margin-bottom:1rem; font-size:0.85rem;">
+ <div style="flex:1; padding:0.6rem; border-radius:8px; background:#fef2f2; border:1px solid #fecaca;">
+ <strong>Source (supprimé)</strong><br>
+ ${esc(preview.source.name) || '—'}<br>
+ <span style="color:#6b7280;">${esc(preview.source.email) || ''} ${esc(preview.source.phone) || ''}</span>
+ </div>
+ <div style="display:flex; align-items:center; font-size:1.3rem;">→</div>
+ <div style="flex:1; padding:0.6rem; border-radius:8px; background:#f0fdf4; border:1px solid #bbf7d0;">
+ <strong>Cible (conservé)</strong><br>
+ ${esc(preview.target.name) || '—'}<br>
+ <span style="color:#6b7280;">${esc(preview.target.email) || ''} ${esc(preview.target.phone) || ''}</span>
+ </div>
+ </div>`;
+
+ if (preview.actions.length === 0) {
+ html += '<div style="padding:0.75rem; color:var(--text-muted);">Aucune carte à transférer (source sans commerce)</div>';
+ } else {
+ preview.actions.forEach(a => {
+ const tag = a.action === 'merge'
+ ? '<span class="merge-tag-merge">FUSION</span>'
+ : '<span class="merge-tag-transfer">TRANSFERT</span>';
+
+ let detail = '';
+ if (a.action === 'merge') {
+ detail = `${a.target_before.points} + ${a.source.points} → <strong>${a.target_after.points} pts</strong>`;
+ } else {
+ detail = `<strong>${a.source.points} pts</strong>, ${a.source.visits} visites`;
+ }
+
+ html += `<div class="merge-action">
+ <div>
+ <div class="merge-label">${esc(a.business_name)} ${tag}</div>
+ <div class="merge-detail">${detail}</div>
+ </div>
+ </div>`;
+ });
+ }
+
+ if (preview.newAliases.length > 0) {
+ html += `<div style="margin-top:0.75rem; font-size:0.8rem; color:var(--text-muted);">
+ <strong>Aliases créés :</strong> ${preview.newAliases.map(a => esc(a.value)).join(', ')}
+ </div>`;
+ }
+
+ content.innerHTML = html;
+ section.style.display = 'block';
+ } catch (e) {
+ UI.showAlert('merge-alert', e.message, 'error');
+ }
+ }
+
+ async function executeMerge() {
+ if (!mergeSourceId || !mergeTargetId) return;
+ const reason = document.getElementById('merge-reason').value.trim();
+ if (!confirm(` IRRÉVERSIBLE\n\nFusionner l'utilisateur #${mergeSourceId} dans #${mergeTargetId} ?\n\nLe user source sera supprimé définitivement.`)) return;
+
+ try {
+ const result = await adminCall(`/users/${mergeTargetId}/merge`, {
+ method: 'POST',
+ body: JSON.stringify({ sourceId: mergeSourceId, reason }),
+ });
+ closeMergeModal();
+ closeUserModal();
+ loadUsers();
+ loadStats();
+ alert(` Fusion effectuée\n${result.merged} carte(s) fusionnée(s)\n${result.transferred} carte(s) transférée(s)`);
+ } catch (e) {
+ UI.showAlert('merge-alert', e.message, 'error');
+ }
+ }
+
+
+ // ═══════════════════════════════════════════════════════
+ // ANNOUNCEMENTS
+ // ═══════════════════════════════════════════════════════
+
+ async function loadAnnouncements() {
+ const container = document.getElementById('announcements-container');
+ try {
+ container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
+
+ const data = await adminCall('/announcements');
+ const anns = data.announcements;
+
+ let html = `
+ <div class="flex-between mb-2">
+ <h2 style="margin: 0; color: #e2e8f0; font-size: 1.1rem;"> Annonces (${anns.length})</h2>
+ <button class="btn btn-primary btn-sm" onclick="showCreateAnn()">+ Nouvelle annonce</button>
+ </div>
+ `;
+
+ if (anns.length === 0) {
+ html += '<div class="admin-empty"><div class="admin-empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><p>Aucune annonce pour le moment</p></div>';
+ container.innerHTML = html;
+ return;
+ }
+
+ anns.forEach(a => {
+ const prioIcons = { info: 'ℹ', warning: '', urgent: '' };
+ const isExpired = a.expires_at && new Date(a.expires_at) < new Date();
+
+ html += `
+ <div class="ann-card priority-${a.priority}" ${isExpired ? 'style="opacity: 0.4;"' : ''}>
+ <div class="ann-header">
+ <div>
+ <span class="ann-title">${prioIcons[a.priority]} ${esc(a.title)}</span>
+ ${isExpired ? '<span class="badge badge-dark-neutral" style="margin-left: 0.5rem;">Expirée</span>' : ''}
+ </div>
+ <div class="ann-actions">
+ <button class="btn btn-outline btn-sm" onclick="editAnnouncement(${a.id})"></button>
+ <button class="btn btn-danger btn-sm" onclick="deleteAnnouncement(${a.id})"></button>
+ </div>
+ </div>
+ <div class="ann-meta">
+ ${Format.datetime(a.created_at)} — par ${esc(a.author_name)}
+ · <strong>${a.read_count}</strong> lecture(s)
+ · ${a.target_type === 'all' ? ' Tous' : ` ${a.targets.length} commerce(s)`}
+ ${a.expires_at ? ` · Expire le ${Format.datetime(a.expires_at)}` : ''}
+ </div>
+ <div class="ann-content">${esc(a.content)}</div>
+ ${a.target_type === 'selected' && a.targets.length > 0 ? `
+ <div class="ann-targets">
+ ${a.targets.map(t => `<span class="ann-target-chip">${esc(t.business_name)}</span>`).join('')}
+ </div>
+ ` : ''}
+ </div>
+ `;
+ });
+
+ container.innerHTML = html;
+ } catch (e) {
+ container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ }
+ }
+
+ // ─── Announcement Modal ───
+
+ function toggleMerchantList() {
+ const val = document.getElementById('ann-target').value;
+ document.getElementById('merchant-list-group').style.display = val === 'selected' ? 'block' : 'none';
+ if (val === 'selected' && activeMerchants.length === 0) {
+ loadMerchantChecklist();
+ }
+ }
+
+ async function loadMerchantChecklist() {
+ try {
+ const data = await adminCall('/announcements/merchants');
+ activeMerchants = data.merchants;
+ const container = document.getElementById('merchant-checklist');
+ if (activeMerchants.length === 0) {
+ container.innerHTML = '<p class="text-muted text-sm">Aucun commerce actif</p>';
+ return;
+ }
+ container.innerHTML = activeMerchants.map(m => `
+ <div class="merchant-check-item">
+ <input type="checkbox" id="mc-${m.id}" value="${m.id}" class="merchant-cb">
+ <label for="mc-${m.id}">${esc(m.business_name)}</label>
+ </div>
+ `).join('');
+ } catch (e) {
+ console.error(e);
+ }
+ }
+
+ function showCreateAnn() {
+ editingAnnouncementId = null;
+ document.getElementById('ann-modal-title').textContent = 'Nouvelle annonce';
+ document.getElementById('ann-title').value = '';
+ document.getElementById('ann-content').value = '';
+ document.getElementById('ann-priority').value = 'info';
+ document.getElementById('ann-target').value = 'all';
+ document.getElementById('ann-expires').value = '';
+ document.getElementById('merchant-list-group').style.display = 'none';
+ document.getElementById('ann-submit-btn').textContent = 'Publier l\'annonce';
+ UI.clearAlert('ann-alert');
+ document.getElementById('ann-modal').classList.add('active');
+ }
+
+ async function editAnnouncement(id) {
+ try {
+ const data = await adminCall('/announcements');
+ const ann = data.announcements.find(a => a.id === id);
+ if (!ann) return;
+
+ editingAnnouncementId = id;
+ document.getElementById('ann-modal-title').textContent = 'Modifier l\'annonce';
+ document.getElementById('ann-title').value = ann.title;
+ document.getElementById('ann-content').value = ann.content;
+ document.getElementById('ann-priority').value = ann.priority;
+ document.getElementById('ann-target').value = ann.target_type;
+ document.getElementById('ann-submit-btn').textContent = 'Mettre à jour';
+
+ if (ann.expires_at) {
+ const d = new Date(ann.expires_at + 'Z');
+ document.getElementById('ann-expires').value = d.toISOString().slice(0, 16);
+ } else {
+ document.getElementById('ann-expires').value = '';
+ }
+
+ if (ann.target_type === 'selected') {
+ document.getElementById('merchant-list-group').style.display = 'block';
+ await loadMerchantChecklist();
+ const targetIds = ann.targets.map(t => t.merchant_id);
+ document.querySelectorAll('.merchant-cb').forEach(cb => {
+ cb.checked = targetIds.includes(parseInt(cb.value));
+ });
+ } else {
+ document.getElementById('merchant-list-group').style.display = 'none';
+ }
+
+ UI.clearAlert('ann-alert');
+ document.getElementById('ann-modal').classList.add('active');
+ } catch (e) {
+ console.error(e);
+ }
+ }
+
+ function closeAnnModal() { document.getElementById('ann-modal').classList.remove('active'); }
+ document.getElementById('ann-modal').addEventListener('click', (e) => { if (e.target.id === 'ann-modal') closeAnnModal(); });
+
+ async function submitAnnouncement() {
+ const title = document.getElementById('ann-title').value.trim();
+ const content = document.getElementById('ann-content').value.trim();
+ const priority = document.getElementById('ann-priority').value;
+ const targetType = document.getElementById('ann-target').value;
+ const expiresRaw = document.getElementById('ann-expires').value;
+
+ if (!title || !content) {
+ UI.showAlert('ann-alert', 'Titre et contenu requis', 'error');
+ return;
+ }
+
+ const merchantIds = [];
+ if (targetType === 'selected') {
+ document.querySelectorAll('.merchant-cb:checked').forEach(cb => {
+ merchantIds.push(parseInt(cb.value));
+ });
+ if (merchantIds.length === 0) {
+ UI.showAlert('ann-alert', 'Sélectionnez au moins un commerce', 'error');
+ return;
+ }
+ }
+
+ const payload = {
+ title, content, priority,
+ targetType,
+ merchantIds,
+ expiresAt: expiresRaw ? new Date(expiresRaw).toISOString() : null,
+ };
+
+ try {
+ if (editingAnnouncementId) {
+ await adminCall(`/announcements/${editingAnnouncementId}`, {
+ method: 'PUT',
+ body: JSON.stringify(payload),
+ });
+ UI.showAlert('ann-alert', 'Annonce mise à jour !', 'success');
+ } else {
+ await adminCall('/announcements', {
+ method: 'POST',
+ body: JSON.stringify(payload),
+ });
+ UI.showAlert('ann-alert', 'Annonce publiée !', 'success');
+ }
+
+ setTimeout(() => {
+ closeAnnModal();
+ loadAnnouncements();
+ }, 800);
+ } catch (e) {
+ UI.showAlert('ann-alert', e.message, 'error');
+ }
+ }
+
+ async function deleteAnnouncement(id) {
+ if (!confirm(' Supprimer cette annonce ?')) return;
+ try {
+ await adminCall(`/announcements/${id}`, { method: 'DELETE' });
+ loadAnnouncements();
+ } catch (e) {
+ alert(e.message);
+ }
+ }
+
+
+ // ═══════════════════════════════════════════════════════
+ // INIT
+ // ═══════════════════════════════════════════════════════
+
+ loadStats();
+ loadMerchants();
+ checkHealth();
+ // Refresh health every 60s
+ setInterval(checkHealth, 60000);
+ </script>
 </body>
 </html>
