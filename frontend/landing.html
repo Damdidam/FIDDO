@@ -46,6 +46,11 @@
       color: var(--text);
       line-height: 1.7;
       background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 70% 0%, rgba(8,145,178,0.07), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 10% 60%, rgba(8,145,178,0.04), transparent 50%),
+        radial-gradient(ellipse 50% 50% at 80% 100%, rgba(8,145,178,0.05), transparent 50%);
+      background-attachment: fixed;
       overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
@@ -1192,14 +1197,14 @@
         <a href="#features" class="footer-a">Fonctionnalités</a>
         <a href="#pricing" class="footer-a">Tarifs</a>
         <a href="#apps" class="footer-a">Apps</a>
-        <a href="mailto:support@fiddo.be" class="footer-a">Contact</a>
+        <a href="/cdn-cgi/l/email-protection#b6c5c3c6c6d9c4c2f6d0dfd2d2d998d4d3" class="footer-a">Contact</a>
       </div>
-      <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · support@fiddo.be</div>
+      <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="92e1e7e2e2fde0e6d2f4fbf6f6fdbcf0f7">[email&#160;protected]</a></div>
       <div class="footer-c" style="margin-top: 0.5rem; opacity: 0.5;">Powered by <strong>H3001</strong></div>
     </div>
   </footer>
 
-  <script>
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
     // Nav scroll effect
     const nav = document.getElementById('nav');
     window.addEventListener('scroll', () => {
@@ -1234,12 +1239,4 @@
         const t = document.querySelector(a.getAttribute('href'));
         if (t) {
           e.preventDefault();
-          t.scrollIntoView({ behavior: 'smooth' });
-          document.querySelector('.nav-links')?.classList.remove('open');
-        }
-      });
-    });
-  </script>
-  <script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(()=>{});</script>
-</body>
-</html>
+          t.scrollIntoVi
