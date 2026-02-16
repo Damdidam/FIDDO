@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ <link rel="manifest" href="/manifest.json">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <meta name="apple-mobile-web-app-title" content="FIDDO">
+ <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+ <meta name="theme-color" content="#0891B2">
+ <title>FIDDO</title>
+ <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ <style>
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+
+ :root {
+ --accent: #0891B2;
+ --accent-dark: #0E7490;
+ --accent-light: #ECFEFF;
+ --accent-glow: rgba(8,145,178,0.18);
+ --dark: #0F172A;
+ --card: #FFFFFF;
+ --bg: #F1F5F9;
+ --gradient: linear-gradient(135deg, var(--accent), var(--accent-dark));
+ }
+
+ [data-theme="navy"] { --accent: #1E40AF; --accent-dark: #1E3A8A; --accent-light: #DBEAFE; --accent-glow: rgba(30,64,175,0.18); }
+ [data-theme="violet"] { --accent: #7C3AED; --accent-dark: #6D28D9; --accent-light: #EDE9FE; --accent-glow: rgba(124,58,237,0.18); }
+ [data-theme="forest"] { --accent: #059669; --accent-dark: #047857; --accent-light: #D1FAE5; --accent-glow: rgba(5,150,105,0.18); }
+ [data-theme="brick"] { --accent: #DC2626; --accent-dark: #B91C1C; --accent-light: #FEE2E2; --accent-glow: rgba(220,38,38,0.18); }
+ [data-theme="amber"] { --accent: #D97706; --accent-dark: #B45309; --accent-light: #FEF3C7; --accent-glow: rgba(217,119,6,0.18); }
+ [data-theme="slate"] { --accent: #475569; --accent-dark: #334155; --accent-light: #F1F5F9; --accent-glow: rgba(71,85,105,0.18); }
+
+ body {
+ font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+ background: var(--dark);
+ color: #1E293B;
+ min-height: 100vh;
+ min-height: 100dvh;
+ display: flex;
+ flex-direction: column;
+ }
+
+ /* RTL support */
+ [dir="rtl"] .form-control { text-align: right; }
+ [dir="rtl"] .form-label { text-align: right; }
+ [dir="rtl"] .reward-info { direction: rtl; }
+
+ /* ── Dark top area ── */
+ .top-zone {
+ background: var(--dark);
+ padding: 2rem 1.5rem 3.5rem;
+ text-align: center;
+ position: relative;
+ }
+ .top-zone::after {
+ content: '';
+ position: absolute;
+ bottom: -1px; left: 0; right: 0;
+ height: 32px;
+ background: var(--bg);
+ border-radius: 24px 24px 0 0;
+ }
+
+ .merchant-name {
+ font-size: 1.15rem;
+ font-weight: 700;
+ color: #FFFFFF;
+ margin-bottom: 0.25rem;
+ }
+ .merchant-sub {
+ font-size: 0.78rem;
+ color: #94A3B8;
+ }
+
+ /* ── Language bar ── */
+ .lang-bar {
+ display: flex;
+ justify-content: center;
+ gap: 4px;
+ margin-top: 0.75rem;
+ position: relative;
+ z-index: 2;
+ }
+ .lang-btn {
+ background: rgba(255,255,255,0.06);
+ border: 1px solid rgba(255,255,255,0.08);
+ border-radius: 6px;
+ padding: 5px 10px;
+ font-size: 0.72rem;
+ font-weight: 600;
+ color: rgba(255,255,255,0.4);
+ cursor: pointer;
+ font-family: inherit;
+ transition: all 0.2s;
+ min-width: 40px;
+ text-align: center;
+ }
+ .lang-btn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.1); }
+ .lang-btn.active {
+ background: rgba(8,145,178,0.2);
+ border-color: rgba(8,145,178,0.3);
+ color: #22d3ee;
+ }
+
+ /* ── Content area ── */
+ .content {
+ flex: 1;
+ background: var(--bg);
+ padding: 0 1.25rem 2rem;
+ }
+ .content-inner {
+ max-width: 400px;
+ margin: 0 auto;
+ }
+
+ /* ── Card ── */
+ .card {
+ background: var(--card);
+ border-radius: 16px;
+ padding: 1.5rem;
+ box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+ }
+
+ /* ── Form ── */
+ .form-group { margin-bottom: 1rem; }
+ .form-label {
+ display: block;
+ font-size: 0.75rem;
+ font-weight: 700;
+ color: #64748B;
+ margin-bottom: 6px;
+ text-transform: uppercase;
+ letter-spacing: 0.5px;
+ }
+ .form-control {
+ width: 100%;
+ padding: 14px 16px;
+ border: 2px solid #E2E8F0;
+ border-radius: 12px;
+ font-size: 1rem;
+ font-family: inherit;
+ transition: all 0.25s;
+ background: #F8FAFC;
+ color: #1E293B;
+ }
+ .form-control:focus {
+ outline: none;
+ border-color: var(--accent);
+ background: white;
+ box-shadow: 0 0 0 4px var(--accent-glow);
+ }
+ .form-control::placeholder { color: #CBD5E1; }
+
+ /* ── Segment toggle ── */
+ .seg {
+ display: flex;
+ background: #F1F5F9;
+ border-radius: 12px;
+ padding: 3px;
+ margin-bottom: 1rem;
+ }
+ .seg button {
+ flex: 1;
+ padding: 10px;
+ border: none;
+ background: none;
+ border-radius: 10px;
+ font-size: 0.85rem;
+ font-weight: 600;
+ color: #94A3B8;
+ cursor: pointer;
+ font-family: inherit;
+ transition: all 0.25s;
+ }
+ .seg button.active {
+ background: white;
+ color: var(--accent);
+ box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+ }
+
+ /* ── Button ── */
+ .btn-submit {
+ display: block;
+ width: 100%;
+ padding: 16px;
+ border: none;
+ border-radius: 14px;
+ font-size: 1.05rem;
+ font-weight: 700;
+ font-family: inherit;
+ cursor: pointer;
+ background: var(--gradient);
+ color: white;
+ transition: all 0.25s;
+ margin-top: 0.5rem;
+ position: relative;
+ overflow: hidden;
+ }
+ .btn-submit:hover { transform: translateY(-1px); box-shadow: 0 6px 20px var(--accent-glow); }
+ .btn-submit:active { transform: translateY(0); }
+ .btn-submit:disabled { opacity: 0.5; transform: none; cursor: not-allowed; }
+
+ /* ── Alert ── */
+ .alert {
+ padding: 0.7rem 0.9rem;
+ border-radius: 10px;
+ font-size: 0.85rem;
+ margin-bottom: 0.75rem;
+ animation: slideIn 0.3s ease;
+ }
+ .alert-error { background: #FEF2F2; color: #DC2626; border: 1px solid #FECACA; }
+ @keyframes slideIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+ /* ── Reward info ── */
+ .reward-info {
+ background: var(--accent-light);
+ border-radius: 12px;
+ padding: 0.75rem 1rem;
+ text-align: center;
+ font-size: 0.82rem;
+ color: var(--accent-dark);
+ margin-bottom: 1rem;
+ font-weight: 500;
+ }
+
+ /* ── Success screen ── */
+ .success-card {
+ text-align: center;
+ padding: 2rem 1.5rem;
+ animation: pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+ }
+ .success-icon {
+ width: 72px; height: 72px;
+ background: linear-gradient(135deg, #10B981, #059669);
+ border-radius: 50%;
+ display: flex; align-items: center; justify-content: center;
+ margin: 0 auto 1rem;
+ font-size: 2rem;
+ box-shadow: 0 8px 24px rgba(16,185,129,0.25);
+ }
+ .success-card h2 { font-size: 1.2rem; color: #166534; margin-bottom: 0.5rem; }
+ .success-card p { font-size: 0.88rem; color: #64748B; line-height: 1.5; }
+ .success-points {
+ display: inline-block;
+ background: var(--accent-light); color: var(--accent-dark);
+ font-weight: 700; padding: 0.4rem 1rem; border-radius: 20px;
+ font-size: 0.85rem; margin-top: 0.75rem;
+ }
+ @keyframes pop { 0% { transform: scale(0.85); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+ /* ── Error screen ── */
+ .error-card { text-align: center; padding: 2rem 1.5rem; }
+
+ /* ── Loading ── */
+ .spinner {
+ width: 36px; height: 36px;
+ border: 3px solid rgba(255,255,255,0.15);
+ border-top-color: var(--accent);
+ border-radius: 50%;
+ animation: spin 0.7s linear infinite;
+ margin: 3rem auto;
+ }
+ @keyframes spin { to { transform: rotate(360deg); } }
+
+ .screen { display: none; }
+ .screen.active { display: block; }
+
+ .footer {
+ background: var(--bg); text-align: center;
+ padding: 0.75rem; font-size: 0.68rem; color: #CBD5E1;
+ }
+
+ @media (max-width: 480px) {
+ .top-zone { padding: 1.75rem 1rem 3rem; }
+ .merchant-name { font-size: 1rem; }
+ .content { padding: 0 0.75rem 1.5rem; }
+ .card { padding: 1.25rem; }
+ .form-control { padding: 13px 14px; }
+ .btn-submit { min-height: 48px; padding: 14px; }
+ .lang-bar { gap: 2px; }
+ .lang-btn { padding: 5px 8px; min-width: 36px; font-size: 0.68rem; }
+ }
+ </style>
+</head>
+<body>
+
+ <div class="top-zone">
+ <div class="merchant-name" id="merchant-name">Chargement…</div>
+ <div class="merchant-sub" id="merchant-sub">Programme de fidélité</div>
+ <div class="lang-bar" id="lang-bar">
+ <button type="button" class="lang-btn active" data-lang="fr" onclick="setLang('fr')">FR</button>
+ <button type="button" class="lang-btn" data-lang="nl" onclick="setLang('nl')">NL</button>
+ <button type="button" class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+ <button type="button" class="lang-btn" data-lang="de" onclick="setLang('de')">DE</button>
+ <button type="button" class="lang-btn" data-lang="es" onclick="setLang('es')">ES</button>
+ <button type="button" class="lang-btn" data-lang="ar" onclick="setLang('ar')">AR</button>
+ </div>
+ </div>
+
+ <div class="content">
+ <div class="content-inner">
+
+ <div id="screen-loading" class="screen active">
+ <div class="spinner"></div>
+ </div>
+
+ <div id="screen-error" class="screen">
+ <div class="card error-card">
+ <div style="margin-bottom:0.75rem;"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 16s-1.5-2-4-2-4 2-4 2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+ <h2 style="font-size:1.1rem; margin-bottom:0.5rem;" id="error-title"></h2>
+ <p style="font-size:0.85rem; color:#64748B;" id="error-msg"></p>
+ </div>
+ </div>
+
+ <div id="screen-form" class="screen">
+ <div id="reward-info" class="reward-info"></div>
+ <div class="card">
+ <div id="form-alert"></div>
+ <div class="seg">
+ <button type="button" id="seg-email" class="active" onclick="setMode('email')">@ Email</button>
+ <button type="button" id="seg-phone" onclick="setMode('phone')"># <span id="lbl-seg-phone">Téléphone</span></button>
+ </div>
+ <div class="form-group" id="group-email">
+ <label class="form-label" id="lbl-email">Adresse email</label>
+ <input type="email" id="inp-email" class="form-control" placeholder="votre@email.com" autocomplete="email" inputmode="email">
+ </div>
+ <div class="form-group" id="group-phone" style="display:none;">
+ <label class="form-label" id="lbl-phone">Numéro de téléphone</label>
+ <input type="tel" id="inp-phone" class="form-control" placeholder="+32 497 12 34 56" autocomplete="tel" inputmode="tel">
+ </div>
+ <div class="form-group">
+ <label class="form-label"><span id="lbl-name">Nom / prénom</span> <span style="font-weight:400; text-transform:none; letter-spacing:0;" id="lbl-optional">(optionnel)</span></label>
+ <input type="text" id="inp-name" class="form-control" placeholder="Pierre" autocomplete="name">
+ </div>
+ <div class="form-group">
+ <label class="form-label"><span id="lbl-pin">Code PIN</span> <span style="font-weight:400; text-transform:none; letter-spacing:0;" id="lbl-pin-hint">(4 chiffres — protège vos récompenses)</span></label>
+ <input type="tel" id="inp-pin" class="form-control" placeholder="1234" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" style="text-align:center; font-size:1.3rem; letter-spacing:0.5rem; font-weight:700;">
+ </div>
+ <button class="btn-submit" id="btn-submit" onclick="doSubmit()"> <span id="lbl-submit">C'est moi !</span></button>
+ </div>
+ </div>
+
+ <div id="screen-success" class="screen">
+ <div class="card success-card">
+ <div class="success-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+ <h2 id="success-title"></h2>
+ <p id="success-msg"></p>
+ <div class="success-points" id="success-points" style="display:none;"></div>
+ </div>
+ </div>
+
+ </div>
+ </div>
+
+ <div class="footer" id="footer">Propulsé par FIDDO</div>
+
+ <script>
+ // XSS protection helper
+ function esc(s) { if (!s) return ''; const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+ // ═══════════════════════════════════════════════════════
+ // TRANSLATIONS (6 languages)
+ // ═══════════════════════════════════════════════════════
+
+ var T = {
+ fr: {
+ sub: 'Programme de fidélité',
+ segPhone: 'Téléphone',
+ lblEmail: 'Adresse email',
+ lblPhone: 'Numéro de téléphone',
+ lblName: 'Nom / prénom',
+ lblOptional: '(optionnel)',
+ lblPin: 'Code PIN',
+ lblPinHint: '(4 chiffres — protège vos récompenses)',
+ errInvalidPin: 'Le code PIN doit contenir 4 chiffres',
+ btnSubmit: "C'est moi !",
+ btnSending: 'Envoi…',
+ placeholderName: 'Pierre',
+ rewardInfo: function(ppe, pfr, desc) { return ppe + ' pt/€ · Récompense à ' + pfr + ' pts — <strong>' + desc + '</strong>'; },
+ errLinkTitle: 'Lien invalide',
+ errLinkMsg: 'Ce lien ne contient pas de code QR valide.',
+ errNotFoundTitle: 'Commerce non trouvé',
+ errNotFoundMsg: "Ce QR code n'est pas valide ou le commerce n'est plus actif.",
+ errConnectionTitle: 'Erreur de connexion',
+ errConnectionMsg: 'Impossible de contacter le serveur.',
+ errNetwork: 'Erreur réseau. Réessayez.',
+ errEnterEmail: 'Saisissez votre adresse email',
+ errInvalidEmail: 'Adresse email invalide',
+ errEnterPhone: 'Saisissez votre numéro de téléphone',
+ welcomeTitle: 'Bienvenue !',
+ welcomeMsg: function(n) { return 'Vous êtes enregistré chez ' + n + '. Vos premiers points arrivent !'; },
+ returnTitle: 'Content de vous revoir !',
+ returnMsg: function(name) { return (name ? name + ', v' : 'V') + 'ous êtes identifié. Vos points arrivent !'; },
+ balance: function(pts) { return 'Solde actuel : ' + pts + ' pts'; },
+ footer: 'Propulsé par FIDDO',
+ },
+ nl: {
+ sub: 'Getrouwheidsprogramma',
+ segPhone: 'Telefoon',
+ lblEmail: 'E-mailadres',
+ lblPhone: 'Telefoonnummer',
+ lblName: 'Naam / voornaam',
+ lblOptional: '(optioneel)',
+ lblPin: 'PIN-code',
+ lblPinHint: '(4 cijfers — beschermt uw beloningen)',
+ errInvalidPin: 'De PIN-code moet 4 cijfers bevatten',
+ btnSubmit: 'Dat ben ik!',
+ btnSending: 'Verzenden…',
+ placeholderName: 'Jan',
+ rewardInfo: function(ppe, pfr, desc) { return ppe + ' pt/€ · Beloning bij ' + pfr + ' pts — <strong>' + desc + '</strong>'; },
+ errLinkTitle: 'Ongeldige link',
+ errLinkMsg: 'Deze link bevat geen geldige QR-code.',
+ errNotFoundTitle: 'Zaak niet gevonden',
+ errNotFoundMsg: 'Deze QR-code is niet geldig of de zaak is niet meer actief.',
+ errConnectionTitle: 'Verbindingsfout',
+ errConnectionMsg: 'Kan geen verbinding maken met de server.',
+ errNetwork: 'Netwerkfout. Probeer opnieuw.',
+ errEnterEmail: 'Vul uw e-mailadres in',
+ errInvalidEmail: 'Ongeldig e-mailadres',
+ errEnterPhone: 'Vul uw telefoonnummer in',
+ welcomeTitle: 'Welkom!',
+ welcomeMsg: function(n) { return 'U bent geregistreerd bij ' + n + '. Uw eerste punten komen eraan!'; },
+ returnTitle: 'Leuk u terug te zien!',
+ returnMsg: function(name) { return (name ? name + ', u' : 'U') + ' bent geïdentificeerd. Uw punten komen eraan!'; },
+ balance: function(pts) { return 'Huidig saldo: ' + pts + ' pts'; },
+ footer: 'Aangedreven door FIDDO',
+ },
+ en: {
+ sub: 'Loyalty program',
+ segPhone: 'Phone',
+ lblEmail: 'Email address',
+ lblPhone: 'Phone number',
+ lblName: 'Name',
+ lblOptional: '(optional)',
+ lblPin: 'PIN code',
+ lblPinHint: '(4 digits — protects your rewards)',
+ errInvalidPin: 'PIN code must be 4 digits',
+ btnSubmit: "That's me!",
+ btnSending: 'Sending…',
+ placeholderName: 'John',
+ rewardInfo: function(ppe, pfr, desc) { return ppe + ' pt/€ · Reward at ' + pfr + ' pts — <strong>' + desc + '</strong>'; },
+ errLinkTitle: 'Invalid link',
+ errLinkMsg: 'This link does not contain a valid QR code.',
+ errNotFoundTitle: 'Business not found',
+ errNotFoundMsg: 'This QR code is not valid or the business is no longer active.',
+ errConnectionTitle: 'Connection error',
+ errConnectionMsg: 'Unable to reach the server.',
+ errNetwork: 'Network error. Please try again.',
+ errEnterEmail: 'Please enter your email address',
+ errInvalidEmail: 'Invalid email address',
+ errEnterPhone: 'Please enter your phone number',
+ welcomeTitle: 'Welcome!',
+ welcomeMsg: function(n) { return "You're registered at " + n + '. Your first points are on the way!'; },
+ returnTitle: 'Welcome back!',
+ returnMsg: function(name) { return (name ? name + ", you're" : "You're") + ' identified. Your points are on the way!'; },
+ balance: function(pts) { return 'Current balance: ' + pts + ' pts'; },
+ footer: 'Powered by FIDDO',
+ },
+ de: {
+ sub: 'Treueprogramm',
+ segPhone: 'Telefon',
+ lblEmail: 'E-Mail-Adresse',
+ lblPhone: 'Telefonnummer',
+ lblName: 'Name / Vorname',
+ lblOptional: '(optional)',
+ lblPin: 'PIN-Code',
+ lblPinHint: '(4 Ziffern — schützt Ihre Belohnungen)',
+ errInvalidPin: 'Der PIN-Code muss 4 Ziffern enthalten',
+ btnSubmit: 'Das bin ich!',
+ btnSending: 'Senden…',
+ placeholderName: 'Hans',
+ rewardInfo: function(ppe, pfr, desc) { return ppe + ' Pt/€ · Belohnung bei ' + pfr + ' Pts — <strong>' + desc + '</strong>'; },
+ errLinkTitle: 'Ungültiger Link',
+ errLinkMsg: 'Dieser Link enthält keinen gültigen QR-Code.',
+ errNotFoundTitle: 'Geschäft nicht gefunden',
+ errNotFoundMsg: 'Dieser QR-Code ist ungültig oder das Geschäft ist nicht mehr aktiv.',
+ errConnectionTitle: 'Verbindungsfehler',
+ errConnectionMsg: 'Verbindung zum Server nicht möglich.',
+ errNetwork: 'Netzwerkfehler. Bitte erneut versuchen.',
+ errEnterEmail: 'Bitte geben Sie Ihre E-Mail-Adresse ein',
+ errInvalidEmail: 'Ungültige E-Mail-Adresse',
+ errEnterPhone: 'Bitte geben Sie Ihre Telefonnummer ein',
+ welcomeTitle: 'Willkommen!',
+ welcomeMsg: function(n) { return 'Sie sind bei ' + n + ' registriert. Ihre ersten Punkte kommen!'; },
+ returnTitle: 'Schön Sie wiederzusehen!',
+ returnMsg: function(name) { return (name ? name + ', S' : 'S') + 'ie sind identifiziert. Ihre Punkte kommen!'; },
+ balance: function(pts) { return 'Aktueller Stand: ' + pts + ' Pts'; },
+ footer: 'Betrieben von FIDDO',
+ },
+ es: {
+ sub: 'Programa de fidelidad',
+ segPhone: 'Teléfono',
+ lblEmail: 'Correo electrónico',
+ lblPhone: 'Número de teléfono',
+ lblName: 'Nombre / apellido',
+ lblOptional: '(opcional)',
+ lblPin: 'Código PIN',
+ lblPinHint: '(4 dígitos — protege sus recompensas)',
+ errInvalidPin: 'El código PIN debe tener 4 dígitos',
+ btnSubmit: '¡Soy yo!',
+ btnSending: 'Enviando…',
+ placeholderName: 'Pedro',
+ rewardInfo: function(ppe, pfr, desc) { return ppe + ' pt/€ · Recompensa a ' + pfr + ' pts — <strong>' + desc + '</strong>'; },
+ errLinkTitle: 'Enlace no válido',
+ errLinkMsg: 'Este enlace no contiene un código QR válido.',
+ errNotFoundTitle: 'Comercio no encontrado',
+ errNotFoundMsg: 'Este código QR no es válido o el comercio ya no está activo.',
+ errConnectionTitle: 'Error de conexión',
+ errConnectionMsg: 'No se pudo contactar con el servidor.',
+ errNetwork: 'Error de red. Inténtelo de nuevo.',
+ errEnterEmail: 'Introduzca su correo electrónico',
+ errInvalidEmail: 'Correo electrónico no válido',
+ errEnterPhone: 'Introduzca su número de teléfono',
+ welcomeTitle: '¡Bienvenido!',
+ welcomeMsg: function(n) { return 'Está registrado en ' + n + '. ¡Sus primeros puntos llegan pronto!'; },
+ returnTitle: '¡Nos alegra verle de nuevo!',
+ returnMsg: function(name) { return (name ? name + ', e' : 'E') + 'stá identificado. ¡Sus puntos llegan pronto!'; },
+ balance: function(pts) { return 'Saldo actual: ' + pts + ' pts'; },
+ footer: 'Impulsado por FIDDO',
+ },
+ ar: {
+ sub: 'برنامج الولاء',
+ segPhone: 'هاتف',
+ lblEmail: 'البريد الإلكتروني',
+ lblPhone: 'رقم الهاتف',
+ lblName: 'الاسم',
+ lblOptional: '(اختياري)',
+ lblPin: 'رمز PIN',
+ lblPinHint: '(4 أرقام — يحمي مكافآتك)',
+ errInvalidPin: 'يجب أن يتكون رمز PIN من 4 أرقام',
+ btnSubmit: 'هذا أنا!',
+ btnSending: 'جارٍ الإرسال…',
+ placeholderName: 'محمد',
+ rewardInfo: function(ppe, pfr, desc) { return ppe + ' نقطة/€ · مكافأة عند ' + pfr + ' نقطة — <strong>' + desc + '</strong>'; },
+ errLinkTitle: 'رابط غير صالح',
+ errLinkMsg: 'هذا الرابط لا يحتوي على رمز QR صالح.',
+ errNotFoundTitle: 'المتجر غير موجود',
+ errNotFoundMsg: 'رمز QR هذا غير صالح أو المتجر لم يعد نشطًا.',
+ errConnectionTitle: 'خطأ في الاتصال',
+ errConnectionMsg: 'تعذّر الاتصال بالخادم.',
+ errNetwork: 'خطأ في الشبكة. حاول مرة أخرى.',
+ errEnterEmail: 'أدخل بريدك الإلكتروني',
+ errInvalidEmail: 'بريد إلكتروني غير صالح',
+ errEnterPhone: 'أدخل رقم هاتفك',
+ welcomeTitle: 'مرحبًا!',
+ welcomeMsg: function(n) { return 'تم تسجيلك في ' + n + '. نقاطك الأولى في الطريق!'; },
+ returnTitle: 'سعداء بعودتك!',
+ returnMsg: function(name) { return (name ? name + '، ' : '') + 'تم التعرف عليك. نقاطك في الطريق!'; },
+ balance: function(pts) { return 'الرصيد الحالي: ' + pts + ' نقطة'; },
+ footer: 'مدعوم من FIDDO',
+ },
+ };
+
+ // ═══════════════════════════════════════════════════════
+ // CONFIG & STATE
+ // ═══════════════════════════════════════════════════════
+
+ var API_BASE = window.location.hostname === 'localhost'
+ ? 'http://localhost:3000/api' : '/api';
+
+ var qrToken = null;
+ var merchantInfo = null;
+ var mode = 'email';
+ var lang = 'fr';
+
+ // ═══════════════════════════════════════════════════════
+ // LANGUAGE SWITCH
+ // ═══════════════════════════════════════════════════════
+
+ function setLang(l) {
+ lang = l;
+ var t = T[l] || T.fr;
+
+ // RTL for Arabic
+ document.documentElement.dir = (l === 'ar') ? 'rtl' : 'ltr';
+ document.documentElement.lang = l;
+
+ // Active button
+ document.querySelectorAll('.lang-btn').forEach(function(b) {
+ b.classList.toggle('active', b.getAttribute('data-lang') === l);
+ });
+
+ // Static UI
+ document.getElementById('merchant-sub').textContent = t.sub;
+ document.getElementById('lbl-seg-phone').textContent = t.segPhone;
+ document.getElementById('lbl-email').textContent = t.lblEmail;
+ document.getElementById('lbl-phone').textContent = t.lblPhone;
+ document.getElementById('lbl-name').textContent = t.lblName;
+ document.getElementById('lbl-optional').textContent = t.lblOptional;
+ document.getElementById('lbl-pin').textContent = t.lblPin;
+ document.getElementById('lbl-pin-hint').textContent = t.lblPinHint;
+ document.getElementById('lbl-submit').textContent = t.btnSubmit;
+ document.getElementById('inp-name').placeholder = t.placeholderName;
+ document.getElementById('footer').textContent = t.footer;
+
+ // Reward info (if merchant loaded)
+ if (merchantInfo) {
+ document.getElementById('reward-info').innerHTML =
+ t.rewardInfo(merchantInfo.pointsPerEuro, merchantInfo.pointsForReward, esc(merchantInfo.rewardDescription));
+ }
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // INIT
+ // ═══════════════════════════════════════════════════════
+
+ (async function init() {
+ var parts = window.location.pathname.split('/');
+ if (parts[1] === 'q' && parts[2]) {
+ qrToken = parts[2];
+ } else {
+ var p = new URLSearchParams(window.location.search);
+ qrToken = p.get('s') || p.get('token');
+ }
+
+ if (!qrToken) {
+ showError(T[lang].errLinkTitle, T[lang].errLinkMsg);
+ return;
+ }
+
+ try {
+ var resp = await fetch(API_BASE + '/qr/info/' + qrToken);
+ if (!resp.ok) {
+ showError(T[lang].errNotFoundTitle, T[lang].errNotFoundMsg);
+ return;
+ }
+ merchantInfo = await resp.json();
+
+ // Theme
+ document.body.setAttribute('data-theme', merchantInfo.theme || 'teal');
+ document.getElementById('merchant-name').textContent = merchantInfo.merchantName;
+ document.title = merchantInfo.merchantName + ' — FIDDO';
+
+ var themeColors = {
+ teal: '#0891B2', navy: '#1E40AF', violet: '#7C3AED',
+ forest: '#059669', brick: '#DC2626', amber: '#D97706', slate: '#475569'
+ };
+ document.querySelector('meta[name="theme-color"]').content = themeColors[merchantInfo.theme] || '#0891B2';
+
+ // Set merchant default language then apply
+ var defaultLang = merchantInfo.language || 'fr';
+ if (T[defaultLang]) {
+ setLang(defaultLang);
+ }
+
+ // Check if already identified
+ var savedIdentId = sessionStorage.getItem('fiddo_ident_' + qrToken);
+ if (savedIdentId) {
+ try {
+ var check = await fetch(API_BASE + '/qr/status/' + savedIdentId + '?qrToken=' + qrToken);
+ var status = await check.json();
+ if (status.active) {
+ showSuccess(status);
+ return;
+ }
+ } catch (e) {}
+ sessionStorage.removeItem('fiddo_ident_' + qrToken);
+ }
+
+ showScreen('screen-form');
+ setTimeout(function() { document.getElementById('inp-email').focus(); }, 400);
+
+ } catch (e) {
+ showError(T[lang].errConnectionTitle, T[lang].errConnectionMsg);
+ }
+ })();
+
+ // ═══════════════════════════════════════════════════════
+ // SCREENS
+ // ═══════════════════════════════════════════════════════
+
+ function showScreen(id) {
+ document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+ document.getElementById(id).classList.add('active');
+ }
+
+ function showError(title, msg) {
+ document.getElementById('error-title').textContent = title;
+ document.getElementById('error-msg').textContent = msg;
+ document.getElementById('merchant-name').textContent = 'FIDDO';
+ showScreen('screen-error');
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // MODE TOGGLE
+ // ═══════════════════════════════════════════════════════
+
+ function setMode(m) {
+ mode = m;
+ document.getElementById('seg-email').classList.toggle('active', m === 'email');
+ document.getElementById('seg-phone').classList.toggle('active', m === 'phone');
+ document.getElementById('group-email').style.display = m === 'email' ? '' : 'none';
+ document.getElementById('group-phone').style.display = m === 'phone' ? '' : 'none';
+ var inp = document.getElementById(m === 'email' ? 'inp-email' : 'inp-phone');
+ setTimeout(function() { inp.focus(); }, 100);
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // SUBMIT
+ // ═══════════════════════════════════════════════════════
+
+ async function doSubmit() {
+ var t = T[lang] || T.fr;
+ document.getElementById('form-alert').innerHTML = '';
+
+ var email = mode === 'email' ? document.getElementById('inp-email').value.trim() : null;
+ var phone = mode === 'phone' ? document.getElementById('inp-phone').value.trim() : null;
+ var name = document.getElementById('inp-name').value.trim() || null;
+ var pin = document.getElementById('inp-pin').value.trim() || null;
+
+ if (mode === 'email' && !email) { showAlert(t.errEnterEmail); return; }
+ if (mode === 'email' && !/\S+@\S+\.\S+/.test(email)) { showAlert(t.errInvalidEmail); return; }
+ if (mode === 'phone' && !phone) { showAlert(t.errEnterPhone); return; }
+ if (pin && !/^\d{4}$/.test(pin)) { showAlert(t.errInvalidPin); return; }
+
+ var btn = document.getElementById('btn-submit');
+ btn.disabled = true;
+ document.getElementById('lbl-submit').textContent = t.btnSending;
+
+ try {
+ var resp = await fetch(API_BASE + '/qr/register', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ qrToken: qrToken, email: email, phone: phone, name: name, pin: pin }),
+ });
+
+ var data = await resp.json();
+
+ if (!resp.ok) {
+ showAlert(data.error || 'Erreur');
+ btn.disabled = false;
+ document.getElementById('lbl-submit').textContent = t.btnSubmit;
+ return;
+ }
+
+ sessionStorage.setItem('fiddo_ident_' + qrToken, data.identId);
+ showSuccess(data);
+
+ } catch (e) {
+ showAlert(t.errNetwork);
+ btn.disabled = false;
+ document.getElementById('lbl-submit').textContent = t.btnSubmit;
+ }
+ }
+
+ function showSuccess(data) {
+ var t = T[lang] || T.fr;
+ if (data.isNew) {
+ document.getElementById('success-title').textContent = t.welcomeTitle;
+ document.getElementById('success-msg').textContent = t.welcomeMsg(merchantInfo.merchantName);
+ } else {
+ document.getElementById('success-title').textContent = t.returnTitle;
+ document.getElementById('success-msg').textContent = t.returnMsg(data.clientName);
+ if (data.pointsBalance > 0) {
+ var el = document.getElementById('success-points');
+ el.textContent = t.balance(data.pointsBalance);
+ el.style.display = 'inline-block';
+ }
+ }
+ showScreen('screen-success');
+ }
+
+ function showAlert(msg) {
+ document.getElementById('form-alert').innerHTML =
+ '<div class="alert alert-error">' + esc(msg) + '</div>';
+ }
+
+ document.addEventListener('keydown', function(e) {
+ if (e.key === 'Enter' && document.getElementById('screen-form').classList.contains('active')) {
+ e.preventDefault();
+ doSubmit();
+ }
+ });
+ </script>
+<script>if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js").catch(function(){});</script>
+</body>
+</html>
