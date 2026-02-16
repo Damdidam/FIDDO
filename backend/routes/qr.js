@@ -486,11 +486,52 @@ router.post('/register', (req, res) => {
     regData.lastAttempt = Date.now();
     pinAttempts.set(regKey, regData);
 
-    // Cooldown check: if same person identified recently at this merchant, return cached response
+    // Cooldown check: if same person identified recently at this merchant
     const identifier = emailLower || phoneE164;
     const cooldownKey = merchant.id + ':' + identifier;
     const cooldown = identCooldowns.get(cooldownKey);
     if (cooldown && Date.now() - cooldown.ts < IDENT_COOLDOWN_MS) {
+      const elapsedMs = Date.now() - cooldown.ts;
+      const remainingMs = IDENT_COOLDOWN_MS - elapsedMs;
+      const minutesAgo = Math.floor(elapsedMs / 60000);
+      const minutesLeft = Math.ceil(remainingMs / 60000);
+
+      // Still push to merchant queue with recent flag so merchant can decide
+      if (!pendingIdents.has(merchant.id)) {
+        pendingIdents.set(merchant.id, new Map());
+      }
+      const merchantQueue = pendingIdents.get(merchant.id);
+      const recentIdentId = crypto.randomBytes(8).toString('hex');
+
+      // Check if we already have a recent-flagged ident for this person
+      let alreadyQueued = false;
+      for (const [, ident] of merchantQueue) {
+        if (ident.identifier === identifier && ident.recentCredit) {
+          alreadyQueued = true;
+          break;
+        }
+      }
+
+      if (!alreadyQueued) {
+        const mc = findEndUser(emailLower, phoneE164)
+          ? merchantClientQueries.find.get(merchant.id, findEndUser(emailLower, phoneE164).id)
+          : null;
+
+        merchantQueue.set(recentIdentId, {
+          endUserId: cooldown.endUserId || null,
+          name: cooldown.name || name || '',
+          email: email || '',
+          phone: phone || '',
+          pointsBalance: mc?.points_balance ?? cooldown.pointsBalance ?? 0,
+          visitCount: mc?.visit_count ?? 0,
+          isNew: false,
+          identifier,
+          recentCredit: true,
+          minutesAgo,
+          createdAt: Date.now(),
+        });
+      }
+
       return res.json({
         ok: true,
         identId: cooldown.identId,
@@ -498,6 +539,8 @@ router.post('/register', (req, res) => {
         clientName: cooldown.name,
         pointsBalance: cooldown.pointsBalance,
         cached: true,
+        minutesAgo,
+        minutesLeft,
       });
     }
 
@@ -584,6 +627,7 @@ router.post('/register', (req, res) => {
       isNew,
       name: existing?.name || name || null,
       pointsBalance: mc?.points_balance || 0,
+      endUserId: existing?.id || null,
     });
 
     res.json(responseData);
@@ -731,6 +775,8 @@ router.get('/pending', authenticateStaff, (req, res) => {
         visitCount: ident.visitCount,
         isNew: ident.isNew,
         secondsAgo: Math.floor((now - ident.createdAt) / 1000),
+        recentCredit: ident.recentCredit || false,
+        minutesAgo: ident.minutesAgo || 0,
       });
     }
 
