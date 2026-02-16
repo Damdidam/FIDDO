@@ -6,7 +6,7 @@ const router = express.Router();
 
 const { db, endUserQueries, merchantClientQueries, merchantQueries, pollQueries } = require('../database');
 const { normalizeEmail } = require('../services/normalizer');
-const { sendMagicLinkEmail } = require('../services/email');
+const { sendMagicLinkEmail, sendAccountDeletedEmail } = require('../services/email');
 const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
 
 // ═══════════════════════════════════════════════════════
@@ -661,6 +661,48 @@ router.post('/gift/:token/claim', authenticateClient, (req, res) => {
     });
   } catch (error) {
     console.error('Gift claim error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// DELETE /api/me/account — Soft delete (anonymize) user account
+// ═══════════════════════════════════════════════════════
+
+router.delete('/account', authenticateClient, async (req, res) => {
+  try {
+    const endUser = endUserQueries.findById.get(req.endUserId);
+    if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
+
+    const email = endUser.email;
+    const anonName = 'Utilisateur supprimé';
+    const anonEmail = `deleted_${endUser.id}_${Date.now()}@anonymized.fiddo.be`;
+
+    // Anonymize the end_user record
+    db.prepare(`
+      UPDATE end_users SET
+        name = ?,
+        email = ?,
+        email_normalized = ?,
+        phone = NULL,
+        phone_e164 = NULL,
+        date_of_birth = NULL,
+        pin_hash = NULL,
+        is_active = 0,
+        updated_at = datetime('now')
+      WHERE id = ?
+    `).run(anonName, anonEmail, anonEmail.toLowerCase(), endUser.id);
+
+    // Clear JWT cookie
+    res.clearCookie('fiddo_jwt', { path: '/', httpOnly: true, secure: true, sameSite: 'lax' });
+
+    // Send confirmation email to original address
+    try { await sendAccountDeletedEmail(email); } catch (e) { console.error('Delete email error:', e); }
+
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Account delete error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
