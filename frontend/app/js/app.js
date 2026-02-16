@@ -14,29 +14,7 @@ const App = (() => {
   let scanInterval = null;
   let searchQuery = '';
   let activeFilter = 'all';
-  let favorites = loadFavorites();
 
-  function loadFavorites() {
-    try {
-      const stored = localStorage.getItem('fiddo_favs');
-      if (stored) return JSON.parse(stored);
-    } catch (e) {}
-    // Fallback: try cookie
-    try {
-      const match = document.cookie.match(/(?:^|;\s*)fiddo_favs=([^;]+)/);
-      if (match) return JSON.parse(decodeURIComponent(match[1]));
-    } catch (e) {}
-    return [];
-  }
-
-  function saveFavorites() {
-    try {
-      const json = JSON.stringify(favorites);
-      localStorage.setItem('fiddo_favs', json);
-      // Also save as cookie (persists better in Capacitor remote WebView)
-      document.cookie = 'fiddo_favs=' + encodeURIComponent(json) + ';path=/;max-age=31536000;SameSite=Lax;Secure';
-    } catch (e) {}
-  }
   let lastGiftLink = '';
   let pollTimer = null;
 
@@ -336,7 +314,6 @@ const App = (() => {
 
   function showApp() {
     stopPolling();
-    favorites = loadFavorites();
     show('screen-app');
     renderCards();
     buildFilterPills();
@@ -426,8 +403,8 @@ const App = (() => {
     noResult.classList.add('hidden');
 
     filtered.sort((a, b) => {
-      const af = favorites.includes(a.merchantId) ? 0 : 1;
-      const bf = favorites.includes(b.merchantId) ? 0 : 1;
+      const af = a.isFavorite ? 0 : 1;
+      const bf = b.isFavorite ? 0 : 1;
       if (af !== bf) return af - bf;
       return new Date(b.lastVisit || 0) - new Date(a.lastVisit || 0);
     });
@@ -439,7 +416,7 @@ const App = (() => {
       const pct = Math.min(c.progress || 0, 100);
       const date = c.lastVisit ? relDate(c.lastVisit) : '';
       const biz = BIZ_TYPES[c.businessType || 'horeca'] || BIZ_TYPES.autre;
-      const isFav = favorites.includes(c.merchantId);
+      const isFav = c.isFavorite;
 
       return `
         <div class="loyalty-card theme-${theme}" onclick="App.openCard(${c.merchantId})">
@@ -523,7 +500,7 @@ const App = (() => {
         saveCardStates(newCards);
 
         // Only re-render if display-relevant data changed AND not in cooldown
-        const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}`;
+        const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.isFavorite}`;
         const newFp = newCards.map(fingerprint).sort().join('|');
         const oldFp = cards.map(fingerprint).sort().join('|');
         cards = newCards;
@@ -547,23 +524,45 @@ const App = (() => {
 
   // ─── Favorites ────────────────────────────
 
-  function toggleFav() {
+  async function toggleFav() {
     if (!currentMerchant) return;
     const id = currentMerchant.id;
-    const idx = favorites.indexOf(id);
-    if (idx >= 0) { favorites.splice(idx, 1); toast('Retiré des favoris'); }
-    else { favorites.push(id); toast('Ajouté aux favoris ⭐'); }
-    saveFavorites();
-    updateFavIcon();
-    renderFilteredCards();
+    const res = await API.call(`/api/me/cards/${id}/favorite`, { method: 'PUT' });
+    if (res.ok) {
+      // Update local card data
+      const card = cards.find(c => c.merchantId === id);
+      if (card) card.isFavorite = res.data.isFavorite;
+      toast(res.data.isFavorite ? 'Ajouté aux favoris ⭐' : 'Retiré des favoris');
+      updateFavIcon();
+      renderFilteredCards();
+    } else {
+      toast('Erreur');
+    }
   }
 
   function updateFavIcon() {
     if (!currentMerchant) return;
     const icon = document.getElementById('fav-icon');
-    const isFav = favorites.includes(currentMerchant.id);
+    const card = cards.find(c => c.merchantId === currentMerchant.id);
+    const isFav = card?.isFavorite;
     icon.textContent = isFav ? 'star' : 'star_outline';
     if (isFav) icon.classList.add('filled'); else icon.classList.remove('filled');
+  }
+
+  async function hideCard() {
+    if (!currentMerchant) return;
+    if (!confirm(`Masquer la carte "${currentMerchant.name}" ?\n\nVos points seront conservés. Si vous rescannez le QR du commerçant, la carte réapparaîtra.`)) return;
+    const id = currentMerchant.id;
+    const res = await API.call(`/api/me/cards/${id}/hide`, { method: 'PUT' });
+    if (res.ok) {
+      cards = cards.filter(c => c.merchantId !== id);
+      toast('Carte masquée');
+      goBack();
+      renderCards();
+      buildFilterPills();
+    } else {
+      toast('Erreur');
+    }
   }
 
   // ─── Card detail ──────────────────────────
@@ -1221,7 +1220,7 @@ const App = (() => {
     openPinModal, savePin,
     startScanner, closeModal,
     logout, saveNotifs, toast,
-    filterType, clearSearch, toggleFav,
+    filterType, clearSearch, toggleFav, hideCard,
     startGift, confirmGift, copyGiftLink, shareGift,
     confirmDeleteAccount, deleteAccount,
   };
