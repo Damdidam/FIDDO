@@ -233,8 +233,6 @@ function initDatabase() {
   // ───────────────────────────────────────────
   try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
-  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN is_favorite INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
-  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN is_hidden INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
   try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token TEXT'); } catch (e) { /* already exists */ }
@@ -350,7 +348,7 @@ initDatabase();
   const cols = db.prepare("PRAGMA table_info(merchants)").all().map(c => c.name);
 
   const newCols = {
-    business_type: "TEXT",
+    business_type: "TEXT DEFAULT 'horeca'",
     website_url: 'TEXT',
     instagram_url: 'TEXT',
     facebook_url: 'TEXT',
@@ -649,8 +647,7 @@ const merchantClientQueries = {
         total_spent = total_spent + ?,
         visit_count = visit_count + 1,
         last_visit = datetime('now'),
-        updated_at = datetime('now'),
-        is_hidden = 0
+        updated_at = datetime('now')
     WHERE id = ?
   `),
 
@@ -757,6 +754,12 @@ const voucherQueries = {
     JOIN merchant_clients mc ON pv.sender_mc_id = mc.id
     WHERE pv.status = 'pending' AND pv.expires_at < datetime('now')
   `),
+  // Merge support: reassign vouchers from source to target
+  reassignSender: db.prepare('UPDATE point_vouchers SET sender_mc_id = ? WHERE sender_mc_id = ?'),
+  reassignClaimer: db.prepare('UPDATE point_vouchers SET claimer_mc_id = ? WHERE claimer_mc_id = ?'),
+  // Delete support: remove vouchers sent by this client, detach as claimer
+  deleteBySender: db.prepare('DELETE FROM point_vouchers WHERE sender_mc_id = ?'),
+  nullifyClaimer: db.prepare('UPDATE point_vouchers SET claimer_mc_id = NULL WHERE claimer_mc_id = ?'),
 };
 
 // ─── Poll Sessions (native app auth) ────────────────
