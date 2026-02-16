@@ -451,7 +451,7 @@ router.get('/status/:identId', (req, res) => {
 
 router.post('/register', (req, res) => {
   try {
-    const { qrToken, email, phone, name, pin } = req.body;
+    const { qrToken, email, phone, name } = req.body;
 
     // Validate merchant
     if (!qrToken) return res.status(400).json({ error: 'Token QR requis' });
@@ -463,9 +463,6 @@ router.post('/register', (req, res) => {
     // Validate input
     if (!email && !phone) {
       return res.status(400).json({ error: 'Email ou téléphone requis' });
-    }
-    if (pin && !/^\d{4}$/.test(pin)) {
-      return res.status(400).json({ error: 'Le code PIN doit contenir 4 chiffres' });
     }
     // Input length limits
     if (email && email.length > 254) return res.status(400).json({ error: 'Email trop long' });
@@ -570,16 +567,6 @@ router.post('/register', (req, res) => {
 
     const mc = existing ? merchantClientQueries.find.get(merchant.id, existing.id) : null;
 
-    // Hash PIN if provided
-    let pinHash = null;
-    if (pin && /^\d{4}$/.test(pin)) {
-      pinHash = bcrypt.hashSync(pin, 10);
-      // For existing users without PIN, set it directly
-      if (existing && !existing.pin_hash) {
-        endUserQueries.setPin.run(pinHash, existing.id);
-      }
-    }
-
     // Add to pending identifications queue
     const identId = crypto.randomBytes(8).toString('hex');
 
@@ -608,7 +595,6 @@ router.post('/register', (req, res) => {
       pointsBalance: mc?.points_balance || 0,
       visitCount: mc?.visit_count || 0,
       isNew,
-      pinHash: isNew && !existing ? pinHash : null,
       createdAt: Date.now(),
     });
 
@@ -830,13 +816,6 @@ router.post('/consume/:identId', authenticateStaff, (req, res) => {
     // Remove from queue
     queue.delete(req.params.identId);
 
-    // Store pinHash server-side if present (never send to frontend)
-    let pinToken = null;
-    if (ident.pinHash) {
-      pinToken = crypto.randomBytes(16).toString('hex');
-      consumedPinHashes.set(pinToken, { pinHash: ident.pinHash, createdAt: Date.now() });
-    }
-
     // Generate server-side verify token (for PIN bypass on redeem)
     const qrVerifyToken = crypto.randomBytes(16).toString('hex');
     qrVerifyTokens.set(qrVerifyToken, { createdAt: Date.now() });
@@ -847,7 +826,6 @@ router.post('/consume/:identId', authenticateStaff, (req, res) => {
       name: ident.name,
       pointsBalance: ident.pointsBalance,
       isNew: ident.isNew,
-      pinToken,
       qrVerifyToken,
     });
   } catch (error) {
