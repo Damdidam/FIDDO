@@ -611,15 +611,15 @@
  <label class="form-label">Priorité</label>
  <select id="ann-priority" class="form-control">
  <option value="info">ℹ Info</option>
- <option value="warning"> Important</option>
- <option value="urgent"> Urgent</option>
+ <option value="warning">Important</option>
+ <option value="urgent">Urgent</option>
  </select>
  </div>
  <div class="form-group">
  <label class="form-label">Destinataires</label>
  <select id="ann-target" class="form-control" onchange="toggleMerchantList()">
- <option value="all"> Tous les commerces</option>
- <option value="selected"> Commerces sélectionnés</option>
+ <option value="all">Tous les commerces</option>
+ <option value="selected">Commerces sélectionnés</option>
  </select>
  </div>
  <div class="form-group" id="merchant-list-group" style="display: none;">
@@ -652,7 +652,7 @@
  <div id="merge-modal" class="modal">
  <div class="modal-content" style="max-width: 650px;">
  <div class="modal-header">
- <h2> Fusion globale</h2>
+ <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Fusion globale</h2>
  <button class="close-modal" onclick="closeMergeModal()">×</button>
  </div>
  <div class="modal-body">
@@ -676,7 +676,7 @@
  <input type="text" id="merge-reason" class="form-control" placeholder="Ex : Fusion demandée par le client" value="Fusion demandée par le client">
  </div>
 
- <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="executeMerge()"> Confirmer la fusion (irréversible)</button>
+ <button class="btn btn-danger btn-block" id="merge-confirm-btn" onclick="executeMerge()">Confirmer la fusion (irréversible)</button>
  </div>
  </div>
  </div>
@@ -952,12 +952,12 @@
 
  let footer = '<div class="action-btns">';
  if (m.status === 'pending') {
- footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()"> Valider</button>`;
- footer += `<button class="btn btn-danger btn-sm" onclick="showRejectModal()"> Refuser</button>`;
+ footer += `<button class="btn btn-success btn-sm" onclick="validateMerchant()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Valider</button>`;
+ footer += `<button class="btn btn-danger btn-sm" onclick="showRejectModal()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Refuser</button>`;
  } else if (m.status === 'active') {
  footer += `<button class="btn btn-danger btn-sm" onclick="suspendMerchant()">⏸ Suspendre</button>`;
  } else if (m.status === 'suspended') {
- footer += `<button class="btn btn-success btn-sm" onclick="reactivateMerchant()"> Réactiver</button>`;
+ footer += `<button class="btn btn-success btn-sm" onclick="reactivateMerchant()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg> Réactiver</button>`;
  }
  footer += '</div>';
  document.getElementById('mm-footer').innerHTML = footer;
@@ -973,7 +973,7 @@
 
  // ─── Merchant Actions ───
  async function validateMerchant() {
- if (!confirm(' Valider et activer ce commerce ?')) return;
+ if (!confirm('Valider et activer ce commerce ?')) return;
  try {
  await adminCall(`/merchants/${currentMerchantId}/validate`, { method: 'POST' });
  closeModal(); loadMerchants(); loadStats();
@@ -1004,7 +1004,7 @@
  }
 
  async function reactivateMerchant() {
- if (!confirm(' Réactiver ce commerce ?')) return;
+ if (!confirm('Réactiver ce commerce ?')) return;
  try {
  await adminCall(`/merchants/${currentMerchantId}/reactivate`, { method: 'POST' });
  closeModal(); loadMerchants(); loadStats();
@@ -1046,7 +1046,7 @@
 
  users.forEach(u => {
  let badges = '';
- if (u.email_validated) badges += '<span class="badge badge-dark-success" style="font-size:0.65rem;">Email </span> ';
+ if (u.email_validated) badges += '<span class="badge badge-dark-success" style="font-size:0.65rem;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Email</span> ';
  if (u.has_pin) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">PIN</span> ';
  if (u.has_qr) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">QR</span> ';
  if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
@@ -1144,10 +1144,10 @@
  const footer = document.getElementById('um-footer');
  footer.innerHTML = `
  <div class="action-btns">
- <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${mergeLabel}')"> Fusionner avec…</button>
+ <button class="btn btn-primary btn-sm" onclick="openMergeModal(${u.id}, '${mergeLabel}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Fusionner avec…</button>
  ${u.is_blocked
- ? `<button class="btn btn-success btn-sm" onclick="globalUnblockUser(${u.id})"> Débloquer</button>`
- : `<button class="btn btn-danger btn-sm" onclick="globalBlockUser(${u.id})"> Bloquer globalement</button>`
+ ? `<button class="btn btn-success btn-sm" onclick="globalUnblockUser(${u.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Débloquer</button>`
+ : `<button class="btn btn-danger btn-sm" onclick="globalBlockUser(${u.id})"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bloquer globalement</button>`
  }
  </div>
  `;
@@ -1162,22 +1162,22 @@
  document.getElementById('user-modal').addEventListener('click', (e) => { if (e.target.id === 'user-modal') closeUserModal(); });
 
  async function globalBlockUser(id) {
- if (!confirm(' Bloquer cet utilisateur globalement ?\n\nIl ne pourra plus être crédité ni utiliser son QR/PIN chez aucun commerce.')) return;
+ if (!confirm('Bloquer cet utilisateur globalement ?\n\nIl ne pourra plus être crédité ni utiliser son QR/PIN chez aucun commerce.')) return;
  try {
  await adminCall(`/users/${id}/block`, { method: 'POST' });
  closeUserModal();
  loadUsers();
- alert(' Utilisateur bloqué globalement');
+ alert('Utilisateur bloqué globalement');
  } catch (e) { alert(e.message); }
  }
 
  async function globalUnblockUser(id) {
- if (!confirm(' Débloquer cet utilisateur ?')) return;
+ if (!confirm('Débloquer cet utilisateur ?')) return;
  try {
  await adminCall(`/users/${id}/unblock`, { method: 'POST' });
  closeUserModal();
  loadUsers();
- alert(' Utilisateur débloqué');
+ alert('Utilisateur débloqué');
  } catch (e) { alert(e.message); }
  }
 
@@ -1299,7 +1299,7 @@
  async function executeMerge() {
  if (!mergeSourceId || !mergeTargetId) return;
  const reason = document.getElementById('merge-reason').value.trim();
- if (!confirm(` IRRÉVERSIBLE\n\nFusionner l'utilisateur #${mergeSourceId} dans #${mergeTargetId} ?\n\nLe user source sera supprimé définitivement.`)) return;
+ if (!confirm(`IRRÉVERSIBLE\n\nFusionner l'utilisateur #${mergeSourceId} dans #${mergeTargetId} ?\n\nLe user source sera supprimé définitivement.`)) return;
 
  try {
  const result = await adminCall(`/users/${mergeTargetId}/merge`, {
@@ -1310,7 +1310,7 @@
  closeUserModal();
  loadUsers();
  loadStats();
- alert(` Fusion effectuée\n${result.merged} carte(s) fusionnée(s)\n${result.transferred} carte(s) transférée(s)`);
+ alert(`Fusion effectuée\n${result.merged} carte(s) fusionnée(s)\n${result.transferred} carte(s) transférée(s)`);
  } catch (e) {
  UI.showAlert('merge-alert', e.message, 'error');
  }
@@ -1331,7 +1331,7 @@
 
  let html = `
  <div class="flex-between mb-2">
- <h2 style="margin: 0; color: #e2e8f0; font-size: 1.1rem;"> Annonces (${anns.length})</h2>
+ <h2 style="margin: 0; color: #e2e8f0; font-size: 1.1rem;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 11-5.8-1.6"/></svg> Annonces (${anns.length})</h2>
  <button class="btn btn-primary btn-sm" onclick="showCreateAnn()">+ Nouvelle annonce</button>
  </div>
  `;
@@ -1361,7 +1361,7 @@
  <div class="ann-meta">
  ${Format.datetime(a.created_at)} — par ${esc(a.author_name)}
  · <strong>${a.read_count}</strong> lecture(s)
- · ${a.target_type === 'all' ? ' Tous' : ` ${a.targets.length} commerce(s)`}
+ · ${a.target_type === 'all' ? 'Tous' : ` ${a.targets.length} commerce(s)`}
  ${a.expires_at ? ` · Expire le ${Format.datetime(a.expires_at)}` : ''}
  </div>
  <div class="ann-content">${esc(a.content)}</div>
@@ -1521,7 +1521,7 @@
  }
 
  async function deleteAnnouncement(id) {
- if (!confirm(' Supprimer cette annonce ?')) return;
+ if (!confirm('Supprimer cette annonce ?')) return;
  try {
  await adminCall(`/announcements/${id}`, { method: 'DELETE' });
  loadAnnouncements();

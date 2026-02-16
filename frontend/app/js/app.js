@@ -222,7 +222,7 @@ const App = (() => {
 
  if (res.ok && res.data.status === 'ok' && res.data.token) {
  stopPolling();
- toast(' Connexion réussie !');
+ toast('Connexion réussie !');
  API.setToken(res.data.token);
  client = res.data.client || null;
 
@@ -345,9 +345,9 @@ const App = (() => {
  if (res.ok) {
  const name = res.data.clientName || client?.name || '';
  if (res.data.cached) {
- toast(` Déjà identifié il y a ${res.data.minutesAgo} min`);
+ toast(`Déjà identifié il y a ${res.data.minutesAgo} min`);
  } else {
- toast(` ${name} identifié avec succès !`);
+ toast(`${name} identifié avec succès !`);
  }
  setTimeout(() => refreshCards(), 1500);
  } else {
@@ -491,7 +491,7 @@ const App = (() => {
  switchTab('cards');
  renderCards();
  setTimeout(() => {
- showAnimation('reward', ' Récompense !', card.rewardDescription || 'Félicitations !');
+ showAnimation('reward', 'Récompense !', card.rewardDescription || 'Félicitations !');
  setTimeout(() => { animating = false; lastRenderTime = Date.now(); }, 3000);
  }, 300);
  refreshing = false;
@@ -550,7 +550,7 @@ const App = (() => {
  // Update local card data
  const card = cards.find(c => c.merchantId === id);
  if (card) card.isFavorite = res.data.isFavorite;
- toast(res.data.isFavorite ? 'Ajouté aux favoris ' : 'Retiré des favoris');
+ toast(res.data.isFavorite ? 'Ajouté aux favoris' : 'Retiré des favoris');
  updateFavIcon();
  renderFilteredCards();
  } else {
@@ -753,7 +753,7 @@ const App = (() => {
  }
 
  function shareGift(method) {
- const text = ` Cadeau ! Je t'offre mes points fidélité chez ${currentMerchant?.name || 'un commerce'}. Ouvre ce lien pour les récupérer :`;
+ const text = `Cadeau ! Je t'offre mes points fidélité chez ${currentMerchant?.name || 'un commerce'}. Ouvre ce lien pour les récupérer :`;
  const url = lastGiftLink;
  if (method === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(text + '\n' + url)}`);
  else if (method === 'sms') window.open(`sms:?body=${encodeURIComponent(text + ' ' + url)}`);
@@ -836,7 +836,7 @@ const App = (() => {
  else dobRow.classList.add('hidden');
 
  const hasPin = client.hasPin;
- document.getElementById('pin-label').textContent = hasPin ? 'PIN défini ' : 'Aucun PIN défini';
+ document.getElementById('pin-label').textContent = hasPin ? 'PIN défini' : 'Aucun PIN défini';
  document.getElementById('pin-btn-label').textContent = hasPin ? 'Modifier mon PIN' : 'Créer un PIN';
  }
 
@@ -898,7 +898,7 @@ const App = (() => {
  const newPin = document.getElementById('pin-new').value.trim();
  if (!/^\d{4}$/.test(newPin)) { toast('Le PIN doit être 4 chiffres'); return; }
  const res = await API.call('/api/me/pin', { method: 'POST', body: { newPin } });
- if (res.ok) { client.hasPin = true; loadProfile(); closeModal(); toast('Code PIN enregistré '); }
+ if (res.ok) { client.hasPin = true; loadProfile(); closeModal(); toast('Code PIN enregistré'); }
  else toast(res.data?.error || 'Erreur');
  }
 
@@ -1039,10 +1039,10 @@ const App = (() => {
  if (res.ok) {
  const name = res.data.clientName || client?.name || '';
  if (res.data.cached) {
- toast(` Déjà identifié il y a ${res.data.minutesAgo} min — re-crédit possible dans ${res.data.minutesLeft} min`);
+ toast(`Déjà identifié il y a ${res.data.minutesAgo} min — re-crédit possible dans ${res.data.minutesLeft} min`);
  } else {
  const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
- toast(` ${name} identifié${pts}`);
+ toast(`${name} identifié${pts}`);
  }
  setTimeout(() => refreshCards(), 1500);
  } else {

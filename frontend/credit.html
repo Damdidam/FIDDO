@@ -503,9 +503,9 @@
  <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
  <div class="success-overlay" id="success-overlay">
  <div class="success-pts" id="s-pts"></div>
- <div class="success-label">Crédités </div>
+ <div class="success-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Crédités</div>
  <div class="success-info" id="s-info"></div>
- <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()"> Appliquer la récompense</button>
+ <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Appliquer la récompense</button>
  <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
  </div>
 
@@ -896,9 +896,9 @@
  pin = prompt('Code PIN du client (4 chiffres) :');
  if (!pin) return; // cancelled
  if (!/^\d{4}$/.test(pin)) {
- btn.textContent = ' Le code PIN doit contenir 4 chiffres';
+ btn.textContent = 'Le code PIN doit contenir 4 chiffres';
  btn.style.background = '#DC2626';
- setTimeout(() => { btn.textContent = ' Réessayer'; btn.style.background = ''; }, 2000);
+ setTimeout(() => { btn.textContent = 'Réessayer'; btn.style.background = ''; }, 2000);
  return;
  }
  }
@@ -911,7 +911,7 @@
  pin: pin || undefined,
  qrVerifyToken: qrVerifyTokenValue || undefined,
  });
- btn.textContent = ' Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
+ btn.textContent = 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
  btn.style.background = '#047857';
  btn.onclick = null;
  } catch (e) {
@@ -919,7 +919,7 @@
  btn.style.background = '#DC2626';
  setTimeout(() => {
  btn.disabled = false;
- btn.textContent = ' Réessayer';
+ btn.textContent = 'Réessayer';
  btn.style.background = '';
  }, 2000);
  }
@@ -1180,12 +1180,12 @@
  }).catch(err => {
  console.error('Scanner start error:', err);
  document.getElementById('scan-status').innerHTML =
- ' Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
+ 'Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
  document.getElementById('scan-status').style.color = '#DC2626';
  });
  } catch (err) {
  console.error('Scanner init error:', err);
- document.getElementById('scan-status').textContent = ' Erreur d\'initialisation du scanner';
+ document.getElementById('scan-status').textContent = 'Erreur d\'initialisation du scanner';
  document.getElementById('scan-status').style.color = '#DC2626';
  }
  }, 300);
@@ -1226,7 +1226,7 @@
  }
 
  if (!clientQrToken) {
- document.getElementById('scan-status').textContent = ' QR non reconnu';
+ document.getElementById('scan-status').textContent = 'QR non reconnu';
  document.getElementById('scan-status').style.color = '#D97706';
  setTimeout(() => { scannerBusy = false; }, 2000);
  return;
@@ -1268,7 +1268,7 @@
  setTimeout(triggerLookup, 300);
  setTimeout(() => document.getElementById('amount').focus(), 600);
  } catch (e) {
- document.getElementById('scan-status').textContent = ' Client non trouvé';
+ document.getElementById('scan-status').textContent = 'Client non trouvé';
  document.getElementById('scan-status').style.color = '#DC2626';
  scannerBusy = false;
  setTimeout(() => switchMode('scan'), 2000); // restart scanner

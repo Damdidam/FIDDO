@@ -121,9 +121,9 @@ const API = {
  exportCSV: async () => {
  try {
  const data = await API.call('/clients/export/csv', { method: 'POST' });
- alert(' ' + data.message);
+ alert(data.message);
  } catch (e) {
- alert(' Erreur: ' + e.message);
+ alert('Erreur: ' + e.message);
  }
  },
  },
@@ -147,9 +147,9 @@ const API = {
  exportBackup: async () => {
  try {
  const data = await API.call('/preferences/backup/export', { method: 'POST' });
- alert(' ' + data.message);
+ alert(data.message);
  } catch (e) {
- alert(' Erreur: ' + e.message);
+ alert('Erreur: ' + e.message);
  }
  },
  validateBackup: (data) => API.call('/preferences/backup/validate', { method: 'POST', body: JSON.stringify(data) }),
@@ -240,7 +240,7 @@ const UI = {
  },
  showError: (elId, msg) => {
  const el = document.getElementById(elId);
- if (el) el.innerHTML = `<div class="alert alert-error"> ${msg}</div>`;
+ if (el) el.innerHTML = `<div class="alert alert-error">${msg}</div>`;
  },
 };
 
