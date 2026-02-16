@@ -376,17 +376,11 @@
     <div class="modal-bg"></div>
     <div class="modal-sheet sm" onclick="event.stopPropagation()">
       <div class="modal-pill"></div>
-      <h2 id="pin-modal-title">Créer un code PIN</h2>
-      <p class="modal-sub">4 chiffres, à communiquer au commerçant si besoin</p>
-      <div id="pin-current-wrap" class="hidden" style="margin-bottom:12px">
-        <div class="field solid-field">
-          <span class="material-symbols-rounded field-icon">lock_open</span>
-          <input type="tel" id="pin-current" placeholder="PIN actuel" maxlength="4" inputmode="numeric" pattern="[0-9]*">
-        </div>
-      </div>
+      <h2 id="pin-modal-title">Mon code PIN</h2>
+      <p class="modal-sub">4 chiffres, à communiquer au commerçant pour utiliser une récompense</p>
       <div class="field solid-field" style="margin-bottom:16px">
         <span class="material-symbols-rounded field-icon">lock</span>
-        <input type="tel" id="pin-new" placeholder="Nouveau PIN (4 chiffres)" maxlength="4" inputmode="numeric" pattern="[0-9]*">
+        <input type="tel" id="pin-new" placeholder="Entrez 4 chiffres" maxlength="4" inputmode="numeric" pattern="[0-9]*">
       </div>
       <button class="btn-primary" id="btn-save-pin" onclick="App.savePin()"><span>Enregistrer</span></button>
     </div>
