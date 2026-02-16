@@ -791,8 +791,8 @@ select.form-control { appearance: auto; }
  align-items: center;
  justify-content: center;
  flex: 1;
- min-height: 68px;
- padding: 8px 4px 22px;
+ min-height: 56px;
+ padding: 6px 4px 6px;
  text-decoration: none;
  color: rgba(255,255,255,0.32);
  font-family: var(--font);
