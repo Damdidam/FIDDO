@@ -980,12 +980,30 @@ const App = (() => {
   }
 
   let scanBusy = false;
+  function beep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 1200;
+      gain.gain.value = 0.3;
+      osc.start();
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.stop(ctx.currentTime + 0.15);
+      // Haptic feedback if available
+      if (navigator.vibrate) navigator.vibrate(50);
+    } catch (e) {}
+  }
+
   async function handleScan(data) {
     if (scanBusy) return;
 
     const match = data.match(/\/q\/([a-zA-Z0-9_-]+)/);
     if (!match) { toast('QR non reconnu'); return; }
 
+    beep();
     scanBusy = true;
     stopScanner();
 
@@ -1046,6 +1064,24 @@ const App = (() => {
 
   // ─── Animation overlay ─────────────────────
 
+  function successSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.frequency.value = 800;
+      gain.gain.value = 0.25;
+      osc.start();
+      // Rising tone
+      osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.stop(ctx.currentTime + 0.3);
+      if (navigator.vibrate) navigator.vibrate([50, 50, 100]);
+    } catch (e) {}
+  }
+
   function showAnimation(type, text, sub) {
     const overlay = document.getElementById('anim-overlay');
     const iconEl = document.getElementById('anim-icon');
@@ -1063,6 +1099,7 @@ const App = (() => {
       : '<span class="material-symbols-rounded" style="font-size:48px">redeem</span>';
     textEl.textContent = text;
     subEl.textContent = sub;
+    successSound();
 
     // Spawn particles
     particlesEl.innerHTML = '';
