@@ -374,3 +374,37 @@ a{text-decoration:none;cursor:pointer}
    ═══════════════════════════════════════════════ */
 .toast{position:fixed;bottom:calc(var(--tab-h) + var(--sab) + 16px);left:50%;transform:translateX(-50%) translateY(80px);opacity:0;visibility:hidden;background:var(--tx);color:#fff;font-size:14px;font-weight:600;padding:12px 24px;border-radius:var(--r-full);box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:200;transition:transform .35s var(--bounce),opacity .35s ease,visibility .35s ease;white-space:nowrap;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1;visibility:visible}
+
+/* ═══════════════════════════════════════════════
+   FLOATING QR BUTTON
+   ═══════════════════════════════════════════════ */
+.fab-qr{position:absolute;bottom:20px;right:20px;width:56px;height:56px;border-radius:50%;background:var(--pri);color:#fff;border:none;cursor:pointer;z-index:15;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(59,130,246,.4);transition:transform .2s,box-shadow .2s}
+.fab-qr:active{transform:scale(.92)}
+.fab-qr:hover{box-shadow:0 6px 28px rgba(59,130,246,.5)}
+.fab-qr .material-symbols-rounded{font-size:28px}
+
+/* ═══════════════════════════════════════════════
+   DELETE ACCOUNT
+   ═══════════════════════════════════════════════ */
+.prof-danger-zone{margin-top:32px;padding-top:24px;border-top:1px solid var(--brd)}
+.btn-danger-outline{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;border-radius:var(--r-md);border:1.5px solid var(--err);background:transparent;color:var(--err);font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
+.btn-danger-outline:active{background:rgba(239,68,68,.1)}
+.btn-danger-outline .material-symbols-rounded{font-size:20px}
+
+/* ═══════════════════════════════════════════════
+   POINTS / REWARD ANIMATION OVERLAY
+   ═══════════════════════════════════════════════ */
+.anim-overlay{position:fixed;inset:0;z-index:300;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);opacity:0;transition:opacity .3s ease;pointer-events:none}
+.anim-overlay.show{opacity:1;pointer-events:auto}
+.anim-overlay.hidden{display:none}
+.anim-content{text-align:center;animation:animPop .5s cubic-bezier(.34,1.56,.64,1) both}
+.anim-icon{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:48px}
+.anim-icon.credit{background:rgba(16,185,129,.2);color:#34d399}
+.anim-icon.reward{background:rgba(245,158,11,.2);color:#fbbf24}
+.anim-text{font-size:32px;font-weight:800;color:#fff;margin-bottom:8px}
+.anim-sub{font-size:16px;color:rgba(255,255,255,.7);font-weight:500}
+@keyframes animPop{0%{opacity:0;transform:scale(.5) translateY(40px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+
+.anim-particles{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.anim-particle{position:absolute;width:8px;height:8px;border-radius:50%;animation:particleFly 1.2s ease-out forwards;opacity:0}
+@keyframes particleFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
