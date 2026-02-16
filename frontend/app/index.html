@@ -2,468 +2,929 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#3b82f6">
-  <title>FIDDO</title>
-  <link rel="manifest" href="/app/manifest.json">
-  <link rel="icon" type="image/png" sizes="192x192" href="/app/assets/icon-192.png">
-  <link rel="apple-touch-icon" href="/app/assets/icon-192.png">
+  <meta name="apple-mobile-web-app-title" content="FIDDO">
+  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+  <meta name="theme-color" content="#0891B2">
+  <title>FIDDO — Connexion</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/app/css/app.css">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --brand: #0891B2;
+      --brand-dark: #065A73;
+      --brand-glow: #0ED3FF;
+      --surface: #FAFBFC;
+      --card: #FFFFFF;
+      --text-primary: #0F1419;
+      --text-secondary: #536471;
+      --text-hint: #8899A6;
+      --border: #E1E8ED;
+      --border-focus: #0891B2;
+      --error: #C62828;
+      --error-bg: #FFF5F5;
+      --error-border: #EF9A9A;
+      --success: #0A8754;
+      --success-bg: #F0FFF7;
+      --info-bg: #F0FAFF;
+      --radius: 10px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--surface);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══ LAYOUT ═══ */
+    .auth-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+    }
+
+    /* ═══ LEFT PANEL ═══ */
+    .brand-panel {
+      background: #0A1A24;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4rem 3.5rem;
+      overflow: hidden;
+    }
+
+    /* Animated gradient orbs */
+    .brand-panel::before {
+      content: '';
+      position: absolute;
+      top: -15%; right: -10%;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(8,145,178,0.18) 0%, transparent 65%);
+      animation: orbFloat 12s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    .brand-panel::after {
+      content: '';
+      position: absolute;
+      bottom: -10%; left: -15%;
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(14,211,255,0.08) 0%, transparent 60%);
+      animation: orbFloat 15s ease-in-out infinite reverse;
+      pointer-events: none;
+    }
+
+    @keyframes orbFloat {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(25px, -15px) scale(1.05); }
+      66% { transform: translate(-15px, 20px) scale(0.95); }
+    }
+
+    /* Subtle dot pattern */
+    .brand-dots {
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    .brand-inner {
+      position: relative;
+      z-index: 2;
+      max-width: 460px;
+    }
+
+    /* Logo */
+    .brand-logo {
+      margin-bottom: 3.5rem;
+    }
+
+    .brand-logo .wordmark {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--brand);
+      letter-spacing: -0.5px;
+    }
+
+    /* Headline */
+    .brand-headline {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 3rem;
+      font-weight: 600;
+      line-height: 1.15;
+      color: #FFFFFF;
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.5px;
+    }
+
+    .brand-headline em {
+      font-style: italic;
+      color: var(--brand-glow);
+      font-weight: 500;
+    }
+
+    .brand-desc {
+      font-size: 1rem;
+      line-height: 1.75;
+      color: #8A9BAA;
+      margin-bottom: 3rem;
+    }
+
+    /* Stats row */
+    .brand-stats {
+      display: flex;
+      gap: 2.5rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .brand-stat-value {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: #FFFFFF;
+      line-height: 1;
+    }
+
+    .brand-stat-value span {
+      color: var(--brand-glow);
+      font-size: 1rem;
+    }
+
+    .brand-stat-label {
+      font-size: 0.72rem;
+      color: #5C7080;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 0.4rem;
+    }
+
+    /* Bottom line */
+    .brand-footer {
+      position: absolute;
+      bottom: 2.5rem;
+      left: 3.5rem;
+      right: 3.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 2;
+    }
+
+    .brand-footer-left {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .brand-footer span {
+      font-size: 0.7rem;
+      color: rgba(255,255,255,0.2);
+      letter-spacing: 0.5px;
+    }
+
+    .brand-footer .powered-by {
+      font-size: 0.65rem;
+      color: rgba(255,255,255,0.18);
+      letter-spacing: 0.3px;
+    }
+
+    .brand-footer .powered-by strong {
+      color: rgba(255,255,255,0.3);
+      font-weight: 700;
+    }
+
+    /* ═══ RIGHT PANEL ═══ */
+    .form-panel {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+      background: var(--surface);
+    }
+
+    .form-wrapper {
+      width: 100%;
+      max-width: 420px;
+      padding: 2rem 0;
+    }
+
+    /* Mobile brand (hidden on desktop) */
+    .mobile-brand { display: none; }
+
+    /* Header */
+    .form-header { margin-bottom: 2.25rem; }
+
+    .form-header h1 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.85rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-header p {
+      color: var(--text-secondary);
+      font-size: 0.92rem;
+    }
+
+    /* Fields */
+    .field { margin-bottom: 1.35rem; }
+
+    .field-label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 0.45rem;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .field-input {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      background: var(--card);
+      transition: var(--transition);
+      outline: none;
+    }
+
+    .field-input::placeholder { color: var(--text-hint); }
+
+    .field-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
+    }
+
+    .field-input.has-error { border-color: var(--error-border); background: var(--error-bg); }
+    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(198,40,40,0.06); }
+
+    .field-error {
+      font-size: 0.78rem;
+      color: var(--error);
+      margin-top: 0.35rem;
+      display: none;
+    }
+    .field-error.visible { display: block; }
+
+    .field-hint {
+      font-size: 0.78rem;
+      color: var(--text-hint);
+      margin-top: 0.35rem;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Section divider */
+    .section-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin: 2.25rem 0 1.5rem;
+    }
+
+    .section-divider::before,
+    .section-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .section-divider span {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      color: var(--text-hint);
+      white-space: nowrap;
+    }
+
+    /* Reward preview */
+    .reward-preview {
+      display: none;
+      background: linear-gradient(135deg, var(--brand), var(--brand-dark));
+      color: white;
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+    .reward-preview strong { font-weight: 600; }
+
+    /* Button */
+    .btn-submit {
+      width: 100%;
+      padding: 0.9rem 1.5rem;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: 0.3px;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .btn-submit:active:not(:disabled) { transform: scale(0.985); }
+
+    .btn-primary-action {
+      background: var(--brand);
+      color: #FFFFFF;
+      box-shadow: 0 2px 8px rgba(8,145,178,0.2);
+    }
+
+    .btn-primary-action:hover:not(:disabled) {
+      background: var(--brand-dark);
+      box-shadow: 0 4px 20px rgba(8,145,178,0.3);
+      transform: translateY(-1px);
+    }
+
+    .btn-submit:disabled { opacity: 0.7; cursor: wait; }
+    .btn-submit .btn-text { transition: opacity 0.15s; }
+    .btn-submit .btn-loader {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+    .btn-submit.loading .btn-text { opacity: 0; }
+    .btn-submit.loading .btn-loader { opacity: 1; }
+
+    .spinner-dots { display: flex; gap: 4px; }
+    .spinner-dots span {
+      width: 6px; height: 6px;
+      background: white;
+      border-radius: 50%;
+      animation: dotPulse 0.9s ease-in-out infinite;
+    }
+    .spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
+    .spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes dotPulse {
+      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+      40% { opacity: 1; transform: scale(1); }
+    }
+
+    /* Toggle */
+    .form-toggle {
+      text-align: center;
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+    }
+
+    .form-toggle a {
+      color: var(--brand);
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .form-toggle a:hover { color: var(--brand-dark); text-decoration: underline; }
+
+    /* Alerts */
+    .page-alert {
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius);
+      margin-bottom: 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      display: none;
+      animation: alertIn 0.25s ease-out;
+    }
+    .page-alert.visible { display: block; }
+    .page-alert.error  { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
+    .page-alert.success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
+    .page-alert.info   { background: var(--info-bg); color: var(--brand-dark); border-left: 3px solid var(--brand); }
+
+    @keyframes alertIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    #register-form { display: none; }
+
+    /* Entry animations */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-wrapper { animation: fadeUp 0.5s ease-out; }
+    .brand-inner { animation: fadeUp 0.6s ease-out 0.1s both; }
+
+    /* ═══ RESPONSIVE ═══ */
+    @media (max-width: 960px) {
+      .auth-layout { grid-template-columns: 1fr; }
+      .brand-panel { display: none; }
+      .form-panel { min-height: 100vh; padding: 1.5rem; }
+      .form-wrapper { max-width: 480px; }
+      .mobile-brand {
+        display: block;
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      .mobile-brand .wordmark {
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--brand);
+        letter-spacing: -0.5px;
+      }
+      .mobile-brand p {
+        color: var(--text-secondary);
+        font-size: 0.88rem;
+        margin-top: 0.4rem;
+      }
+
+      /* Prevent iOS zoom + bigger tap targets */
+      .field-input { font-size: 1rem; padding: 0.85rem 1rem; }
+      .btn-submit { min-height: 48px; font-size: 1rem; padding: 0.9rem 1.5rem; }
+    }
+
+    @media (max-width: 600px) {
+      .field-row { grid-template-columns: 1fr; }
+      .form-panel { padding: 1rem; }
+    }
+
+    .form-panel::-webkit-scrollbar { width: 5px; }
+    .form-panel::-webkit-scrollbar-track { background: transparent; }
+    .form-panel::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
 </head>
 <body>
 
-  <!-- ═══ LOGIN / ONBOARDING — email only ═══ -->
-  <div id="screen-login" class="screen active">
-    <div class="login-bg"><div class="login-orb orb-1"></div><div class="login-orb orb-2"></div><div class="login-orb orb-3"></div></div>
-    <div class="login-content">
-      <div class="login-logo"><span>F</span></div>
-      <h1 class="login-title">FIDDO</h1>
-      <p class="login-tagline">Vos cartes fidélité, simplifiées</p>
-      <div id="login-form" class="login-form">
-        <div class="field">
-          <span class="material-symbols-rounded field-icon">mail</span>
-          <input type="email" id="login-email" placeholder="Votre adresse email" autocomplete="email" inputmode="email">
+  <div class="auth-layout">
+
+    <!-- ═══ LEFT ═══ -->
+    <div class="brand-panel">
+      <div class="brand-dots"></div>
+
+      <div class="brand-inner">
+        <div class="brand-logo">
+          <span class="wordmark">FIDDO</span>
         </div>
-        <button class="btn-primary" id="btn-login">
-          <span>Continuer</span>
-          <span class="material-symbols-rounded">east</span>
-        </button>
-        <p class="login-hint">Nouveau ou déjà inscrit ? Un lien sécurisé vous sera envoyé</p>
-      </div>
-      <div id="login-sent" class="login-sent hidden">
-        <div class="sent-anim"><span class="material-symbols-rounded">mark_email_read</span></div>
-        <h2>Vérifiez vos emails</h2>
-        <p class="sent-email" id="sent-email"></p>
-        <p>Cliquez sur le lien reçu pour activer votre compte</p>
-        <p class="sent-hint">Pensez à vérifier vos spams</p>
-        <button class="btn-secondary" id="btn-resend"><span class="material-symbols-rounded">refresh</span>Renvoyer</button>
-        <a class="link-muted" id="btn-change-email">Changer d'email</a>
-      </div>
-    </div>
-  </div>
 
-  <!-- ═══ VERIFY ═══ -->
-  <div id="screen-verify" class="screen">
-    <div class="center-col">
-      <div class="loader"></div>
-      <h2>Connexion en cours…</h2>
-      <p id="verify-error" class="error-text hidden"></p>
-      <button class="btn-secondary solid hidden" id="verify-retry" onclick="App.show('screen-login')">
-        <span class="material-symbols-rounded">arrow_back</span>Retour
-      </button>
-    </div>
-  </div>
+        <h2 class="brand-headline">
+          Fidélisez vos clients.<br><em>Simplement.</em>
+        </h2>
 
-  <!-- ═══ GIFT CLAIM ═══ -->
-  <div id="screen-gift-claim" class="screen">
-    <div class="center-col">
-      <div id="gift-loading">
-        <div class="loader"></div>
-        <h2>Chargement du cadeau…</h2>
-      </div>
-      <div id="gift-preview" class="hidden">
-        <div class="gift-box"><span class="material-symbols-rounded">redeem</span></div>
-        <h2 id="gift-title"></h2>
-        <p id="gift-sub" class="gift-sub"></p>
-        <div class="gift-amount" id="gift-amount"></div>
-        <p class="gift-merchant" id="gift-merchant"></p>
-        <p class="gift-expires" id="gift-expires"></p>
-        <button class="btn-primary" id="btn-claim-gift" style="margin-top:24px;width:280px">
-          <span class="material-symbols-rounded">downloading</span>
-          <span>Récupérer mes points</span>
-        </button>
-      </div>
-      <div id="gift-done" class="hidden">
-        <div class="gift-box ok"><span class="material-symbols-rounded">check_circle</span></div>
-        <h2>Cadeau récupéré !</h2>
-        <p id="gift-done-msg" class="gift-sub"></p>
-        <button class="btn-primary" style="margin-top:24px;width:240px" onclick="App.showApp()">
-          <span class="material-symbols-rounded">loyalty</span>
-          <span>Voir mes cartes</span>
-        </button>
-      </div>
-      <div id="gift-error" class="hidden">
-        <div class="gift-box err"><span class="material-symbols-rounded">error</span></div>
-        <h2 id="gift-error-title">Lien invalide</h2>
-        <p id="gift-error-msg" class="gift-sub"></p>
-        <button class="btn-primary" style="margin-top:24px;width:240px" onclick="App.show('screen-login')">
-          <span class="material-symbols-rounded">arrow_back</span>
-          <span>Retour</span>
-        </button>
-      </div>
-    </div>
-  </div>
+        <p class="brand-desc">
+          La plateforme de fidélité conçue pour les commerçants belges.
+          Gestion multi-équipe, QR code intégré, zéro engagement.
+        </p>
 
-  <!-- ═══ ONBOARDING (removed — email-only flow, profile completion is optional via Profile tab) ═══ -->
-
-  <!-- ═══ MAIN APP ═══ -->
-  <div id="screen-app" class="screen">
-
-    <!-- Tab: Cards -->
-    <div id="tab-cards" class="tab active">
-      <div class="tab-head">
-        <h1 id="greeting">Bonjour 👋</h1>
-        <p class="sub" id="greeting-sub">Vos cartes fidélité</p>
-        <div class="search-bar">
-          <span class="material-symbols-rounded">search</span>
-          <input type="text" id="search-input" placeholder="Rechercher un commerce…">
-          <button class="search-clear hidden" id="search-clear" onclick="App.clearSearch()">
-            <span class="material-symbols-rounded">close</span>
-          </button>
-        </div>
-        <div class="filter-row" id="filter-row"></div>
-      </div>
-      <div class="tab-body" id="cards-scroll">
-        <div id="cards-list"></div>
-        <div id="cards-empty" class="empty hidden">
-          <span class="material-symbols-rounded">credit_card_off</span>
-          <h3>Aucune carte</h3>
-          <p>Scannez un QR code chez un commerçant pour commencer à cumuler des points</p>
-        </div>
-        <div id="cards-no-result" class="empty hidden">
-          <span class="material-symbols-rounded">search_off</span>
-          <h3>Aucun résultat</h3>
-          <p>Essayez un autre terme de recherche</p>
-        </div>
-      </div>
-      <!-- Floating QR button -->
-      <button class="fab-qr" onclick="App.showMyQR()">
-        <span class="material-symbols-rounded">qr_code_2</span>
-      </button>
-    </div>
-
-    <!-- Tab: Scanner -->
-    <div id="tab-scanner" class="tab">
-      <div class="scanner-wrap">
-        <video id="scan-video" autoplay playsinline muted></video>
-        <canvas id="scan-canvas" style="display:none;"></canvas>
-        <div class="scan-ui">
-          <div style="text-align:center">
-            <h2>Scanner un QR</h2>
-            <p>Pointez vers le QR du commerçant</p>
-          </div>
-          <div class="scan-frame">
-            <div class="c tl"></div><div class="c tr"></div><div class="c bl"></div><div class="c br"></div>
-            <div class="scan-beam"></div>
-          </div>
-        </div>
-        <div class="scan-no-cam hidden" id="scan-no-cam">
-          <span class="material-symbols-rounded">no_photography</span>
-          <h3>Caméra indisponible</h3>
-          <p>Autorisez l'accès à la caméra dans les réglages de votre navigateur</p>
-          <button class="btn-primary" style="width:200px" onclick="App.startScanner()">Réessayer</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab: Profile -->
-    <div id="tab-profile" class="tab">
-      <div class="tab-head"><h1>Profil</h1></div>
-      <div class="tab-body">
-        <!-- Profile completion prompt (shown if no name) -->
-        <div id="prof-complete" class="prof-complete hidden">
-          <span class="material-symbols-rounded" style="font-size:20px;color:var(--pri)">tips_and_updates</span>
+        <div class="brand-stats">
           <div>
-            <strong>Complétez votre profil</strong>
-            <p style="font-size:12px;color:var(--tx2);margin-top:2px">Ajoutez votre nom pour être reconnu chez les commerçants</p>
+            <div class="brand-stat-value">6<span> langues</span></div>
+            <div class="brand-stat-label">QR client</div>
           </div>
-          <button class="btn-icon" onclick="App.editName()" style="margin-left:auto"><span class="material-symbols-rounded">east</span></button>
-        </div>
-
-        <div class="prof-card">
-          <div class="prof-avatar" id="prof-avatar">?</div>
-          <div class="prof-name-row">
-            <h2 id="prof-name">—</h2>
-            <button class="btn-icon" onclick="App.editName()"><span class="material-symbols-rounded">edit</span></button>
+          <div>
+            <div class="brand-stat-value">3<span> rôles</span></div>
+            <div class="brand-stat-label">Équipe</div>
           </div>
-          <div class="prof-info">
-            <div class="prof-row" onclick="App.editEmail()" style="cursor:pointer">
-              <span class="material-symbols-rounded">mail</span>
-              <span id="prof-email">—</span>
-              <span class="material-symbols-rounded" style="font-size:16px;color:var(--tx3)">edit</span>
-            </div>
-            <div class="prof-row hidden" id="prof-phone-row">
-              <span class="material-symbols-rounded">phone</span>
-              <span id="prof-phone">—</span>
-            </div>
-            <div class="prof-row hidden" id="prof-dob-row">
-              <span class="material-symbols-rounded">cake</span>
-              <span id="prof-dob">—</span>
-            </div>
+          <div>
+            <div class="brand-stat-value">100<span>%</span></div>
+            <div class="brand-stat-label">RGPD</div>
           </div>
         </div>
+      </div>
 
-        <!-- PIN -->
-        <div class="prof-card" style="text-align:left">
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-            <span class="material-symbols-rounded" style="font-size:22px;color:var(--pri)">pin</span>
-            <h3 style="font-size:16px;font-weight:700">Mon code PIN</h3>
+      <div class="brand-footer">
+        <div class="brand-footer-left">
+          <span>FIDDO V3.5</span>
+          <span>Bruxelles, Belgique</span>
+        </div>
+        <span class="powered-by">Powered by <strong>H3001</strong></span>
+      </div>
+    </div>
+
+    <!-- ═══ RIGHT ═══ -->
+    <div class="form-panel">
+      <div class="form-wrapper">
+
+        <div class="mobile-brand">
+          <div class="wordmark">FIDDO</div>
+          <p>Programme de fidélité pour commerçants</p>
+        </div>
+
+        <!-- ═══ LOGIN ═══ -->
+        <form id="login-form" novalidate>
+          <div class="form-header">
+            <h1>Connexion</h1>
+            <p>Accédez à votre espace de gestion</p>
           </div>
-          <p style="font-size:13px;color:var(--tx2);line-height:1.5;margin-bottom:14px">
-            À donner chez le commerçant si vous oubliez votre smartphone
-          </p>
-          <div id="pin-status">
-            <p style="font-size:13px;color:var(--tx3)" id="pin-label">Aucun PIN défini</p>
+
+          <div id="login-alert" class="page-alert"></div>
+
+          <div class="field">
+            <label class="field-label" for="login-email">Email</label>
+            <input type="email" id="login-email" class="field-input" placeholder="votre@email.com" required autocomplete="email">
+            <div class="field-error" id="login-email-error"></div>
           </div>
-          <button class="btn-primary" style="height:44px;font-size:14px;margin-top:12px" onclick="App.openPinModal()">
-            <span class="material-symbols-rounded" style="font-size:18px">lock</span>
-            <span id="pin-btn-label">Créer un PIN</span>
+
+          <div class="field">
+            <label class="field-label" for="login-password">Mot de passe</label>
+            <input type="password" id="login-password" class="field-input" placeholder="Votre mot de passe" required autocomplete="current-password">
+            <div class="field-error" id="login-password-error"></div>
+          </div>
+
+          <button type="submit" class="btn-submit btn-primary-action" id="login-btn">
+            <span class="btn-text">Se connecter</span>
+            <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
           </button>
-        </div>
 
-        <!-- Notifications -->
-        <h3 class="sec-title" style="margin-top:8px">Notifications</h3>
-        <div class="notif-card">
-          <label class="notif-row"><span class="material-symbols-rounded">add_circle</span><span>Crédit de points</span><input type="checkbox" id="notif-credit" checked><span class="tog"></span></label>
-          <label class="notif-row"><span class="material-symbols-rounded">redeem</span><span>Récompense disponible</span><input type="checkbox" id="notif-reward" checked><span class="tog"></span></label>
-          <label class="notif-row"><span class="material-symbols-rounded">campaign</span><span>Promotions</span><input type="checkbox" id="notif-promo"><span class="tog"></span></label>
-          <label class="notif-row last"><span class="material-symbols-rounded">cake</span><span>Anniversaire</span><input type="checkbox" id="notif-birthday" checked><span class="tog"></span></label>
-        </div>
+          <div class="form-toggle">
+            Pas encore inscrit ? <a onclick="showRegister()">Créer un compte</a>
+          </div>
+        </form>
 
-        <!-- QR code (now in floating button on cards screen) -->
+        <!-- ═══ REGISTER ═══ -->
+        <form id="register-form" novalidate>
+          <div class="form-header">
+            <h1>Inscription</h1>
+            <p>Créez votre espace fidélité en quelques minutes</p>
+          </div>
 
-        <button class="btn-danger" onclick="App.logout()">
-          <span class="material-symbols-rounded">logout</span>Déconnexion
-        </button>
+          <div id="register-alert" class="page-alert"></div>
 
-        <div class="prof-danger-zone">
-          <h3 class="sec-title" style="color:var(--err)">Zone dangereuse</h3>
-          <p style="font-size:12px;color:var(--tx3);margin-bottom:12px;line-height:1.5">La suppression est irréversible. Toutes vos données seront anonymisées.</p>
-          <button class="btn-danger-outline" onclick="App.confirmDeleteAccount()">
-            <span class="material-symbols-rounded">delete_forever</span>Supprimer mon compte
+          <div class="section-divider"><span>Votre commerce</span></div>
+
+          <div class="field">
+            <label class="field-label" for="reg-business">Nom du commerce *</label>
+            <input type="text" id="reg-business" class="field-input" placeholder="Mon Commerce" required>
+            <div class="field-error" id="reg-business-error"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-address">Adresse *</label>
+            <input type="text" id="reg-address" class="field-input" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
+            <div class="field-error" id="reg-address-error"></div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="reg-vat">N° TVA *</label>
+              <input type="text" id="reg-vat" class="field-input" placeholder="BE0123456789" required>
+              <div class="field-error" id="reg-vat-error"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="reg-phone">Téléphone commerce *</label>
+              <input type="tel" id="reg-phone" class="field-input" placeholder="+32 2 123 45 67" required>
+              <div class="field-error" id="reg-phone-error"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-biz-email">Email commerce *</label>
+            <input type="email" id="reg-biz-email" class="field-input" placeholder="contact@moncommerce.be" required>
+            <div class="field-error" id="reg-biz-email-error"></div>
+          </div>
+
+          <div class="section-divider"><span>Programme de fidélité</span></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="reg-ppe">Points par euro</label>
+              <input type="number" id="reg-ppe" class="field-input" step="0.1" min="0.1" value="1" placeholder="1">
+              <div class="field-hint">Ex : 1 = 1 point par euro</div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="reg-pfr">Points pour récompense</label>
+              <input type="number" id="reg-pfr" class="field-input" min="1" value="100" placeholder="100">
+              <div class="field-hint">Seuil à atteindre par le client</div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-reward-desc">Description de la récompense *</label>
+            <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage">
+            <div class="field-hint">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</div>
+            <div class="field-error" id="reg-reward-desc-error"></div>
+          </div>
+          <div id="reward-preview" class="reward-preview"></div>
+
+          <div class="section-divider"><span>Responsable</span></div>
+
+          <div class="field-row">
+            <div class="field">
+              <label class="field-label" for="reg-owner-name">Nom complet *</label>
+              <input type="text" id="reg-owner-name" class="field-input" placeholder="Jean Dupont" required>
+              <div class="field-error" id="reg-owner-name-error"></div>
+            </div>
+            <div class="field">
+              <label class="field-label" for="reg-owner-phone">Téléphone personnel *</label>
+              <input type="tel" id="reg-owner-phone" class="field-input" placeholder="+32 497 12 34 56" required>
+              <div class="field-error" id="reg-owner-phone-error"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-owner-email">Email de connexion *</label>
+            <input type="email" id="reg-owner-email" class="field-input" placeholder="jean@email.com" required>
+            <div class="field-hint">Cet email sera utilisé pour vous connecter</div>
+            <div class="field-error" id="reg-owner-email-error"></div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="reg-password">Mot de passe *</label>
+            <input type="password" id="reg-password" class="field-input" placeholder="Minimum 6 caractères" minlength="6" required>
+            <div class="field-error" id="reg-password-error"></div>
+          </div>
+
+          <button type="submit" class="btn-submit btn-primary-action" id="register-btn">
+            <span class="btn-text">Créer mon compte</span>
+            <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
           </button>
-        </div>
 
-        <p class="version">FIDDO v4.3</p>
+          <div class="form-toggle">
+            Déjà inscrit ? <a onclick="showLogin()">Se connecter</a>
+          </div>
+        </form>
+
       </div>
     </div>
 
-    <!-- Tab bar -->
-    <nav class="tbar">
-      <button class="tb active" data-tab="cards" onclick="App.switchTab('cards')">
-        <span class="material-symbols-rounded">loyalty</span><small>Cartes</small>
-      </button>
-      <button class="tb" data-tab="scanner" onclick="App.switchTab('scanner')">
-        <span class="material-symbols-rounded">qr_code_scanner</span><small>Scanner</small>
-      </button>
-      <button class="tb" data-tab="profile" onclick="App.switchTab('profile')">
-        <span class="material-symbols-rounded">person</span><small>Profil</small>
-      </button>
-    </nav>
   </div>
 
-  <!-- ═══ CARD DETAIL ═══ -->
-  <div id="screen-card" class="screen slide-r">
-    <div class="card-hero theme-navy" id="card-hero">
-      <div class="card-hero-top">
-        <button class="btn-back" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
-        <button class="btn-fav" onclick="App.toggleFav()"><span class="material-symbols-rounded" id="fav-icon">star_outline</span></button>
-      </div>
-      <h1 id="cd-name"></h1>
-      <p class="cd-type" id="cd-type"></p>
-      <div class="cd-pts">
-        <span class="cd-pts-big" id="cd-pts">0</span>
-        <span class="cd-pts-tot" id="cd-pts-tot">/ 100 pts</span>
-      </div>
-      <div class="prog-lg"><div class="prog-fill" id="cd-prog" style="width:0%"></div></div>
-      <div id="cd-badge"></div>
-    </div>
-    <div class="card-body" id="card-body">
-      <div class="stats-row">
-        <div class="stat"><span class="material-symbols-rounded">storefront</span><strong id="cd-visits">0</strong><small>Visites</small></div>
-        <div class="stat"><span class="material-symbols-rounded">payments</span><strong id="cd-spent">0€</strong><small>Dépensé</small></div>
-        <div class="stat"><span class="material-symbols-rounded">speed</span><strong id="cd-ratio">1</strong><small>pts/€</small></div>
-      </div>
+  <script src="/js/app.js"></script>
+  <script>
+    // ═══════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════
 
-      <p class="cd-desc" id="cd-desc"></p>
+    function showPageAlert(id, message, type) {
+      var el = document.getElementById(id);
+      el.className = 'page-alert visible ' + type;
+      el.innerHTML = message;
+      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
 
-      <button class="menu-row" onclick="App.showHistory()">
-        <span class="material-symbols-rounded mi">receipt_long</span>
-        <span class="ml">Historique</span>
-        <span class="material-symbols-rounded ma">chevron_right</span>
-      </button>
+    function clearPageAlert(id) {
+      var el = document.getElementById(id);
+      el.className = 'page-alert';
+      el.innerHTML = '';
+    }
 
-      <button class="menu-row gift-row hidden" id="btn-gift" onclick="App.startGift()">
-        <span class="material-symbols-rounded mi" style="color:var(--rew)">card_giftcard</span>
-        <span class="ml">Offrir mes points</span>
-        <span class="material-symbols-rounded ma">chevron_right</span>
-      </button>
+    function setFieldError(inputId, message) {
+      var input = document.getElementById(inputId);
+      var error = document.getElementById(inputId + '-error');
+      if (input) input.classList.add('has-error');
+      if (error) { error.textContent = message; error.classList.add('visible'); }
+    }
 
-      <button class="menu-row" id="btn-maps" onclick="App.openMaps()">
-        <span class="material-symbols-rounded mi">map</span>
-        <span class="ml">Itinéraire</span>
-        <span class="material-symbols-rounded ma">open_in_new</span>
-      </button>
+    function clearFieldError(inputId) {
+      var input = document.getElementById(inputId);
+      var error = document.getElementById(inputId + '-error');
+      if (input) input.classList.remove('has-error');
+      if (error) { error.textContent = ''; error.classList.remove('visible'); }
+    }
 
-      <h3 class="sec-title">Infos</h3>
-      <div class="info-card" id="cd-info"></div>
+    function clearAllFieldErrors(formId) {
+      document.querySelectorAll('#' + formId + ' .field-input').forEach(function(el) { el.classList.remove('has-error'); });
+      document.querySelectorAll('#' + formId + ' .field-error').forEach(function(el) { el.textContent = ''; el.classList.remove('visible'); });
+    }
 
-      <div id="cd-hours-wrap" class="hidden">
-        <h3 class="sec-title">Horaires</h3>
-        <div class="info-card" id="cd-hours"></div>
-      </div>
-    </div>
-  </div>
+    function setLoading(btnId, loading) {
+      var btn = document.getElementById(btnId);
+      if (loading) { btn.classList.add('loading'); btn.disabled = true; }
+      else { btn.classList.remove('loading'); btn.disabled = false; }
+    }
 
-  <!-- ═══ HISTORY ═══ -->
-  <div id="screen-history" class="screen slide-r">
-    <div class="sheet-head">
-      <button class="btn-back-dark" onclick="App.goBack()"><span class="material-symbols-rounded">arrow_back</span></button>
-      <h1>Historique</h1>
-      <span class="badge" id="hist-count"></span>
-    </div>
-    <div class="hist-list" id="hist-list"></div>
-  </div>
+    document.querySelectorAll('.field-input').forEach(function(input) {
+      input.addEventListener('input', function() { clearFieldError(this.id); });
+    });
 
-  <!-- ═══ MODALS ═══ -->
+    // ═══════════════════════════════════════════════════════
+    // VALIDATORS
+    // ═══════════════════════════════════════════════════════
 
-  <!-- QR Modal — uses <img> not <canvas> -->
-  <div id="modal-qr" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
-      <h2>Mon QR code</h2>
-      <p class="modal-sub">À présenter au commerçant</p>
-      <div class="qr-wrap">
-        <img id="qr-img" width="220" height="220" alt="QR code" style="border-radius:8px">
-        <p class="qr-name" id="qr-name"></p>
-      </div>
-    </div>
-  </div>
+    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()); }
+    function isValidPhone(phone) { var d = phone.replace(/[\s\-.()+]/g, ''); return d.length >= 9 && d.length <= 15; }
+    function isValidVAT(vat) { return /^BE0\d{9}$/i.test(vat.replace(/[\s.]/g, '')); }
 
-  <!-- Edit Name Modal -->
-  <div id="modal-edit" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet sm" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <h2>Modifier le nom</h2>
-      <p class="modal-sub">Votre nom affiché chez les commerçants</p>
-      <div class="field solid-field" style="margin-bottom:16px">
-        <span class="material-symbols-rounded field-icon">person</span>
-        <input type="text" id="edit-name" placeholder="Prénom et nom">
-      </div>
-      <button class="btn-primary" id="btn-save-name"><span>Enregistrer</span></button>
-    </div>
-  </div>
+    // ═══════════════════════════════════════════════════════
+    // NAVIGATION
+    // ═══════════════════════════════════════════════════════
 
-  <!-- Edit Email Modal -->
-  <div id="modal-email" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet sm" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <h2>Modifier l'email</h2>
-      <p class="modal-sub">L'email utilisé pour la connexion</p>
-      <div class="field solid-field" style="margin-bottom:16px">
-        <span class="material-symbols-rounded field-icon">mail</span>
-        <input type="email" id="edit-email" placeholder="Nouvel email" inputmode="email">
-      </div>
-      <button class="btn-primary" id="btn-save-email"><span>Enregistrer</span></button>
-    </div>
-  </div>
+    if (Auth.isAuthenticated()) {
+      window.location.href = '/credit';
+    } else {
+      // Auto-verify cookie (Android app: sessionStorage cleared on restart, but cookie persists)
+      (async () => {
+        try {
+          var res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:3000' : '') + '/api/auth/verify', {
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+          });
+          if (res.ok) {
+            var data = await res.json();
+            if (data && data.staff && data.merchant) {
+              Auth.setSession(data.staff, data.merchant);
+              window.location.href = '/credit';
+            }
+          }
+        } catch (e) { /* no cookie — show login form */ }
+      })();
+    }
 
-  <!-- PIN Modal -->
-  <div id="modal-pin" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet sm" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <h2 id="pin-modal-title">Créer un code PIN</h2>
-      <p class="modal-sub">4 chiffres, à communiquer au commerçant si besoin</p>
-      <div id="pin-current-wrap" class="hidden" style="margin-bottom:12px">
-        <div class="field solid-field">
-          <span class="material-symbols-rounded field-icon">lock_open</span>
-          <input type="tel" id="pin-current" placeholder="PIN actuel" maxlength="4" inputmode="numeric" pattern="[0-9]*">
-        </div>
-      </div>
-      <div class="field solid-field" style="margin-bottom:16px">
-        <span class="material-symbols-rounded field-icon">lock</span>
-        <input type="tel" id="pin-new" placeholder="Nouveau PIN (4 chiffres)" maxlength="4" inputmode="numeric" pattern="[0-9]*">
-      </div>
-      <button class="btn-primary" id="btn-save-pin" onclick="App.savePin()"><span>Enregistrer</span></button>
-    </div>
-  </div>
+    function showRegister() {
+      clearPageAlert('login-alert');
+      clearAllFieldErrors('login-form');
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'block';
+      window.scrollTo(0, 0);
+    }
 
-  <!-- Gift Confirm Modal -->
-  <div id="modal-gift" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
-      <h2>Offrir mes points</h2>
-      <p class="modal-sub">Générez un lien à partager</p>
-      <div class="gift-confirm-card">
-        <div class="gift-confirm-pts" id="gift-confirm-pts">0</div>
-        <p class="gift-confirm-label">points chez <strong id="gift-confirm-name"></strong></p>
-      </div>
-      <p class="gift-warn">⚠️ Tous vos points seront transférés. Le destinataire aura 7 jours pour les récupérer.</p>
-      <button class="btn-primary" id="btn-confirm-gift">
-        <span class="material-symbols-rounded">card_giftcard</span>
-        <span>Générer le lien cadeau</span>
-      </button>
-    </div>
-  </div>
+    function showLogin() {
+      clearPageAlert('register-alert');
+      clearAllFieldErrors('register-form');
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('login-form').style.display = 'block';
+    }
 
-  <!-- Gift Share Modal -->
-  <div id="modal-gift-share" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <button class="modal-x" onclick="App.closeModal()"><span class="material-symbols-rounded">close</span></button>
-      <div class="gift-box" style="margin:0 auto 16px"><span class="material-symbols-rounded">check_circle</span></div>
-      <h2>Lien généré !</h2>
-      <p class="modal-sub">Partagez-le avec la personne de votre choix</p>
-      <div class="gift-link-box">
-        <input type="text" class="gift-link-input" id="gift-link" readonly>
-        <button class="btn-copy" onclick="App.copyGiftLink()"><span class="material-symbols-rounded">content_copy</span></button>
-      </div>
-      <div class="gift-share-btns">
-        <button class="btn-share whatsapp" onclick="App.shareGift('whatsapp')"><span class="material-symbols-rounded">chat</span>WhatsApp</button>
-        <button class="btn-share sms" onclick="App.shareGift('sms')"><span class="material-symbols-rounded">sms</span>SMS</button>
-        <button class="btn-share generic" onclick="App.shareGift('share')"><span class="material-symbols-rounded">share</span>Autre</button>
-      </div>
-    </div>
-  </div>
+    // ═══════════════════════════════════════════════════════
+    // REWARD PREVIEW
+    // ═══════════════════════════════════════════════════════
 
-  <!-- Delete Account Confirm Modal -->
-  <div id="modal-delete" class="modal" onclick="App.closeModal()">
-    <div class="modal-bg"></div>
-    <div class="modal-sheet sm" onclick="event.stopPropagation()">
-      <div class="modal-pill"></div>
-      <div style="text-align:center;margin-bottom:16px">
-        <span class="material-symbols-rounded" style="font-size:48px;color:var(--err)">warning</span>
-      </div>
-      <h2 style="color:var(--err)">Supprimer mon compte</h2>
-      <p class="modal-sub">Cette action est irréversible. Toutes vos données seront anonymisées et vous serez déconnecté.</p>
-      <p class="modal-sub" style="margin-top:12px;font-weight:600">Un email de confirmation vous sera envoyé.</p>
-      <div style="display:flex;gap:12px;margin-top:20px">
-        <button class="btn-secondary" style="flex:1" onclick="App.closeModal()">Annuler</button>
-        <button class="btn-danger" style="flex:1" id="btn-confirm-delete" onclick="App.deleteAccount()">
-          <span class="material-symbols-rounded">delete_forever</span>Supprimer
-        </button>
-      </div>
-    </div>
-  </div>
+    function updateRewardPreview() {
+      var ppe = parseFloat(document.getElementById('reg-ppe').value) || 1;
+      var pfr = parseInt(document.getElementById('reg-pfr').value) || 100;
+      var desc = document.getElementById('reg-reward-desc').value.trim();
+      var preview = document.getElementById('reward-preview');
+      if (!desc) { preview.style.display = 'none'; return; }
+      var eurosNeeded = pfr / ppe;
+      preview.style.display = 'block';
+      preview.innerHTML = '<strong>Aperçu pour vos clients :</strong><br>' +
+        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total — accumulez <strong>' + pfr + ' points</strong> — <strong>' + esc(desc) + '</strong>';
+    }
 
-  <!-- Points animation overlay -->
-  <div id="anim-overlay" class="anim-overlay hidden">
-    <div class="anim-content">
-      <div class="anim-icon" id="anim-icon"></div>
-      <div class="anim-text" id="anim-text"></div>
-      <div class="anim-sub" id="anim-sub"></div>
-    </div>
-    <div class="anim-particles" id="anim-particles"></div>
-  </div>
+    document.getElementById('reg-ppe').addEventListener('input', updateRewardPreview);
+    document.getElementById('reg-pfr').addEventListener('input', updateRewardPreview);
+    document.getElementById('reg-reward-desc').addEventListener('input', updateRewardPreview);
 
-  <div id="toast" class="toast"></div>
+    // ═══════════════════════════════════════════════════════
+    // LOGIN
+    // ═══════════════════════════════════════════════════════
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-  <script src="/app/js/api.js"></script>
-  <script src="/app/js/app.js"></script>
+    document.getElementById('login-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearPageAlert('login-alert');
+      clearAllFieldErrors('login-form');
+
+      var email = document.getElementById('login-email').value.trim();
+      var password = document.getElementById('login-password').value;
+      var hasError = false;
+
+      if (!email) { setFieldError('login-email', 'Veuillez saisir votre adresse email.'); hasError = true; }
+      else if (!isValidEmail(email)) { setFieldError('login-email', 'Cette adresse email ne semble pas valide.'); hasError = true; }
+      if (!password) { setFieldError('login-password', 'Veuillez saisir votre mot de passe.'); hasError = true; }
+      if (hasError) return;
+
+      setLoading('login-btn', true);
+
+      try {
+        var data = await API.auth.login({ email: email, password: password });
+        Auth.setSession(data.staff, data.merchant);
+        showPageAlert('login-alert', 'Connexion réussie, redirection en cours...', 'success');
+        setTimeout(function() {
+          window.location.href = '/credit';
+        }, 400);
+      } catch (err) {
+        setLoading('login-btn', false);
+        var msg = err.message || '';
+        var displayMsg;
+
+        if (msg.indexOf('incorrect') !== -1) displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
+        else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) displayMsg = esc(msg);
+        else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
+        else if (msg.indexOf('suspendu') !== -1) displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
+        else if (msg.indexOf('refusée') !== -1) displayMsg = esc(msg);
+        else if (msg.indexOf('résilié') !== -1) displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
+        else if (msg.indexOf('pas actif') !== -1) displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
+        else if (msg.indexOf('désactivé') !== -1) displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
+        else displayMsg = 'Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants.';
+
+        showPageAlert('login-alert', displayMsg, 'error');
+      }
+    });
+
+    // ═══════════════════════════════════════════════════════
+    // REGISTER
+    // ═══════════════════════════════════════════════════════
+
+    document.getElementById('register-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      clearPageAlert('register-alert');
+      clearAllFieldErrors('register-form');
+
+      var f = {
+        business:   document.getElementById('reg-business').value.trim(),
+        address:    document.getElementById('reg-address').value.trim(),
+        vat:        document.getElementById('reg-vat').value.trim(),
+        phone:      document.getElementById('reg-phone').value.trim(),
+        bizEmail:   document.getElementById('reg-biz-email').value.trim(),
+        rewardDesc: document.getElementById('reg-reward-desc').value.trim(),
+        ppe:        document.getElementById('reg-ppe').value,
+        pfr:        document.getElementById('reg-pfr').value,
+        ownerName:  document.getElementById('reg-owner-name').value.trim(),
+        ownerPhone: document.getElementById('reg-owner-phone').value.trim(),
+        ownerEmail: document.getElementById('reg-owner-email').value.trim(),
+        password:   document.getElementById('reg-password').value,
+      };
+
+      var errorCount = 0;
+
+      if (!f.business) { setFieldError('reg-business', 'Le nom de votre commerce est requis.'); errorCount++; }
+      if (!f.address) { setFieldError('reg-address', 'L\'adresse est requise.'); errorCount++; }
+      else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète.'); errorCount++; }
+      if (!f.vat) { setFieldError('reg-vat', 'Le numéro de TVA est requis.'); errorCount++; }
+      else if (!isValidVAT(f.vat)) { setFieldError('reg-vat', 'Format attendu : BE0 suivi de 9 chiffres.'); errorCount++; }
+      if (!f.phone) { setFieldError('reg-phone', 'Le téléphone du commerce est requis.'); errorCount++; }
+      else if (!isValidPhone(f.phone)) { setFieldError('reg-phone', 'Numéro invalide.'); errorCount++; }
+      if (!f.bizEmail) { setFieldError('reg-biz-email', 'L\'email du commerce est requis.'); errorCount++; }
+      else if (!isValidEmail(f.bizEmail)) { setFieldError('reg-biz-email', 'Email invalide.'); errorCount++; }
+      if (!f.rewardDesc) { setFieldError('reg-reward-desc', 'Décrivez la récompense que recevront vos clients.'); errorCount++; }
+      if (!f.ownerName) { setFieldError('reg-owner-name', 'Votre nom complet est requis.'); errorCount++; }
+      if (!f.ownerPhone) { setFieldError('reg-owner-phone', 'Votre numéro est requis.'); errorCount++; }
+      else if (!isValidPhone(f.ownerPhone)) { setFieldError('reg-owner-phone', 'Numéro invalide.'); errorCount++; }
+      if (!f.ownerEmail) { setFieldError('reg-owner-email', 'Votre email de connexion est requis.'); errorCount++; }
+      else if (!isValidEmail(f.ownerEmail)) { setFieldError('reg-owner-email', 'Email invalide.'); errorCount++; }
+      if (!f.password) { setFieldError('reg-password', 'Choisissez un mot de passe.'); errorCount++; }
+      else if (f.password.length < 6) { setFieldError('reg-password', 'Minimum 6 caractères.'); errorCount++; }
+
+      if (errorCount > 0) {
+        showPageAlert('register-alert', errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger.', 'error');
+        var firstErr = document.querySelector('#register-form .field-input.has-error');
+        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+
+      setLoading('register-btn', true);
+
+      try {
+        await API.auth.register({
+          businessName: f.business, address: f.address, vatNumber: f.vat,
+          email: f.bizEmail, phone: f.phone, ownerPhone: f.ownerPhone,
+          ownerEmail: f.ownerEmail, ownerPassword: f.password, ownerName: f.ownerName,
+          pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || 100,
+          rewardDescription: f.rewardDesc,
+        });
+
+        showPageAlert('register-alert',
+          '<strong>Demande envoyée avec succès.</strong><br>' +
+          'Vous recevrez un email de confirmation à <strong>' + esc(f.ownerEmail) + '</strong> dès que votre commerce sera validé.',
+          'success'
+        );
+        document.querySelectorAll('#register-form .field-input').forEach(function(el) { el.disabled = true; });
+        document.getElementById('register-btn').style.display = 'none';
+      } catch (err) {
+        setLoading('register-btn', false);
+        var msg = err.message || '';
+        var displayMsg;
+
+        if (msg.indexOf('TVA') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Ce numéro de TVA est déjà enregistré.';
+        else if (msg.indexOf('email') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Cet email est déjà associé à un compte existant.';
+        else if (msg.indexOf('TVA invalide') !== -1) { displayMsg = 'Format de TVA incorrect.'; setFieldError('reg-vat', 'Format incorrect.'); }
+        else if (msg.indexOf('Email') !== -1 && msg.indexOf('invalide') !== -1) { displayMsg = 'Email du responsable invalide.'; setFieldError('reg-owner-email', 'Email invalide.'); }
+        else if (msg.indexOf('mot de passe') !== -1) { displayMsg = 'Mot de passe trop court.'; setFieldError('reg-password', 'Trop court.'); }
+        else displayMsg = 'Erreur lors de l\'inscription. Vérifiez vos informations.';
+
+        showPageAlert('register-alert', displayMsg, 'error');
+      }
+    });
+  </script>
 </body>
 </html>
