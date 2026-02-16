@@ -350,7 +350,7 @@ initDatabase();
   const cols = db.prepare("PRAGMA table_info(merchants)").all().map(c => c.name);
 
   const newCols = {
-    business_type: "TEXT DEFAULT 'horeca'",
+    business_type: "TEXT",
     website_url: 'TEXT',
     instagram_url: 'TEXT',
     facebook_url: 'TEXT',
