@@ -1,11 +1,12 @@
 const express = require('express');
-const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries } = require('../database');
+const bcrypt = require('bcryptjs');
+const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQueries, aliasQueries, voucherQueries } = require('../database');
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendPointsCreditedEmail, sendExportEmail } = require('../services/email');
+const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
-const { resolveQrVerifyToken } = require('./qr');
+const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
 const router = express.Router();
 router.use(authenticateStaff);
@@ -148,7 +149,7 @@ router.post('/credit', async (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const staffId = req.staff.id;
-    const { email, phone, name, amount, notes, idempotencyKey } = req.body;
+    const { email, phone, name, amount, notes, idempotencyKey, pin, pinToken } = req.body;
 
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
     if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
@@ -160,9 +161,13 @@ router.post('/credit', async (req, res) => {
     if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
     if (notes && notes.length > 500) return res.status(400).json({ error: 'Notes trop longues (max 500)' });
 
+    // Resolve pinToken server-side (from QR registration) or hash PIN from manual input
+    const pinHash = resolvePinToken(pinToken) || (pin ? await bcrypt.hash(pin, 10) : null);
+
     const result = creditPoints({
       merchantId, staffId, email: email || null, phone: phone || null, name: name || null,
       amount: parseFloat(amount), notes: notes || null, idempotencyKey: idempotencyKey || null, source: 'manual',
+      pinHash,
     });
 
     const merchant = merchantQueries.findById.get(merchantId);
@@ -405,8 +410,9 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
       transactionQueries.create.run(merchantId, targetMcId, req.staff.id, null, 0, 'merge', null, 'manual',
         `Fusion avec ${sourceEu?.name || sourceEu?.email || sourceEu?.phone || '#'+sourceMcId} — ${reason || 'Fusion manuelle'}`);
 
-      // Note: no global aliases created here — merge is local to this merchant only
-      // Global merges (with aliases) are handled by super admin
+      // Reassign point vouchers (FK: sender_mc_id, claimer_mc_id → merchant_clients)
+      voucherQueries.reassignSender.run(targetMcId, sourceMcId);
+      voucherQueries.reassignClaimer.run(targetMcId, sourceMcId);
 
       merchantClientQueries.delete.run(sourceMcId);
 
@@ -440,7 +446,12 @@ router.delete('/:id', requireRole('owner'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
 
     const run = db.transaction(() => {
-      // Delete transactions first (FK: merchant_client_id NOT NULL REFERENCES merchant_clients)
+      // Delete point vouchers sent by this client (FK: sender_mc_id NOT NULL)
+      voucherQueries.deleteBySender.run(mcId);
+      // Detach as claimer on vouchers sent by others (FK: claimer_mc_id nullable)
+      voucherQueries.nullifyClaimer.run(mcId);
+
+      // Delete transactions (FK: merchant_client_id NOT NULL REFERENCES merchant_clients)
       db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(mcId);
 
       // Now safe to delete the merchant_client record
@@ -734,4 +745,50 @@ router.post('/:id/unblock', requireRole('owner', 'manager'), (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════
+// POST /api/clients/:id/pin — Set or update client PIN (owner/manager)
+// ═══════════════════════════════════════════════════════
+
+router.post('/:id/pin', requireRole('owner', 'manager'), async (req, res) => {
+  try {
+    const mcId = parseInt(req.params.id);
+    const merchantId = req.staff.merchant_id;
+    const { pin } = req.body;
+
+    if (!pin || !/^\d{4}$/.test(pin)) {
+      return res.status(400).json({ error: 'Le code PIN doit contenir exactement 4 chiffres' });
+    }
+
+    const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+    if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const eu = endUserQueries.findById.get(mc.end_user_id);
+    if (!eu) return res.status(404).json({ error: 'Client non trouvé' });
+
+    const hadPin = !!eu.pin_hash;
+    const pinHash = await bcrypt.hash(pin, 10);
+    endUserQueries.setPin.run(pinHash, eu.id);
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'staff',
+      actorId: req.staff.id,
+      merchantId,
+      action: hadPin ? 'pin_updated' : 'pin_set',
+      targetType: 'end_user',
+      targetId: eu.id,
+    });
+
+    // Fire-and-forget: notify client by email if validated
+    if (eu.email && eu.email_validated) {
+      const merchant = merchantQueries.findById.get(merchantId);
+      sendPinChangedEmail(eu.email, merchant.business_name);
+    }
+
+    res.json({ message: 'Code PIN mis à jour', has_pin: true });
+  } catch (error) {
+    console.error('Erreur set PIN:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 module.exports = router;
