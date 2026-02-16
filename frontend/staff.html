@@ -1,521 +1,521 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="FIDDO">
-  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-  <meta name="theme-color" content="#0891B2">
-  <title>Équipe — FIDDO</title>
-  <link rel="stylesheet" href="/css/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --primary-light: #CFFAFE;
-    }
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link rel="manifest" href="/manifest.json">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <meta name="apple-mobile-web-app-title" content="FIDDO">
+ <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+ <meta name="theme-color" content="#0891B2">
+ <title>Équipe — FIDDO</title>
+ <link rel="stylesheet" href="/css/styles.css">
+ <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <style>
+ :root {
+ --primary-light: #CFFAFE;
+ }
 
-    .staff-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
-    .staff-page * { box-sizing: border-box; }
+ .staff-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+ .staff-page * { box-sizing: border-box; }
 
-    .staff-wrap { max-width: 860px; margin: 0 auto; padding: 1rem; }
+ .staff-wrap { max-width: 860px; margin: 0 auto; padding: 1rem; }
 
-    .pg-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin: 0.3rem 0 0.8rem;
-    }
-    .pg-title {
-      font-size: 1.05rem; font-weight: 700; color: #1E293B;
-      letter-spacing: -0.3px;
-    }
-    .pg-btn {
-      padding: 0.4rem 1rem; border: none; border-radius: 8px;
-      background: var(--primary); color: white; font-family: inherit;
-      font-size: 0.78rem; font-weight: 600; cursor: pointer;
-      transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.35rem;
-    }
-    .pg-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(8,145,178,0.25); }
+ .pg-header {
+ display: flex; align-items: center; justify-content: space-between;
+ margin: 0.3rem 0 0.8rem;
+ }
+ .pg-title {
+ font-size: 1.05rem; font-weight: 700; color: #1E293B;
+ letter-spacing: -0.3px;
+ }
+ .pg-btn {
+ padding: 0.4rem 1rem; border: none; border-radius: 8px;
+ background: var(--primary); color: white; font-family: inherit;
+ font-size: 0.78rem; font-weight: 600; cursor: pointer;
+ transition: all 0.15s; display: inline-flex; align-items: center; gap: 0.35rem;
+ }
+ .pg-btn:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 3px 10px rgba(8,145,178,0.25); }
 
-    .info-banner {
-      background: color-mix(in srgb, var(--primary-light) 40%, white);
-      border-left: 3px solid var(--primary);
-      border-radius: 8px; padding: 0.65rem 0.85rem;
-      font-size: 0.78rem; color: #334155; line-height: 1.5;
-      margin-bottom: 0.9rem;
-    }
-    .info-banner strong { color: var(--primary-dark); }
+ .info-banner {
+ background: color-mix(in srgb, var(--primary-light) 40%, white);
+ border-left: 3px solid var(--primary);
+ border-radius: 8px; padding: 0.65rem 0.85rem;
+ font-size: 0.78rem; color: #334155; line-height: 1.5;
+ margin-bottom: 0.9rem;
+ }
+ .info-banner strong { color: var(--primary-dark); }
 
-    .stats-row {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 0.6rem; margin-bottom: 1rem;
-    }
-    .st {
-      background: white; border-radius: 10px; padding: 0.7rem 0.6rem;
-      text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-    }
-    .st-val {
-      font-size: 1.5rem; font-weight: 700; color: var(--primary);
-      line-height: 1.15; letter-spacing: -0.5px;
-    }
-    .st-val.green { color: #059669; }
-    .st-val.amber { color: #D97706; }
-    .st-lbl {
-      font-size: 0.62rem; color: #94A3B8; text-transform: uppercase;
-      letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600;
-    }
+ .stats-row {
+ display: grid; grid-template-columns: repeat(3, 1fr);
+ gap: 0.6rem; margin-bottom: 1rem;
+ }
+ .st {
+ background: white; border-radius: 10px; padding: 0.7rem 0.6rem;
+ text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+ }
+ .st-val {
+ font-size: 1.5rem; font-weight: 700; color: var(--primary);
+ line-height: 1.15; letter-spacing: -0.5px;
+ }
+ .st-val.green { color: #059669; }
+ .st-val.amber { color: #D97706; }
+ .st-lbl {
+ font-size: 0.62rem; color: #94A3B8; text-transform: uppercase;
+ letter-spacing: 0.4px; margin-top: 0.15rem; font-weight: 600;
+ }
 
-    .staff-card {
-      background: white; border-radius: 10px;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-      overflow: hidden;
-    }
-    .staff-card-hdr {
-      padding: 0.6rem 0.85rem;
-      border-bottom: 1px solid #F1F5F9;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .staff-card-title { font-weight: 600; font-size: 0.88rem; color: #1E293B; }
+ .staff-card {
+ background: white; border-radius: 10px;
+ box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+ overflow: hidden;
+ }
+ .staff-card-hdr {
+ padding: 0.6rem 0.85rem;
+ border-bottom: 1px solid #F1F5F9;
+ display: flex; align-items: center; justify-content: space-between;
+ }
+ .staff-card-title { font-weight: 600; font-size: 0.88rem; color: #1E293B; }
 
-    .staff-table { width: 100%; border-collapse: collapse; }
-    .staff-table thead th {
-      padding: 0.45rem 0.85rem;
-      font-size: 0.65rem; font-weight: 600; color: #94A3B8;
-      text-transform: uppercase; letter-spacing: 0.4px;
-      text-align: left; background: #F8FAFC;
-      border-bottom: 1px solid #F1F5F9;
-    }
-    .staff-table tbody tr {
-      border-bottom: 1px solid #F8FAFC;
-      transition: background 0.12s;
-    }
-    .staff-table tbody tr:hover { background: #FAFBFC; }
-    .staff-table tbody tr:last-child { border-bottom: none; }
-    .staff-table td {
-      padding: 0.55rem 0.85rem;
-      font-size: 0.82rem; color: #334155;
-      vertical-align: middle;
-    }
+ .staff-table { width: 100%; border-collapse: collapse; }
+ .staff-table thead th {
+ padding: 0.45rem 0.85rem;
+ font-size: 0.65rem; font-weight: 600; color: #94A3B8;
+ text-transform: uppercase; letter-spacing: 0.4px;
+ text-align: left; background: #F8FAFC;
+ border-bottom: 1px solid #F1F5F9;
+ }
+ .staff-table tbody tr {
+ border-bottom: 1px solid #F8FAFC;
+ transition: background 0.12s;
+ }
+ .staff-table tbody tr:hover { background: #FAFBFC; }
+ .staff-table tbody tr:last-child { border-bottom: none; }
+ .staff-table td {
+ padding: 0.55rem 0.85rem;
+ font-size: 0.82rem; color: #334155;
+ vertical-align: middle;
+ }
 
-    .staff-name { font-weight: 600; color: #1E293B; }
-    .staff-email { font-size: 0.75rem; color: #94A3B8; }
-    .staff-login { font-size: 0.75rem; color: #94A3B8; }
+ .staff-name { font-weight: 600; color: #1E293B; }
+ .staff-email { font-size: 0.75rem; color: #94A3B8; }
+ .staff-login { font-size: 0.75rem; color: #94A3B8; }
 
-    .s-badge {
-      display: inline-block; padding: 2px 8px; border-radius: 12px;
-      font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.3px;
-    }
-    .s-badge.owner { background: #FEF3C7; color: #92400E; }
-    .s-badge.manager { background: color-mix(in srgb, var(--primary-light) 55%, white); color: var(--primary-dark); }
-    .s-badge.cashier { background: #F1F5F9; color: #64748B; }
-    .s-badge.active { background: #D1FAE5; color: #065F46; }
-    .s-badge.inactive { background: #FEE2E2; color: #991B1B; }
-    .s-badge.you { background: color-mix(in srgb, var(--primary-light) 55%, white); color: var(--primary-dark); }
+ .s-badge {
+ display: inline-block; padding: 2px 8px; border-radius: 12px;
+ font-size: 0.62rem; font-weight: 600; text-transform: uppercase;
+ letter-spacing: 0.3px;
+ }
+ .s-badge.owner { background: #FEF3C7; color: #92400E; }
+ .s-badge.manager { background: color-mix(in srgb, var(--primary-light) 55%, white); color: var(--primary-dark); }
+ .s-badge.cashier { background: #F1F5F9; color: #64748B; }
+ .s-badge.active { background: #D1FAE5; color: #065F46; }
+ .s-badge.inactive { background: #FEE2E2; color: #991B1B; }
+ .s-badge.you { background: color-mix(in srgb, var(--primary-light) 55%, white); color: var(--primary-dark); }
 
-    .role-select {
-      padding: 2px 6px; border: 1.5px solid #E2E8F0; border-radius: 8px;
-      font-family: inherit; font-size: 0.72rem; font-weight: 500;
-      color: #334155; cursor: pointer; background: white;
-      transition: border-color 0.15s;
-    }
-    .role-select:focus { border-color: var(--primary); outline: none; }
-    .role-select:hover { border-color: #CBD5E1; }
+ .role-select {
+ padding: 2px 6px; border: 1.5px solid #E2E8F0; border-radius: 8px;
+ font-family: inherit; font-size: 0.72rem; font-weight: 500;
+ color: #334155; cursor: pointer; background: white;
+ transition: border-color 0.15s;
+ }
+ .role-select:focus { border-color: var(--primary); outline: none; }
+ .role-select:hover { border-color: #CBD5E1; }
 
-    .action-btns { display: flex; gap: 0.3rem; flex-wrap: wrap; }
-    .act-btn {
-      width: 28px; height: 28px; border: 1.5px solid #E2E8F0;
-      border-radius: 6px; background: white; cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center;
-      transition: all 0.12s; color: #94A3B8;
-    }
-    .act-btn:hover { border-color: var(--primary); color: var(--primary-dark); background: #F0FDFA; }
-    .act-btn.danger:hover { border-color: #EF4444; color: #DC2626; background: #FEF2F2; }
-    .act-btn svg { width: 13px; height: 13px; }
+ .action-btns { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+ .act-btn {
+ width: 28px; height: 28px; border: 1.5px solid #E2E8F0;
+ border-radius: 6px; background: white; cursor: pointer;
+ display: inline-flex; align-items: center; justify-content: center;
+ transition: all 0.12s; color: #94A3B8;
+ }
+ .act-btn:hover { border-color: var(--primary); color: var(--primary-dark); background: #F0FDFA; }
+ .act-btn.danger:hover { border-color: #EF4444; color: #DC2626; background: #FEF2F2; }
+ .act-btn svg { width: 13px; height: 13px; }
 
-    .staff-loading { text-align: center; padding: 2.5rem; color: #94A3B8; font-size: 0.82rem; }
-    .staff-empty { text-align: center; padding: 2.5rem; color: #94A3B8; }
-    .staff-empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
-    .staff-empty p { font-size: 0.82rem; }
+ .staff-loading { text-align: center; padding: 2.5rem; color: #94A3B8; font-size: 0.82rem; }
+ .staff-empty { text-align: center; padding: 2.5rem; color: #94A3B8; }
+ .staff-empty-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+ .staff-empty p { font-size: 0.82rem; }
 
-    .s-modal {
-      display: none; position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%; background: rgba(15,23,42,0.5);
-      z-index: 1000; backdrop-filter: blur(2px);
-    }
-    .s-modal.active { display: flex; align-items: center; justify-content: center; }
-    .s-modal-box {
-      background: white; border-radius: 12px; max-width: 440px;
-      width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
-      overflow: hidden;
-    }
-    .s-modal-hdr {
-      padding: 0.85rem 1.1rem; border-bottom: 1px solid #F1F5F9;
-      display: flex; align-items: center; justify-content: space-between;
-    }
-    .s-modal-hdr h3 { font-size: 0.92rem; font-weight: 700; color: #1E293B; margin: 0; }
-    .s-modal-close {
-      background: none; border: none; font-size: 1.2rem;
-      color: #94A3B8; cursor: pointer; line-height: 1;
-    }
-    .s-modal-close:hover { color: #475569; }
-    .s-modal-body { padding: 1.1rem; }
+ .s-modal {
+ display: none; position: fixed; top: 0; left: 0;
+ width: 100%; height: 100%; background: rgba(15,23,42,0.5);
+ z-index: 1000; backdrop-filter: blur(2px);
+ }
+ .s-modal.active { display: flex; align-items: center; justify-content: center; }
+ .s-modal-box {
+ background: white; border-radius: 12px; max-width: 440px;
+ width: 92%; box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+ overflow: hidden;
+ }
+ .s-modal-hdr {
+ padding: 0.85rem 1.1rem; border-bottom: 1px solid #F1F5F9;
+ display: flex; align-items: center; justify-content: space-between;
+ }
+ .s-modal-hdr h3 { font-size: 0.92rem; font-weight: 700; color: #1E293B; margin: 0; }
+ .s-modal-close {
+ background: none; border: none; font-size: 1.2rem;
+ color: #94A3B8; cursor: pointer; line-height: 1;
+ }
+ .s-modal-close:hover { color: #475569; }
+ .s-modal-body { padding: 1.1rem; }
 
-    .s-fg { margin-bottom: 0.9rem; }
-    .s-fg label {
-      display: block; font-size: 0.72rem; font-weight: 600;
-      color: #475569; margin-bottom: 0.25rem;
-    }
-    .s-fg input, .s-fg select {
-      width: 100%; padding: 0.5rem 0.65rem; border: 1.5px solid #E2E8F0;
-      border-radius: 8px; font-family: inherit; font-size: 0.82rem;
-      color: #1E293B; transition: border-color 0.15s;
-    }
-    .s-fg input:focus, .s-fg select:focus { border-color: var(--primary); outline: none; }
-    .s-fg small { font-size: 0.68rem; color: #94A3B8; margin-top: 0.2rem; display: block; }
-    .s-fg .s-submit {
-      width: 100%; padding: 0.55rem; border: none; border-radius: 8px;
-      background: var(--primary); color: white; font-family: inherit;
-      font-size: 0.82rem; font-weight: 600; cursor: pointer;
-      transition: background 0.15s;
-    }
-    .s-fg .s-submit:hover { background: var(--primary-dark); }
-    .s-fg .s-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+ .s-fg { margin-bottom: 0.9rem; }
+ .s-fg label {
+ display: block; font-size: 0.72rem; font-weight: 600;
+ color: #475569; margin-bottom: 0.25rem;
+ }
+ .s-fg input, .s-fg select {
+ width: 100%; padding: 0.5rem 0.65rem; border: 1.5px solid #E2E8F0;
+ border-radius: 8px; font-family: inherit; font-size: 0.82rem;
+ color: #1E293B; transition: border-color 0.15s;
+ }
+ .s-fg input:focus, .s-fg select:focus { border-color: var(--primary); outline: none; }
+ .s-fg small { font-size: 0.68rem; color: #94A3B8; margin-top: 0.2rem; display: block; }
+ .s-fg .s-submit {
+ width: 100%; padding: 0.55rem; border: none; border-radius: 8px;
+ background: var(--primary); color: white; font-family: inherit;
+ font-size: 0.82rem; font-weight: 600; cursor: pointer;
+ transition: background 0.15s;
+ }
+ .s-fg .s-submit:hover { background: var(--primary-dark); }
+ .s-fg .s-submit:disabled { opacity: 0.5; cursor: not-allowed; }
 
-    .s-alert {
-      padding: 0.5rem 0.75rem; border-radius: 8px; margin-bottom: 0.75rem;
-      font-size: 0.78rem; border-left: 3px solid;
-    }
-    .s-alert.success { background: #F0FDF4; color: #065F46; border-color: #10B981; }
-    .s-alert.error { background: #FEF2F2; color: #991B1B; border-color: #EF4444; }
-    .s-alert.info { background: color-mix(in srgb, var(--primary-light) 40%, white); color: #0E7490; border-color: var(--primary); }
+ .s-alert {
+ padding: 0.5rem 0.75rem; border-radius: 8px; margin-bottom: 0.75rem;
+ font-size: 0.78rem; border-left: 3px solid;
+ }
+ .s-alert.success { background: #F0FDF4; color: #065F46; border-color: #10B981; }
+ .s-alert.error { background: #FEF2F2; color: #991B1B; border-color: #EF4444; }
+ .s-alert.info { background: color-mix(in srgb, var(--primary-light) 40%, white); color: #0E7490; border-color: var(--primary); }
 
-    @media (max-width: 768px) {
-      .dash-wrap { padding: 0.4rem; }
-      .pg-title { font-size: 0.95rem; }
-      .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
+ @media (max-width: 768px) {
+ .dash-wrap { padding: 0.4rem; }
+ .pg-title { font-size: 0.95rem; }
+ .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
 
-      /* Table rows — bigger tap targets */
-      .staff-table { font-size: 0.78rem; }
-      .staff-table th, .staff-table td { padding: 0.55rem 0.6rem; }
-      .staff-table tr { min-height: 48px; }
-      .staff-table .hide-mobile { display: none; }
+ /* Table rows — bigger tap targets */
+ .staff-table { font-size: 0.78rem; }
+ .staff-table th, .staff-table td { padding: 0.55rem 0.6rem; }
+ .staff-table tr { min-height: 48px; }
+ .staff-table .hide-mobile { display: none; }
 
-      /* Buttons */
-      .pg-btn { font-size: 0.75rem; padding: 0.4rem 0.85rem; min-height: 36px; }
+ /* Buttons */
+ .pg-btn { font-size: 0.75rem; padding: 0.4rem 0.85rem; min-height: 36px; }
 
-      /* Form inputs in modal — prevent iOS zoom */
-      .s-modal input, .s-modal select { font-size: 1rem; }
-      .s-modal .s-btn { min-height: 44px; }
-    }
-    @media (max-width: 480px) {
-      .stats-row { grid-template-columns: repeat(2, 1fr); }
-    }
-  </style>
+ /* Form inputs in modal — prevent iOS zoom */
+ .s-modal input, .s-modal select { font-size: 1rem; }
+ .s-modal .s-btn { min-height: 44px; }
+ }
+ @media (max-width: 480px) {
+ .stats-row { grid-template-columns: repeat(2, 1fr); }
+ }
+ </style>
 </head>
 <body>
-  <nav class="navbar">
-    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
-    <div class="navbar-menu"></div>
-  </nav>
+ <nav class="navbar">
+ <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+ <div class="navbar-menu"></div>
+ </nav>
 
-  <div class="staff-page">
-    <div class="staff-wrap">
-      <div class="pg-header">
-        <div class="pg-title">Mon équipe</div>
-        <button class="pg-btn" onclick="showAddModal()">+ Ajouter un membre</button>
-      </div>
+ <div class="staff-page">
+ <div class="staff-wrap">
+ <div class="pg-header">
+ <div class="pg-title">Mon équipe</div>
+ <button class="pg-btn" onclick="showAddModal()">+ Ajouter un membre</button>
+ </div>
 
-      <div class="info-banner">
-        ℹ️ Les <strong>managers</strong> peuvent voir les clients et l'historique.
-        Les <strong>caissiers</strong> ont un accès limité (crédit uniquement, max 200€).
-      </div>
+ <div class="info-banner">
+ ℹ Les <strong>managers</strong> peuvent voir les clients et l'historique.
+ Les <strong>caissiers</strong> ont un accès limité (crédit uniquement, max 200€).
+ </div>
 
-      <div class="stats-row" id="staff-stats" style="display: none;">
-        <div class="st"><div class="st-val" id="st-total">0</div><div class="st-lbl">Membres</div></div>
-        <div class="st"><div class="st-val green" id="st-active">0</div><div class="st-lbl">Actifs</div></div>
-        <div class="st"><div class="st-val amber" id="st-inactive">0</div><div class="st-lbl">Inactifs</div></div>
-      </div>
+ <div class="stats-row" id="staff-stats" style="display: none;">
+ <div class="st"><div class="st-val" id="st-total">0</div><div class="st-lbl">Membres</div></div>
+ <div class="st"><div class="st-val green" id="st-active">0</div><div class="st-lbl">Actifs</div></div>
+ <div class="st"><div class="st-val amber" id="st-inactive">0</div><div class="st-lbl">Inactifs</div></div>
+ </div>
 
-      <div id="staff-list"></div>
-    </div>
-  </div>
+ <div id="staff-list"></div>
+ </div>
+ </div>
 
-  <!-- Add Modal -->
-  <div id="add-modal" class="s-modal">
-    <div class="s-modal-box">
-      <div class="s-modal-hdr">
-        <h3>Ajouter un membre</h3>
-        <button class="s-modal-close" onclick="closeAddModal()">×</button>
-      </div>
-      <div class="s-modal-body">
-        <div id="add-alert"></div>
-        <form id="add-form">
-          <div class="s-fg">
-            <label>Nom complet *</label>
-            <input type="text" id="add-name" placeholder="Marie Dupont" required>
-          </div>
-          <div class="s-fg">
-            <label>Email de connexion *</label>
-            <input type="email" id="add-email" placeholder="marie@email.com" required>
-            <small>Un seul compte par email (même entre commerces)</small>
-          </div>
-          <div class="s-fg">
-            <label>Mot de passe temporaire *</label>
-            <input type="text" id="add-password" placeholder="Minimum 6 caractères" minlength="6" required>
-          </div>
-          <div class="s-fg">
-            <label>Rôle *</label>
-            <select id="add-role">
-              <option value="cashier">Caissier — Créditer uniquement</option>
-              <option value="manager">Manager — Créditer + voir clients</option>
-            </select>
-          </div>
-          <div class="s-fg">
-            <button type="submit" class="s-submit" id="add-btn">Ajouter le membre</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
+ <!-- Add Modal -->
+ <div id="add-modal" class="s-modal">
+ <div class="s-modal-box">
+ <div class="s-modal-hdr">
+ <h3>Ajouter un membre</h3>
+ <button class="s-modal-close" onclick="closeAddModal()">×</button>
+ </div>
+ <div class="s-modal-body">
+ <div id="add-alert"></div>
+ <form id="add-form">
+ <div class="s-fg">
+ <label>Nom complet *</label>
+ <input type="text" id="add-name" placeholder="Marie Dupont" required>
+ </div>
+ <div class="s-fg">
+ <label>Email de connexion *</label>
+ <input type="email" id="add-email" placeholder="marie@email.com" required>
+ <small>Un seul compte par email (même entre commerces)</small>
+ </div>
+ <div class="s-fg">
+ <label>Mot de passe temporaire *</label>
+ <input type="text" id="add-password" placeholder="Minimum 6 caractères" minlength="6" required>
+ </div>
+ <div class="s-fg">
+ <label>Rôle *</label>
+ <select id="add-role">
+ <option value="cashier">Caissier — Créditer uniquement</option>
+ <option value="manager">Manager — Créditer + voir clients</option>
+ </select>
+ </div>
+ <div class="s-fg">
+ <button type="submit" class="s-submit" id="add-btn">Ajouter le membre</button>
+ </div>
+ </form>
+ </div>
+ </div>
+ </div>
 
-  <!-- Password Reset Modal -->
-  <div id="pw-modal" class="s-modal">
-    <div class="s-modal-box">
-      <div class="s-modal-hdr">
-        <h3>Réinitialiser le mot de passe</h3>
-        <button class="s-modal-close" onclick="closePwModal()">×</button>
-      </div>
-      <div class="s-modal-body">
-        <div id="pw-alert"></div>
-        <p style="font-size: 0.78rem; color: #64748B; margin-bottom: 0.75rem;" id="pw-target"></p>
-        <div class="s-fg">
-          <label>Nouveau mot de passe</label>
-          <input type="text" id="pw-value" placeholder="Minimum 6 caractères" minlength="6">
-        </div>
-        <div class="s-fg">
-          <button type="button" class="s-submit" onclick="submitPasswordReset()">Réinitialiser</button>
-        </div>
-      </div>
-    </div>
-  </div>
+ <!-- Password Reset Modal -->
+ <div id="pw-modal" class="s-modal">
+ <div class="s-modal-box">
+ <div class="s-modal-hdr">
+ <h3>Réinitialiser le mot de passe</h3>
+ <button class="s-modal-close" onclick="closePwModal()">×</button>
+ </div>
+ <div class="s-modal-body">
+ <div id="pw-alert"></div>
+ <p style="font-size: 0.78rem; color: #64748B; margin-bottom: 0.75rem;" id="pw-target"></p>
+ <div class="s-fg">
+ <label>Nouveau mot de passe</label>
+ <input type="text" id="pw-value" placeholder="Minimum 6 caractères" minlength="6">
+ </div>
+ <div class="s-fg">
+ <button type="button" class="s-submit" onclick="submitPasswordReset()">Réinitialiser</button>
+ </div>
+ </div>
+ </div>
+ </div>
 
-  <script src="/js/app.js"></script>
-  <script>
-    if (!requireOwner()) throw 'Not authorized';
+ <script src="/js/app.js"></script>
+ <script>
+ if (!requireOwner()) throw 'Not authorized';
 
-    const currentStaff = Auth.getStaff();
-    let staffMembers = [];
-    let resetTargetId = null;
+ const currentStaff = Auth.getStaff();
+ let staffMembers = [];
+ let resetTargetId = null;
 
-    function showAlert(id, msg, type) {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = `<div class="s-alert ${type}">${esc(msg)}</div>`;
-    }
-    function clearAlert(id) {
-      const el = document.getElementById(id);
-      if (el) el.innerHTML = '';
-    }
+ function showAlert(id, msg, type) {
+ const el = document.getElementById(id);
+ if (el) el.innerHTML = `<div class="s-alert ${type}">${esc(msg)}</div>`;
+ }
+ function clearAlert(id) {
+ const el = document.getElementById(id);
+ if (el) el.innerHTML = '';
+ }
 
-    async function loadStaff() {
-      try {
-        document.getElementById('staff-list').innerHTML =
-          '<div class="staff-loading"><div class="spinner"></div>Chargement…</div>';
-        const data = await API.staff.list();
-        staffMembers = data.staff;
-        updateStats();
-        renderStaff();
-      } catch (err) {
-        document.getElementById('staff-list').innerHTML =
-          `<div class="s-alert error">⚠️ ${err.message}</div>`;
-      }
-    }
+ async function loadStaff() {
+ try {
+ document.getElementById('staff-list').innerHTML =
+ '<div class="staff-loading"><div class="spinner"></div>Chargement…</div>';
+ const data = await API.staff.list();
+ staffMembers = data.staff;
+ updateStats();
+ renderStaff();
+ } catch (err) {
+ document.getElementById('staff-list').innerHTML =
+ `<div class="s-alert error"> ${err.message}</div>`;
+ }
+ }
 
-    function updateStats() {
-      const total = staffMembers.length;
-      const active = staffMembers.filter(m => m.is_active).length;
-      document.getElementById('st-total').textContent = total;
-      document.getElementById('st-active').textContent = active;
-      document.getElementById('st-inactive').textContent = total - active;
-      document.getElementById('staff-stats').style.display = 'grid';
-    }
+ function updateStats() {
+ const total = staffMembers.length;
+ const active = staffMembers.filter(m => m.is_active).length;
+ document.getElementById('st-total').textContent = total;
+ document.getElementById('st-active').textContent = active;
+ document.getElementById('st-inactive').textContent = total - active;
+ document.getElementById('staff-stats').style.display = 'grid';
+ }
 
-    function renderStaff() {
-      const container = document.getElementById('staff-list');
-      if (staffMembers.length === 0) {
-        container.innerHTML = `
-          <div class="staff-card">
-            <div class="staff-empty">
-              <div class="staff-empty-icon">👥</div>
-              <p>Aucun membre dans l'équipe</p>
-            </div>
-          </div>`;
-        return;
-      }
+ function renderStaff() {
+ const container = document.getElementById('staff-list');
+ if (staffMembers.length === 0) {
+ container.innerHTML = `
+ <div class="staff-card">
+ <div class="staff-empty">
+ <div class="staff-empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+ <p>Aucun membre dans l'équipe</p>
+ </div>
+ </div>`;
+ return;
+ }
 
-      let html = `
-        <div class="staff-card">
-          <div class="staff-card-hdr">
-            <div class="staff-card-title">Membres (${staffMembers.length})</div>
-          </div>
-          <table class="staff-table">
-            <thead><tr>
-              <th>Nom</th>
-              <th class="hide-mobile">Email</th>
-              <th>Rôle</th>
-              <th>Statut</th>
-              <th class="hide-mobile">Dernière connexion</th>
-              <th>Actions</th>
-            </tr></thead>
-            <tbody>`;
+ let html = `
+ <div class="staff-card">
+ <div class="staff-card-hdr">
+ <div class="staff-card-title">Membres (${staffMembers.length})</div>
+ </div>
+ <table class="staff-table">
+ <thead><tr>
+ <th>Nom</th>
+ <th class="hide-mobile">Email</th>
+ <th>Rôle</th>
+ <th>Statut</th>
+ <th class="hide-mobile">Dernière connexion</th>
+ <th>Actions</th>
+ </tr></thead>
+ <tbody>`;
 
-      staffMembers.forEach(m => {
-        const isSelf = m.id === currentStaff.id;
-        const isOwner = m.role === 'owner';
+ staffMembers.forEach(m => {
+ const isSelf = m.id === currentStaff.id;
+ const isOwner = m.role === 'owner';
 
-        let roleCell;
-        if (isOwner) {
-          roleCell = '<span class="s-badge owner">Propriétaire</span>';
-        } else {
-          roleCell = `<select class="role-select" onchange="changeRole(${m.id}, this.value)" ${isSelf ? 'disabled' : ''}>
-            <option value="manager" ${m.role === 'manager' ? 'selected' : ''}>Manager</option>
-            <option value="cashier" ${m.role === 'cashier' ? 'selected' : ''}>Caissier</option>
-          </select>`;
-        }
+ let roleCell;
+ if (isOwner) {
+ roleCell = '<span class="s-badge owner">Propriétaire</span>';
+ } else {
+ roleCell = `<select class="role-select" onchange="changeRole(${m.id}, this.value)" ${isSelf ? 'disabled' : ''}>
+ <option value="manager" ${m.role === 'manager' ? 'selected' : ''}>Manager</option>
+ <option value="cashier" ${m.role === 'cashier' ? 'selected' : ''}>Caissier</option>
+ </select>`;
+ }
 
-        const statusBadge = m.is_active
-          ? '<span class="s-badge active">Actif</span>'
-          : '<span class="s-badge inactive">Inactif</span>';
+ const statusBadge = m.is_active
+ ? '<span class="s-badge active">Actif</span>'
+ : '<span class="s-badge inactive">Inactif</span>';
 
-        const lastLogin = m.last_login
-          ? Format.timeSince(m.last_login)
-          : '<span style="color:#CBD5E1">Jamais</span>';
+ const lastLogin = m.last_login
+ ? Format.timeSince(m.last_login)
+ : '<span style="color:#CBD5E1">Jamais</span>';
 
-        const safeName = esc(m.display_name);
-        const safeNameAttr = m.display_name.replace(/'/g, "\\'").replace(/</g, '&lt;');
+ const safeName = esc(m.display_name);
+ const safeNameAttr = m.display_name.replace(/'/g, "\\'").replace(/</g, '&lt;');
 
-        let actions = '<div class="action-btns">';
-        if (isSelf) {
-          actions += '<span class="s-badge you">Vous</span>';
-        } else if (!isOwner) {
-          if (m.is_active) {
-            actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${safeNameAttr}')" title="Désactiver">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-            </button>`;
-          } else {
-            actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${safeNameAttr}')" title="Activer">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
-            </button>`;
-          }
-          actions += `<button class="act-btn" onclick="showPwModal(${m.id}, '${safeNameAttr}')" title="Mot de passe">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-          </button>`;
-          actions += `<button class="act-btn danger" onclick="deleteMember(${m.id}, '${safeNameAttr}')" title="Supprimer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"/></svg>
-          </button>`;
-        }
-        actions += '</div>';
+ let actions = '<div class="action-btns">';
+ if (isSelf) {
+ actions += '<span class="s-badge you">Vous</span>';
+ } else if (!isOwner) {
+ if (m.is_active) {
+ actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${safeNameAttr}')" title="Désactiver">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+ </button>`;
+ } else {
+ actions += `<button class="act-btn" onclick="toggleMember(${m.id}, '${safeNameAttr}')" title="Activer">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
+ </button>`;
+ }
+ actions += `<button class="act-btn" onclick="showPwModal(${m.id}, '${safeNameAttr}')" title="Mot de passe">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+ </button>`;
+ actions += `<button class="act-btn danger" onclick="deleteMember(${m.id}, '${safeNameAttr}')" title="Supprimer">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19,6v14a2,2,0,0,1-2,2H7a2,2,0,0,1-2-2V6m3,0V4a2,2,0,0,1,2-2h4a2,2,0,0,1,2,2v2"/></svg>
+ </button>`;
+ }
+ actions += '</div>';
 
-        html += `<tr>
-          <td><span class="staff-name">${safeName}</span></td>
-          <td class="hide-mobile"><span class="staff-email">${esc(m.email)}</span></td>
-          <td>${roleCell}</td>
-          <td>${statusBadge}</td>
-          <td class="hide-mobile"><span class="staff-login">${lastLogin}</span></td>
-          <td>${actions}</td>
-        </tr>`;
-      });
+ html += `<tr>
+ <td><span class="staff-name">${safeName}</span></td>
+ <td class="hide-mobile"><span class="staff-email">${esc(m.email)}</span></td>
+ <td>${roleCell}</td>
+ <td>${statusBadge}</td>
+ <td class="hide-mobile"><span class="staff-login">${lastLogin}</span></td>
+ <td>${actions}</td>
+ </tr>`;
+ });
 
-      html += '</tbody></table></div>';
-      container.innerHTML = html;
-    }
+ html += '</tbody></table></div>';
+ container.innerHTML = html;
+ }
 
-    function showAddModal() {
-      document.getElementById('add-form').reset();
-      clearAlert('add-alert');
-      document.getElementById('add-modal').classList.add('active');
-    }
-    function closeAddModal() { document.getElementById('add-modal').classList.remove('active'); }
-    document.getElementById('add-modal').addEventListener('click', (e) => { if (e.target.id === 'add-modal') closeAddModal(); });
+ function showAddModal() {
+ document.getElementById('add-form').reset();
+ clearAlert('add-alert');
+ document.getElementById('add-modal').classList.add('active');
+ }
+ function closeAddModal() { document.getElementById('add-modal').classList.remove('active'); }
+ document.getElementById('add-modal').addEventListener('click', (e) => { if (e.target.id === 'add-modal') closeAddModal(); });
 
-    document.getElementById('add-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('add-btn');
-      btn.disabled = true;
-      try {
-        showAlert('add-alert', 'Création en cours…', 'info');
-        await API.staff.create({
-          name: document.getElementById('add-name').value.trim(),
-          email: document.getElementById('add-email').value.trim(),
-          password: document.getElementById('add-password').value,
-          role: document.getElementById('add-role').value,
-        });
-        showAlert('add-alert', 'Membre ajouté avec succès !', 'success');
-        setTimeout(() => { closeAddModal(); loadStaff(); }, 800);
-      } catch (err) {
-        showAlert('add-alert', err.message, 'error');
-      } finally {
-        btn.disabled = false;
-      }
-    });
+ document.getElementById('add-form').addEventListener('submit', async (e) => {
+ e.preventDefault();
+ const btn = document.getElementById('add-btn');
+ btn.disabled = true;
+ try {
+ showAlert('add-alert', 'Création en cours…', 'info');
+ await API.staff.create({
+ name: document.getElementById('add-name').value.trim(),
+ email: document.getElementById('add-email').value.trim(),
+ password: document.getElementById('add-password').value,
+ role: document.getElementById('add-role').value,
+ });
+ showAlert('add-alert', 'Membre ajouté avec succès !', 'success');
+ setTimeout(() => { closeAddModal(); loadStaff(); }, 800);
+ } catch (err) {
+ showAlert('add-alert', err.message, 'error');
+ } finally {
+ btn.disabled = false;
+ }
+ });
 
-    async function changeRole(id, newRole) {
-      try {
-        await API.staff.updateRole(id, newRole);
-        loadStaff();
-      } catch (err) {
-        alert('Erreur : ' + err.message);
-        loadStaff();
-      }
-    }
+ async function changeRole(id, newRole) {
+ try {
+ await API.staff.updateRole(id, newRole);
+ loadStaff();
+ } catch (err) {
+ alert('Erreur : ' + err.message);
+ loadStaff();
+ }
+ }
 
-    async function toggleMember(id, name) {
-      const member = staffMembers.find(m => m.id === id);
-      if (!member) return;
-      const action = member.is_active ? 'désactiver' : 'activer';
-      if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name} ?`)) return;
-      try {
-        await API.staff.toggle(id);
-        loadStaff();
-      } catch (err) {
-        alert('Erreur : ' + err.message);
-      }
-    }
+ async function toggleMember(id, name) {
+ const member = staffMembers.find(m => m.id === id);
+ if (!member) return;
+ const action = member.is_active ? 'désactiver' : 'activer';
+ if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} ${name} ?`)) return;
+ try {
+ await API.staff.toggle(id);
+ loadStaff();
+ } catch (err) {
+ alert('Erreur : ' + err.message);
+ }
+ }
 
-    function showPwModal(id, name) {
-      resetTargetId = id;
-      document.getElementById('pw-target').textContent = `Nouveau mot de passe pour ${name}`;
-      document.getElementById('pw-value').value = '';
-      clearAlert('pw-alert');
-      document.getElementById('pw-modal').classList.add('active');
-    }
-    function closePwModal() { document.getElementById('pw-modal').classList.remove('active'); resetTargetId = null; }
-    document.getElementById('pw-modal').addEventListener('click', (e) => { if (e.target.id === 'pw-modal') closePwModal(); });
+ function showPwModal(id, name) {
+ resetTargetId = id;
+ document.getElementById('pw-target').textContent = `Nouveau mot de passe pour ${name}`;
+ document.getElementById('pw-value').value = '';
+ clearAlert('pw-alert');
+ document.getElementById('pw-modal').classList.add('active');
+ }
+ function closePwModal() { document.getElementById('pw-modal').classList.remove('active'); resetTargetId = null; }
+ document.getElementById('pw-modal').addEventListener('click', (e) => { if (e.target.id === 'pw-modal') closePwModal(); });
 
-    async function submitPasswordReset() {
-      const pw = document.getElementById('pw-value').value;
-      if (!pw || pw.length < 6) { showAlert('pw-alert', 'Minimum 6 caractères', 'error'); return; }
-      try {
-        await API.staff.resetPassword(resetTargetId, pw);
-        showAlert('pw-alert', 'Mot de passe réinitialisé !', 'success');
-        setTimeout(() => closePwModal(), 800);
-      } catch (err) {
-        showAlert('pw-alert', err.message, 'error');
-      }
-    }
+ async function submitPasswordReset() {
+ const pw = document.getElementById('pw-value').value;
+ if (!pw || pw.length < 6) { showAlert('pw-alert', 'Minimum 6 caractères', 'error'); return; }
+ try {
+ await API.staff.resetPassword(resetTargetId, pw);
+ showAlert('pw-alert', 'Mot de passe réinitialisé !', 'success');
+ setTimeout(() => closePwModal(), 800);
+ } catch (err) {
+ showAlert('pw-alert', err.message, 'error');
+ }
+ }
 
-    async function deleteMember(id, name) {
-      if (!confirm(`Supprimer définitivement ${name} ? Cette action est irréversible.`)) return;
-      try {
-        await API.staff.delete(id);
-        loadStaff();
-      } catch (err) {
-        alert('Erreur : ' + err.message);
-      }
-    }
+ async function deleteMember(id, name) {
+ if (!confirm(`Supprimer définitivement ${name} ? Cette action est irréversible.`)) return;
+ try {
+ await API.staff.delete(id);
+ loadStaff();
+ } catch (err) {
+ alert('Erreur : ' + err.message);
+ }
+ }
 
-    loadStaff();
-  </script>
+ loadStaff();
+ </script>
 </body>
 </html>

@@ -1,1085 +1,1085 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="FIDDO">
-  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-  <meta name="theme-color" content="#0891B2">
-  <title>FIDDO — Espace Commerçant</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Satoshi:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-    :root {
-      --bg: #0a0c10;
-      --bg-raised: #0f1219;
-      --bg-card: #141820;
-      --bg-input: #181d27;
-      --border: rgba(255,255,255,0.06);
-      --border-hover: rgba(255,255,255,0.12);
-      --border-focus: rgba(8,145,178,0.5);
-      --teal: #0891B2;
-      --teal-glow: rgba(8,145,178,0.15);
-      --teal-deep: #0e7490;
-      --teal-bright: #22d3ee;
-      --amber: #f59e0b;
-      --green: #10b981;
-      --error: #f87171;
-      --error-bg: rgba(248,113,113,0.08);
-      --error-border: rgba(248,113,113,0.25);
-      --success: #34d399;
-      --success-bg: rgba(52,211,153,0.08);
-      --text: #f1f5f9;
-      --text-secondary: rgba(255,255,255,0.55);
-      --text-muted: rgba(255,255,255,0.3);
-      --text-faint: rgba(255,255,255,0.15);
-      --radius: 10px;
-      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      --font-display: 'Instrument Serif', Georgia, serif;
-      --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    body {
-      font-family: var(--font-body);
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.6;
-      min-height: 100vh;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ═══════════════════════════════════════════════
-       LAYOUT
-       ═══════════════════════════════════════════════ */
-    .auth-layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      min-height: 100vh;
-    }
-
-    /* ═══════════════════════════════════════════════
-       LEFT PANEL — Brand (sticky)
-       ═══════════════════════════════════════════════ */
-    .brand-panel {
-      background: #060810;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 4rem 3.5rem;
-      overflow: hidden;
-    }
-
-    .brand-panel::before {
-      content: '';
-      position: absolute;
-      top: -15%; right: -10%;
-      width: 550px; height: 550px;
-      background: radial-gradient(circle, rgba(8,145,178,0.12) 0%, transparent 60%);
-      animation: orbFloat 14s ease-in-out infinite;
-      pointer-events: none;
-    }
-
-    .brand-panel::after {
-      content: '';
-      position: absolute;
-      bottom: -10%; left: -15%;
-      width: 450px; height: 450px;
-      background: radial-gradient(circle, rgba(8,145,178,0.06) 0%, transparent 55%);
-      animation: orbFloat 18s ease-in-out infinite reverse;
-      pointer-events: none;
-    }
-
-    @keyframes orbFloat {
-      0%, 100% { transform: translate(0, 0) scale(1); }
-      33% { transform: translate(20px, -12px) scale(1.04); }
-      66% { transform: translate(-12px, 18px) scale(0.96); }
-    }
-
-    .brand-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-      background-size: 60px 60px;
-      mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
-      -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .brand-inner {
-      position: relative;
-      z-index: 2;
-      max-width: 420px;
-      animation: fadeUp 0.6s ease-out 0.1s both;
-    }
-
-    .brand-logo {
-      margin-bottom: 3.5rem;
-    }
-
-    .brand-logo .wordmark {
-      font-family: var(--font-body);
-      font-size: 1.5rem;
-      font-weight: 800;
-      color: var(--teal);
-      letter-spacing: -0.5px;
-    }
-
-    .brand-headline {
-      font-family: var(--font-display);
-      font-size: 2.8rem;
-      font-weight: 400;
-      line-height: 1.15;
-      color: #FFFFFF;
-      margin-bottom: 1.25rem;
-    }
-
-    .brand-headline em {
-      font-style: italic;
-      background: linear-gradient(135deg, var(--teal-bright), var(--teal));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .brand-desc {
-      font-size: 1rem;
-      line-height: 1.8;
-      color: var(--text-secondary);
-      margin-bottom: 2rem;
-    }
-
-    .brand-features {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .brand-feat {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      font-size: 0.88rem;
-      color: rgba(255,255,255,0.75);
-      font-weight: 500;
-    }
-
-    .brand-feat svg { color: var(--teal-bright); flex-shrink: 0; }
-
-    .brand-stats {
-      display: flex;
-      gap: 2.5rem;
-      padding-top: 2.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .brand-stat-value {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 400;
-      color: #FFFFFF;
-      line-height: 1;
-    }
-
-    .brand-stat-value span {
-      color: var(--teal-bright);
-      font-size: 0.95rem;
-    }
-
-    .brand-stat-label {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      margin-top: 0.4rem;
-    }
-
-    .brand-footer {
-      position: absolute;
-      bottom: 2.5rem;
-      left: 3.5rem;
-      right: 3.5rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 2;
-    }
-
-    .brand-footer-left {
-      display: flex;
-      gap: 1.5rem;
-    }
-
-    .brand-footer span {
-      font-size: 0.68rem;
-      color: var(--text-faint);
-      letter-spacing: 0.5px;
-    }
-
-    .brand-footer .powered-by {
-      font-size: 0.62rem;
-      color: var(--text-faint);
-    }
-
-    .brand-footer .powered-by strong {
-      color: var(--text-muted);
-      font-weight: 700;
-    }
-
-    /* ═══════════════════════════════════════════════
-       RIGHT PANEL — Form
-       ═══════════════════════════════════════════════ */
-    .form-panel {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem;
-      overflow-y: auto;
-      background: var(--bg);
-      background-image: radial-gradient(ellipse 80% 60% at 80% 20%, rgba(8,145,178,0.04), transparent 50%);
-    }
-
-    .form-wrapper {
-      width: 100%;
-      max-width: 420px;
-      padding: 2rem 0;
-      animation: fadeUp 0.5s ease-out;
-    }
-
-    /* Mobile brand (hidden on desktop) */
-    .mobile-brand { display: none; }
-
-    .form-header { margin-bottom: 2.25rem; }
-
-    .form-header h1 {
-      font-family: var(--font-display);
-      font-size: 2rem;
-      font-weight: 400;
-      color: var(--text);
-      margin-bottom: 0.4rem;
-    }
-
-    .form-header p {
-      color: var(--text-secondary);
-      font-size: 0.92rem;
-    }
-
-    /* ═══════════════════════════════════════════════
-       FORM FIELDS
-       ═══════════════════════════════════════════════ */
-    .field { margin-bottom: 1.35rem; }
-
-    .field-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 0.45rem;
-      letter-spacing: 0.5px;
-      text-transform: uppercase;
-    }
-
-    .field-input,
-    .field-select {
-      width: 100%;
-      padding: 0.8rem 1rem;
-      border: 1.5px solid var(--border);
-      border-radius: var(--radius);
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      color: var(--text);
-      background: var(--bg-input);
-      transition: var(--transition);
-      outline: none;
-    }
-
-    .field-input::placeholder { color: var(--text-faint); }
-
-    .field-input:focus,
-    .field-select:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 3px var(--teal-glow);
-      background: var(--bg-card);
-    }
-
-    .field-input.has-error { border-color: var(--error-border); background: var(--error-bg); }
-    .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113,0.1); }
-
-    .field-select {
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2367738a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.85rem center;
-      padding-right: 2.5rem;
-      cursor: pointer;
-    }
-    .field-select option {
-      background: var(--bg-card);
-      color: var(--text);
-    }
-
-    .field-error {
-      font-size: 0.78rem;
-      color: var(--error);
-      margin-top: 0.35rem;
-      display: none;
-    }
-    .field-error.visible { display: block; }
-
-    .field-hint {
-      font-size: 0.75rem;
-      color: var(--text-faint);
-      margin-top: 0.35rem;
-    }
-
-    .field-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-
-    /* Section divider */
-    .section-divider {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 2.25rem 0 1.5rem;
-    }
-
-    .section-divider::before,
-    .section-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .section-divider span {
-      font-size: 0.65rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    /* Reward preview */
-    .reward-preview {
-      display: none;
-      background: linear-gradient(135deg, var(--teal-deep), #0c5e72);
-      border: 1px solid rgba(8,145,178,0.2);
-      color: white;
-      border-radius: var(--radius);
-      padding: 1rem 1.25rem;
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
-      line-height: 1.65;
-    }
-    .reward-preview strong { font-weight: 600; }
-
-    /* ═══════════════════════════════════════════════
-       BUTTONS
-       ═══════════════════════════════════════════════ */
-    .btn-submit {
-      width: 100%;
-      padding: 0.9rem 1.5rem;
-      border: none;
-      border-radius: var(--radius);
-      font-family: var(--font-body);
-      font-size: 0.95rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: var(--transition);
-      letter-spacing: 0.3px;
-      position: relative;
-      overflow: hidden;
-      margin-top: 0.5rem;
-    }
-
-    .btn-submit:active:not(:disabled) { transform: scale(0.985); }
-
-    .btn-primary-action {
-      background: var(--teal);
-      color: #FFFFFF;
-      box-shadow: 0 0 20px var(--teal-glow), 0 2px 8px rgba(8,145,178,0.2);
-    }
-
-    .btn-primary-action:hover:not(:disabled) {
-      background: var(--teal-deep);
-      box-shadow: 0 0 30px rgba(8,145,178,0.25), 0 4px 20px rgba(8,145,178,0.3);
-      transform: translateY(-1px);
-    }
-
-    .btn-submit:disabled { opacity: 0.6; cursor: wait; }
-    .btn-submit .btn-text { transition: opacity 0.15s; }
-    .btn-submit .btn-loader {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      opacity: 0;
-      transition: opacity 0.15s;
-    }
-    .btn-submit.loading .btn-text { opacity: 0; }
-    .btn-submit.loading .btn-loader { opacity: 1; }
-
-    .spinner-dots { display: flex; gap: 4px; }
-    .spinner-dots span {
-      width: 6px; height: 6px;
-      background: white;
-      border-radius: 50%;
-      animation: dotPulse 0.9s ease-in-out infinite;
-    }
-    .spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
-    .spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
-
-    @keyframes dotPulse {
-      0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-      40% { opacity: 1; transform: scale(1); }
-    }
-
-    /* Toggle */
-    .form-toggle {
-      text-align: center;
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .form-toggle a {
-      color: var(--teal-bright);
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-      transition: var(--transition);
-    }
-    .form-toggle a:hover { color: var(--teal); text-decoration: underline; }
-
-    /* Alerts */
-    .page-alert {
-      padding: 0.85rem 1rem;
-      border-radius: var(--radius);
-      margin-bottom: 1.25rem;
-      font-size: 0.88rem;
-      line-height: 1.55;
-      display: none;
-      animation: alertIn 0.25s ease-out;
-    }
-    .page-alert.visible { display: block; }
-    .page-alert.error   { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
-    .page-alert.success  { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
-    .page-alert.info     { background: rgba(8,145,178,0.08); color: var(--teal-bright); border-left: 3px solid var(--teal); }
-
-    @keyframes alertIn {
-      from { opacity: 0; transform: translateY(-6px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    #register-form { display: none; }
-
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    /* Back to site link */
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.8rem;
-      font-weight: 500;
-      margin-bottom: 2rem;
-      transition: color 0.2s;
-    }
-    .back-link:hover { color: var(--text-secondary); }
-    .back-link svg { width: 14px; height: 14px; }
-
-    /* Portal note */
-    .portal-note {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.6rem;
-      margin-top: 2.5rem;
-      padding: 1rem 1.15rem;
-      border-radius: var(--radius);
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--border);
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      line-height: 1.55;
-    }
-    .portal-note svg { flex-shrink: 0; margin-top: 1px; color: var(--text-faint); }
-    .portal-note a { color: var(--teal-bright); text-decoration: none; font-weight: 500; }
-    .portal-note a:hover { text-decoration: underline; }
-
-    /* Merchant app badge */
-    .brand-app-note {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-top: 2rem;
-      padding: 0.55rem 1rem;
-      border-radius: 100px;
-      background: rgba(8,145,178,0.08);
-      border: 1px solid rgba(8,145,178,0.12);
-      font-size: 0.75rem;
-      color: var(--teal-bright);
-      letter-spacing: 0.2px;
-    }
-    .brand-app-note svg { flex-shrink: 0; }
-
-    /* ═══════════════════════════════════════════════
-       RESPONSIVE
-       ═══════════════════════════════════════════════ */
-    @media (max-width: 960px) {
-      .auth-layout { grid-template-columns: 1fr; }
-      .brand-panel { display: none; }
-      .form-panel { min-height: 100vh; padding: 1.5rem; }
-      .form-wrapper { max-width: 480px; }
-      .mobile-brand {
-        display: block;
-        text-align: center;
-        margin-bottom: 2.5rem;
-      }
-      .mobile-brand .wordmark {
-        font-family: var(--font-body);
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: var(--teal);
-        letter-spacing: -0.5px;
-      }
-      .mobile-brand p {
-        color: var(--text-secondary);
-        font-size: 0.88rem;
-        margin-top: 0.4rem;
-      }
-      .back-link { justify-content: center; width: 100%; margin-bottom: 1.5rem; }
-      .field-input, .field-select { font-size: 1rem; padding: 0.85rem 1rem; }
-      .btn-submit { min-height: 48px; font-size: 1rem; padding: 0.9rem 1.5rem; }
-    }
-
-    @media (max-width: 600px) {
-      .field-row { grid-template-columns: 1fr; }
-      .form-panel { padding: 1rem; }
-    }
-
-    .form-panel::-webkit-scrollbar { width: 5px; }
-    .form-panel::-webkit-scrollbar-track { background: transparent; }
-    .form-panel::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
-  </style>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link rel="manifest" href="/manifest.json">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <meta name="apple-mobile-web-app-title" content="FIDDO">
+ <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+ <meta name="theme-color" content="#0891B2">
+ <title>FIDDO — Espace Commerçant</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Satoshi:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ <style>
+ *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+ :root {
+ --bg: #0a0c10;
+ --bg-raised: #0f1219;
+ --bg-card: #141820;
+ --bg-input: #181d27;
+ --border: rgba(255,255,255,0.06);
+ --border-hover: rgba(255,255,255,0.12);
+ --border-focus: rgba(8,145,178,0.5);
+ --teal: #0891B2;
+ --teal-glow: rgba(8,145,178,0.15);
+ --teal-deep: #0e7490;
+ --teal-bright: #22d3ee;
+ --amber: #f59e0b;
+ --green: #10b981;
+ --error: #f87171;
+ --error-bg: rgba(248,113,113,0.08);
+ --error-border: rgba(248,113,113,0.25);
+ --success: #34d399;
+ --success-bg: rgba(52,211,153,0.08);
+ --text: #f1f5f9;
+ --text-secondary: rgba(255,255,255,0.55);
+ --text-muted: rgba(255,255,255,0.3);
+ --text-faint: rgba(255,255,255,0.15);
+ --radius: 10px;
+ --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+ --font-display: 'Instrument Serif', Georgia, serif;
+ --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+ }
+
+ body {
+ font-family: var(--font-body);
+ background: var(--bg);
+ color: var(--text);
+ line-height: 1.6;
+ min-height: 100vh;
+ -webkit-font-smoothing: antialiased;
+ }
+
+ /* ═══════════════════════════════════════════════
+ LAYOUT
+ ═══════════════════════════════════════════════ */
+ .auth-layout {
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ min-height: 100vh;
+ }
+
+ /* ═══════════════════════════════════════════════
+ LEFT PANEL — Brand (sticky)
+ ═══════════════════════════════════════════════ */
+ .brand-panel {
+ background: #060810;
+ position: sticky;
+ top: 0;
+ height: 100vh;
+ display: flex;
+ flex-direction: column;
+ justify-content: center;
+ padding: 4rem 3.5rem;
+ overflow: hidden;
+ }
+
+ .brand-panel::before {
+ content: '';
+ position: absolute;
+ top: -15%; right: -10%;
+ width: 550px; height: 550px;
+ background: radial-gradient(circle, rgba(8,145,178,0.12) 0%, transparent 60%);
+ animation: orbFloat 14s ease-in-out infinite;
+ pointer-events: none;
+ }
+
+ .brand-panel::after {
+ content: '';
+ position: absolute;
+ bottom: -10%; left: -15%;
+ width: 450px; height: 450px;
+ background: radial-gradient(circle, rgba(8,145,178,0.06) 0%, transparent 55%);
+ animation: orbFloat 18s ease-in-out infinite reverse;
+ pointer-events: none;
+ }
+
+ @keyframes orbFloat {
+ 0%, 100% { transform: translate(0, 0) scale(1); }
+ 33% { transform: translate(20px, -12px) scale(1.04); }
+ 66% { transform: translate(-12px, 18px) scale(0.96); }
+ }
+
+ .brand-grid {
+ position: absolute; inset: 0;
+ background-image:
+ linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+ linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+ background-size: 60px 60px;
+ mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+ -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, black 20%, transparent 70%);
+ pointer-events: none;
+ }
+
+ .brand-inner {
+ position: relative;
+ z-index: 2;
+ max-width: 420px;
+ animation: fadeUp 0.6s ease-out 0.1s both;
+ }
+
+ .brand-logo {
+ margin-bottom: 3.5rem;
+ }
+
+ .brand-logo .wordmark {
+ font-family: var(--font-body);
+ font-size: 1.5rem;
+ font-weight: 800;
+ color: var(--teal);
+ letter-spacing: -0.5px;
+ }
+
+ .brand-headline {
+ font-family: var(--font-display);
+ font-size: 2.8rem;
+ font-weight: 400;
+ line-height: 1.15;
+ color: #FFFFFF;
+ margin-bottom: 1.25rem;
+ }
+
+ .brand-headline em {
+ font-style: italic;
+ background: linear-gradient(135deg, var(--teal-bright), var(--teal));
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ background-clip: text;
+ }
+
+ .brand-desc {
+ font-size: 1rem;
+ line-height: 1.8;
+ color: var(--text-secondary);
+ margin-bottom: 2rem;
+ }
+
+ .brand-features {
+ display: flex;
+ flex-direction: column;
+ gap: 0.75rem;
+ margin-bottom: 2.5rem;
+ }
+
+ .brand-feat {
+ display: flex;
+ align-items: center;
+ gap: 0.65rem;
+ font-size: 0.88rem;
+ color: rgba(255,255,255,0.75);
+ font-weight: 500;
+ }
+
+ .brand-feat svg { color: var(--teal-bright); flex-shrink: 0; }
+
+ .brand-stats {
+ display: flex;
+ gap: 2.5rem;
+ padding-top: 2.5rem;
+ border-top: 1px solid var(--border);
+ }
+
+ .brand-stat-value {
+ font-family: var(--font-display);
+ font-size: 1.5rem;
+ font-weight: 400;
+ color: #FFFFFF;
+ line-height: 1;
+ }
+
+ .brand-stat-value span {
+ color: var(--teal-bright);
+ font-size: 0.95rem;
+ }
+
+ .brand-stat-label {
+ font-size: 0.7rem;
+ color: var(--text-muted);
+ text-transform: uppercase;
+ letter-spacing: 1.5px;
+ margin-top: 0.4rem;
+ }
+
+ .brand-footer {
+ position: absolute;
+ bottom: 2.5rem;
+ left: 3.5rem;
+ right: 3.5rem;
+ display: flex;
+ justify-content: space-between;
+ align-items: center;
+ z-index: 2;
+ }
+
+ .brand-footer-left {
+ display: flex;
+ gap: 1.5rem;
+ }
+
+ .brand-footer span {
+ font-size: 0.68rem;
+ color: var(--text-faint);
+ letter-spacing: 0.5px;
+ }
+
+ .brand-footer .powered-by {
+ font-size: 0.62rem;
+ color: var(--text-faint);
+ }
+
+ .brand-footer .powered-by strong {
+ color: var(--text-muted);
+ font-weight: 700;
+ }
+
+ /* ═══════════════════════════════════════════════
+ RIGHT PANEL — Form
+ ═══════════════════════════════════════════════ */
+ .form-panel {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ padding: 2rem;
+ overflow-y: auto;
+ background: var(--bg);
+ background-image: radial-gradient(ellipse 80% 60% at 80% 20%, rgba(8,145,178,0.04), transparent 50%);
+ }
+
+ .form-wrapper {
+ width: 100%;
+ max-width: 420px;
+ padding: 2rem 0;
+ animation: fadeUp 0.5s ease-out;
+ }
+
+ /* Mobile brand (hidden on desktop) */
+ .mobile-brand { display: none; }
+
+ .form-header { margin-bottom: 2.25rem; }
+
+ .form-header h1 {
+ font-family: var(--font-display);
+ font-size: 2rem;
+ font-weight: 400;
+ color: var(--text);
+ margin-bottom: 0.4rem;
+ }
+
+ .form-header p {
+ color: var(--text-secondary);
+ font-size: 0.92rem;
+ }
+
+ /* ═══════════════════════════════════════════════
+ FORM FIELDS
+ ═══════════════════════════════════════════════ */
+ .field { margin-bottom: 1.35rem; }
+
+ .field-label {
+ display: block;
+ font-size: 0.75rem;
+ font-weight: 600;
+ color: var(--text-muted);
+ margin-bottom: 0.45rem;
+ letter-spacing: 0.5px;
+ text-transform: uppercase;
+ }
+
+ .field-input,
+ .field-select {
+ width: 100%;
+ padding: 0.8rem 1rem;
+ border: 1.5px solid var(--border);
+ border-radius: var(--radius);
+ font-family: var(--font-body);
+ font-size: 0.95rem;
+ color: var(--text);
+ background: var(--bg-input);
+ transition: var(--transition);
+ outline: none;
+ }
+
+ .field-input::placeholder { color: var(--text-faint); }
+
+ .field-input:focus,
+ .field-select:focus {
+ border-color: var(--border-focus);
+ box-shadow: 0 0 0 3px var(--teal-glow);
+ background: var(--bg-card);
+ }
+
+ .field-input.has-error { border-color: var(--error-border); background: var(--error-bg); }
+ .field-input.has-error:focus { border-color: var(--error); box-shadow: 0 0 0 3px rgba(248,113,113,0.1); }
+
+ .field-select {
+ appearance: none;
+ background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%2367738a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+ background-repeat: no-repeat;
+ background-position: right 0.85rem center;
+ padding-right: 2.5rem;
+ cursor: pointer;
+ }
+ .field-select option {
+ background: var(--bg-card);
+ color: var(--text);
+ }
+
+ .field-error {
+ font-size: 0.78rem;
+ color: var(--error);
+ margin-top: 0.35rem;
+ display: none;
+ }
+ .field-error.visible { display: block; }
+
+ .field-hint {
+ font-size: 0.75rem;
+ color: var(--text-faint);
+ margin-top: 0.35rem;
+ }
+
+ .field-row {
+ display: grid;
+ grid-template-columns: 1fr 1fr;
+ gap: 1rem;
+ }
+
+ /* Section divider */
+ .section-divider {
+ display: flex;
+ align-items: center;
+ gap: 0.75rem;
+ margin: 2.25rem 0 1.5rem;
+ }
+
+ .section-divider::before,
+ .section-divider::after {
+ content: '';
+ flex: 1;
+ height: 1px;
+ background: var(--border);
+ }
+
+ .section-divider span {
+ font-size: 0.65rem;
+ font-weight: 700;
+ text-transform: uppercase;
+ letter-spacing: 2px;
+ color: var(--text-muted);
+ white-space: nowrap;
+ }
+
+ /* Reward preview */
+ .reward-preview {
+ display: none;
+ background: linear-gradient(135deg, var(--teal-deep), #0c5e72);
+ border: 1px solid rgba(8,145,178,0.2);
+ color: white;
+ border-radius: var(--radius);
+ padding: 1rem 1.25rem;
+ margin-top: 0.75rem;
+ font-size: 0.85rem;
+ line-height: 1.65;
+ }
+ .reward-preview strong { font-weight: 600; }
+
+ /* ═══════════════════════════════════════════════
+ BUTTONS
+ ═══════════════════════════════════════════════ */
+ .btn-submit {
+ width: 100%;
+ padding: 0.9rem 1.5rem;
+ border: none;
+ border-radius: var(--radius);
+ font-family: var(--font-body);
+ font-size: 0.95rem;
+ font-weight: 700;
+ cursor: pointer;
+ transition: var(--transition);
+ letter-spacing: 0.3px;
+ position: relative;
+ overflow: hidden;
+ margin-top: 0.5rem;
+ }
+
+ .btn-submit:active:not(:disabled) { transform: scale(0.985); }
+
+ .btn-primary-action {
+ background: var(--teal);
+ color: #FFFFFF;
+ box-shadow: 0 0 20px var(--teal-glow), 0 2px 8px rgba(8,145,178,0.2);
+ }
+
+ .btn-primary-action:hover:not(:disabled) {
+ background: var(--teal-deep);
+ box-shadow: 0 0 30px rgba(8,145,178,0.25), 0 4px 20px rgba(8,145,178,0.3);
+ transform: translateY(-1px);
+ }
+
+ .btn-submit:disabled { opacity: 0.6; cursor: wait; }
+ .btn-submit .btn-text { transition: opacity 0.15s; }
+ .btn-submit .btn-loader {
+ position: absolute;
+ inset: 0;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ opacity: 0;
+ transition: opacity 0.15s;
+ }
+ .btn-submit.loading .btn-text { opacity: 0; }
+ .btn-submit.loading .btn-loader { opacity: 1; }
+
+ .spinner-dots { display: flex; gap: 4px; }
+ .spinner-dots span {
+ width: 6px; height: 6px;
+ background: white;
+ border-radius: 50%;
+ animation: dotPulse 0.9s ease-in-out infinite;
+ }
+ .spinner-dots span:nth-child(2) { animation-delay: 0.15s; }
+ .spinner-dots span:nth-child(3) { animation-delay: 0.3s; }
+
+ @keyframes dotPulse {
+ 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+ 40% { opacity: 1; transform: scale(1); }
+ }
+
+ /* Toggle */
+ .form-toggle {
+ text-align: center;
+ margin-top: 2rem;
+ padding-top: 1.5rem;
+ border-top: 1px solid var(--border);
+ font-size: 0.9rem;
+ color: var(--text-secondary);
+ }
+
+ .form-toggle a {
+ color: var(--teal-bright);
+ font-weight: 600;
+ text-decoration: none;
+ cursor: pointer;
+ transition: var(--transition);
+ }
+ .form-toggle a:hover { color: var(--teal); text-decoration: underline; }
+
+ /* Alerts */
+ .page-alert {
+ padding: 0.85rem 1rem;
+ border-radius: var(--radius);
+ margin-bottom: 1.25rem;
+ font-size: 0.88rem;
+ line-height: 1.55;
+ display: none;
+ animation: alertIn 0.25s ease-out;
+ }
+ .page-alert.visible { display: block; }
+ .page-alert.error { background: var(--error-bg); color: var(--error); border-left: 3px solid var(--error); }
+ .page-alert.success { background: var(--success-bg); color: var(--success); border-left: 3px solid var(--success); }
+ .page-alert.info { background: rgba(8,145,178,0.08); color: var(--teal-bright); border-left: 3px solid var(--teal); }
+
+ @keyframes alertIn {
+ from { opacity: 0; transform: translateY(-6px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+
+ #register-form { display: none; }
+
+ @keyframes fadeUp {
+ from { opacity: 0; transform: translateY(20px); }
+ to { opacity: 1; transform: translateY(0); }
+ }
+
+ /* Back to site link */
+ .back-link {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.4rem;
+ color: var(--text-muted);
+ text-decoration: none;
+ font-size: 0.8rem;
+ font-weight: 500;
+ margin-bottom: 2rem;
+ transition: color 0.2s;
+ }
+ .back-link:hover { color: var(--text-secondary); }
+ .back-link svg { width: 14px; height: 14px; }
+
+ /* Portal note */
+ .portal-note {
+ display: flex;
+ align-items: flex-start;
+ gap: 0.6rem;
+ margin-top: 2.5rem;
+ padding: 1rem 1.15rem;
+ border-radius: var(--radius);
+ background: rgba(255,255,255,0.02);
+ border: 1px solid var(--border);
+ font-size: 0.8rem;
+ color: var(--text-muted);
+ line-height: 1.55;
+ }
+ .portal-note svg { flex-shrink: 0; margin-top: 1px; color: var(--text-faint); }
+ .portal-note a { color: var(--teal-bright); text-decoration: none; font-weight: 500; }
+ .portal-note a:hover { text-decoration: underline; }
+
+ /* Merchant app badge */
+ .brand-app-note {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.5rem;
+ margin-top: 2rem;
+ padding: 0.55rem 1rem;
+ border-radius: 100px;
+ background: rgba(8,145,178,0.08);
+ border: 1px solid rgba(8,145,178,0.12);
+ font-size: 0.75rem;
+ color: var(--teal-bright);
+ letter-spacing: 0.2px;
+ }
+ .brand-app-note svg { flex-shrink: 0; }
+
+ /* ═══════════════════════════════════════════════
+ RESPONSIVE
+ ═══════════════════════════════════════════════ */
+ @media (max-width: 960px) {
+ .auth-layout { grid-template-columns: 1fr; }
+ .brand-panel { display: none; }
+ .form-panel { min-height: 100vh; padding: 1.5rem; }
+ .form-wrapper { max-width: 480px; }
+ .mobile-brand {
+ display: block;
+ text-align: center;
+ margin-bottom: 2.5rem;
+ }
+ .mobile-brand .wordmark {
+ font-family: var(--font-body);
+ font-size: 1.75rem;
+ font-weight: 800;
+ color: var(--teal);
+ letter-spacing: -0.5px;
+ }
+ .mobile-brand p {
+ color: var(--text-secondary);
+ font-size: 0.88rem;
+ margin-top: 0.4rem;
+ }
+ .back-link { justify-content: center; width: 100%; margin-bottom: 1.5rem; }
+ .field-input, .field-select { font-size: 1rem; padding: 0.85rem 1rem; }
+ .btn-submit { min-height: 48px; font-size: 1rem; padding: 0.9rem 1.5rem; }
+ }
+
+ @media (max-width: 600px) {
+ .field-row { grid-template-columns: 1fr; }
+ .form-panel { padding: 1rem; }
+ }
+
+ .form-panel::-webkit-scrollbar { width: 5px; }
+ .form-panel::-webkit-scrollbar-track { background: transparent; }
+ .form-panel::-webkit-scrollbar-thumb { background: var(--border-hover); border-radius: 3px; }
+ </style>
 </head>
 <body>
 
-  <div class="auth-layout">
-
-    <!-- ═══ LEFT ═══ -->
-    <div class="brand-panel">
-      <div class="brand-grid"></div>
-
-      <div class="brand-inner">
-        <div class="brand-logo">
-          <span class="wordmark">FIDDO</span>
-        </div>
-
-        <h2 class="brand-headline">
-          Votre espace<br><em>commerçant.</em>
-        </h2>
-
-        <p class="brand-desc">
-          Gérez votre programme de fidélité, suivez vos clients
-          et pilotez vos récompenses depuis votre tableau de bord.
-          Une application mobile commerçant est également en cours de développement.
-        </p>
-
-        <div class="brand-features">
-          <div class="brand-feat">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            <span>Tableau de bord avec statistiques avancées</span>
-          </div>
-          <div class="brand-feat">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
-            <span>Programme de fidélisation personnalisable par client</span>
-          </div>
-        </div>
-
-        <div class="brand-stats">
-          <div>
-            <div class="brand-stat-value">2<span> min</span></div>
-            <div class="brand-stat-label">Pour s'inscrire</div>
-          </div>
-          <div>
-            <div class="brand-stat-value">3<span> rôles</span></div>
-            <div class="brand-stat-label">Équipe</div>
-          </div>
-          <div>
-            <div class="brand-stat-value">100<span>%</span></div>
-            <div class="brand-stat-label">RGPD</div>
-          </div>
-        </div>
-
-        <div class="brand-app-note">
-          <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          Application mobile commerçant en cours de développement
-        </div>
-      </div>
-
-      <div class="brand-footer">
-        <div class="brand-footer-left">
-          <span>FIDDO</span>
-          <span>Bruxelles, Belgique</span>
-        </div>
-        <span class="powered-by">Powered by <strong>H3001</strong></span>
-      </div>
-    </div>
-
-    <!-- ═══ RIGHT ═══ -->
-    <div class="form-panel">
-      <div class="form-wrapper">
-
-        <a href="/" class="back-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-          Retour au site
-        </a>
-
-        <div class="mobile-brand">
-          <div class="wordmark">FIDDO</div>
-          <p>Espace commerçant</p>
-        </div>
-
-        <!-- ═══ LOGIN ═══ -->
-        <form id="login-form" novalidate>
-          <div class="form-header">
-            <h1>Connexion</h1>
-            <p>Accédez à votre espace de gestion commerçant</p>
-          </div>
-
-          <div id="login-alert" class="page-alert"></div>
-
-          <div class="field">
-            <label class="field-label" for="login-email">Email</label>
-            <input type="email" id="login-email" class="field-input" placeholder="votre@email.com" required autocomplete="email">
-            <div class="field-error" id="login-email-error"></div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="login-password">Mot de passe</label>
-            <input type="password" id="login-password" class="field-input" placeholder="Votre mot de passe" required autocomplete="current-password">
-            <div class="field-error" id="login-password-error"></div>
-          </div>
-
-          <button type="submit" class="btn-submit btn-primary-action" id="login-btn">
-            <span class="btn-text">Se connecter</span>
-            <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
-          </button>
-
-          <div class="form-toggle">
-            Pas encore inscrit ? <a onclick="showRegister()">Créer un compte</a>
-          </div>
-        </form>
-
-        <!-- ═══ REGISTER ═══ -->
-        <form id="register-form" novalidate>
-          <div class="form-header">
-            <h1>Inscription</h1>
-            <p>Créez votre espace fidélité en quelques minutes</p>
-          </div>
-
-          <div id="register-alert" class="page-alert"></div>
-
-          <div class="section-divider"><span>Votre commerce</span></div>
-
-          <div class="field">
-            <label class="field-label" for="reg-business">Nom du commerce *</label>
-            <input type="text" id="reg-business" class="field-input" placeholder="Mon Commerce" required>
-            <div class="field-error" id="reg-business-error"></div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="reg-biz-type">Type de commerce *</label>
-            <select id="reg-biz-type" class="field-select" required>
-              <option value="" disabled selected>— Choisir un type —</option>
-              <option value="horeca">Horeca</option>
-              <option value="boulangerie">Boulangerie</option>
-              <option value="coiffeur">Coiffeur</option>
-              <option value="beaute">Beauté</option>
-              <option value="pharmacie">Pharmacie</option>
-              <option value="fleuriste">Fleuriste</option>
-              <option value="boucherie">Boucherie</option>
-              <option value="epicerie">Épicerie</option>
-              <option value="cave">Cave à vins</option>
-              <option value="librairie">Librairie</option>
-              <option value="pressing">Pressing</option>
-              <option value="fitness">Fitness</option>
-              <option value="garage">Garage</option>
-              <option value="veterinaire">Vétérinaire</option>
-              <option value="autre">Autre</option>
-            </select>
-            <div class="field-error" id="reg-biz-type-error"></div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="reg-address">Adresse *</label>
-            <input type="text" id="reg-address" class="field-input" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
-            <div class="field-error" id="reg-address-error"></div>
-          </div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label" for="reg-vat">N° TVA *</label>
-              <input type="text" id="reg-vat" class="field-input" placeholder="BE0123456789" required>
-              <div class="field-error" id="reg-vat-error"></div>
-            </div>
-            <div class="field">
-              <label class="field-label" for="reg-phone">Téléphone commerce *</label>
-              <input type="tel" id="reg-phone" class="field-input" placeholder="+32 2 123 45 67" required>
-              <div class="field-error" id="reg-phone-error"></div>
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="reg-biz-email">Email commerce *</label>
-            <input type="email" id="reg-biz-email" class="field-input" placeholder="contact@moncommerce.be" required>
-            <div class="field-error" id="reg-biz-email-error"></div>
-          </div>
-
-          <div class="section-divider"><span>Programme de fidélité</span></div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label" for="reg-ppe">Points par euro</label>
-              <input type="number" id="reg-ppe" class="field-input" step="0.1" min="0.1" value="1" placeholder="1">
-              <div class="field-hint">Ex : 1 = 1 point par euro</div>
-            </div>
-            <div class="field">
-              <label class="field-label" for="reg-pfr">Points pour récompense</label>
-              <input type="number" id="reg-pfr" class="field-input" min="1" value="100" placeholder="100">
-              <div class="field-hint">Seuil à atteindre par le client</div>
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="reg-reward-desc">Description de la récompense *</label>
-            <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage">
-            <div class="field-hint">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</div>
-            <div class="field-error" id="reg-reward-desc-error"></div>
-          </div>
-          <div id="reward-preview" class="reward-preview"></div>
-
-          <div class="section-divider"><span>Responsable</span></div>
-
-          <div class="field-row">
-            <div class="field">
-              <label class="field-label" for="reg-owner-name">Nom complet *</label>
-              <input type="text" id="reg-owner-name" class="field-input" placeholder="Jean Dupont" required>
-              <div class="field-error" id="reg-owner-name-error"></div>
-            </div>
-            <div class="field">
-              <label class="field-label" for="reg-owner-phone">Téléphone personnel *</label>
-              <input type="tel" id="reg-owner-phone" class="field-input" placeholder="+32 497 12 34 56" required>
-              <div class="field-error" id="reg-owner-phone-error"></div>
-            </div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="reg-owner-email">Email de connexion *</label>
-            <input type="email" id="reg-owner-email" class="field-input" placeholder="jean@email.com" required>
-            <div class="field-hint">Cet email sera utilisé pour vous connecter</div>
-            <div class="field-error" id="reg-owner-email-error"></div>
-          </div>
-
-          <div class="field">
-            <label class="field-label" for="reg-password">Mot de passe *</label>
-            <input type="password" id="reg-password" class="field-input" placeholder="Minimum 6 caractères" minlength="6" required>
-            <div class="field-error" id="reg-password-error"></div>
-          </div>
-
-          <button type="submit" class="btn-submit btn-primary-action" id="register-btn">
-            <span class="btn-text">Créer mon compte</span>
-            <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
-          </button>
-
-          <div class="form-toggle">
-            Déjà inscrit ? <a onclick="showLogin()">Se connecter</a>
-          </div>
-        </form>
-
-        <!-- Client redirect note -->
-        <div class="portal-note">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-          <span>Cet espace est réservé aux commerçants. Vous êtes client ? <a href="/app">Accédez à votre carte de fidélité ici.</a></span>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-
-  <script src="/js/app.js"></script>
-  <script>
-    // ═══════════════════════════════════════════════════════
-    // HELPERS
-    // ═══════════════════════════════════════════════════════
-
-    function showPageAlert(id, message, type) {
-      var el = document.getElementById(id);
-      el.className = 'page-alert visible ' + type;
-      el.innerHTML = message;
-      el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    function clearPageAlert(id) {
-      var el = document.getElementById(id);
-      el.className = 'page-alert';
-      el.innerHTML = '';
-    }
-
-    function setFieldError(inputId, message) {
-      var input = document.getElementById(inputId);
-      var error = document.getElementById(inputId + '-error');
-      if (input) input.classList.add('has-error');
-      if (error) { error.textContent = message; error.classList.add('visible'); }
-    }
-
-    function clearFieldError(inputId) {
-      var input = document.getElementById(inputId);
-      var error = document.getElementById(inputId + '-error');
-      if (input) input.classList.remove('has-error');
-      if (error) { error.textContent = ''; error.classList.remove('visible'); }
-    }
-
-    function clearAllFieldErrors(formId) {
-      document.querySelectorAll('#' + formId + ' .field-input, #' + formId + ' .field-select').forEach(function(el) { el.classList.remove('has-error'); });
-      document.querySelectorAll('#' + formId + ' .field-error').forEach(function(el) { el.textContent = ''; el.classList.remove('visible'); });
-    }
-
-    function setLoading(btnId, loading) {
-      var btn = document.getElementById(btnId);
-      if (loading) { btn.classList.add('loading'); btn.disabled = true; }
-      else { btn.classList.remove('loading'); btn.disabled = false; }
-    }
-
-    document.querySelectorAll('.field-input, .field-select').forEach(function(input) {
-      input.addEventListener('input', function() { clearFieldError(this.id); });
-      input.addEventListener('change', function() { clearFieldError(this.id); });
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // VALIDATORS
-    // ═══════════════════════════════════════════════════════
-
-    function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()); }
-    function isValidPhone(phone) { var d = phone.replace(/[\s\-.()+]/g, ''); return d.length >= 9 && d.length <= 15; }
-    function isValidVAT(vat) { return /^BE0\d{9}$/i.test(vat.replace(/[\s.]/g, '')); }
-
-    // ═══════════════════════════════════════════════════════
-    // NAVIGATION
-    // ═══════════════════════════════════════════════════════
-
-    if (Auth.isAuthenticated()) {
-      window.location.href = '/credit';
-    } else {
-      (async () => {
-        try {
-          var res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:3000' : '') + '/api/auth/verify', {
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-          });
-          if (res.ok) {
-            var data = await res.json();
-            if (data && data.staff && data.merchant) {
-              Auth.setSession(data.staff, data.merchant);
-              window.location.href = '/credit';
-            }
-          }
-        } catch (e) { /* no cookie */ }
-      })();
-    }
-
-    function showRegister() {
-      clearPageAlert('login-alert');
-      clearAllFieldErrors('login-form');
-      document.getElementById('login-form').style.display = 'none';
-      document.getElementById('register-form').style.display = 'block';
-      window.scrollTo(0, 0);
-    }
-
-    function showLogin() {
-      clearPageAlert('register-alert');
-      clearAllFieldErrors('register-form');
-      document.getElementById('register-form').style.display = 'none';
-      document.getElementById('login-form').style.display = 'block';
-    }
-
-    if (window.location.hash === '#register') showRegister();
-
-    // ═══════════════════════════════════════════════════════
-    // REWARD PREVIEW
-    // ═══════════════════════════════════════════════════════
-
-    function updateRewardPreview() {
-      var ppe = parseFloat(document.getElementById('reg-ppe').value) || 1;
-      var pfr = parseInt(document.getElementById('reg-pfr').value) || 100;
-      var desc = document.getElementById('reg-reward-desc').value.trim();
-      var preview = document.getElementById('reward-preview');
-      if (!desc) { preview.style.display = 'none'; return; }
-      var eurosNeeded = pfr / ppe;
-      preview.style.display = 'block';
-      preview.innerHTML = '<strong>Aperçu pour vos clients :</strong><br>' +
-        'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total — accumulez <strong>' + pfr + ' points</strong> — <strong>' + esc(desc) + '</strong>';
-    }
-
-    document.getElementById('reg-ppe').addEventListener('input', updateRewardPreview);
-    document.getElementById('reg-pfr').addEventListener('input', updateRewardPreview);
-    document.getElementById('reg-reward-desc').addEventListener('input', updateRewardPreview);
-
-    // ═══════════════════════════════════════════════════════
-    // LOGIN
-    // ═══════════════════════════════════════════════════════
-
-    document.getElementById('login-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      clearPageAlert('login-alert');
-      clearAllFieldErrors('login-form');
-
-      var email = document.getElementById('login-email').value.trim();
-      var password = document.getElementById('login-password').value;
-      var hasError = false;
-
-      if (!email) { setFieldError('login-email', 'Veuillez saisir votre adresse email.'); hasError = true; }
-      else if (!isValidEmail(email)) { setFieldError('login-email', 'Cette adresse email ne semble pas valide.'); hasError = true; }
-      if (!password) { setFieldError('login-password', 'Veuillez saisir votre mot de passe.'); hasError = true; }
-      if (hasError) return;
-
-      setLoading('login-btn', true);
-
-      try {
-        var data = await API.auth.login({ email: email, password: password });
-        Auth.setSession(data.staff, data.merchant);
-        showPageAlert('login-alert', 'Connexion réussie, redirection en cours...', 'success');
-        setTimeout(function() {
-          window.location.href = '/credit';
-        }, 400);
-      } catch (err) {
-        setLoading('login-btn', false);
-        var msg = err.message || '';
-        var displayMsg;
-
-        if (msg.indexOf('incorrect') !== -1) displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
-        else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) displayMsg = esc(msg);
-        else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
-        else if (msg.indexOf('suspendu') !== -1) displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
-        else if (msg.indexOf('refusée') !== -1) displayMsg = esc(msg);
-        else if (msg.indexOf('résilié') !== -1) displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
-        else if (msg.indexOf('pas actif') !== -1) displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
-        else if (msg.indexOf('désactivé') !== -1) displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
-        else displayMsg = 'Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants.';
-
-        showPageAlert('login-alert', displayMsg, 'error');
-      }
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // REGISTER
-    // ═══════════════════════════════════════════════════════
-
-    document.getElementById('register-form').addEventListener('submit', async function(e) {
-      e.preventDefault();
-      clearPageAlert('register-alert');
-      clearAllFieldErrors('register-form');
-
-      var f = {
-        business:   document.getElementById('reg-business').value.trim(),
-        bizType:    document.getElementById('reg-biz-type').value,
-        address:    document.getElementById('reg-address').value.trim(),
-        vat:        document.getElementById('reg-vat').value.trim(),
-        phone:      document.getElementById('reg-phone').value.trim(),
-        bizEmail:   document.getElementById('reg-biz-email').value.trim(),
-        rewardDesc: document.getElementById('reg-reward-desc').value.trim(),
-        ppe:        document.getElementById('reg-ppe').value,
-        pfr:        document.getElementById('reg-pfr').value,
-        ownerName:  document.getElementById('reg-owner-name').value.trim(),
-        ownerPhone: document.getElementById('reg-owner-phone').value.trim(),
-        ownerEmail: document.getElementById('reg-owner-email').value.trim(),
-        password:   document.getElementById('reg-password').value,
-      };
-
-      var errorCount = 0;
-
-      if (!f.business) { setFieldError('reg-business', 'Le nom de votre commerce est requis.'); errorCount++; }
-      if (!f.bizType) { setFieldError('reg-biz-type', 'Veuillez choisir un type de commerce.'); errorCount++; }
-      if (!f.address) { setFieldError('reg-address', 'L\'adresse est requise.'); errorCount++; }
-      else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète.'); errorCount++; }
-      if (!f.vat) { setFieldError('reg-vat', 'Le numéro de TVA est requis.'); errorCount++; }
-      else if (!isValidVAT(f.vat)) { setFieldError('reg-vat', 'Format attendu : BE0 suivi de 9 chiffres.'); errorCount++; }
-      if (!f.phone) { setFieldError('reg-phone', 'Le téléphone du commerce est requis.'); errorCount++; }
-      else if (!isValidPhone(f.phone)) { setFieldError('reg-phone', 'Numéro invalide.'); errorCount++; }
-      if (!f.bizEmail) { setFieldError('reg-biz-email', 'L\'email du commerce est requis.'); errorCount++; }
-      else if (!isValidEmail(f.bizEmail)) { setFieldError('reg-biz-email', 'Email invalide.'); errorCount++; }
-      if (!f.rewardDesc) { setFieldError('reg-reward-desc', 'Décrivez la récompense que recevront vos clients.'); errorCount++; }
-      if (!f.ownerName) { setFieldError('reg-owner-name', 'Votre nom complet est requis.'); errorCount++; }
-      if (!f.ownerPhone) { setFieldError('reg-owner-phone', 'Votre numéro est requis.'); errorCount++; }
-      else if (!isValidPhone(f.ownerPhone)) { setFieldError('reg-owner-phone', 'Numéro invalide.'); errorCount++; }
-      if (!f.ownerEmail) { setFieldError('reg-owner-email', 'Votre email de connexion est requis.'); errorCount++; }
-      else if (!isValidEmail(f.ownerEmail)) { setFieldError('reg-owner-email', 'Email invalide.'); errorCount++; }
-      if (!f.password) { setFieldError('reg-password', 'Choisissez un mot de passe.'); errorCount++; }
-      else if (f.password.length < 6) { setFieldError('reg-password', 'Minimum 6 caractères.'); errorCount++; }
-
-      if (errorCount > 0) {
-        showPageAlert('register-alert', errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger.', 'error');
-        var firstErr = document.querySelector('#register-form .field-input.has-error, #register-form .field-select.has-error');
-        if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        return;
-      }
-
-      setLoading('register-btn', true);
-
-      try {
-        await API.auth.register({
-          businessName: f.business, businessType: f.bizType, address: f.address, vatNumber: f.vat,
-          email: f.bizEmail, phone: f.phone, ownerPhone: f.ownerPhone,
-          ownerEmail: f.ownerEmail, ownerPassword: f.password, ownerName: f.ownerName,
-          pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || 100,
-          rewardDescription: f.rewardDesc,
-        });
-
-        showPageAlert('register-alert',
-          '<strong>Demande envoyée avec succès.</strong><br>' +
-          'Vous recevrez un email de confirmation à <strong>' + esc(f.ownerEmail) + '</strong> dès que votre commerce sera validé.',
-          'success'
-        );
-        document.querySelectorAll('#register-form .field-input, #register-form .field-select').forEach(function(el) { el.disabled = true; });
-        document.getElementById('register-btn').style.display = 'none';
-      } catch (err) {
-        setLoading('register-btn', false);
-        var msg = err.message || '';
-        var displayMsg;
-
-        if (msg.indexOf('TVA') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Ce numéro de TVA est déjà enregistré.';
-        else if (msg.indexOf('email') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Cet email est déjà associé à un compte existant.';
-        else if (msg.indexOf('TVA invalide') !== -1) { displayMsg = 'Format de TVA incorrect.'; setFieldError('reg-vat', 'Format incorrect.'); }
-        else if (msg.indexOf('Email') !== -1 && msg.indexOf('invalide') !== -1) { displayMsg = 'Email du responsable invalide.'; setFieldError('reg-owner-email', 'Email invalide.'); }
-        else if (msg.indexOf('mot de passe') !== -1) { displayMsg = 'Mot de passe trop court.'; setFieldError('reg-password', 'Trop court.'); }
-        else displayMsg = 'Erreur lors de l\'inscription. Vérifiez vos informations.';
-
-        showPageAlert('register-alert', displayMsg, 'error');
-      }
-    });
-  </script>
+ <div class="auth-layout">
+
+ <!-- ═══ LEFT ═══ -->
+ <div class="brand-panel">
+ <div class="brand-grid"></div>
+
+ <div class="brand-inner">
+ <div class="brand-logo">
+ <span class="wordmark">FIDDO</span>
+ </div>
+
+ <h2 class="brand-headline">
+ Votre espace<br><em>commerçant.</em>
+ </h2>
+
+ <p class="brand-desc">
+ Gérez votre programme de fidélité, suivez vos clients
+ et pilotez vos récompenses depuis votre tableau de bord.
+ Une application mobile commerçant est également en cours de développement.
+ </p>
+
+ <div class="brand-features">
+ <div class="brand-feat">
+ <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+ <span>Tableau de bord avec statistiques avancées</span>
+ </div>
+ <div class="brand-feat">
+ <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg>
+ <span>Programme de fidélisation personnalisable par client</span>
+ </div>
+ </div>
+
+ <div class="brand-stats">
+ <div>
+ <div class="brand-stat-value">2<span> min</span></div>
+ <div class="brand-stat-label">Pour s'inscrire</div>
+ </div>
+ <div>
+ <div class="brand-stat-value">3<span> rôles</span></div>
+ <div class="brand-stat-label">Équipe</div>
+ </div>
+ <div>
+ <div class="brand-stat-value">100<span>%</span></div>
+ <div class="brand-stat-label">RGPD</div>
+ </div>
+ </div>
+
+ <div class="brand-app-note">
+ <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+ Application mobile commerçant en cours de développement
+ </div>
+ </div>
+
+ <div class="brand-footer">
+ <div class="brand-footer-left">
+ <span>FIDDO</span>
+ <span>Bruxelles, Belgique</span>
+ </div>
+ <span class="powered-by">Powered by <strong>H3001</strong></span>
+ </div>
+ </div>
+
+ <!-- ═══ RIGHT ═══ -->
+ <div class="form-panel">
+ <div class="form-wrapper">
+
+ <a href="/" class="back-link">
+ <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+ Retour au site
+ </a>
+
+ <div class="mobile-brand">
+ <div class="wordmark">FIDDO</div>
+ <p>Espace commerçant</p>
+ </div>
+
+ <!-- ═══ LOGIN ═══ -->
+ <form id="login-form" novalidate>
+ <div class="form-header">
+ <h1>Connexion</h1>
+ <p>Accédez à votre espace de gestion commerçant</p>
+ </div>
+
+ <div id="login-alert" class="page-alert"></div>
+
+ <div class="field">
+ <label class="field-label" for="login-email">Email</label>
+ <input type="email" id="login-email" class="field-input" placeholder="votre@email.com" required autocomplete="email">
+ <div class="field-error" id="login-email-error"></div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="login-password">Mot de passe</label>
+ <input type="password" id="login-password" class="field-input" placeholder="Votre mot de passe" required autocomplete="current-password">
+ <div class="field-error" id="login-password-error"></div>
+ </div>
+
+ <button type="submit" class="btn-submit btn-primary-action" id="login-btn">
+ <span class="btn-text">Se connecter</span>
+ <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
+ </button>
+
+ <div class="form-toggle">
+ Pas encore inscrit ? <a onclick="showRegister()">Créer un compte</a>
+ </div>
+ </form>
+
+ <!-- ═══ REGISTER ═══ -->
+ <form id="register-form" novalidate>
+ <div class="form-header">
+ <h1>Inscription</h1>
+ <p>Créez votre espace fidélité en quelques minutes</p>
+ </div>
+
+ <div id="register-alert" class="page-alert"></div>
+
+ <div class="section-divider"><span>Votre commerce</span></div>
+
+ <div class="field">
+ <label class="field-label" for="reg-business">Nom du commerce *</label>
+ <input type="text" id="reg-business" class="field-input" placeholder="Mon Commerce" required>
+ <div class="field-error" id="reg-business-error"></div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="reg-biz-type">Type de commerce *</label>
+ <select id="reg-biz-type" class="field-select" required>
+ <option value="" disabled selected>— Choisir un type —</option>
+ <option value="horeca">Horeca</option>
+ <option value="boulangerie">Boulangerie</option>
+ <option value="coiffeur">Coiffeur</option>
+ <option value="beaute">Beauté</option>
+ <option value="pharmacie">Pharmacie</option>
+ <option value="fleuriste">Fleuriste</option>
+ <option value="boucherie">Boucherie</option>
+ <option value="epicerie">Épicerie</option>
+ <option value="cave">Cave à vins</option>
+ <option value="librairie">Librairie</option>
+ <option value="pressing">Pressing</option>
+ <option value="fitness">Fitness</option>
+ <option value="garage">Garage</option>
+ <option value="veterinaire">Vétérinaire</option>
+ <option value="autre">Autre</option>
+ </select>
+ <div class="field-error" id="reg-biz-type-error"></div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="reg-address">Adresse *</label>
+ <input type="text" id="reg-address" class="field-input" placeholder="1 Rue de la Paix, 1000 Bruxelles" required>
+ <div class="field-error" id="reg-address-error"></div>
+ </div>
+
+ <div class="field-row">
+ <div class="field">
+ <label class="field-label" for="reg-vat">N° TVA *</label>
+ <input type="text" id="reg-vat" class="field-input" placeholder="BE0123456789" required>
+ <div class="field-error" id="reg-vat-error"></div>
+ </div>
+ <div class="field">
+ <label class="field-label" for="reg-phone">Téléphone commerce *</label>
+ <input type="tel" id="reg-phone" class="field-input" placeholder="+32 2 123 45 67" required>
+ <div class="field-error" id="reg-phone-error"></div>
+ </div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="reg-biz-email">Email commerce *</label>
+ <input type="email" id="reg-biz-email" class="field-input" placeholder="contact@moncommerce.be" required>
+ <div class="field-error" id="reg-biz-email-error"></div>
+ </div>
+
+ <div class="section-divider"><span>Programme de fidélité</span></div>
+
+ <div class="field-row">
+ <div class="field">
+ <label class="field-label" for="reg-ppe">Points par euro</label>
+ <input type="number" id="reg-ppe" class="field-input" step="0.1" min="0.1" value="1" placeholder="1">
+ <div class="field-hint">Ex : 1 = 1 point par euro</div>
+ </div>
+ <div class="field">
+ <label class="field-label" for="reg-pfr">Points pour récompense</label>
+ <input type="number" id="reg-pfr" class="field-input" min="1" value="100" placeholder="100">
+ <div class="field-hint">Seuil à atteindre par le client</div>
+ </div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="reg-reward-desc">Description de la récompense *</label>
+ <input type="text" id="reg-reward-desc" class="field-input" maxlength="200" placeholder="Ex : 10% offerts sur votre prochain passage">
+ <div class="field-hint">Ce que le client reçoit une fois le seuil atteint (max 200 car.)</div>
+ <div class="field-error" id="reg-reward-desc-error"></div>
+ </div>
+ <div id="reward-preview" class="reward-preview"></div>
+
+ <div class="section-divider"><span>Responsable</span></div>
+
+ <div class="field-row">
+ <div class="field">
+ <label class="field-label" for="reg-owner-name">Nom complet *</label>
+ <input type="text" id="reg-owner-name" class="field-input" placeholder="Jean Dupont" required>
+ <div class="field-error" id="reg-owner-name-error"></div>
+ </div>
+ <div class="field">
+ <label class="field-label" for="reg-owner-phone">Téléphone personnel *</label>
+ <input type="tel" id="reg-owner-phone" class="field-input" placeholder="+32 497 12 34 56" required>
+ <div class="field-error" id="reg-owner-phone-error"></div>
+ </div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="reg-owner-email">Email de connexion *</label>
+ <input type="email" id="reg-owner-email" class="field-input" placeholder="jean@email.com" required>
+ <div class="field-hint">Cet email sera utilisé pour vous connecter</div>
+ <div class="field-error" id="reg-owner-email-error"></div>
+ </div>
+
+ <div class="field">
+ <label class="field-label" for="reg-password">Mot de passe *</label>
+ <input type="password" id="reg-password" class="field-input" placeholder="Minimum 6 caractères" minlength="6" required>
+ <div class="field-error" id="reg-password-error"></div>
+ </div>
+
+ <button type="submit" class="btn-submit btn-primary-action" id="register-btn">
+ <span class="btn-text">Créer mon compte</span>
+ <span class="btn-loader"><span class="spinner-dots"><span></span><span></span><span></span></span></span>
+ </button>
+
+ <div class="form-toggle">
+ Déjà inscrit ? <a onclick="showLogin()">Se connecter</a>
+ </div>
+ </form>
+
+ <!-- Client redirect note -->
+ <div class="portal-note">
+ <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+ <span>Cet espace est réservé aux commerçants. Vous êtes client ? <a href="/app">Accédez à votre carte de fidélité ici.</a></span>
+ </div>
+
+ </div>
+ </div>
+
+ </div>
+
+ <script src="/js/app.js"></script>
+ <script>
+ // ═══════════════════════════════════════════════════════
+ // HELPERS
+ // ═══════════════════════════════════════════════════════
+
+ function showPageAlert(id, message, type) {
+ var el = document.getElementById(id);
+ el.className = 'page-alert visible ' + type;
+ el.innerHTML = message;
+ el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+ }
+
+ function clearPageAlert(id) {
+ var el = document.getElementById(id);
+ el.className = 'page-alert';
+ el.innerHTML = '';
+ }
+
+ function setFieldError(inputId, message) {
+ var input = document.getElementById(inputId);
+ var error = document.getElementById(inputId + '-error');
+ if (input) input.classList.add('has-error');
+ if (error) { error.textContent = message; error.classList.add('visible'); }
+ }
+
+ function clearFieldError(inputId) {
+ var input = document.getElementById(inputId);
+ var error = document.getElementById(inputId + '-error');
+ if (input) input.classList.remove('has-error');
+ if (error) { error.textContent = ''; error.classList.remove('visible'); }
+ }
+
+ function clearAllFieldErrors(formId) {
+ document.querySelectorAll('#' + formId + ' .field-input, #' + formId + ' .field-select').forEach(function(el) { el.classList.remove('has-error'); });
+ document.querySelectorAll('#' + formId + ' .field-error').forEach(function(el) { el.textContent = ''; el.classList.remove('visible'); });
+ }
+
+ function setLoading(btnId, loading) {
+ var btn = document.getElementById(btnId);
+ if (loading) { btn.classList.add('loading'); btn.disabled = true; }
+ else { btn.classList.remove('loading'); btn.disabled = false; }
+ }
+
+ document.querySelectorAll('.field-input, .field-select').forEach(function(input) {
+ input.addEventListener('input', function() { clearFieldError(this.id); });
+ input.addEventListener('change', function() { clearFieldError(this.id); });
+ });
+
+ // ═══════════════════════════════════════════════════════
+ // VALIDATORS
+ // ═══════════════════════════════════════════════════════
+
+ function isValidEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()); }
+ function isValidPhone(phone) { var d = phone.replace(/[\s\-.()+]/g, ''); return d.length >= 9 && d.length <= 15; }
+ function isValidVAT(vat) { return /^BE0\d{9}$/i.test(vat.replace(/[\s.]/g, '')); }
+
+ // ═══════════════════════════════════════════════════════
+ // NAVIGATION
+ // ═══════════════════════════════════════════════════════
+
+ if (Auth.isAuthenticated()) {
+ window.location.href = '/credit';
+ } else {
+ (async () => {
+ try {
+ var res = await fetch((window.location.hostname === 'localhost' ? 'http://localhost:3000' : '') + '/api/auth/verify', {
+ headers: { 'Content-Type': 'application/json' },
+ credentials: 'include',
+ });
+ if (res.ok) {
+ var data = await res.json();
+ if (data && data.staff && data.merchant) {
+ Auth.setSession(data.staff, data.merchant);
+ window.location.href = '/credit';
+ }
+ }
+ } catch (e) { /* no cookie */ }
+ })();
+ }
+
+ function showRegister() {
+ clearPageAlert('login-alert');
+ clearAllFieldErrors('login-form');
+ document.getElementById('login-form').style.display = 'none';
+ document.getElementById('register-form').style.display = 'block';
+ window.scrollTo(0, 0);
+ }
+
+ function showLogin() {
+ clearPageAlert('register-alert');
+ clearAllFieldErrors('register-form');
+ document.getElementById('register-form').style.display = 'none';
+ document.getElementById('login-form').style.display = 'block';
+ }
+
+ if (window.location.hash === '#register') showRegister();
+
+ // ═══════════════════════════════════════════════════════
+ // REWARD PREVIEW
+ // ═══════════════════════════════════════════════════════
+
+ function updateRewardPreview() {
+ var ppe = parseFloat(document.getElementById('reg-ppe').value) || 1;
+ var pfr = parseInt(document.getElementById('reg-pfr').value) || 100;
+ var desc = document.getElementById('reg-reward-desc').value.trim();
+ var preview = document.getElementById('reward-preview');
+ if (!desc) { preview.style.display = 'none'; return; }
+ var eurosNeeded = pfr / ppe;
+ preview.style.display = 'block';
+ preview.innerHTML = '<strong>Aperçu pour vos clients :</strong><br>' +
+ 'Dépensez <strong>' + Math.ceil(eurosNeeded) + ' €</strong> au total — accumulez <strong>' + pfr + ' points</strong> — <strong>' + esc(desc) + '</strong>';
+ }
+
+ document.getElementById('reg-ppe').addEventListener('input', updateRewardPreview);
+ document.getElementById('reg-pfr').addEventListener('input', updateRewardPreview);
+ document.getElementById('reg-reward-desc').addEventListener('input', updateRewardPreview);
+
+ // ═══════════════════════════════════════════════════════
+ // LOGIN
+ // ═══════════════════════════════════════════════════════
+
+ document.getElementById('login-form').addEventListener('submit', async function(e) {
+ e.preventDefault();
+ clearPageAlert('login-alert');
+ clearAllFieldErrors('login-form');
+
+ var email = document.getElementById('login-email').value.trim();
+ var password = document.getElementById('login-password').value;
+ var hasError = false;
+
+ if (!email) { setFieldError('login-email', 'Veuillez saisir votre adresse email.'); hasError = true; }
+ else if (!isValidEmail(email)) { setFieldError('login-email', 'Cette adresse email ne semble pas valide.'); hasError = true; }
+ if (!password) { setFieldError('login-password', 'Veuillez saisir votre mot de passe.'); hasError = true; }
+ if (hasError) return;
+
+ setLoading('login-btn', true);
+
+ try {
+ var data = await API.auth.login({ email: email, password: password });
+ Auth.setSession(data.staff, data.merchant);
+ showPageAlert('login-alert', 'Connexion réussie, redirection en cours...', 'success');
+ setTimeout(function() {
+ window.location.href = '/credit';
+ }, 400);
+ } catch (err) {
+ setLoading('login-btn', false);
+ var msg = err.message || '';
+ var displayMsg;
+
+ if (msg.indexOf('incorrect') !== -1) displayMsg = 'L\'email ou le mot de passe est incorrect. Vérifiez vos identifiants et réessayez.';
+ else if (msg.indexOf('verrouillé') !== -1 || msg.indexOf('Réessayez') !== -1) displayMsg = esc(msg);
+ else if (msg.indexOf('attente') !== -1 || msg.indexOf('validation') !== -1) displayMsg = 'Votre commerce est en cours de validation par notre équipe. Vous recevrez un email dès que votre compte sera activé.';
+ else if (msg.indexOf('suspendu') !== -1) displayMsg = 'Votre commerce est actuellement suspendu. Contactez le support pour plus d\'informations.';
+ else if (msg.indexOf('refusée') !== -1) displayMsg = esc(msg);
+ else if (msg.indexOf('résilié') !== -1) displayMsg = 'Ce commerce a été résilié. Contactez le support si vous pensez qu\'il s\'agit d\'une erreur.';
+ else if (msg.indexOf('pas actif') !== -1) displayMsg = 'Votre commerce n\'est pas encore actif. Veuillez patienter ou contacter le support.';
+ else if (msg.indexOf('désactivé') !== -1) displayMsg = 'Votre compte est désactivé. Contactez le responsable de votre commerce.';
+ else displayMsg = 'Une erreur est survenue lors de la connexion. Veuillez réessayer dans quelques instants.';
+
+ showPageAlert('login-alert', displayMsg, 'error');
+ }
+ });
+
+ // ═══════════════════════════════════════════════════════
+ // REGISTER
+ // ═══════════════════════════════════════════════════════
+
+ document.getElementById('register-form').addEventListener('submit', async function(e) {
+ e.preventDefault();
+ clearPageAlert('register-alert');
+ clearAllFieldErrors('register-form');
+
+ var f = {
+ business: document.getElementById('reg-business').value.trim(),
+ bizType: document.getElementById('reg-biz-type').value,
+ address: document.getElementById('reg-address').value.trim(),
+ vat: document.getElementById('reg-vat').value.trim(),
+ phone: document.getElementById('reg-phone').value.trim(),
+ bizEmail: document.getElementById('reg-biz-email').value.trim(),
+ rewardDesc: document.getElementById('reg-reward-desc').value.trim(),
+ ppe: document.getElementById('reg-ppe').value,
+ pfr: document.getElementById('reg-pfr').value,
+ ownerName: document.getElementById('reg-owner-name').value.trim(),
+ ownerPhone: document.getElementById('reg-owner-phone').value.trim(),
+ ownerEmail: document.getElementById('reg-owner-email').value.trim(),
+ password: document.getElementById('reg-password').value,
+ };
+
+ var errorCount = 0;
+
+ if (!f.business) { setFieldError('reg-business', 'Le nom de votre commerce est requis.'); errorCount++; }
+ if (!f.bizType) { setFieldError('reg-biz-type', 'Veuillez choisir un type de commerce.'); errorCount++; }
+ if (!f.address) { setFieldError('reg-address', 'L\'adresse est requise.'); errorCount++; }
+ else if (f.address.length < 10) { setFieldError('reg-address', 'L\'adresse semble incomplète.'); errorCount++; }
+ if (!f.vat) { setFieldError('reg-vat', 'Le numéro de TVA est requis.'); errorCount++; }
+ else if (!isValidVAT(f.vat)) { setFieldError('reg-vat', 'Format attendu : BE0 suivi de 9 chiffres.'); errorCount++; }
+ if (!f.phone) { setFieldError('reg-phone', 'Le téléphone du commerce est requis.'); errorCount++; }
+ else if (!isValidPhone(f.phone)) { setFieldError('reg-phone', 'Numéro invalide.'); errorCount++; }
+ if (!f.bizEmail) { setFieldError('reg-biz-email', 'L\'email du commerce est requis.'); errorCount++; }
+ else if (!isValidEmail(f.bizEmail)) { setFieldError('reg-biz-email', 'Email invalide.'); errorCount++; }
+ if (!f.rewardDesc) { setFieldError('reg-reward-desc', 'Décrivez la récompense que recevront vos clients.'); errorCount++; }
+ if (!f.ownerName) { setFieldError('reg-owner-name', 'Votre nom complet est requis.'); errorCount++; }
+ if (!f.ownerPhone) { setFieldError('reg-owner-phone', 'Votre numéro est requis.'); errorCount++; }
+ else if (!isValidPhone(f.ownerPhone)) { setFieldError('reg-owner-phone', 'Numéro invalide.'); errorCount++; }
+ if (!f.ownerEmail) { setFieldError('reg-owner-email', 'Votre email de connexion est requis.'); errorCount++; }
+ else if (!isValidEmail(f.ownerEmail)) { setFieldError('reg-owner-email', 'Email invalide.'); errorCount++; }
+ if (!f.password) { setFieldError('reg-password', 'Choisissez un mot de passe.'); errorCount++; }
+ else if (f.password.length < 6) { setFieldError('reg-password', 'Minimum 6 caractères.'); errorCount++; }
+
+ if (errorCount > 0) {
+ showPageAlert('register-alert', errorCount + ' champ' + (errorCount > 1 ? 's' : '') + ' à corriger.', 'error');
+ var firstErr = document.querySelector('#register-form .field-input.has-error, #register-form .field-select.has-error');
+ if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+ return;
+ }
+
+ setLoading('register-btn', true);
+
+ try {
+ await API.auth.register({
+ businessName: f.business, businessType: f.bizType, address: f.address, vatNumber: f.vat,
+ email: f.bizEmail, phone: f.phone, ownerPhone: f.ownerPhone,
+ ownerEmail: f.ownerEmail, ownerPassword: f.password, ownerName: f.ownerName,
+ pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || 100,
+ rewardDescription: f.rewardDesc,
+ });
+
+ showPageAlert('register-alert',
+ '<strong>Demande envoyée avec succès.</strong><br>' +
+ 'Vous recevrez un email de confirmation à <strong>' + esc(f.ownerEmail) + '</strong> dès que votre commerce sera validé.',
+ 'success'
+ );
+ document.querySelectorAll('#register-form .field-input, #register-form .field-select').forEach(function(el) { el.disabled = true; });
+ document.getElementById('register-btn').style.display = 'none';
+ } catch (err) {
+ setLoading('register-btn', false);
+ var msg = err.message || '';
+ var displayMsg;
+
+ if (msg.indexOf('TVA') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Ce numéro de TVA est déjà enregistré.';
+ else if (msg.indexOf('email') !== -1 && msg.indexOf('déjà') !== -1) displayMsg = 'Cet email est déjà associé à un compte existant.';
+ else if (msg.indexOf('TVA invalide') !== -1) { displayMsg = 'Format de TVA incorrect.'; setFieldError('reg-vat', 'Format incorrect.'); }
+ else if (msg.indexOf('Email') !== -1 && msg.indexOf('invalide') !== -1) { displayMsg = 'Email du responsable invalide.'; setFieldError('reg-owner-email', 'Email invalide.'); }
+ else if (msg.indexOf('mot de passe') !== -1) { displayMsg = 'Mot de passe trop court.'; setFieldError('reg-password', 'Trop court.'); }
+ else displayMsg = 'Erreur lors de l\'inscription. Vérifiez vos informations.';
+
+ showPageAlert('register-alert', displayMsg, 'error');
+ }
+ });
+ </script>
 </body>
 </html>

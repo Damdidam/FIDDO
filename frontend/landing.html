@@ -1,1242 +1,1242 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="FIDDO">
-  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-  <meta name="theme-color" content="#0891B2">
-  <title>FIDDO — Programme de fidélité pour commerces belges</title>
-  <meta name="description" content="FIDDO digitalise la fidélité de vos clients. Simple, efficace, conçu pour les commerces de proximité belges. Essai gratuit 30 jours.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Satoshi:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link rel="manifest" href="/manifest.json">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <meta name="apple-mobile-web-app-title" content="FIDDO">
+ <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+ <meta name="theme-color" content="#0891B2">
+ <title>FIDDO — Programme de fidélité pour commerces belges</title>
+ <meta name="description" content="FIDDO digitalise la fidélité de vos clients. Simple, efficace, conçu pour les commerces de proximité belges. Essai gratuit 30 jours.">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Satoshi:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ <style>
+ *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    :root {
-      --bg: #0a0c10;
-      --bg-raised: #0f1219;
-      --bg-card: #141820;
-      --bg-card-hover: #181d27;
-      --border: rgba(255,255,255,0.06);
-      --border-hover: rgba(255,255,255,0.1);
-      --teal: #0891B2;
-      --teal-glow: rgba(8,145,178,0.15);
-      --teal-deep: #0e7490;
-      --teal-bright: #22d3ee;
-      --amber: #f59e0b;
-      --amber-glow: rgba(245,158,11,0.12);
-      --green: #10b981;
-      --green-glow: rgba(16,185,129,0.12);
-      --text: #f1f5f9;
-      --text-secondary: rgba(255,255,255,0.55);
-      --text-muted: rgba(255,255,255,0.3);
-      --text-faint: rgba(255,255,255,0.15);
-      --font-display: 'Instrument Serif', Georgia, serif;
-      --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
+ :root {
+ --bg: #0a0c10;
+ --bg-raised: #0f1219;
+ --bg-card: #141820;
+ --bg-card-hover: #181d27;
+ --border: rgba(255,255,255,0.06);
+ --border-hover: rgba(255,255,255,0.1);
+ --teal: #0891B2;
+ --teal-glow: rgba(8,145,178,0.15);
+ --teal-deep: #0e7490;
+ --teal-bright: #22d3ee;
+ --amber: #f59e0b;
+ --amber-glow: rgba(245,158,11,0.12);
+ --green: #10b981;
+ --green-glow: rgba(16,185,129,0.12);
+ --text: #f1f5f9;
+ --text-secondary: rgba(255,255,255,0.55);
+ --text-muted: rgba(255,255,255,0.3);
+ --text-faint: rgba(255,255,255,0.15);
+ --font-display: 'Instrument Serif', Georgia, serif;
+ --font-body: 'Satoshi', -apple-system, BlinkMacSystemFont, sans-serif;
+ }
 
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: var(--font-body);
-      color: var(--text);
-      line-height: 1.7;
-      background: var(--bg);
-      background-image:
-        radial-gradient(ellipse 80% 50% at 70% 0%, rgba(8,145,178,0.07), transparent 60%),
-        radial-gradient(ellipse 60% 40% at 10% 60%, rgba(8,145,178,0.04), transparent 50%),
-        radial-gradient(ellipse 50% 50% at 80% 100%, rgba(8,145,178,0.05), transparent 50%);
-      background-attachment: fixed;
-      overflow-x: hidden;
-      -webkit-font-smoothing: antialiased;
-    }
+ html { scroll-behavior: smooth; }
+ body {
+ font-family: var(--font-body);
+ color: var(--text);
+ line-height: 1.7;
+ background: var(--bg);
+ background-image:
+ radial-gradient(ellipse 80% 50% at 70% 0%, rgba(8,145,178,0.07), transparent 60%),
+ radial-gradient(ellipse 60% 40% at 10% 60%, rgba(8,145,178,0.04), transparent 50%),
+ radial-gradient(ellipse 50% 50% at 80% 100%, rgba(8,145,178,0.05), transparent 50%);
+ background-attachment: fixed;
+ overflow-x: hidden;
+ -webkit-font-smoothing: antialiased;
+ }
 
-    /* ═══════════════════════════════════════════════
-       NAV
-       ═══════════════════════════════════════════════ */
-    .nav {
-      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      padding: 1.1rem 2rem;
-      background: rgba(10,12,16,0.7);
-      backdrop-filter: blur(12px) saturate(150%);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .nav.scrolled {
-      background: rgba(10,12,16,0.95);
-      backdrop-filter: blur(20px) saturate(180%);
-      border-bottom: 1px solid var(--border);
-      padding: 0.7rem 2rem;
-    }
-    .nav-inner {
-      max-width: 1140px; margin: 0 auto;
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .nav-logo {
-      display: flex; align-items: center;
-      text-decoration: none;
-      font-family: var(--font-body);
-      font-size: 1.35rem; font-weight: 800;
-      color: var(--teal); letter-spacing: -0.5px;
-    }
-    .nav-links { display: flex; gap: 2rem; align-items: center; }
-    .nav-link {
-      text-decoration: none; color: var(--text-muted);
-      font-weight: 500; font-size: 0.88rem;
-      transition: color 0.25s;
-      position: relative;
-    }
-    .nav-link:hover { color: var(--text-secondary); }
-    .nav-login {
-      color: var(--text-secondary); text-decoration: none;
-      font-weight: 600; font-size: 0.88rem;
-      transition: color 0.25s;
-    }
-    .nav-login:hover { color: var(--text); }
-    .nav-cta {
-      background: var(--teal); color: white;
-      padding: 9px 24px; border-radius: 8px;
-      text-decoration: none; font-weight: 700; font-size: 0.85rem;
-      transition: all 0.3s;
-      box-shadow: 0 0 20px var(--teal-glow);
-    }
-    .nav-cta:hover {
-      background: var(--teal-deep);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 30px rgba(8,145,178,0.3);
-    }
-    .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
-    .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--text-secondary); margin: 5px 0; border-radius: 2px; transition: all 0.3s; }
+ /* ═══════════════════════════════════════════════
+ NAV
+ ═══════════════════════════════════════════════ */
+ .nav {
+ position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+ padding: 1.1rem 2rem;
+ background: rgba(10,12,16,0.7);
+ backdrop-filter: blur(12px) saturate(150%);
+ transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .nav.scrolled {
+ background: rgba(10,12,16,0.95);
+ backdrop-filter: blur(20px) saturate(180%);
+ border-bottom: 1px solid var(--border);
+ padding: 0.7rem 2rem;
+ }
+ .nav-inner {
+ max-width: 1140px; margin: 0 auto;
+ display: flex; justify-content: space-between; align-items: center;
+ }
+ .nav-logo {
+ display: flex; align-items: center;
+ text-decoration: none;
+ font-family: var(--font-body);
+ font-size: 1.35rem; font-weight: 800;
+ color: var(--teal); letter-spacing: -0.5px;
+ }
+ .nav-links { display: flex; gap: 2rem; align-items: center; }
+ .nav-link {
+ text-decoration: none; color: var(--text-muted);
+ font-weight: 500; font-size: 0.88rem;
+ transition: color 0.25s;
+ position: relative;
+ }
+ .nav-link:hover { color: var(--text-secondary); }
+ .nav-login {
+ color: var(--text-secondary); text-decoration: none;
+ font-weight: 600; font-size: 0.88rem;
+ transition: color 0.25s;
+ }
+ .nav-login:hover { color: var(--text); }
+ .nav-cta {
+ background: var(--teal); color: white;
+ padding: 9px 24px; border-radius: 8px;
+ text-decoration: none; font-weight: 700; font-size: 0.85rem;
+ transition: all 0.3s;
+ box-shadow: 0 0 20px var(--teal-glow);
+ }
+ .nav-cta:hover {
+ background: var(--teal-deep);
+ transform: translateY(-1px);
+ box-shadow: 0 4px 30px rgba(8,145,178,0.3);
+ }
+ .nav-toggle { display: none; background: none; border: none; cursor: pointer; padding: 0.5rem; }
+ .nav-toggle span { display: block; width: 22px; height: 2px; background: var(--text-secondary); margin: 5px 0; border-radius: 2px; transition: all 0.3s; }
 
-    /* ═══════════════════════════════════════════════
-       HERO
-       ═══════════════════════════════════════════════ */
-    .hero {
-      min-height: 100vh; display: flex; align-items: center;
-      padding: 8rem 2rem 5rem;
-      position: relative; overflow: hidden;
-    }
-    /* Gradient orbs */
-    .hero::before {
-      content: ''; position: absolute;
-      top: -15%; right: -8%;
-      width: 650px; height: 650px;
-      background: radial-gradient(circle, rgba(8,145,178,0.08) 0%, transparent 60%);
-      border-radius: 50%;
-      filter: blur(40px);
-    }
-    .hero::after {
-      content: ''; position: absolute;
-      bottom: -10%; left: -5%;
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 60%);
-      border-radius: 50%;
-      filter: blur(40px);
-    }
-    /* Grid lines */
-    .hero-grid {
-      position: absolute; inset: 0;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-      background-size: 80px 80px;
-      mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 20%, transparent 70%);
-      -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 20%, transparent 70%);
-    }
-    .hero-inner {
-      max-width: 1140px; margin: 0 auto; width: 100%;
-      display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 5rem;
-      align-items: center; position: relative; z-index: 1;
-    }
-    .hero-tag {
-      display: inline-flex; align-items: center; gap: 0.6rem;
-      padding: 6px 16px 6px 6px;
-      background: var(--teal-glow);
-      border: 1px solid rgba(8,145,178,0.15);
-      border-radius: 20px;
-      font-weight: 600; font-size: 0.78rem;
-      color: var(--teal-bright);
-      margin-bottom: 2rem;
-      letter-spacing: 0.02em;
-    }
-    .hero-tag-dot {
-      width: 8px; height: 8px; border-radius: 50%;
-      background: var(--teal);
-      box-shadow: 0 0 8px rgba(8,145,178,0.5);
-      animation: pulse-dot 2.5s ease-in-out infinite;
-    }
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(8,145,178,0.5); }
-      50% { opacity: 0.5; box-shadow: 0 0 16px rgba(8,145,178,0.3); }
-    }
-    .hero h1 {
-      font-family: var(--font-display);
-      font-size: clamp(2.8rem, 5.2vw, 3.8rem);
-      line-height: 1.12;
-      color: var(--text);
-      margin-bottom: 1.5rem;
-      font-weight: 400;
-    }
-    .hero h1 em {
-      font-style: italic;
-      background: linear-gradient(135deg, var(--teal-bright), var(--teal));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-    .hero-sub {
-      font-size: 1.1rem; color: var(--text-secondary);
-      margin-bottom: 2.5rem; max-width: 460px; line-height: 1.85;
-      font-weight: 400;
-    }
-    .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
-    .btn-main {
-      background: var(--teal); color: white;
-      padding: 16px 36px; border-radius: 10px;
-      text-decoration: none; font-weight: 700; font-size: 0.95rem;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 0 30px var(--teal-glow), 0 4px 16px rgba(8,145,178,0.2);
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      border: none; cursor: pointer;
-      position: relative;
-    }
-    .btn-main::after {
-      content: ''; position: absolute; inset: -1px;
-      border-radius: 11px;
-      background: linear-gradient(135deg, rgba(34,211,238,0.2), transparent, rgba(8,145,178,0.2));
-      z-index: -1;
-      opacity: 0; transition: opacity 0.3s;
-    }
-    .btn-main:hover {
-      background: var(--teal-deep);
-      transform: translateY(-2px);
-      box-shadow: 0 0 50px rgba(8,145,178,0.25), 0 8px 30px rgba(8,145,178,0.3);
-    }
-    .btn-main:hover::after { opacity: 1; }
-    .btn-ghost {
-      color: var(--text-muted); text-decoration: none;
-      font-weight: 600; font-size: 0.95rem; padding: 16px 12px;
-      transition: color 0.25s;
-    }
-    .btn-ghost:hover { color: var(--text-secondary); }
+ /* ═══════════════════════════════════════════════
+ HERO
+ ═══════════════════════════════════════════════ */
+ .hero {
+ min-height: 100vh; display: flex; align-items: center;
+ padding: 8rem 2rem 5rem;
+ position: relative; overflow: hidden;
+ }
+ /* Gradient orbs */
+ .hero::before {
+ content: ''; position: absolute;
+ top: -15%; right: -8%;
+ width: 650px; height: 650px;
+ background: radial-gradient(circle, rgba(8,145,178,0.08) 0%, transparent 60%);
+ border-radius: 50%;
+ filter: blur(40px);
+ }
+ .hero::after {
+ content: ''; position: absolute;
+ bottom: -10%; left: -5%;
+ width: 500px; height: 500px;
+ background: radial-gradient(circle, rgba(245,158,11,0.04) 0%, transparent 60%);
+ border-radius: 50%;
+ filter: blur(40px);
+ }
+ /* Grid lines */
+ .hero-grid {
+ position: absolute; inset: 0;
+ background-image:
+ linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+ linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
+ background-size: 80px 80px;
+ mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 20%, transparent 70%);
+ -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 40%, black 20%, transparent 70%);
+ }
+ .hero-inner {
+ max-width: 1140px; margin: 0 auto; width: 100%;
+ display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 5rem;
+ align-items: center; position: relative; z-index: 1;
+ }
+ .hero-tag {
+ display: inline-flex; align-items: center; gap: 0.6rem;
+ padding: 6px 16px 6px 6px;
+ background: var(--teal-glow);
+ border: 1px solid rgba(8,145,178,0.15);
+ border-radius: 20px;
+ font-weight: 600; font-size: 0.78rem;
+ color: var(--teal-bright);
+ margin-bottom: 2rem;
+ letter-spacing: 0.02em;
+ }
+ .hero-tag-dot {
+ width: 8px; height: 8px; border-radius: 50%;
+ background: var(--teal);
+ box-shadow: 0 0 8px rgba(8,145,178,0.5);
+ animation: pulse-dot 2.5s ease-in-out infinite;
+ }
+ @keyframes pulse-dot {
+ 0%, 100% { opacity: 1; box-shadow: 0 0 8px rgba(8,145,178,0.5); }
+ 50% { opacity: 0.5; box-shadow: 0 0 16px rgba(8,145,178,0.3); }
+ }
+ .hero h1 {
+ font-family: var(--font-display);
+ font-size: clamp(2.8rem, 5.2vw, 3.8rem);
+ line-height: 1.12;
+ color: var(--text);
+ margin-bottom: 1.5rem;
+ font-weight: 400;
+ }
+ .hero h1 em {
+ font-style: italic;
+ background: linear-gradient(135deg, var(--teal-bright), var(--teal));
+ -webkit-background-clip: text;
+ -webkit-text-fill-color: transparent;
+ background-clip: text;
+ }
+ .hero-sub {
+ font-size: 1.1rem; color: var(--text-secondary);
+ margin-bottom: 2.5rem; max-width: 460px; line-height: 1.85;
+ font-weight: 400;
+ }
+ .hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; }
+ .btn-main {
+ background: var(--teal); color: white;
+ padding: 16px 36px; border-radius: 10px;
+ text-decoration: none; font-weight: 700; font-size: 0.95rem;
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ box-shadow: 0 0 30px var(--teal-glow), 0 4px 16px rgba(8,145,178,0.2);
+ display: inline-flex; align-items: center; gap: 0.5rem;
+ border: none; cursor: pointer;
+ position: relative;
+ }
+ .btn-main::after {
+ content: ''; position: absolute; inset: -1px;
+ border-radius: 11px;
+ background: linear-gradient(135deg, rgba(34,211,238,0.2), transparent, rgba(8,145,178,0.2));
+ z-index: -1;
+ opacity: 0; transition: opacity 0.3s;
+ }
+ .btn-main:hover {
+ background: var(--teal-deep);
+ transform: translateY(-2px);
+ box-shadow: 0 0 50px rgba(8,145,178,0.25), 0 8px 30px rgba(8,145,178,0.3);
+ }
+ .btn-main:hover::after { opacity: 1; }
+ .btn-ghost {
+ color: var(--text-muted); text-decoration: none;
+ font-weight: 600; font-size: 0.95rem; padding: 16px 12px;
+ transition: color 0.25s;
+ }
+ .btn-ghost:hover { color: var(--text-secondary); }
 
-    .hero-proof {
-      display: flex; gap: 2.5rem; margin-top: 3.5rem;
-      padding-top: 2.5rem;
-      border-top: 1px solid var(--border);
-    }
-    .hero-proof-item { }
-    .hero-proof-val {
-      font-family: var(--font-display);
-      font-size: 1.35rem; color: var(--text); font-weight: 400;
-    }
-    .hero-proof-label {
-      font-size: 0.75rem; color: var(--text-muted);
-      margin-top: 0.1rem; letter-spacing: 0.02em;
-    }
+ .hero-proof {
+ display: flex; gap: 2.5rem; margin-top: 3.5rem;
+ padding-top: 2.5rem;
+ border-top: 1px solid var(--border);
+ }
+ .hero-proof-item { }
+ .hero-proof-val {
+ font-family: var(--font-display);
+ font-size: 1.35rem; color: var(--text); font-weight: 400;
+ }
+ .hero-proof-label {
+ font-size: 0.75rem; color: var(--text-muted);
+ margin-top: 0.1rem; letter-spacing: 0.02em;
+ }
 
-    /* ─── Hero Card ──────────────────────────────── */
-    .hero-visual { position: relative; display: flex; justify-content: center; }
-    .mock-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.75rem; width: 340px;
-      box-shadow: 0 20px 80px rgba(0,0,0,0.4), 0 0 40px rgba(8,145,178,0.05);
-    }
-    .mock-header {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 1.25rem; padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .mock-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
-    .mock-badge {
-      background: var(--green-glow); color: var(--green);
-      padding: 3px 10px; border-radius: 6px;
-      font-size: 0.65rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      border: 1px solid rgba(16,185,129,0.15);
-    }
-    .mock-pts {
-      background: linear-gradient(135deg, var(--teal-deep), #0c5e72);
-      border: 1px solid rgba(8,145,178,0.2);
-      border-radius: 12px; color: white; text-align: center;
-      padding: 1.5rem 1rem; margin-bottom: 1.25rem;
-      position: relative; overflow: hidden;
-    }
-    .mock-pts::before {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(circle at 30% 20%, rgba(34,211,238,0.1), transparent 50%);
-    }
-    .mock-pts-num {
-      font-family: var(--font-display);
-      font-size: 3rem; font-weight: 400; line-height: 1;
-      position: relative;
-    }
-    .mock-pts-label { font-size: 0.8rem; opacity: 0.7; margin-top: 0.3rem; position: relative; }
-    .mock-bar { margin-bottom: 1rem; }
-    .mock-bar-track {
-      height: 6px; background: rgba(255,255,255,0.06);
-      border-radius: 3px; overflow: hidden;
-    }
-    .mock-bar-fill {
-      height: 100%; width: 72%;
-      background: linear-gradient(90deg, var(--teal), var(--teal-bright));
-      border-radius: 3px;
-      animation: growBar 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
-    }
-    @keyframes growBar { from { width: 0; } }
-    .mock-bar-meta {
-      display: flex; justify-content: space-between;
-      font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem;
-    }
-    .mock-tx {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.55rem 0;
-      border-top: 1px solid var(--border);
-      font-size: 0.82rem; color: var(--text-secondary);
-    }
-    .mock-tx-pts { color: var(--teal-bright); font-weight: 700; font-size: 0.82rem; }
+ /* ─── Hero Card ──────────────────────────────── */
+ .hero-visual { position: relative; display: flex; justify-content: center; }
+ .mock-card {
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ border-radius: 16px;
+ padding: 1.75rem; width: 340px;
+ box-shadow: 0 20px 80px rgba(0,0,0,0.4), 0 0 40px rgba(8,145,178,0.05);
+ }
+ .mock-header {
+ display: flex; justify-content: space-between; align-items: center;
+ margin-bottom: 1.25rem; padding-bottom: 1rem;
+ border-bottom: 1px solid var(--border);
+ }
+ .mock-name { font-weight: 700; font-size: 0.95rem; color: var(--text); }
+ .mock-badge {
+ background: var(--green-glow); color: var(--green);
+ padding: 3px 10px; border-radius: 6px;
+ font-size: 0.65rem; font-weight: 700;
+ text-transform: uppercase; letter-spacing: 0.5px;
+ border: 1px solid rgba(16,185,129,0.15);
+ }
+ .mock-pts {
+ background: linear-gradient(135deg, var(--teal-deep), #0c5e72);
+ border: 1px solid rgba(8,145,178,0.2);
+ border-radius: 12px; color: white; text-align: center;
+ padding: 1.5rem 1rem; margin-bottom: 1.25rem;
+ position: relative; overflow: hidden;
+ }
+ .mock-pts::before {
+ content: ''; position: absolute; inset: 0;
+ background: radial-gradient(circle at 30% 20%, rgba(34,211,238,0.1), transparent 50%);
+ }
+ .mock-pts-num {
+ font-family: var(--font-display);
+ font-size: 3rem; font-weight: 400; line-height: 1;
+ position: relative;
+ }
+ .mock-pts-label { font-size: 0.8rem; opacity: 0.7; margin-top: 0.3rem; position: relative; }
+ .mock-bar { margin-bottom: 1rem; }
+ .mock-bar-track {
+ height: 6px; background: rgba(255,255,255,0.06);
+ border-radius: 3px; overflow: hidden;
+ }
+ .mock-bar-fill {
+ height: 100%; width: 72%;
+ background: linear-gradient(90deg, var(--teal), var(--teal-bright));
+ border-radius: 3px;
+ animation: growBar 2.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+ }
+ @keyframes growBar { from { width: 0; } }
+ .mock-bar-meta {
+ display: flex; justify-content: space-between;
+ font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem;
+ }
+ .mock-tx {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 0.55rem 0;
+ border-top: 1px solid var(--border);
+ font-size: 0.82rem; color: var(--text-secondary);
+ }
+ .mock-tx-pts { color: var(--teal-bright); font-weight: 700; font-size: 0.82rem; }
 
-    .float-pill {
-      position: absolute; border-radius: 10px;
-      padding: 0.6rem 1rem;
-      font-size: 0.78rem; font-weight: 600;
-      animation: floatIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
-      white-space: nowrap;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-    }
-    .fp1 {
-      top: -14px; right: -24px;
-      animation-delay: 1.4s;
-      background: #0d2118;
-      border: 1px solid rgba(16,185,129,0.25);
-      color: var(--green);
-    }
-    .fp2 {
-      bottom: -14px; left: -24px;
-      animation-delay: 2s;
-      background: #1a1508;
-      border: 1px solid rgba(245,158,11,0.25);
-      color: var(--amber);
-    }
-    @keyframes floatIn {
-      from { opacity: 0; transform: translateY(16px) scale(0.95); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
-    }
+ .float-pill {
+ position: absolute; border-radius: 10px;
+ padding: 0.6rem 1rem;
+ font-size: 0.78rem; font-weight: 600;
+ animation: floatIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+ white-space: nowrap;
+ box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+ }
+ .fp1 {
+ top: -14px; right: -24px;
+ animation-delay: 1.4s;
+ background: #0d2118;
+ border: 1px solid rgba(16,185,129,0.25);
+ color: var(--green);
+ }
+ .fp2 {
+ bottom: -14px; left: -24px;
+ animation-delay: 2s;
+ background: #1a1508;
+ border: 1px solid rgba(245,158,11,0.25);
+ color: var(--amber);
+ }
+ @keyframes floatIn {
+ from { opacity: 0; transform: translateY(16px) scale(0.95); }
+ to { opacity: 1; transform: translateY(0) scale(1); }
+ }
 
-    /* ═══════════════════════════════════════════════
-       SECTIONS SHARED
-       ═══════════════════════════════════════════════ */
-    section { padding: 7rem 2rem; }
-    .si { max-width: 1040px; margin: 0 auto; }
-    .stag {
-      font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 3px; color: var(--teal);
-      margin-bottom: 0.75rem; display: block;
-    }
-    .sh {
-      font-family: var(--font-display);
-      font-size: clamp(2rem, 3.5vw, 2.8rem);
-      color: var(--text); margin-bottom: 0.75rem;
-      line-height: 1.2; font-weight: 400;
-    }
-    .ss {
-      font-size: 1.05rem; color: var(--text-secondary);
-      max-width: 500px; margin-bottom: 3.5rem; line-height: 1.8;
-    }
+ /* ═══════════════════════════════════════════════
+ SECTIONS SHARED
+ ═══════════════════════════════════════════════ */
+ section { padding: 7rem 2rem; }
+ .si { max-width: 1040px; margin: 0 auto; }
+ .stag {
+ font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+ letter-spacing: 3px; color: var(--teal);
+ margin-bottom: 0.75rem; display: block;
+ }
+ .sh {
+ font-family: var(--font-display);
+ font-size: clamp(2rem, 3.5vw, 2.8rem);
+ color: var(--text); margin-bottom: 0.75rem;
+ line-height: 1.2; font-weight: 400;
+ }
+ .ss {
+ font-size: 1.05rem; color: var(--text-secondary);
+ max-width: 500px; margin-bottom: 3.5rem; line-height: 1.8;
+ }
 
-    /* ═══════════════════════════════════════════════
-       PROBLEM
-       ═══════════════════════════════════════════════ */
-    .problem {
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-    }
-    .pgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
-    .pcard {
-      padding: 2rem; border-radius: 14px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .pcard:hover {
-      border-color: var(--border-hover);
-      background: var(--bg-card-hover);
-      transform: translateY(-4px);
-      box-shadow: 0 16px 50px rgba(0,0,0,0.3);
-    }
-    .picon {
-      width: 48px; height: 48px;
-      background: rgba(245,158,11,0.08);
-      border: 1px solid rgba(245,158,11,0.1);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1.25rem;
-      color: var(--amber);
-    }
-    .picon svg { width: 22px; height: 22px; }
-    .ptitle { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: var(--text); }
-    .ptext { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; }
+ /* ═══════════════════════════════════════════════
+ PROBLEM
+ ═══════════════════════════════════════════════ */
+ .problem {
+ background: var(--bg);
+ border-top: 1px solid var(--border);
+ }
+ .pgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; }
+ .pcard {
+ padding: 2rem; border-radius: 14px;
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .pcard:hover {
+ border-color: var(--border-hover);
+ background: var(--bg-card-hover);
+ transform: translateY(-4px);
+ box-shadow: 0 16px 50px rgba(0,0,0,0.3);
+ }
+ .picon {
+ width: 48px; height: 48px;
+ background: rgba(245,158,11,0.08);
+ border: 1px solid rgba(245,158,11,0.1);
+ border-radius: 10px;
+ display: flex; align-items: center; justify-content: center;
+ margin-bottom: 1.25rem;
+ color: var(--amber);
+ }
+ .picon svg { width: 22px; height: 22px; }
+ .ptitle { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: var(--text); }
+ .ptext { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; }
 
-    /* ═══════════════════════════════════════════════
-       HOW IT WORKS
-       ═══════════════════════════════════════════════ */
-    .how {
-      background: var(--bg-raised);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-    .steps {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 2rem; position: relative;
-    }
-    .steps::before {
-      content: ''; position: absolute; top: 28px;
-      left: calc(16.66% + 24px); right: calc(16.66% + 24px);
-      height: 1px;
-      background: linear-gradient(90deg, var(--border), var(--teal-glow), var(--border));
-    }
-    .step { text-align: center; position: relative; }
-    .step-n {
-      width: 56px; height: 56px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      color: var(--teal-bright);
-      border-radius: 50%;
-      display: inline-flex; align-items: center; justify-content: center;
-      font-family: var(--font-display);
-      font-size: 1.3rem; font-weight: 400;
-      margin-bottom: 1.5rem; position: relative; z-index: 2;
-      transition: all 0.3s;
-    }
-    .step:hover .step-n {
-      border-color: rgba(8,145,178,0.3);
-      box-shadow: 0 0 30px var(--teal-glow);
-    }
-    .step-t { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: var(--text); }
-    .step-d {
-      color: var(--text-secondary); font-size: 0.88rem;
-      max-width: 260px; margin: 0 auto; line-height: 1.7;
-    }
+ /* ═══════════════════════════════════════════════
+ HOW IT WORKS
+ ═══════════════════════════════════════════════ */
+ .how {
+ background: var(--bg-raised);
+ border-top: 1px solid var(--border);
+ border-bottom: 1px solid var(--border);
+ }
+ .steps {
+ display: grid; grid-template-columns: repeat(3, 1fr);
+ gap: 2rem; position: relative;
+ }
+ .steps::before {
+ content: ''; position: absolute; top: 28px;
+ left: calc(16.66% + 24px); right: calc(16.66% + 24px);
+ height: 1px;
+ background: linear-gradient(90deg, var(--border), var(--teal-glow), var(--border));
+ }
+ .step { text-align: center; position: relative; }
+ .step-n {
+ width: 56px; height: 56px;
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ color: var(--teal-bright);
+ border-radius: 50%;
+ display: inline-flex; align-items: center; justify-content: center;
+ font-family: var(--font-display);
+ font-size: 1.3rem; font-weight: 400;
+ margin-bottom: 1.5rem; position: relative; z-index: 2;
+ transition: all 0.3s;
+ }
+ .step:hover .step-n {
+ border-color: rgba(8,145,178,0.3);
+ box-shadow: 0 0 30px var(--teal-glow);
+ }
+ .step-t { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: var(--text); }
+ .step-d {
+ color: var(--text-secondary); font-size: 0.88rem;
+ max-width: 260px; margin: 0 auto; line-height: 1.7;
+ }
 
-    /* ═══════════════════════════════════════════════
-       FEATURES
-       ═══════════════════════════════════════════════ */
-    .features {
-      background: var(--bg-raised);
-      border-bottom: 1px solid var(--border);
-    }
-    .fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
-    .feat {
-      padding: 1.75rem; border-radius: 14px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .feat:hover {
-      border-color: var(--border-hover);
-      background: var(--bg-card-hover);
-      transform: translateY(-3px);
-    }
-    .feat-i {
-      width: 42px; height: 42px;
-      background: var(--teal-glow);
-      border: 1px solid rgba(8,145,178,0.12);
-      border-radius: 10px;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1.1rem;
-      color: var(--teal-bright);
-    }
-    .feat-i svg { width: 20px; height: 20px; }
-    .feat-t { font-weight: 700; margin-bottom: 0.4rem; font-size: 0.92rem; color: var(--text); }
-    .feat-d { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7; }
+ /* ═══════════════════════════════════════════════
+ FEATURES
+ ═══════════════════════════════════════════════ */
+ .features {
+ background: var(--bg-raised);
+ border-bottom: 1px solid var(--border);
+ }
+ .fgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+ .feat {
+ padding: 1.75rem; border-radius: 14px;
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .feat:hover {
+ border-color: var(--border-hover);
+ background: var(--bg-card-hover);
+ transform: translateY(-3px);
+ }
+ .feat-i {
+ width: 42px; height: 42px;
+ background: var(--teal-glow);
+ border: 1px solid rgba(8,145,178,0.12);
+ border-radius: 10px;
+ display: flex; align-items: center; justify-content: center;
+ margin-bottom: 1.1rem;
+ color: var(--teal-bright);
+ }
+ .feat-i svg { width: 20px; height: 20px; }
+ .feat-t { font-weight: 700; margin-bottom: 0.4rem; font-size: 0.92rem; color: var(--text); }
+ .feat-d { color: var(--text-secondary); font-size: 0.85rem; line-height: 1.7; }
 
-    /* ═══════════════════════════════════════════════
-       TESTIMONIAL
-       ═══════════════════════════════════════════════ */
-    .proof {
-      background: var(--bg-raised);
-      text-align: center; padding: 5.5rem 2rem;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      position: relative; overflow: hidden;
-    }
-    .proof::before {
-      content: ''; position: absolute;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 500px; height: 500px;
-      background: radial-gradient(circle, var(--teal-glow), transparent 60%);
-      filter: blur(60px); opacity: 0.5;
-    }
-    .proof-inner { position: relative; z-index: 1; }
+ /* ═══════════════════════════════════════════════
+ TESTIMONIAL
+ ═══════════════════════════════════════════════ */
+ .proof {
+ background: var(--bg-raised);
+ text-align: center; padding: 5.5rem 2rem;
+ border-top: 1px solid var(--border);
+ border-bottom: 1px solid var(--border);
+ position: relative; overflow: hidden;
+ }
+ .proof::before {
+ content: ''; position: absolute;
+ top: 50%; left: 50%; transform: translate(-50%, -50%);
+ width: 500px; height: 500px;
+ background: radial-gradient(circle, var(--teal-glow), transparent 60%);
+ filter: blur(60px); opacity: 0.5;
+ }
+ .proof-inner { position: relative; z-index: 1; }
 
-    /* ═══════════════════════════════════════════════
-       PRICING
-       ═══════════════════════════════════════════════ */
-    .pricing {
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-    }
-    .prgrid {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 1.25rem; max-width: 780px; margin: 0 auto;
-    }
-    .prcard {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px; padding: 2.5rem;
-      position: relative;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .prcard:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-    .prcard.pop {
-      border-color: rgba(8,145,178,0.25);
-      box-shadow: 0 0 40px var(--teal-glow);
-    }
-    .prcard.pop:hover {
-      box-shadow: 0 0 60px rgba(8,145,178,0.15), 0 20px 60px rgba(0,0,0,0.3);
-    }
-    .prtag {
-      position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
-      background: linear-gradient(135deg, var(--teal), var(--teal-deep));
-      color: white;
-      padding: 4px 18px; border-radius: 6px;
-      font-size: 0.68rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px;
-      box-shadow: 0 4px 16px var(--teal-glow);
-    }
-    .prname {
-      font-family: var(--font-display);
-      font-size: 1.4rem; color: var(--text);
-      font-weight: 400; margin-bottom: 0.3rem;
-    }
-    .prdesc { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
-    .prprice { display: flex; align-items: baseline; gap: 0.2rem; margin-bottom: 0.15rem; }
-    .pramt {
-      font-family: var(--font-display);
-      font-size: 2.8rem; color: var(--text);
-      font-weight: 400; line-height: 1;
-    }
-    .prper { color: var(--text-muted); font-size: 0.85rem; }
-    .prnote { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.75rem; }
-    .prlist { list-style: none; margin-bottom: 2rem; }
-    .prlist li {
-      padding: 0.5rem 0; font-size: 0.88rem; color: var(--text-secondary);
-      display: flex; align-items: center; gap: 0.65rem;
-    }
-    .prlist li + li { border-top: 1px solid var(--border); }
-    .chk { color: var(--green); flex-shrink: 0; display: flex; align-items: center; }
-    .chk svg { width: 15px; height: 15px; }
-    .prbtn {
-      display: block; width: 100%; padding: 14px; border-radius: 10px;
-      text-align: center; font-weight: 700; font-size: 0.92rem;
-      text-decoration: none; transition: all 0.3s;
-      cursor: pointer; border: none; font-family: var(--font-body);
-    }
-    .prbtn-f {
-      background: var(--teal); color: white;
-      box-shadow: 0 0 24px var(--teal-glow);
-    }
-    .prbtn-f:hover {
-      background: var(--teal-deep);
-      transform: translateY(-1px);
-      box-shadow: 0 8px 30px rgba(8,145,178,0.3);
-    }
-    .prbtn-o {
-      background: transparent; color: var(--teal-bright);
-      border: 1px solid rgba(8,145,178,0.25);
-    }
-    .prbtn-o:hover {
-      background: var(--teal-glow);
-      border-color: rgba(8,145,178,0.4);
-    }
+ /* ═══════════════════════════════════════════════
+ PRICING
+ ═══════════════════════════════════════════════ */
+ .pricing {
+ background: var(--bg);
+ border-bottom: 1px solid var(--border);
+ }
+ .prgrid {
+ display: grid; grid-template-columns: repeat(2, 1fr);
+ gap: 1.25rem; max-width: 780px; margin: 0 auto;
+ }
+ .prcard {
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ border-radius: 16px; padding: 2.5rem;
+ position: relative;
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .prcard:hover {
+ transform: translateY(-4px);
+ box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+ }
+ .prcard.pop {
+ border-color: rgba(8,145,178,0.25);
+ box-shadow: 0 0 40px var(--teal-glow);
+ }
+ .prcard.pop:hover {
+ box-shadow: 0 0 60px rgba(8,145,178,0.15), 0 20px 60px rgba(0,0,0,0.3);
+ }
+ .prtag {
+ position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+ background: linear-gradient(135deg, var(--teal), var(--teal-deep));
+ color: white;
+ padding: 4px 18px; border-radius: 6px;
+ font-size: 0.68rem; font-weight: 700;
+ text-transform: uppercase; letter-spacing: 1px;
+ box-shadow: 0 4px 16px var(--teal-glow);
+ }
+ .prname {
+ font-family: var(--font-display);
+ font-size: 1.4rem; color: var(--text);
+ font-weight: 400; margin-bottom: 0.3rem;
+ }
+ .prdesc { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1.5rem; }
+ .prprice { display: flex; align-items: baseline; gap: 0.2rem; margin-bottom: 0.15rem; }
+ .pramt {
+ font-family: var(--font-display);
+ font-size: 2.8rem; color: var(--text);
+ font-weight: 400; line-height: 1;
+ }
+ .prper { color: var(--text-muted); font-size: 0.85rem; }
+ .prnote { color: var(--text-muted); font-size: 0.75rem; margin-bottom: 1.75rem; }
+ .prlist { list-style: none; margin-bottom: 2rem; }
+ .prlist li {
+ padding: 0.5rem 0; font-size: 0.88rem; color: var(--text-secondary);
+ display: flex; align-items: center; gap: 0.65rem;
+ }
+ .prlist li + li { border-top: 1px solid var(--border); }
+ .chk { color: var(--green); flex-shrink: 0; display: flex; align-items: center; }
+ .chk svg { width: 15px; height: 15px; }
+ .prbtn {
+ display: block; width: 100%; padding: 14px; border-radius: 10px;
+ text-align: center; font-weight: 700; font-size: 0.92rem;
+ text-decoration: none; transition: all 0.3s;
+ cursor: pointer; border: none; font-family: var(--font-body);
+ }
+ .prbtn-f {
+ background: var(--teal); color: white;
+ box-shadow: 0 0 24px var(--teal-glow);
+ }
+ .prbtn-f:hover {
+ background: var(--teal-deep);
+ transform: translateY(-1px);
+ box-shadow: 0 8px 30px rgba(8,145,178,0.3);
+ }
+ .prbtn-o {
+ background: transparent; color: var(--teal-bright);
+ border: 1px solid rgba(8,145,178,0.25);
+ }
+ .prbtn-o:hover {
+ background: var(--teal-glow);
+ border-color: rgba(8,145,178,0.4);
+ }
 
-    /* ═══════════════════════════════════════════════
-       CTA
-       ═══════════════════════════════════════════════ */
-    .cta {
-      text-align: center;
-      padding: 7rem 2rem;
-      position: relative; overflow: hidden;
-      background: var(--bg-raised);
-      border-top: 1px solid var(--border);
-    }
-    .cta::before {
-      content: ''; position: absolute;
-      bottom: -20%; left: 50%; transform: translateX(-50%);
-      width: 700px; height: 400px;
-      background: radial-gradient(ellipse, var(--teal-glow), transparent 60%);
-      filter: blur(60px); opacity: 0.4;
-    }
-    .cta .si { position: relative; z-index: 1; }
-    .cta .sh { max-width: 550px; margin: 0 auto 0.75rem; }
-    .cta .ss { margin: 0 auto 2.5rem; text-align: center; }
-    .cta-trust {
-      display: flex; justify-content: center; gap: 2rem;
-      margin-top: 2.5rem; flex-wrap: wrap;
-    }
-    .cta-trust span { color: var(--text-muted); font-size: 0.82rem; font-weight: 500; }
+ /* ═══════════════════════════════════════════════
+ CTA
+ ═══════════════════════════════════════════════ */
+ .cta {
+ text-align: center;
+ padding: 7rem 2rem;
+ position: relative; overflow: hidden;
+ background: var(--bg-raised);
+ border-top: 1px solid var(--border);
+ }
+ .cta::before {
+ content: ''; position: absolute;
+ bottom: -20%; left: 50%; transform: translateX(-50%);
+ width: 700px; height: 400px;
+ background: radial-gradient(ellipse, var(--teal-glow), transparent 60%);
+ filter: blur(60px); opacity: 0.4;
+ }
+ .cta .si { position: relative; z-index: 1; }
+ .cta .sh { max-width: 550px; margin: 0 auto 0.75rem; }
+ .cta .ss { margin: 0 auto 2.5rem; text-align: center; }
+ .cta-trust {
+ display: flex; justify-content: center; gap: 2rem;
+ margin-top: 2.5rem; flex-wrap: wrap;
+ }
+ .cta-trust span { color: var(--text-muted); font-size: 0.82rem; font-weight: 500; }
 
-    /* ═══════════════════════════════════════════════
-       FOOTER
-       ═══════════════════════════════════════════════ */
-    /* ═══════════════════════════════════════════════
-       DOWNLOAD APPS
-       ═══════════════════════════════════════════════ */
-    .downloads { text-align: center; background: var(--bg-raised); }
-    .dl-cards { display: flex; gap: 2rem; justify-content: center; margin-top: 2.5rem; flex-wrap: wrap; }
-    .dl-card {
-      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-      padding: 2.5rem 2rem; width: 280px; text-align: center; transition: all 0.3s;
-    }
-    .dl-card:hover { border-color: var(--border-hover); transform: translateY(-4px); }
-    .dl-icon {
-      width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 1.2rem;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5rem; font-weight: 800; color: #fff;
-    }
-    .dl-icon-client { background: #0891B2; }
-    .dl-icon-merchant { background: #0e7490; }
-    .dl-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.3rem; }
-    .dl-desc { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5; }
-    .dl-btn {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 12px 28px; border-radius: 10px; text-decoration: none;
-      font-weight: 700; font-size: 0.9rem; transition: all 0.3s;
-    }
-    .dl-btn-client { background: #0891B2; color: #fff; }
-    .dl-btn-client:hover { background: #0e7490; }
-    .dl-btn-merchant { background: #0e7490; color: #fff; }
-    .dl-btn-merchant:hover { background: #0a5e73; }
-    .dl-badge { display: inline-block; margin-top: 1rem; font-size: 0.75rem; color: var(--text-muted); }
+ /* ═══════════════════════════════════════════════
+ FOOTER
+ ═══════════════════════════════════════════════ */
+ /* ═══════════════════════════════════════════════
+ DOWNLOAD APPS
+ ═══════════════════════════════════════════════ */
+ .downloads { text-align: center; background: var(--bg-raised); }
+ .dl-cards { display: flex; gap: 2rem; justify-content: center; margin-top: 2.5rem; flex-wrap: wrap; }
+ .dl-card {
+ background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+ padding: 2.5rem 2rem; width: 280px; text-align: center; transition: all 0.3s;
+ }
+ .dl-card:hover { border-color: var(--border-hover); transform: translateY(-4px); }
+ .dl-icon {
+ width: 72px; height: 72px; border-radius: 18px; margin: 0 auto 1.2rem;
+ display: flex; align-items: center; justify-content: center;
+ font-size: 1.5rem; font-weight: 800; color: #fff;
+ }
+ .dl-icon-client { background: #0891B2; }
+ .dl-icon-merchant { background: #0e7490; }
+ .dl-name { font-weight: 700; font-size: 1.1rem; margin-bottom: 0.3rem; }
+ .dl-desc { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1.5rem; line-height: 1.5; }
+ .dl-btn {
+ display: inline-flex; align-items: center; gap: 8px;
+ padding: 12px 28px; border-radius: 10px; text-decoration: none;
+ font-weight: 700; font-size: 0.9rem; transition: all 0.3s;
+ }
+ .dl-btn-client { background: #0891B2; color: #fff; }
+ .dl-btn-client:hover { background: #0e7490; }
+ .dl-btn-merchant { background: #0e7490; color: #fff; }
+ .dl-btn-merchant:hover { background: #0a5e73; }
+ .dl-badge { display: inline-block; margin-top: 1rem; font-size: 0.75rem; color: var(--text-muted); }
 
-    .footer {
-      background: var(--bg);
-      border-top: 1px solid var(--border);
-      padding: 2.5rem 2rem;
-    }
-    .footer-in {
-      max-width: 1040px; margin: 0 auto;
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 1rem;
-    }
-    .footer-b {
-      font-family: var(--font-body);
-      font-size: 1.1rem; font-weight: 800;
-      color: var(--teal); letter-spacing: -0.3px;
-    }
-    .footer-l { display: flex; gap: 2rem; }
-    .footer-a {
-      color: var(--text-muted); text-decoration: none;
-      font-size: 0.82rem; transition: color 0.2s;
-    }
-    .footer-a:hover { color: var(--text-secondary); }
-    .footer-c {
-      font-size: 0.75rem; color: var(--text-faint);
-      width: 100%; text-align: center;
-      margin-top: 1.5rem; padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-    }
+ .footer {
+ background: var(--bg);
+ border-top: 1px solid var(--border);
+ padding: 2.5rem 2rem;
+ }
+ .footer-in {
+ max-width: 1040px; margin: 0 auto;
+ display: flex; justify-content: space-between; align-items: center;
+ flex-wrap: wrap; gap: 1rem;
+ }
+ .footer-b {
+ font-family: var(--font-body);
+ font-size: 1.1rem; font-weight: 800;
+ color: var(--teal); letter-spacing: -0.3px;
+ }
+ .footer-l { display: flex; gap: 2rem; }
+ .footer-a {
+ color: var(--text-muted); text-decoration: none;
+ font-size: 0.82rem; transition: color 0.2s;
+ }
+ .footer-a:hover { color: var(--text-secondary); }
+ .footer-c {
+ font-size: 0.75rem; color: var(--text-faint);
+ width: 100%; text-align: center;
+ margin-top: 1.5rem; padding-top: 1.5rem;
+ border-top: 1px solid var(--border);
+ }
 
 
-    /* ═══════════════════════════════════════════════
-       NETWORK — "Ce qui change tout"
-       ═══════════════════════════════════════════════ */
-    .network {
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      position: relative; overflow: hidden;
-    }
-    .network::before {
-      content: ''; position: absolute;
-      top: 50%; left: 50%; transform: translate(-50%, -50%);
-      width: 700px; height: 700px;
-      background: radial-gradient(circle, rgba(8,145,178,0.06), transparent 55%);
-      filter: blur(60px);
-    }
-    .network .si { position: relative; z-index: 1; }
-    .net-visual {
-      display: flex; justify-content: center; gap: 1.25rem;
-      flex-wrap: wrap; margin-top: 3rem;
-    }
-    .net-node {
-      padding: 1.25rem 1.75rem; border-radius: 14px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      text-align: center;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      min-width: 150px;
-    }
-    .net-node:hover {
-      border-color: rgba(8,145,178,0.3);
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px var(--teal-glow);
-    }
-    .net-node-icon { margin-bottom: 0.5rem; color: var(--text-secondary); }
-    .net-node-icon svg { width: 28px; height: 28px; }
-    .net-node-name { font-weight: 700; font-size: 0.88rem; color: var(--text); margin-bottom: 0.15rem; }
-    .net-node-type { font-size: 0.72rem; color: var(--text-muted); }
-    .net-connector {
-      display: flex; align-items: center; color: var(--teal);
-      font-size: 1.2rem; opacity: 0.4;
-    }
-    .net-badge {
-      display: inline-flex; align-items: center; gap: 0.5rem;
-      padding: 8px 18px; border-radius: 20px;
-      background: var(--teal-glow);
-      border: 1px solid rgba(8,145,178,0.15);
-      color: var(--teal-bright);
-      font-weight: 600; font-size: 0.78rem;
-      margin-top: 2.5rem;
-    }
+ /* ═══════════════════════════════════════════════
+ NETWORK — "Ce qui change tout"
+ ═══════════════════════════════════════════════ */
+ .network {
+ background: var(--bg);
+ border-bottom: 1px solid var(--border);
+ position: relative; overflow: hidden;
+ }
+ .network::before {
+ content: ''; position: absolute;
+ top: 50%; left: 50%; transform: translate(-50%, -50%);
+ width: 700px; height: 700px;
+ background: radial-gradient(circle, rgba(8,145,178,0.06), transparent 55%);
+ filter: blur(60px);
+ }
+ .network .si { position: relative; z-index: 1; }
+ .net-visual {
+ display: flex; justify-content: center; gap: 1.25rem;
+ flex-wrap: wrap; margin-top: 3rem;
+ }
+ .net-node {
+ padding: 1.25rem 1.75rem; border-radius: 14px;
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ text-align: center;
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ min-width: 150px;
+ }
+ .net-node:hover {
+ border-color: rgba(8,145,178,0.3);
+ transform: translateY(-3px);
+ box-shadow: 0 12px 40px rgba(0,0,0,0.3), 0 0 20px var(--teal-glow);
+ }
+ .net-node-icon { margin-bottom: 0.5rem; color: var(--text-secondary); }
+ .net-node-icon svg { width: 28px; height: 28px; }
+ .net-node-name { font-weight: 700; font-size: 0.88rem; color: var(--text); margin-bottom: 0.15rem; }
+ .net-node-type { font-size: 0.72rem; color: var(--text-muted); }
+ .net-connector {
+ display: flex; align-items: center; color: var(--teal);
+ font-size: 1.2rem; opacity: 0.4;
+ }
+ .net-badge {
+ display: inline-flex; align-items: center; gap: 0.5rem;
+ padding: 8px 18px; border-radius: 20px;
+ background: var(--teal-glow);
+ border: 1px solid rgba(8,145,178,0.15);
+ color: var(--teal-bright);
+ font-weight: 600; font-size: 0.78rem;
+ margin-top: 2.5rem;
+ }
 
-    /* ═══════════════════════════════════════════════
-       PROOF CARDS (dual testimonials)
-       ═══════════════════════════════════════════════ */
-    .proof-cards {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 2rem; max-width: 880px; margin: 0 auto;
-      text-align: left;
-    }
-    .proof-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 14px; padding: 2rem;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .proof-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-3px);
-    }
-    .proof-card-mark {
-      font-family: var(--font-display);
-      font-size: 2.8rem; color: var(--teal); opacity: 0.4;
-      line-height: 1;
-    }
-    .proof-card-q {
-      font-family: var(--font-display);
-      font-size: 1.05rem; line-height: 1.65;
-      font-style: italic; color: var(--text);
-      margin: 0.5rem 0 1.25rem;
-    }
-    .proof-card-a { color: var(--text-muted); font-size: 0.85rem; }
-    .proof-card-a strong { color: var(--text-secondary); font-weight: 600; }
+ /* ═══════════════════════════════════════════════
+ PROOF CARDS (dual testimonials)
+ ═══════════════════════════════════════════════ */
+ .proof-cards {
+ display: grid; grid-template-columns: repeat(2, 1fr);
+ gap: 2rem; max-width: 880px; margin: 0 auto;
+ text-align: left;
+ }
+ .proof-card {
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ border-radius: 14px; padding: 2rem;
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .proof-card:hover {
+ border-color: var(--border-hover);
+ transform: translateY(-3px);
+ }
+ .proof-card-mark {
+ font-family: var(--font-display);
+ font-size: 2.8rem; color: var(--teal); opacity: 0.4;
+ line-height: 1;
+ }
+ .proof-card-q {
+ font-family: var(--font-display);
+ font-size: 1.05rem; line-height: 1.65;
+ font-style: italic; color: var(--text);
+ margin: 0.5rem 0 1.25rem;
+ }
+ .proof-card-a { color: var(--text-muted); font-size: 0.85rem; }
+ .proof-card-a strong { color: var(--text-secondary); font-weight: 600; }
 
-    /* ═══════════════════════════════════════════════
-       COMING SOON
-       ═══════════════════════════════════════════════ */
-    .coming {
-      background: var(--bg-raised);
-      border-bottom: 1px solid var(--border);
-    }
-    .coming-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr);
-      gap: 1.25rem; max-width: 780px; margin: 0 auto;
-    }
-    .coming-card {
-      padding: 2rem; border-radius: 14px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      position: relative; overflow: hidden;
-      text-align: left;
-    }
-    .coming-card::before {
-      content: ''; position: absolute;
-      top: 0; right: 0;
-      width: 80px; height: 80px;
-      background: radial-gradient(circle at top right, var(--teal-glow), transparent 70%);
-    }
-    .coming-card:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-3px);
-    }
-    .coming-icon { margin-bottom: 1rem; position: relative; color: var(--teal-bright); }
-    .coming-icon svg { width: 24px; height: 24px; }
-    .coming-tag {
-      display: inline-block;
-      padding: 3px 10px; border-radius: 5px;
-      background: rgba(245,158,11,0.08);
-      border: 1px solid rgba(245,158,11,0.12);
-      color: var(--amber);
-      font-size: 0.62rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px;
-      margin-bottom: 0.75rem;
-    }
-    .coming-t { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: var(--text); }
-    .coming-d { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; }
+ /* ═══════════════════════════════════════════════
+ COMING SOON
+ ═══════════════════════════════════════════════ */
+ .coming {
+ background: var(--bg-raised);
+ border-bottom: 1px solid var(--border);
+ }
+ .coming-grid {
+ display: grid; grid-template-columns: repeat(2, 1fr);
+ gap: 1.25rem; max-width: 780px; margin: 0 auto;
+ }
+ .coming-card {
+ padding: 2rem; border-radius: 14px;
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+ position: relative; overflow: hidden;
+ text-align: left;
+ }
+ .coming-card::before {
+ content: ''; position: absolute;
+ top: 0; right: 0;
+ width: 80px; height: 80px;
+ background: radial-gradient(circle at top right, var(--teal-glow), transparent 70%);
+ }
+ .coming-card:hover {
+ border-color: var(--border-hover);
+ transform: translateY(-3px);
+ }
+ .coming-icon { margin-bottom: 1rem; position: relative; color: var(--teal-bright); }
+ .coming-icon svg { width: 24px; height: 24px; }
+ .coming-tag {
+ display: inline-block;
+ padding: 3px 10px; border-radius: 5px;
+ background: rgba(245,158,11,0.08);
+ border: 1px solid rgba(245,158,11,0.12);
+ color: var(--amber);
+ font-size: 0.62rem; font-weight: 700;
+ text-transform: uppercase; letter-spacing: 1px;
+ margin-bottom: 0.75rem;
+ }
+ .coming-t { font-weight: 700; margin-bottom: 0.5rem; font-size: 1rem; color: var(--text); }
+ .coming-d { color: var(--text-secondary); font-size: 0.88rem; line-height: 1.7; }
 
-    /* ═══════════════════════════════════════════════
-       DL WEB NOTE
-       ═══════════════════════════════════════════════ */
-    .dl-web-note {
-      max-width: 520px; margin: 2.5rem auto 0;
-      padding: 1.25rem 1.5rem; border-radius: 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      font-size: 0.88rem; color: var(--text-secondary);
-      line-height: 1.7;
-    }
-    .dl-web-note strong { color: var(--text); }
+ /* ═══════════════════════════════════════════════
+ DL WEB NOTE
+ ═══════════════════════════════════════════════ */
+ .dl-web-note {
+ max-width: 520px; margin: 2.5rem auto 0;
+ padding: 1.25rem 1.5rem; border-radius: 12px;
+ background: var(--bg-card);
+ border: 1px solid var(--border);
+ font-size: 0.88rem; color: var(--text-secondary);
+ line-height: 1.7;
+ }
+ .dl-web-note strong { color: var(--text); }
 
-    /* ═══════════════════════════════════════════════
-       RESPONSIVE
-       ═══════════════════════════════════════════════ */
-    @media (max-width: 900px) {
-      .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 3rem; }
-      .hero-sub { margin-left: auto; margin-right: auto; max-width: 100%; }
-      .hero-actions { justify-content: center; }
-      .hero-proof { justify-content: center; }
-      .hero-visual { display: none; }
-      .pgrid, .fgrid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
-      .steps { grid-template-columns: 1fr; max-width: 320px; margin-left: auto; margin-right: auto; }
-      .steps::before { display: none; }
-      .prgrid, .coming-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
-      .proof-cards { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
-      .net-visual { flex-direction: column; align-items: center; }
-      .net-connector { transform: rotate(90deg); margin: -0.25rem 0; }
-      .dl-cards { flex-direction: column; align-items: center; }
-      .dl-card { width: 100%; max-width: 340px; }
-      .dl-web-note { margin-left: 1rem; margin-right: 1rem; }
-    }
-    @media (max-width: 640px) {
-      .nav-links { display: none; }
-      .nav-links.open {
-        display: flex; flex-direction: column;
-        position: absolute; top: 100%; left: 0; right: 0;
-        background: rgba(10,12,16,0.98);
-        backdrop-filter: blur(20px);
-        padding: 1.5rem 2rem; gap: 1rem;
-        border-bottom: 1px solid var(--border);
-      }
-      .nav-toggle { display: block; }
-      .hero { padding-top: 6rem; min-height: auto; }
-      section { padding: 4.5rem 1.25rem; }
-      .hero-proof { gap: 1.5rem; }
-      .hero-actions { flex-direction: column; align-items: stretch; }
-      .btn-main { text-align: center; justify-content: center; padding: 16px 24px; }
-      .btn-ghost { text-align: center; }
-      .sh { font-size: clamp(1.7rem, 6vw, 2.4rem); }
-      .ss { font-size: 0.95rem; }
-      .prcard { padding: 1.75rem; }
-      .proof-card { padding: 1.5rem; }
-      .proof-card-q { font-size: 0.95rem; }
-      .coming-card { padding: 1.5rem; }
-      .net-node { min-width: 130px; padding: 1rem 1.25rem; }
-      .net-badge { font-size: 0.72rem; padding: 6px 14px; }
-      .cta-trust { gap: 1rem; }
-      .cta-trust span { font-size: 0.75rem; }
-    }
-    @media (max-width: 380px) {
-      .hero h1 { font-size: 2rem; }
-      .hero-proof { flex-direction: column; gap: 0.75rem; align-items: center; }
-      .hero-proof-item { text-align: center; }
-      .pcard, .feat { padding: 1.25rem; }
-      .prcard { padding: 1.25rem; }
-      .pramt { font-size: 2.2rem; }
-    }
+ /* ═══════════════════════════════════════════════
+ RESPONSIVE
+ ═══════════════════════════════════════════════ */
+ @media (max-width: 900px) {
+ .hero-inner { grid-template-columns: 1fr; text-align: center; gap: 3rem; }
+ .hero-sub { margin-left: auto; margin-right: auto; max-width: 100%; }
+ .hero-actions { justify-content: center; }
+ .hero-proof { justify-content: center; }
+ .hero-visual { display: none; }
+ .pgrid, .fgrid { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
+ .steps { grid-template-columns: 1fr; max-width: 320px; margin-left: auto; margin-right: auto; }
+ .steps::before { display: none; }
+ .prgrid, .coming-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+ .proof-cards { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; }
+ .net-visual { flex-direction: column; align-items: center; }
+ .net-connector { transform: rotate(90deg); margin: -0.25rem 0; }
+ .dl-cards { flex-direction: column; align-items: center; }
+ .dl-card { width: 100%; max-width: 340px; }
+ .dl-web-note { margin-left: 1rem; margin-right: 1rem; }
+ }
+ @media (max-width: 640px) {
+ .nav-links { display: none; }
+ .nav-links.open {
+ display: flex; flex-direction: column;
+ position: absolute; top: 100%; left: 0; right: 0;
+ background: rgba(10,12,16,0.98);
+ backdrop-filter: blur(20px);
+ padding: 1.5rem 2rem; gap: 1rem;
+ border-bottom: 1px solid var(--border);
+ }
+ .nav-toggle { display: block; }
+ .hero { padding-top: 6rem; min-height: auto; }
+ section { padding: 4.5rem 1.25rem; }
+ .hero-proof { gap: 1.5rem; }
+ .hero-actions { flex-direction: column; align-items: stretch; }
+ .btn-main { text-align: center; justify-content: center; padding: 16px 24px; }
+ .btn-ghost { text-align: center; }
+ .sh { font-size: clamp(1.7rem, 6vw, 2.4rem); }
+ .ss { font-size: 0.95rem; }
+ .prcard { padding: 1.75rem; }
+ .proof-card { padding: 1.5rem; }
+ .proof-card-q { font-size: 0.95rem; }
+ .coming-card { padding: 1.5rem; }
+ .net-node { min-width: 130px; padding: 1rem 1.25rem; }
+ .net-badge { font-size: 0.72rem; padding: 6px 14px; }
+ .cta-trust { gap: 1rem; }
+ .cta-trust span { font-size: 0.75rem; }
+ }
+ @media (max-width: 380px) {
+ .hero h1 { font-size: 2rem; }
+ .hero-proof { flex-direction: column; gap: 0.75rem; align-items: center; }
+ .hero-proof-item { text-align: center; }
+ .pcard, .feat { padding: 1.25rem; }
+ .prcard { padding: 1.25rem; }
+ .pramt { font-size: 2.2rem; }
+ }
 
-    /* ═══════════════════════════════════════════════
-       REVEAL ANIMATIONS
-       ═══════════════════════════════════════════════ */
-    .rv {
-      opacity: 0; transform: translateY(28px);
-      transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .rv.vis { opacity: 1; transform: translateY(0); }
-    .rd1 { transition-delay: 0.12s; }
-    .rd2 { transition-delay: 0.24s; }
-    .rd3 { transition-delay: 0.36s; }
+ /* ═══════════════════════════════════════════════
+ REVEAL ANIMATIONS
+ ═══════════════════════════════════════════════ */
+ .rv {
+ opacity: 0; transform: translateY(28px);
+ transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+ transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+ }
+ .rv.vis { opacity: 1; transform: translateY(0); }
+ .rd1 { transition-delay: 0.12s; }
+ .rd2 { transition-delay: 0.24s; }
+ .rd3 { transition-delay: 0.36s; }
 
-    /* Fallback: if JS hasn't fired within 1.5s, show everything */
-    @keyframes revealFallback {
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .rv {
-      animation: revealFallback 0.6s ease forwards;
-      animation-delay: 0.3s;
-    }
-    .rv.rd1 { animation-delay: 0.45s; }
-    .rv.rd2 { animation-delay: 0.6s; }
-    .rv.rd3 { animation-delay: 0.75s; }
-    /* When JS observer is active, disable CSS fallback and use observer-driven .vis */
-    .js-observer .rv {
-      animation: none;
-      opacity: 0; transform: translateY(28px);
-    }
-    .js-observer .rv.vis { opacity: 1; transform: translateY(0); }
-  </style>
+ /* Fallback: if JS hasn't fired within 1.5s, show everything */
+ @keyframes revealFallback {
+ to { opacity: 1; transform: translateY(0); }
+ }
+ .rv {
+ animation: revealFallback 0.6s ease forwards;
+ animation-delay: 0.3s;
+ }
+ .rv.rd1 { animation-delay: 0.45s; }
+ .rv.rd2 { animation-delay: 0.6s; }
+ .rv.rd3 { animation-delay: 0.75s; }
+ /* When JS observer is active, disable CSS fallback and use observer-driven .vis */
+ .js-observer .rv {
+ animation: none;
+ opacity: 0; transform: translateY(28px);
+ }
+ .js-observer .rv.vis { opacity: 1; transform: translateY(0); }
+ </style>
 </head>
 <body>
 
-  <!-- NAV -->
-  <nav class="nav" id="nav">
-    <div class="nav-inner">
-      <a href="/" class="nav-logo">FIDDO</a>
-      <button class="nav-toggle" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-      <div class="nav-links">
-        <a href="#features" class="nav-link">Fonctionnalités</a>
-        <a href="#pricing" class="nav-link">Tarifs</a>
-        <a href="#how" class="nav-link">Comment ça marche</a>
-        <a href="#apps" class="nav-link">Apps</a>
-        <a href="/login" class="nav-login">Se connecter</a>
-        <a href="/login#register" class="nav-cta">Essai gratuit</a>
-      </div>
-    </div>
-  </nav>
+ <!-- NAV -->
+ <nav class="nav" id="nav">
+ <div class="nav-inner">
+ <a href="/" class="nav-logo">FIDDO</a>
+ <button class="nav-toggle" onclick="this.nextElementSibling.classList.toggle('open')" aria-label="Menu">
+ <span></span><span></span><span></span>
+ </button>
+ <div class="nav-links">
+ <a href="#features" class="nav-link">Fonctionnalités</a>
+ <a href="#pricing" class="nav-link">Tarifs</a>
+ <a href="#how" class="nav-link">Comment ça marche</a>
+ <a href="#apps" class="nav-link">Apps</a>
+ <a href="/login" class="nav-login">Se connecter</a>
+ <a href="/login#register" class="nav-cta">Essai gratuit</a>
+ </div>
+ </div>
+ </nav>
 
-  <!-- HERO -->
-  <section class="hero">
-    <div class="hero-grid"></div>
-    <div class="hero-inner">
-      <div>
-        <div class="hero-tag">
-          <span class="hero-tag-dot"></span>
-          Votre programme de fidélité. Pas un agrégateur.
-        </div>
-        <h1>Vos clients reviennent.<br><em>Vous savez pourquoi.</em></h1>
-        <p class="hero-sub">FIDDO n'est pas un agrégateur de cartes existantes. C'est une solution complète et abordable pour créer et gérer votre propre programme de fidélité digital. Vos clients cumulent des points, reçoivent leurs récompenses, et reviennent plus souvent — sans carte tampon à perdre.</p>
-        <div class="hero-actions">
-          <a href="/login#register" class="btn-main">Essai gratuit — 30 jours <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-          <a href="#how" class="btn-ghost">Comment ça marche</a>
-        </div>
-        <div class="hero-proof">
-          <div class="hero-proof-item">
-            <div class="hero-proof-val">30 jours</div>
-            <div class="hero-proof-label">d'essai gratuit</div>
-          </div>
-          <div class="hero-proof-item">
-            <div class="hero-proof-val">2 min</div>
-            <div class="hero-proof-label">pour s'inscrire</div>
-          </div>
-          <div class="hero-proof-item">
-            <div class="hero-proof-val">0 €</div>
-            <div class="hero-proof-label">de commission</div>
-          </div>
-        </div>
-      </div>
-      <div class="hero-visual">
-        <div class="mock-card">
-          <div class="mock-header">
-            <span class="mock-name">Sophie M.</span>
-            <span class="mock-badge">Fidèle</span>
-          </div>
-          <div class="mock-pts">
-            <div class="mock-pts-num">72</div>
-            <div class="mock-pts-label">points cumulés</div>
-          </div>
-          <div class="mock-bar">
-            <div class="mock-bar-track"><div class="mock-bar-fill"></div></div>
-            <div class="mock-bar-meta"><span>72 / 100 points</span><span>Récompense offerte</span></div>
-          </div>
-          <div class="mock-tx"><span>Aujourd'hui — Menu midi</span><span class="mock-tx-pts">+15 pts</span></div>
-          <div class="mock-tx"><span>Lundi — Dîner</span><span class="mock-tx-pts">+32 pts</span></div>
-        </div>
-        <div class="float-pill fp1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> +15 points crédités</div>
-        <div class="float-pill fp2">Récompense dans 28 pts</div>
-      </div>
-    </div>
-  </section>
+ <!-- HERO -->
+ <section class="hero">
+ <div class="hero-grid"></div>
+ <div class="hero-inner">
+ <div>
+ <div class="hero-tag">
+ <span class="hero-tag-dot"></span>
+ Votre programme de fidélité. Pas un agrégateur.
+ </div>
+ <h1>Vos clients reviennent.<br><em>Vous savez pourquoi.</em></h1>
+ <p class="hero-sub">FIDDO n'est pas un agrégateur de cartes existantes. C'est une solution complète et abordable pour créer et gérer votre propre programme de fidélité digital. Vos clients cumulent des points, reçoivent leurs récompenses, et reviennent plus souvent — sans carte tampon à perdre.</p>
+ <div class="hero-actions">
+ <a href="/login#register" class="btn-main">Essai gratuit — 30 jours <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+ <a href="#how" class="btn-ghost">Comment ça marche</a>
+ </div>
+ <div class="hero-proof">
+ <div class="hero-proof-item">
+ <div class="hero-proof-val">30 jours</div>
+ <div class="hero-proof-label">d'essai gratuit</div>
+ </div>
+ <div class="hero-proof-item">
+ <div class="hero-proof-val">2 min</div>
+ <div class="hero-proof-label">pour s'inscrire</div>
+ </div>
+ <div class="hero-proof-item">
+ <div class="hero-proof-val">0 €</div>
+ <div class="hero-proof-label">de commission</div>
+ </div>
+ </div>
+ </div>
+ <div class="hero-visual">
+ <div class="mock-card">
+ <div class="mock-header">
+ <span class="mock-name">Sophie M.</span>
+ <span class="mock-badge">Fidèle</span>
+ </div>
+ <div class="mock-pts">
+ <div class="mock-pts-num">72</div>
+ <div class="mock-pts-label">points cumulés</div>
+ </div>
+ <div class="mock-bar">
+ <div class="mock-bar-track"><div class="mock-bar-fill"></div></div>
+ <div class="mock-bar-meta"><span>72 / 100 points</span><span>Récompense offerte</span></div>
+ </div>
+ <div class="mock-tx"><span>Aujourd'hui — Menu midi</span><span class="mock-tx-pts">+15 pts</span></div>
+ <div class="mock-tx"><span>Lundi — Dîner</span><span class="mock-tx-pts">+32 pts</span></div>
+ </div>
+ <div class="float-pill fp1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> +15 points crédités</div>
+ <div class="float-pill fp2">Récompense dans 28 pts</div>
+ </div>
+ </div>
+ </section>
 
-  <!-- PROBLEM -->
-  <section class="problem">
-    <div class="si">
-      <span class="stag">Le constat</span>
-      <h2 class="sh">Les cartes tampons, c'est fini.</h2>
-      <p class="ss">80 % des cartes de fidélité papier sont perdues ou oubliées. Résultat : vos efforts de fidélisation passent à la trappe.</p>
-      <div class="pgrid">
-        <div class="pcard rv">
-          <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
-          <div class="ptitle">Cartes perdues, clients perdus</div>
-          <div class="ptext">Vos clients oublient leur carte, la jettent, ou l'ont laissée dans un autre portefeuille. Chaque carte perdue, c'est un client à reconvaincre.</div>
-        </div>
-        <div class="pcard rv rd1">
-          <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>
-          <div class="ptitle">Zéro visibilité sur la fidélité</div>
-          <div class="ptext">Qui revient ? Combien de fois ? Impossible de le savoir avec un tampon. Vous fidélisez à l'aveugle.</div>
-        </div>
-        <div class="pcard rv rd2">
-          <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-          <div class="ptitle">Solutions trop chères ou inadaptées</div>
-          <div class="ptext">Les apps existantes prennent des commissions ou demandent du matériel. Pas adapté à un commerce indépendant.</div>
-        </div>
-        <div class="pcard rv rd3">
-          <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.16 11.75l-1.72 1.71a5 5 0 0 0 7.07 7.07l1.72-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/></svg></div>
-          <div class="ptitle">Clients à reconquérir partout</div>
-          <div class="ptext">Chaque commerce repart de zéro. Aucun moyen de profiter d'une base de clients déjà engagés chez d'autres commerçants du quartier.</div>
-        </div>
-      </div>
-    </div>
-  </section>
+ <!-- PROBLEM -->
+ <section class="problem">
+ <div class="si">
+ <span class="stag">Le constat</span>
+ <h2 class="sh">Les cartes tampons, c'est fini.</h2>
+ <p class="ss">80 % des cartes de fidélité papier sont perdues ou oubliées. Résultat : vos efforts de fidélisation passent à la trappe.</p>
+ <div class="pgrid">
+ <div class="pcard rv">
+ <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+ <div class="ptitle">Cartes perdues, clients perdus</div>
+ <div class="ptext">Vos clients oublient leur carte, la jettent, ou l'ont laissée dans un autre portefeuille. Chaque carte perdue, c'est un client à reconvaincre.</div>
+ </div>
+ <div class="pcard rv rd1">
+ <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div>
+ <div class="ptitle">Zéro visibilité sur la fidélité</div>
+ <div class="ptext">Qui revient ? Combien de fois ? Impossible de le savoir avec un tampon. Vous fidélisez à l'aveugle.</div>
+ </div>
+ <div class="pcard rv rd2">
+ <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+ <div class="ptitle">Solutions trop chères ou inadaptées</div>
+ <div class="ptext">Les apps existantes prennent des commissions ou demandent du matériel. Pas adapté à un commerce indépendant.</div>
+ </div>
+ <div class="pcard rv rd3">
+ <div class="picon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.84 12.25l1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M5.16 11.75l-1.72 1.71a5 5 0 0 0 7.07 7.07l1.72-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/></svg></div>
+ <div class="ptitle">Clients à reconquérir partout</div>
+ <div class="ptext">Chaque commerce repart de zéro. Aucun moyen de profiter d'une base de clients déjà engagés chez d'autres commerçants du quartier.</div>
+ </div>
+ </div>
+ </div>
+ </section>
 
-  <!-- HOW -->
-  <section id="how" class="how">
-    <div class="si" style="text-align: center;">
-      <span class="stag">Comment ça marche</span>
-      <h2 class="sh">Prêt en 3 étapes</h2>
-      <p class="ss" style="margin: 0 auto 3.5rem;">Pas de matériel à acheter, pas de configuration complexe.</p>
-      <div class="steps">
-        <div class="step rv">
-          <div class="step-n">1</div>
-          <div class="step-t">Inscrivez-vous</div>
-          <div class="step-d">Créez votre compte en 2 minutes. Définissez vos règles : points par euro, récompense à offrir.</div>
-        </div>
-        <div class="step rv rd1">
-          <div class="step-n">2</div>
-          <div class="step-t">Créditez les points</div>
-          <div class="step-d">Votre caissier entre l'email ou le téléphone du client et le montant. Les points sont ajoutés automatiquement.</div>
-        </div>
-        <div class="step rv rd2">
-          <div class="step-n">3</div>
-          <div class="step-t">Le client revient</div>
-          <div class="step-d">Il reçoit un email avec son solde. Quand la récompense est atteinte, vous l'appliquez en un clic.</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-
-  <!-- NETWORK — "Ce qui change tout" -->
-  <section class="network">
-    <div class="si" style="text-align: center;">
-      <span class="stag">Ce qui change tout</span>
-      <h2 class="sh">Un réseau partagé. Un avantage unique.</h2>
-      <p class="ss" style="margin: 0 auto 1.5rem; max-width: 600px;">Vos clients ne s'inscrivent qu'une seule fois. Une fois reconnus par FIDDO chez vous, ils le sont automatiquement chez tous les commerçants du réseau.</p>
-      <p class="ss" style="margin: 0 auto 3.5rem; max-width: 600px;">Résultat : une expérience sans friction pour le client, et pour vous, un accès à une base de clients déjà engagés. Chaque nouveau commerçant qui rejoint FIDDO enrichit le réseau pour tous les autres.</p>
-      <div class="net-visual rv">
-        <div class="net-node">
-          <div class="net-node-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 2l0 7c0 3.31 2.69 6 6 6h2v7"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3"/></svg></div>
-          <div class="net-node-name">Pizzeria Roma</div>
-          <div class="net-node-type">Restaurant</div>
-        </div>
-        <div class="net-connector"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="16"><line x1="4" y1="8" x2="28" y2="8" stroke-dasharray="3 3" opacity="0.5"/></svg></div>
-        <div class="net-node" style="border-color: rgba(8,145,178,0.25); box-shadow: 0 0 20px var(--teal-glow);">
-          <div class="net-node-icon" style="font-size: 1.1rem; font-weight: 800; color: var(--teal);">FIDDO</div>
-          <div class="net-node-name">Réseau partagé</div>
-          <div class="net-node-type">1 inscription = partout</div>
-        </div>
-        <div class="net-connector"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="16"><line x1="4" y1="8" x2="28" y2="8" stroke-dasharray="3 3" opacity="0.5"/></svg></div>
-        <div class="net-node">
-          <div class="net-node-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
-          <div class="net-node-name">Barber Shop</div>
-          <div class="net-node-type">Coiffeur</div>
-        </div>
-      </div>
-      <div class="net-badge rv rd1">
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-        Un client inscrit chez l'un est reconnu chez tous
-      </div>
-    </div>
-  </section>
-
-  <!-- FEATURES -->
-  <section id="features" class="features">
-    <div class="si">
-      <span class="stag">Fonctionnalités</span>
-      <h2 class="sh">Tout ce qu'il faut. Rien de superflu.</h2>
-      <p class="ss">Conçu par et pour des commerçants. Pas de gadgets, juste ce qui marche.</p>
-      <div class="fgrid">
-        <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="feat-t">Tableau de bord</div><div class="feat-d">Clients actifs, fréquence de visite, top clients, récompenses réclamées. Analysez l'engagement et prenez des décisions éclairées, tout en un coup d'œil.</div></div>
-        <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="feat-t">Gestion d'équipe</div><div class="feat-d">Attribuez des rôles distincts — propriétaire, manager, caissier — avec des permissions adaptées. Chacun a les bons accès, vous gardez le contrôle total.</div></div>
-        <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><div class="feat-t">Récompenses flexibles</div><div class="feat-d">Cadeau offert, -10%, service gratuit… Vous définissez les règles de votre programme. FIDDO s'adapte à votre commerce, qu'il s'agisse d'une boutique locale ou d'une chaîne de restaurants.</div></div>
-        <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4" rx="0.5"/><line x1="22" y1="14" x2="22" y2="14.01"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="18" y2="22.01"/></svg></div><div class="feat-t">QR code client</div><div class="feat-d">Vos clients s'identifient eux-mêmes via QR code. Zéro friction au comptoir.</div></div>
-        <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div><div class="feat-t">Personnalisable</div><div class="feat-d">Adaptez chaque aspect de votre programme : identité visuelle, règles de fidélisation, messages et récompenses. Votre marque, votre style.</div></div>
-        <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div class="feat-t">Sécurisé et RGPD</div><div class="feat-d">Données isolées par commerce, hébergées en Europe. Conforme au RGPD.</div></div>
-        <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="feat-t">Export CSV</div><div class="feat-d">Exportez votre base clients quand vous voulez. Vos données vous appartiennent.</div></div>
-        <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.78.77L12 20.65l7.65-7.65.77-.77a5.4 5.4 0 0 0 0-7.65z"/></svg></div><div class="feat-t">Accompagnement dédié</div><div class="feat-d">Conseils personnalisés et mises à jour régulières. Notre équipe vous accompagne pour tirer le meilleur de FIDDO et rester à la pointe.</div></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- TESTIMONIALS -->
-  <section class="proof">
-    <div class="si rv proof-inner">
-      <span class="stag">Témoignages</span>
-      <h2 class="sh" style="text-align: center; margin-bottom: 2.5rem;">Ils utilisent FIDDO</h2>
-      <div class="proof-cards">
-        <div class="proof-card rv">
-          <div class="proof-card-mark">"</div>
-          <p class="proof-card-q">Depuis qu'on utilise FIDDO, on voit clairement quels clients reviennent. Le mois dernier, 34 récompenses réclamées — c'est 34 clients revenus grâce au programme.</p>
-          <div class="proof-card-a"><strong>Marco D.</strong> — Commerçant à Bruxelles</div>
-        </div>
-        <div class="proof-card rv rd1">
-          <div class="proof-card-mark">"</div>
-          <p class="proof-card-q">Le fait que nos clients soient reconnus dans tout le réseau FIDDO est un vrai plus. On profite d'une base de clients déjà fidélisés sans effort supplémentaire.</p>
-          <div class="proof-card-a"><strong>Karim D.</strong> — Restaurateur à Charleroi</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PRICING -->
-  <section id="pricing" class="pricing">
-    <div class="si" style="text-align: center;">
-      <span class="stag">Tarifs</span>
-      <h2 class="sh">Simple et transparent</h2>
-      <p class="ss" style="margin: 0 auto 3.5rem;">Pas de commission, pas de frais cachés. FIDDO se rembourse dès le premier client qui revient.</p>
-      <div class="prgrid">
-        <div class="prcard rv">
-          <div class="prname">Essentiel</div>
-          <div class="prdesc">Tout pour fidéliser vos clients</div>
-          <div class="prprice"><span class="pramt">29€</span><span class="prper">/ mois</span></div>
-          <div class="prnote">HTVA · Sans engagement</div>
-          <ul class="prlist">
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Programme de fidélité complet</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Gestion d'équipe illimitée</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Tableau de bord</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> QR code clients</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Export CSV</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Support par email</li>
-          </ul>
-          <a href="/login#register" class="prbtn prbtn-o">Commencer gratuitement</a>
-        </div>
-        <div class="prcard pop rv rd1">
-          <div class="prtag">Recommandé</div>
-          <div class="prname">Pro</div>
-          <div class="prdesc">Fidélité + communication clients</div>
-          <div class="prprice"><span class="pramt">49€</span><span class="prper">/ mois</span></div>
-          <div class="prnote">HTVA · Sans engagement</div>
-          <ul class="prlist">
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Tout le plan Essentiel</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Emails automatiques</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Campagnes SMS</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Statistiques avancées</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Personnalisation visuelle</li>
-            <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Support prioritaire</li>
-          </ul>
-          <a href="/login#register" class="prbtn prbtn-f">Commencer gratuitement</a>
-        </div>
-      </div>
-    </div>
-  </section>
+ <!-- HOW -->
+ <section id="how" class="how">
+ <div class="si" style="text-align: center;">
+ <span class="stag">Comment ça marche</span>
+ <h2 class="sh">Prêt en 3 étapes</h2>
+ <p class="ss" style="margin: 0 auto 3.5rem;">Pas de matériel à acheter, pas de configuration complexe.</p>
+ <div class="steps">
+ <div class="step rv">
+ <div class="step-n">1</div>
+ <div class="step-t">Inscrivez-vous</div>
+ <div class="step-d">Créez votre compte en 2 minutes. Définissez vos règles : points par euro, récompense à offrir.</div>
+ </div>
+ <div class="step rv rd1">
+ <div class="step-n">2</div>
+ <div class="step-t">Créditez les points</div>
+ <div class="step-d">Votre caissier entre l'email ou le téléphone du client et le montant. Les points sont ajoutés automatiquement.</div>
+ </div>
+ <div class="step rv rd2">
+ <div class="step-n">3</div>
+ <div class="step-t">Le client revient</div>
+ <div class="step-d">Il reçoit un email avec son solde. Quand la récompense est atteinte, vous l'appliquez en un clic.</div>
+ </div>
+ </div>
+ </div>
+ </section>
 
 
-  <!-- COMING SOON -->
-  <section class="coming">
-    <div class="si" style="text-align: center;">
-      <span class="stag">Bientôt disponible</span>
-      <h2 class="sh">FIDDO continue d'évoluer.</h2>
-      <p class="ss" style="margin: 0 auto 3.5rem;">De nouvelles fonctionnalités arrivent pour aller encore plus loin.</p>
-      <div class="coming-grid">
-        <div class="coming-card rv">
-          <div class="coming-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
-          <div class="coming-tag">Prochainement</div>
-          <div class="coming-t">Carte en ligne</div>
-          <div class="coming-d">Intégrez une carte de fidélité directement sur votre site web. Vos clients pourront consulter leur progression depuis votre propre vitrine en ligne.</div>
-        </div>
-        <div class="coming-card rv rd1">
-          <div class="coming-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
-          <div class="coming-tag">Prochainement</div>
-          <div class="coming-t">Commande en ligne</div>
-          <div class="coming-d">Idéal pour la restauration : proposez la commande de plats à emporter directement depuis l'app. Simplifiez vos opérations et boostez vos ventes.</div>
-        </div>
-      </div>
-    </div>
-  </section>
+ <!-- NETWORK — "Ce qui change tout" -->
+ <section class="network">
+ <div class="si" style="text-align: center;">
+ <span class="stag">Ce qui change tout</span>
+ <h2 class="sh">Un réseau partagé. Un avantage unique.</h2>
+ <p class="ss" style="margin: 0 auto 1.5rem; max-width: 600px;">Vos clients ne s'inscrivent qu'une seule fois. Une fois reconnus par FIDDO chez vous, ils le sont automatiquement chez tous les commerçants du réseau.</p>
+ <p class="ss" style="margin: 0 auto 3.5rem; max-width: 600px;">Résultat : une expérience sans friction pour le client, et pour vous, un accès à une base de clients déjà engagés. Chaque nouveau commerçant qui rejoint FIDDO enrichit le réseau pour tous les autres.</p>
+ <div class="net-visual rv">
+ <div class="net-node">
+ <div class="net-node-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><path d="M3 2l0 7c0 3.31 2.69 6 6 6h2v7"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3"/></svg></div>
+ <div class="net-node-name">Pizzeria Roma</div>
+ <div class="net-node-type">Restaurant</div>
+ </div>
+ <div class="net-connector"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="16"><line x1="4" y1="8" x2="28" y2="8" stroke-dasharray="3 3" opacity="0.5"/></svg></div>
+ <div class="net-node" style="border-color: rgba(8,145,178,0.25); box-shadow: 0 0 20px var(--teal-glow);">
+ <div class="net-node-icon" style="font-size: 1.1rem; font-weight: 800; color: var(--teal);">FIDDO</div>
+ <div class="net-node-name">Réseau partagé</div>
+ <div class="net-node-type">1 inscription = partout</div>
+ </div>
+ <div class="net-connector"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="32" height="16"><line x1="4" y1="8" x2="28" y2="8" stroke-dasharray="3 3" opacity="0.5"/></svg></div>
+ <div class="net-node">
+ <div class="net-node-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="28" height="28"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg></div>
+ <div class="net-node-name">Barber Shop</div>
+ <div class="net-node-type">Coiffeur</div>
+ </div>
+ </div>
+ <div class="net-badge rv rd1">
+ <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="flex-shrink:0"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+ Un client inscrit chez l'un est reconnu chez tous
+ </div>
+ </div>
+ </section>
 
-  <!-- CTA -->
-  <section class="cta">
-    <div class="si rv">
-      <span class="stag">Prêt ?</span>
-      <h2 class="sh">Votre programme de fidélité en 2 minutes.</h2>
-      <p class="ss" style="margin: 0 auto 2.5rem; text-align: center;">30 jours d'essai gratuit. Pas de carte de crédit. Annulez quand vous voulez.</p>
-      <a href="/login#register" class="btn-main">Créer mon compte gratuitement <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
-      <div class="cta-trust">
-        <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align:-2px;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>Conforme RGPD</span>
-        <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Hébergé en Europe</span>
-        <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align:-2px;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Sans engagement</span>
-      </div>
-    </div>
-  </section>
+ <!-- FEATURES -->
+ <section id="features" class="features">
+ <div class="si">
+ <span class="stag">Fonctionnalités</span>
+ <h2 class="sh">Tout ce qu'il faut. Rien de superflu.</h2>
+ <p class="ss">Conçu par et pour des commerçants. Pas de gadgets, juste ce qui marche.</p>
+ <div class="fgrid">
+ <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="feat-t">Tableau de bord</div><div class="feat-d">Clients actifs, fréquence de visite, top clients, récompenses réclamées. Analysez l'engagement et prenez des décisions éclairées, tout en un coup d'œil.</div></div>
+ <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="feat-t">Gestion d'équipe</div><div class="feat-d">Attribuez des rôles distincts — propriétaire, manager, caissier — avec des permissions adaptées. Chacun a les bons accès, vous gardez le contrôle total.</div></div>
+ <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><div class="feat-t">Récompenses flexibles</div><div class="feat-d">Cadeau offert, -10%, service gratuit… Vous définissez les règles de votre programme. FIDDO s'adapte à votre commerce, qu'il s'agisse d'une boutique locale ou d'une chaîne de restaurants.</div></div>
+ <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4" rx="0.5"/><line x1="22" y1="14" x2="22" y2="14.01"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="18" y2="22.01"/></svg></div><div class="feat-t">QR code client</div><div class="feat-d">Vos clients s'identifient eux-mêmes via QR code. Zéro friction au comptoir.</div></div>
+ <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div><div class="feat-t">Personnalisable</div><div class="feat-d">Adaptez chaque aspect de votre programme : identité visuelle, règles de fidélisation, messages et récompenses. Votre marque, votre style.</div></div>
+ <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div class="feat-t">Sécurisé et RGPD</div><div class="feat-d">Données isolées par commerce, hébergées en Europe. Conforme au RGPD.</div></div>
+ <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="feat-t">Export CSV</div><div class="feat-d">Exportez votre base clients quand vous voulez. Vos données vous appartiennent.</div></div>
+ <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.78.77L12 20.65l7.65-7.65.77-.77a5.4 5.4 0 0 0 0-7.65z"/></svg></div><div class="feat-t">Accompagnement dédié</div><div class="feat-d">Conseils personnalisés et mises à jour régulières. Notre équipe vous accompagne pour tirer le meilleur de FIDDO et rester à la pointe.</div></div>
+ </div>
+ </div>
+ </section>
 
-  <!-- DOWNLOAD APPS -->
-  <section id="apps" class="downloads">
-    <div class="si rv">
-      <span class="stag">Disponible partout</span>
-      <h2 class="sh">Téléchargez les apps FIDDO</h2>
-      <p class="ss" style="margin: 0 auto; text-align: center;">Vos points et votre commerce, accessibles à tout moment.</p>
-      
-      <div class="dl-cards">
-        <div class="dl-card">
-          <div class="dl-icon dl-icon-client">F</div>
-          <div class="dl-name">FIDDO</div>
-          <div class="dl-desc">L'app pour les clients.<br>Vos cartes de fidélité, vos points, vos récompenses.</div>
-          <a href="/downloads/FIDDO-Client.apk" class="dl-btn dl-btn-client"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger l'APK</a>
-          <div class="dl-badge">Android · bientôt sur iOS</div>
-        </div>
-        <div class="dl-card">
-          <div class="dl-icon dl-icon-merchant">F<span style="font-size:0.7em;opacity:0.7">PRO</span></div>
-          <div class="dl-name">FIDDO Pro</div>
-          <div class="dl-desc">L'app pour les commerçants.<br>Créditez des points, scannez, gérez vos clients.</div>
-          <a href="/downloads/FIDDO-Pro.apk" class="dl-btn dl-btn-merchant"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger l'APK</a>
-          <div class="dl-badge">Android · bientôt sur iOS</div>
-        </div>
-      </div>
-      <div class="dl-web-note rv">
-        <strong>Pas envie d'installer une app ?</strong> La version web fonctionne tout aussi bien, côté client comme côté commerçant. Aucune installation nécessaire.
-      </div>
-    </div>
-  </section>
+ <!-- TESTIMONIALS -->
+ <section class="proof">
+ <div class="si rv proof-inner">
+ <span class="stag">Témoignages</span>
+ <h2 class="sh" style="text-align: center; margin-bottom: 2.5rem;">Ils utilisent FIDDO</h2>
+ <div class="proof-cards">
+ <div class="proof-card rv">
+ <div class="proof-card-mark">"</div>
+ <p class="proof-card-q">Depuis qu'on utilise FIDDO, on voit clairement quels clients reviennent. Le mois dernier, 34 récompenses réclamées — c'est 34 clients revenus grâce au programme.</p>
+ <div class="proof-card-a"><strong>Marco D.</strong> — Commerçant à Bruxelles</div>
+ </div>
+ <div class="proof-card rv rd1">
+ <div class="proof-card-mark">"</div>
+ <p class="proof-card-q">Le fait que nos clients soient reconnus dans tout le réseau FIDDO est un vrai plus. On profite d'une base de clients déjà fidélisés sans effort supplémentaire.</p>
+ <div class="proof-card-a"><strong>Karim D.</strong> — Restaurateur à Charleroi</div>
+ </div>
+ </div>
+ </div>
+ </section>
+
+ <!-- PRICING -->
+ <section id="pricing" class="pricing">
+ <div class="si" style="text-align: center;">
+ <span class="stag">Tarifs</span>
+ <h2 class="sh">Simple et transparent</h2>
+ <p class="ss" style="margin: 0 auto 3.5rem;">Pas de commission, pas de frais cachés. FIDDO se rembourse dès le premier client qui revient.</p>
+ <div class="prgrid">
+ <div class="prcard rv">
+ <div class="prname">Essentiel</div>
+ <div class="prdesc">Tout pour fidéliser vos clients</div>
+ <div class="prprice"><span class="pramt">29€</span><span class="prper">/ mois</span></div>
+ <div class="prnote">HTVA · Sans engagement</div>
+ <ul class="prlist">
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Programme de fidélité complet</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Gestion d'équipe illimitée</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Tableau de bord</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> QR code clients</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Export CSV</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Support par email</li>
+ </ul>
+ <a href="/login#register" class="prbtn prbtn-o">Commencer gratuitement</a>
+ </div>
+ <div class="prcard pop rv rd1">
+ <div class="prtag">Recommandé</div>
+ <div class="prname">Pro</div>
+ <div class="prdesc">Fidélité + communication clients</div>
+ <div class="prprice"><span class="pramt">49€</span><span class="prper">/ mois</span></div>
+ <div class="prnote">HTVA · Sans engagement</div>
+ <ul class="prlist">
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Tout le plan Essentiel</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Emails automatiques</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Campagnes SMS</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Statistiques avancées</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Personnalisation visuelle</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Support prioritaire</li>
+ </ul>
+ <a href="/login#register" class="prbtn prbtn-f">Commencer gratuitement</a>
+ </div>
+ </div>
+ </div>
+ </section>
 
 
-  <!-- FOOTER -->
-  <footer class="footer">
-    <div class="footer-in">
-      <div class="footer-b">FIDDO</div>
-      <div class="footer-l">
-        <a href="#features" class="footer-a">Fonctionnalités</a>
-        <a href="#pricing" class="footer-a">Tarifs</a>
-        <a href="#apps" class="footer-a">Apps</a>
-        <a href="/cdn-cgi/l/email-protection#b6c5c3c6c6d9c4c2f6d0dfd2d2d998d4d3" class="footer-a">Contact</a>
-      </div>
-      <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="92e1e7e2e2fde0e6d2f4fbf6f6fdbcf0f7">[email&#160;protected]</a></div>
-      <div class="footer-c" style="margin-top: 0.5rem; opacity: 0.5;">Powered by <strong>H3001</strong></div>
-    </div>
-  </footer>
+ <!-- COMING SOON -->
+ <section class="coming">
+ <div class="si" style="text-align: center;">
+ <span class="stag">Bientôt disponible</span>
+ <h2 class="sh">FIDDO continue d'évoluer.</h2>
+ <p class="ss" style="margin: 0 auto 3.5rem;">De nouvelles fonctionnalités arrivent pour aller encore plus loin.</p>
+ <div class="coming-grid">
+ <div class="coming-card rv">
+ <div class="coming-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
+ <div class="coming-tag">Prochainement</div>
+ <div class="coming-t">Carte en ligne</div>
+ <div class="coming-d">Intégrez une carte de fidélité directement sur votre site web. Vos clients pourront consulter leur progression depuis votre propre vitrine en ligne.</div>
+ </div>
+ <div class="coming-card rv rd1">
+ <div class="coming-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
+ <div class="coming-tag">Prochainement</div>
+ <div class="coming-t">Commande en ligne</div>
+ <div class="coming-d">Idéal pour la restauration : proposez la commande de plats à emporter directement depuis l'app. Simplifiez vos opérations et boostez vos ventes.</div>
+ </div>
+ </div>
+ </div>
+ </section>
 
-  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-    // Nav scroll effect
-    const nav = document.getElementById('nav');
-    window.addEventListener('scroll', () => {
-      nav.classList.toggle('scrolled', window.scrollY > 50);
-    }, { passive: true });
+ <!-- CTA -->
+ <section class="cta">
+ <div class="si rv">
+ <span class="stag">Prêt ?</span>
+ <h2 class="sh">Votre programme de fidélité en 2 minutes.</h2>
+ <p class="ss" style="margin: 0 auto 2.5rem; text-align: center;">30 jours d'essai gratuit. Pas de carte de crédit. Annulez quand vous voulez.</p>
+ <a href="/login#register" class="btn-main">Créer mon compte gratuitement <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
+ <div class="cta-trust">
+ <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align:-2px;margin-right:4px"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>Conforme RGPD</span>
+ <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align:-2px;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Hébergé en Europe</span>
+ <span><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" style="vertical-align:-2px;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Sans engagement</span>
+ </div>
+ </div>
+ </section>
 
-    // Reveal on scroll — progressive enhancement
-    if ('IntersectionObserver' in window) {
-      document.documentElement.classList.add('js-observer');
-      const obs = new IntersectionObserver(entries => {
-        entries.forEach(e => {
-          if (e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target); }
-        });
-      }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
-      document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+ <!-- DOWNLOAD APPS -->
+ <section id="apps" class="downloads">
+ <div class="si rv">
+ <span class="stag">Disponible partout</span>
+ <h2 class="sh">Téléchargez les apps FIDDO</h2>
+ <p class="ss" style="margin: 0 auto; text-align: center;">Vos points et votre commerce, accessibles à tout moment.</p>
+ 
+ <div class="dl-cards">
+ <div class="dl-card">
+ <div class="dl-icon dl-icon-client">F</div>
+ <div class="dl-name">FIDDO</div>
+ <div class="dl-desc">L'app pour les clients.<br>Vos cartes de fidélité, vos points, vos récompenses.</div>
+ <a href="/downloads/FIDDO-Client.apk" class="dl-btn dl-btn-client"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger l'APK</a>
+ <div class="dl-badge">Android · bientôt sur iOS</div>
+ </div>
+ <div class="dl-card">
+ <div class="dl-icon dl-icon-merchant">F<span style="font-size:0.7em;opacity:0.7">PRO</span></div>
+ <div class="dl-name">FIDDO Pro</div>
+ <div class="dl-desc">L'app pour les commerçants.<br>Créditez des points, scannez, gérez vos clients.</div>
+ <a href="/downloads/FIDDO-Pro.apk" class="dl-btn dl-btn-merchant"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Télécharger l'APK</a>
+ <div class="dl-badge">Android · bientôt sur iOS</div>
+ </div>
+ </div>
+ <div class="dl-web-note rv">
+ <strong>Pas envie d'installer une app ?</strong> La version web fonctionne tout aussi bien, côté client comme côté commerçant. Aucune installation nécessaire.
+ </div>
+ </div>
+ </section>
 
-      // Force-reveal elements already in viewport on load
-      requestAnimationFrame(() => {
-        document.querySelectorAll('.rv').forEach(el => {
-          const rect = el.getBoundingClientRect();
-          if (rect.top < window.innerHeight) {
-            el.classList.add('vis');
-            obs.unobserve(el);
-          }
-        });
-      });
-    }
 
-    // Smooth scroll for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(a => {
-      a.addEventListener('click', e => {
-        const t = document.querySelector(a.getAttribute('href'));
-        if (t) {
-          e.preventDefault();
-          t.scrollIntoVi
+ <!-- FOOTER -->
+ <footer class="footer">
+ <div class="footer-in">
+ <div class="footer-b">FIDDO</div>
+ <div class="footer-l">
+ <a href="#features" class="footer-a">Fonctionnalités</a>
+ <a href="#pricing" class="footer-a">Tarifs</a>
+ <a href="#apps" class="footer-a">Apps</a>
+ <a href="/cdn-cgi/l/email-protection#b6c5c3c6c6d9c4c2f6d0dfd2d2d998d4d3" class="footer-a">Contact</a>
+ </div>
+ <div class="footer-c">© 2025 FIDDO · Programme de fidélité pour commerces belges · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="92e1e7e2e2fde0e6d2f4fbf6f6fdbcf0f7">[email&#160;protected]</a></div>
+ <div class="footer-c" style="margin-top: 0.5rem; opacity: 0.5;">Powered by <strong>H3001</strong></div>
+ </div>
+ </footer>
+
+ <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+ // Nav scroll effect
+ const nav = document.getElementById('nav');
+ window.addEventListener('scroll', () => {
+ nav.classList.toggle('scrolled', window.scrollY > 50);
+ }, { passive: true });
+
+ // Reveal on scroll — progressive enhancement
+ if ('IntersectionObserver' in window) {
+ document.documentElement.classList.add('js-observer');
+ const obs = new IntersectionObserver(entries => {
+ entries.forEach(e => {
+ if (e.isIntersecting) { e.target.classList.add('vis'); obs.unobserve(e.target); }
+ });
+ }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+ document.querySelectorAll('.rv').forEach(el => obs.observe(el));
+
+ // Force-reveal elements already in viewport on load
+ requestAnimationFrame(() => {
+ document.querySelectorAll('.rv').forEach(el => {
+ const rect = el.getBoundingClientRect();
+ if (rect.top < window.innerHeight) {
+ el.classList.add('vis');
+ obs.unobserve(el);
+ }
+ });
+ });
+ }
+
+ // Smooth scroll for anchor links
+ document.querySelectorAll('a[href^="#"]').forEach(a => {
+ a.addEventListener('click', e => {
+ const t = document.querySelector(a.getAttribute('href'));
+ if (t) {
+ e.preventDefault();
+ t.scrollIntoVi

@@ -1,1292 +1,1292 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="/manifest.json">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="FIDDO">
-  <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
-  <meta name="theme-color" content="#0891B2">
-  <title>Créditer — FIDDO</title>
-  <link rel="stylesheet" href="/css/styles.css">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    /* ═══════════════════════════════════════════════════════
-       CREDIT PAGE — Premium POS redesign (CSS-only upgrade)
-       ═══════════════════════════════════════════════════════ */
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <link rel="manifest" href="/manifest.json">
+ <meta name="apple-mobile-web-app-capable" content="yes">
+ <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+ <meta name="apple-mobile-web-app-title" content="FIDDO">
+ <link rel="apple-touch-icon" href="/img/apple-touch-icon.png">
+ <meta name="theme-color" content="#0891B2">
+ <title>Créditer — FIDDO</title>
+ <link rel="stylesheet" href="/css/styles.css">
+ <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <style>
+ /* ═══════════════════════════════════════════════════════
+ CREDIT PAGE — Premium POS redesign (CSS-only upgrade)
+ ═══════════════════════════════════════════════════════ */
 
-    .credit-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
-    .credit-page * { box-sizing: border-box; }
+ .credit-page { font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif; }
+ .credit-page * { box-sizing: border-box; }
 
-    /* ── Centered layout ── */
-    .credit-wrap {
-      max-width: 520px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
+ /* ── Centered layout ── */
+ .credit-wrap {
+ max-width: 520px;
+ margin: 0 auto;
+ padding: 1rem;
+ }
 
-    .pg-title {
-      font-size: 1.05rem; font-weight: 700; color: #1E293B;
-      margin: 0.4rem 0 0.8rem; letter-spacing: -0.3px;
-    }
+ .pg-title {
+ font-size: 1.05rem; font-weight: 700; color: #1E293B;
+ margin: 0.4rem 0 0.8rem; letter-spacing: -0.3px;
+ }
 
-    /* ── Card ── */
-    .c-card {
-      background: white; border-radius: 14px;
-      box-shadow:
-        0 0 0 1px rgba(0,0,0,0.03),
-        0 2px 4px rgba(0,0,0,0.02),
-        0 12px 36px rgba(0,0,0,0.06);
-      overflow: hidden; position: relative;
-    }
-    .c-card-body { padding: 1rem 1.1rem 1.15rem; }
-    .credit-page .alert {
-      border-radius: 8px; font-size: 0.82rem;
-      padding: 0.5rem 0.75rem; margin-bottom: 0.8rem;
-    }
+ /* ── Card ── */
+ .c-card {
+ background: white; border-radius: 14px;
+ box-shadow:
+ 0 0 0 1px rgba(0,0,0,0.03),
+ 0 2px 4px rgba(0,0,0,0.02),
+ 0 12px 36px rgba(0,0,0,0.06);
+ overflow: hidden; position: relative;
+ }
+ .c-card-body { padding: 1rem 1.1rem 1.15rem; }
+ .credit-page .alert {
+ border-radius: 8px; font-size: 0.82rem;
+ padding: 0.5rem 0.75rem; margin-bottom: 0.8rem;
+ }
 
-    /* ══════ SEGMENTED CONTROL ══════ */
-    .seg {
-      display: flex;
-      background: #F1F5F9; border-radius: 10px; padding: 3px;
-      margin-bottom: 0.9rem;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
-    }
-    .seg button {
-      flex: 1;
-      padding: 0.45rem; border: none; background: transparent;
-      border-radius: 8px; font-family: inherit; font-weight: 600;
-      font-size: 0.75rem; color: #94A3B8; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 4px;
-      transition: all 0.2s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .seg button svg {
-      width: 13px; height: 13px; flex-shrink: 0;
-      transition: stroke 0.2s ease;
-    }
-    .seg button.active {
-      background: white; color: #0f172a;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.03);
-    }
-    .seg button.active svg { stroke: var(--primary, #0891B2); }
-    .seg button:not(.active):hover { color: #64748B; background: rgba(255,255,255,0.5); }
+ /* ══════ SEGMENTED CONTROL ══════ */
+ .seg {
+ display: flex;
+ background: #F1F5F9; border-radius: 10px; padding: 3px;
+ margin-bottom: 0.9rem;
+ box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);
+ }
+ .seg button {
+ flex: 1;
+ padding: 0.45rem; border: none; background: transparent;
+ border-radius: 8px; font-family: inherit; font-weight: 600;
+ font-size: 0.75rem; color: #94A3B8; cursor: pointer;
+ display: flex; align-items: center; justify-content: center; gap: 4px;
+ transition: all 0.2s ease;
+ -webkit-tap-highlight-color: transparent;
+ }
+ .seg button svg {
+ width: 13px; height: 13px; flex-shrink: 0;
+ transition: stroke 0.2s ease;
+ }
+ .seg button.active {
+ background: white; color: #0f172a;
+ box-shadow: 0 1px 4px rgba(0,0,0,0.08), 0 0 0 0.5px rgba(0,0,0,0.03);
+ }
+ .seg button.active svg { stroke: var(--primary, #0891B2); }
+ .seg button:not(.active):hover { color: #64748B; background: rgba(255,255,255,0.5); }
 
-    /* ══════ FORM ══════ */
-    .credit-page .form-group { margin-bottom: 0.85rem; }
-    .credit-page .form-label {
-      display: block; font-size: 0.68rem; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.5px;
-      color: #94A3B8; margin-bottom: 0.28rem;
-    }
-    .credit-page .form-control {
-      width: 100%; padding: 0.55rem 0.7rem;
-      border: 1.5px solid #E2E8F0; border-radius: 9px;
-      font-family: inherit; font-size: 0.9rem; font-weight: 500;
-      color: #1E293B; background: #fff;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .credit-page .form-control:focus {
-      outline: none; border-color: var(--primary, #0891B2);
-      box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
-    }
-    .credit-page .form-control::placeholder { color: #CBD5E1; font-weight: 400; }
-    .credit-page .form-hint { font-size: 0.67rem; color: #94A3B8; margin-top: 0.15rem; }
+ /* ══════ FORM ══════ */
+ .credit-page .form-group { margin-bottom: 0.85rem; }
+ .credit-page .form-label {
+ display: block; font-size: 0.68rem; font-weight: 600;
+ text-transform: uppercase; letter-spacing: 0.5px;
+ color: #94A3B8; margin-bottom: 0.28rem;
+ }
+ .credit-page .form-control {
+ width: 100%; padding: 0.55rem 0.7rem;
+ border: 1.5px solid #E2E8F0; border-radius: 9px;
+ font-family: inherit; font-size: 0.9rem; font-weight: 500;
+ color: #1E293B; background: #fff;
+ transition: border-color 0.2s, box-shadow 0.2s;
+ }
+ .credit-page .form-control:focus {
+ outline: none; border-color: var(--primary, #0891B2);
+ box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
+ }
+ .credit-page .form-control::placeholder { color: #CBD5E1; font-weight: 400; }
+ .credit-page .form-hint { font-size: 0.67rem; color: #94A3B8; margin-top: 0.15rem; }
 
-    /* ── Input wrap + clear ── */
-    .input-wrap { position: relative; }
-    .input-wrap .form-control { padding-right: 28px; }
-    .btn-clear {
-      position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
-      background: #F1F5F9; border: none;
-      width: 20px; height: 20px; border-radius: 50%;
-      font-size: 0.72rem; color: #94A3B8;
-      cursor: pointer; display: none;
-      align-items: center; justify-content: center;
-      line-height: 1; transition: all 0.15s;
-    }
-    .btn-clear:hover { background: #FEE2E2; color: #DC2626; }
-    .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
-    .input-wrap .form-control.has-value ~ .btn-clear { display: flex; }
+ /* ── Input wrap + clear ── */
+ .input-wrap { position: relative; }
+ .input-wrap .form-control { padding-right: 28px; }
+ .btn-clear {
+ position: absolute; right: 7px; top: 50%; transform: translateY(-50%);
+ background: #F1F5F9; border: none;
+ width: 20px; height: 20px; border-radius: 50%;
+ font-size: 0.72rem; color: #94A3B8;
+ cursor: pointer; display: none;
+ align-items: center; justify-content: center;
+ line-height: 1; transition: all 0.15s;
+ }
+ .btn-clear:hover { background: #FEE2E2; color: #DC2626; }
+ .input-wrap .form-control:not(:placeholder-shown) ~ .btn-clear,
+ .input-wrap .form-control.has-value ~ .btn-clear { display: flex; }
 
-    /* ── Typo warning ── */
-    .typo-warning {
-      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 7px;
-      padding: 0.38rem 0.65rem; margin-top: 0.25rem; font-size: 0.73rem; color: #92400E;
-      display: flex; align-items: center; gap: 0.4rem;
-      animation: slideUp 0.2s ease;
-    }
-    .typo-warning button {
-      background: linear-gradient(135deg, #F59E0B, #D97706); color: white;
-      border: none; border-radius: 5px;
-      padding: 2px 8px; font-size: 0.68rem; cursor: pointer; font-weight: 600;
-      white-space: nowrap; font-family: inherit;
-    }
+ /* ── Typo warning ── */
+ .typo-warning {
+ background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 7px;
+ padding: 0.38rem 0.65rem; margin-top: 0.25rem; font-size: 0.73rem; color: #92400E;
+ display: flex; align-items: center; gap: 0.4rem;
+ animation: slideUp 0.2s ease;
+ }
+ .typo-warning button {
+ background: linear-gradient(135deg, #F59E0B, #D97706); color: white;
+ border: none; border-radius: 5px;
+ padding: 2px 8px; font-size: 0.68rem; cursor: pointer; font-weight: 600;
+ white-space: nowrap; font-family: inherit;
+ }
 
-    /* ── Autocomplete ── */
-    .autocomplete-list {
-      position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
-      background: white; border: 1.5px solid #E2E8F0; border-top: none;
-      border-radius: 0 0 9px 9px; max-height: 200px; overflow-y: auto;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.1); display: none;
-    }
-    .autocomplete-list.show { display: block; }
-    .ac-item {
-      padding: 0.45rem 0.7rem; cursor: pointer;
-      border-bottom: 1px solid #F8FAFC; font-size: 0.78rem;
-      transition: background 0.1s;
-    }
-    .ac-item:last-child { border-bottom: none; }
-    .ac-item:hover, .ac-item.selected { background: #F0FDFA; }
-    .ac-item .ac-name { font-weight: 600; color: #1E293B; }
-    .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
-    .ac-item .ac-pts { float: right; color: var(--primary, #0891B2); font-weight: 700; font-size: 0.78rem; }
+ /* ── Autocomplete ── */
+ .autocomplete-list {
+ position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
+ background: white; border: 1.5px solid #E2E8F0; border-top: none;
+ border-radius: 0 0 9px 9px; max-height: 200px; overflow-y: auto;
+ box-shadow: 0 8px 24px rgba(0,0,0,0.1); display: none;
+ }
+ .autocomplete-list.show { display: block; }
+ .ac-item {
+ padding: 0.45rem 0.7rem; cursor: pointer;
+ border-bottom: 1px solid #F8FAFC; font-size: 0.78rem;
+ transition: background 0.1s;
+ }
+ .ac-item:last-child { border-bottom: none; }
+ .ac-item:hover, .ac-item.selected { background: #F0FDFA; }
+ .ac-item .ac-name { font-weight: 600; color: #1E293B; }
+ .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
+ .ac-item .ac-pts { float: right; color: var(--primary, #0891B2); font-weight: 700; font-size: 0.78rem; }
 
-    /* ── Lookup strip ── */
-    .lookup-strip {
-      border-radius: 9px; padding: 0.5rem 0.7rem;
-      font-size: 0.78rem; margin-top: 0.35rem;
-      line-height: 1.5; display: none;
-      animation: slideUp 0.25s ease;
-    }
-    .lookup-strip.show { display: block; }
-    .lookup-strip.found {
-      background: linear-gradient(135deg, #F0FDFA, #ECFDF5);
-      border: 1px solid #A7F3D0;
-    }
-    .lookup-strip.new-client {
-      background: #F8FAFC; border: 1.5px dashed #CBD5E1;
-    }
-    .lookup-strip .l-name { font-weight: 600; }
-    .lookup-strip .l-pts { float: right; font-weight: 700; color: var(--primary, #0891B2); }
-    .lookup-strip .l-meta { font-size: 0.7rem; color: #64748B; }
-    .lookup-strip .l-prog { background: #E2E8F0; height: 3.5px; border-radius: 2px; margin: 0.25rem 0; overflow: hidden; }
-    .lookup-strip .l-prog-fill {
-      height: 100%; border-radius: 2px;
-      background: linear-gradient(90deg, var(--primary, #0891B2), #14B8A6);
-      transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-    }
-    .lookup-strip .l-reward {
-      background: linear-gradient(135deg, #059669, #10B981); color: white;
-      padding: 0.35rem 0.55rem; border-radius: 7px; text-align: center;
-      margin-top: 0.3rem; cursor: pointer; font-size: 0.73rem; font-weight: 600;
-      box-shadow: 0 2px 8px rgba(5,150,105,0.2);
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .lookup-strip .l-reward:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(5,150,105,0.3);
-    }
+ /* ── Lookup strip ── */
+ .lookup-strip {
+ border-radius: 9px; padding: 0.5rem 0.7rem;
+ font-size: 0.78rem; margin-top: 0.35rem;
+ line-height: 1.5; display: none;
+ animation: slideUp 0.25s ease;
+ }
+ .lookup-strip.show { display: block; }
+ .lookup-strip.found {
+ background: linear-gradient(135deg, #F0FDFA, #ECFDF5);
+ border: 1px solid #A7F3D0;
+ }
+ .lookup-strip.new-client {
+ background: #F8FAFC; border: 1.5px dashed #CBD5E1;
+ }
+ .lookup-strip .l-name { font-weight: 600; }
+ .lookup-strip .l-pts { float: right; font-weight: 700; color: var(--primary, #0891B2); }
+ .lookup-strip .l-meta { font-size: 0.7rem; color: #64748B; }
+ .lookup-strip .l-prog { background: #E2E8F0; height: 3.5px; border-radius: 2px; margin: 0.25rem 0; overflow: hidden; }
+ .lookup-strip .l-prog-fill {
+ height: 100%; border-radius: 2px;
+ background: linear-gradient(90deg, var(--primary, #0891B2), #14B8A6);
+ transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+ }
+ .lookup-strip .l-reward {
+ background: linear-gradient(135deg, #059669, #10B981); color: white;
+ padding: 0.35rem 0.55rem; border-radius: 7px; text-align: center;
+ margin-top: 0.3rem; cursor: pointer; font-size: 0.73rem; font-weight: 600;
+ box-shadow: 0 2px 8px rgba(5,150,105,0.2);
+ transition: transform 0.15s, box-shadow 0.15s;
+ }
+ .lookup-strip .l-reward:hover {
+ transform: translateY(-1px);
+ box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+ }
 
-    /* ── Amount row + points badge ── */
-    .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; align-items: end; }
-    .pts-badge {
-      display: inline-block;
-      background: #0f172a; color: #67E8F9;
-      padding: 2px 9px; border-radius: 20px;
-      font-size: 0.68rem; font-weight: 700;
-      margin-left: 0.3rem; vertical-align: middle;
-      letter-spacing: 0.2px;
-      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
-    }
-    .pts-badge.pop { transform: scale(1.15); }
+ /* ── Amount row + points badge ── */
+ .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; align-items: end; }
+ .pts-badge {
+ display: inline-block;
+ background: #0f172a; color: #67E8F9;
+ padding: 2px 9px; border-radius: 20px;
+ font-size: 0.68rem; font-weight: 700;
+ margin-left: 0.3rem; vertical-align: middle;
+ letter-spacing: 0.2px;
+ transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+ }
+ .pts-badge.pop { transform: scale(1.15); }
 
-    /* ══════ SUBMIT ══════ */
-    .btn-credit {
-      width: 100%; padding: 0.68rem; border: none; border-radius: 10px;
-      background: linear-gradient(135deg, #0891B2 0%, #06B6D4 60%, #14B8A6 100%);
-      background-size: 200% auto;
-      color: white; font-family: inherit;
-      font-size: 0.9rem; font-weight: 700; cursor: pointer;
-      box-shadow: 0 4px 14px rgba(8,145,178,0.25);
-      transition: all 0.3s ease;
-    }
-    .btn-credit:hover:not(:disabled) {
-      background-position: right center;
-      box-shadow: 0 6px 22px rgba(8,145,178,0.35);
-      transform: translateY(-1px);
-    }
-    .btn-credit:active:not(:disabled) { transform: translateY(0); }
-    .btn-credit:disabled { opacity: 0.55; cursor: not-allowed; }
+ /* ══════ SUBMIT ══════ */
+ .btn-credit {
+ width: 100%; padding: 0.68rem; border: none; border-radius: 10px;
+ background: linear-gradient(135deg, #0891B2 0%, #06B6D4 60%, #14B8A6 100%);
+ background-size: 200% auto;
+ color: white; font-family: inherit;
+ font-size: 0.9rem; font-weight: 700; cursor: pointer;
+ box-shadow: 0 4px 14px rgba(8,145,178,0.25);
+ transition: all 0.3s ease;
+ }
+ .btn-credit:hover:not(:disabled) {
+ background-position: right center;
+ box-shadow: 0 6px 22px rgba(8,145,178,0.35);
+ transform: translateY(-1px);
+ }
+ .btn-credit:active:not(:disabled) { transform: translateY(0); }
+ .btn-credit:disabled { opacity: 0.55; cursor: not-allowed; }
 
-    /* ═══════════════════════════════════════════════════════
-       SUCCESS OVERLAY
-       ═══════════════════════════════════════════════════════ */
-    .success-overlay {
-      position: absolute; inset: 0; z-index: 10;
-      background: white; border-radius: 14px;
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      text-align: center; padding: 2rem 1.5rem;
-    }
-    .success-overlay.show {
-      display: flex;
-      animation: scaleIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
-    }
+ /* ═══════════════════════════════════════════════════════
+ SUCCESS OVERLAY
+ ═══════════════════════════════════════════════════════ */
+ .success-overlay {
+ position: absolute; inset: 0; z-index: 10;
+ background: white; border-radius: 14px;
+ display: none; flex-direction: column;
+ align-items: center; justify-content: center;
+ text-align: center; padding: 2rem 1.5rem;
+ }
+ .success-overlay.show {
+ display: flex;
+ animation: scaleIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+ }
 
-    .success-pts {
-      font-size: 2.6rem; font-weight: 700; color: #059669;
-      line-height: 1; letter-spacing: -1.5px;
-      animation: slideUp 0.35s ease 0.08s both;
-    }
-    .success-label {
-      font-size: 0.73rem; color: #10B981; text-transform: uppercase;
-      letter-spacing: 1px; margin-top: 3px; font-weight: 600;
-      animation: slideUp 0.35s ease 0.14s both;
-    }
-    .success-info {
-      margin-top: 1rem; font-size: 0.84rem; color: #1E293B;
-      line-height: 1.7;
-      background: #F0FDF4; border: 1px solid #BBF7D0;
-      border-radius: 10px; padding: 0.75rem 1.2rem;
-      min-width: 240px;
-      animation: slideUp 0.35s ease 0.2s both;
-    }
-    .success-info strong { color: #047857; }
-    .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
-    .success-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #CFFAFE, #A7F3D0);
-      color: #065F46; padding: 2px 10px; border-radius: 12px;
-      font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
-    }
-    .success-reward {
-      display: none; margin-top: 1rem; padding: 0.65rem 1.25rem;
-      background: linear-gradient(135deg, #059669, #10B981);
-      color: white; border: none; border-radius: 9px;
-      font-family: inherit; font-size: 0.82rem; font-weight: 600;
-      cursor: pointer; transition: all 0.2s; width: 100%; max-width: 300px;
-      box-shadow: 0 3px 10px rgba(5,150,105,0.25);
-    }
-    .success-reward:hover { box-shadow: 0 5px 16px rgba(5,150,105,0.35); transform: translateY(-1px); }
-    .success-reward.show { display: block; }
-    .success-btn {
-      margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 9px;
-      background: linear-gradient(135deg, #0891B2, #06B6D4); color: white;
-      font-family: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
-      box-shadow: 0 2px 6px rgba(8,145,178,0.18);
-      transition: all 0.2s;
-    }
-    .success-btn:hover { box-shadow: 0 3px 10px rgba(8,145,178,0.28); }
+ .success-pts {
+ font-size: 2.6rem; font-weight: 700; color: #059669;
+ line-height: 1; letter-spacing: -1.5px;
+ animation: slideUp 0.35s ease 0.08s both;
+ }
+ .success-label {
+ font-size: 0.73rem; color: #10B981; text-transform: uppercase;
+ letter-spacing: 1px; margin-top: 3px; font-weight: 600;
+ animation: slideUp 0.35s ease 0.14s both;
+ }
+ .success-info {
+ margin-top: 1rem; font-size: 0.84rem; color: #1E293B;
+ line-height: 1.7;
+ background: #F0FDF4; border: 1px solid #BBF7D0;
+ border-radius: 10px; padding: 0.75rem 1.2rem;
+ min-width: 240px;
+ animation: slideUp 0.35s ease 0.2s both;
+ }
+ .success-info strong { color: #047857; }
+ .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
+ .success-badge {
+ display: inline-block;
+ background: linear-gradient(135deg, #CFFAFE, #A7F3D0);
+ color: #065F46; padding: 2px 10px; border-radius: 12px;
+ font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
+ }
+ .success-reward {
+ display: none; margin-top: 1rem; padding: 0.65rem 1.25rem;
+ background: linear-gradient(135deg, #059669, #10B981);
+ color: white; border: none; border-radius: 9px;
+ font-family: inherit; font-size: 0.82rem; font-weight: 600;
+ cursor: pointer; transition: all 0.2s; width: 100%; max-width: 300px;
+ box-shadow: 0 3px 10px rgba(5,150,105,0.25);
+ }
+ .success-reward:hover { box-shadow: 0 5px 16px rgba(5,150,105,0.35); transform: translateY(-1px); }
+ .success-reward.show { display: block; }
+ .success-btn {
+ margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 9px;
+ background: linear-gradient(135deg, #0891B2, #06B6D4); color: white;
+ font-family: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
+ box-shadow: 0 2px 6px rgba(8,145,178,0.18);
+ transition: all 0.2s;
+ }
+ .success-btn:hover { box-shadow: 0 3px 10px rgba(8,145,178,0.28); }
 
-    /* ═══════════════════════════════════════════════════════
-       QR
-       ═══════════════════════════════════════════════════════ */
-    .qr-box {
-      text-align: center; padding: 1.1rem;
-      background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
-      border: 1.5px solid #E2E8F0;
-      border-radius: 10px; margin-bottom: 0.8rem;
-    }
-    .qr-box .qr-sub { font-size: 0.73rem; color: #64748B; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: 500; }
-    .qr-box .qr-sub svg { width: 14px; height: 14px; }
+ /* ═══════════════════════════════════════════════════════
+ QR
+ ═══════════════════════════════════════════════════════ */
+ .qr-box {
+ text-align: center; padding: 1.1rem;
+ background: linear-gradient(135deg, #F8FAFC, #F1F5F9);
+ border: 1.5px solid #E2E8F0;
+ border-radius: 10px; margin-bottom: 0.8rem;
+ }
+ .qr-box .qr-sub { font-size: 0.73rem; color: #64748B; margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: center; gap: 5px; font-weight: 500; }
+ .qr-box .qr-sub svg { width: 14px; height: 14px; }
 
-    .qr-frame {
-      position: relative; display: inline-block; padding: 8px;
-      background: white; border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    }
-    .qr-frame::after {
-      content: '';
-      position: absolute; inset: -4px;
-      border-radius: 14px;
-      border: 2px dashed #CBD5E1;
-      opacity: 0.4;
-      animation: qrPulse 3s ease-in-out infinite;
-    }
-    @keyframes qrPulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.6; } }
-    .qr-frame img { display: block; border-radius: 3px; }
+ .qr-frame {
+ position: relative; display: inline-block; padding: 8px;
+ background: white; border-radius: 10px;
+ box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+ }
+ .qr-frame::after {
+ content: '';
+ position: absolute; inset: -4px;
+ border-radius: 14px;
+ border: 2px dashed #CBD5E1;
+ opacity: 0.4;
+ animation: qrPulse 3s ease-in-out infinite;
+ }
+ @keyframes qrPulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.6; } }
+ .qr-frame img { display: block; border-radius: 3px; }
 
-    .qr-fullscreen-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      margin-top: 0.65rem; padding: 6px 14px;
-      background: white; border: 1px solid #E2E8F0; border-radius: 8px;
-      font-family: inherit; font-size: 0.72rem; font-weight: 600;
-      color: #64748B; cursor: pointer; transition: all 0.2s;
-    }
-    .qr-fullscreen-btn:hover { border-color: var(--primary, #0891B2); color: var(--primary, #0891B2); }
-    .qr-fullscreen-btn svg { width: 13px; height: 13px; }
+ .qr-fullscreen-btn {
+ display: inline-flex; align-items: center; gap: 5px;
+ margin-top: 0.65rem; padding: 6px 14px;
+ background: white; border: 1px solid #E2E8F0; border-radius: 8px;
+ font-family: inherit; font-size: 0.72rem; font-weight: 600;
+ color: #64748B; cursor: pointer; transition: all 0.2s;
+ }
+ .qr-fullscreen-btn:hover { border-color: var(--primary, #0891B2); color: var(--primary, #0891B2); }
+ .qr-fullscreen-btn svg { width: 13px; height: 13px; }
 
-    /* ── Duplicate warning ── */
-    .dup-warning {
-      background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
-      padding: 0.5rem 0.65rem; margin-top: 0.35rem; font-size: 0.73rem;
-      color: #92400E; line-height: 1.5; animation: fadeSlide 0.3s ease;
-    }
-    .dup-warning svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; flex-shrink: 0; }
-    .dup-warning-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
-    .dup-match {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 5px 7px; background: rgba(245,158,11,0.08); border-radius: 6px;
-      margin-top: 3px; cursor: pointer; transition: background 0.15s;
-    }
-    .dup-match:hover { background: rgba(245,158,11,0.15); }
-    .dup-match-info { font-size: 0.7rem; }
-    .dup-match-name { font-weight: 600; color: #78350F; }
-    .dup-match-id { color: #92400E; }
-    .dup-match-use { font-size: 0.62rem; color: #B45309; font-weight: 600; white-space: nowrap; }
+ /* ── Duplicate warning ── */
+ .dup-warning {
+ background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
+ padding: 0.5rem 0.65rem; margin-top: 0.35rem; font-size: 0.73rem;
+ color: #92400E; line-height: 1.5; animation: fadeSlide 0.3s ease;
+ }
+ .dup-warning svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; flex-shrink: 0; }
+ .dup-warning-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
+ .dup-match {
+ display: flex; justify-content: space-between; align-items: center;
+ padding: 5px 7px; background: rgba(245,158,11,0.08); border-radius: 6px;
+ margin-top: 3px; cursor: pointer; transition: background 0.15s;
+ }
+ .dup-match:hover { background: rgba(245,158,11,0.15); }
+ .dup-match-info { font-size: 0.7rem; }
+ .dup-match-name { font-weight: 600; color: #78350F; }
+ .dup-match-id { color: #92400E; }
+ .dup-match-use { font-size: 0.62rem; color: #B45309; font-weight: 600; white-space: nowrap; }
 
-    /* ═══════════════════════════════════════════════════════
-       KEYFRAMES
-       ═══════════════════════════════════════════════════════ */
-    @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeSlide { from { opacity: 0; transform: translateY(-4px); } }
+ /* ═══════════════════════════════════════════════════════
+ KEYFRAMES
+ ═══════════════════════════════════════════════════════ */
+ @keyframes scaleIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+ @keyframes slideUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+ @keyframes fadeSlide { from { opacity: 0; transform: translateY(-4px); } }
 
-    /* ═══════════════════════════════════════════════════════
-       RESPONSIVE
-       ═══════════════════════════════════════════════════════ */
-    @media (max-width: 768px) {
-      .credit-wrap { padding: 0.4rem; }
-      .pg-title { font-size: 0.92rem; margin: 0.3rem 0 0.5rem; }
-      .c-card-body { padding: 0.8rem 0.75rem 0.9rem; }
+ /* ═══════════════════════════════════════════════════════
+ RESPONSIVE
+ ═══════════════════════════════════════════════════════ */
+ @media (max-width: 768px) {
+ .credit-wrap { padding: 0.4rem; }
+ .pg-title { font-size: 0.92rem; margin: 0.3rem 0 0.5rem; }
+ .c-card-body { padding: 0.8rem 0.75rem 0.9rem; }
 
-      .seg { padding: 3px; gap: 2px; }
-      .seg button { min-height: 44px; font-size: 0.78rem; padding: 0.35rem 0.2rem; }
-      .seg button svg { width: 15px; height: 15px; }
+ .seg { padding: 3px; gap: 2px; }
+ .seg button { min-height: 44px; font-size: 0.78rem; padding: 0.35rem 0.2rem; }
+ .seg button svg { width: 15px; height: 15px; }
 
-      .credit-page .form-control { font-size: 1rem; padding: 0.6rem 0.75rem; }
-      .credit-page .form-label { font-size: 0.66rem; }
+ .credit-page .form-control { font-size: 1rem; padding: 0.6rem 0.75rem; }
+ .credit-page .form-label { font-size: 0.66rem; }
 
-      /* Amount + Notes stacked */
-      .row-2 { grid-template-columns: 1fr; gap: 0.5rem; }
+ /* Amount + Notes stacked */
+ .row-2 { grid-template-columns: 1fr; gap: 0.5rem; }
 
-      .btn-credit { min-height: 50px; font-size: 0.92rem; border-radius: 12px; }
+ .btn-credit { min-height: 50px; font-size: 0.92rem; border-radius: 12px; }
 
-      .lookup-strip { font-size: 0.8rem; padding: 0.5rem 0.7rem; }
-      .lookup-strip .l-reward { min-height: 42px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; }
+ .lookup-strip { font-size: 0.8rem; padding: 0.5rem 0.7rem; }
+ .lookup-strip .l-reward { min-height: 42px; display: flex; align-items: center; justify-content: center; font-size: 0.78rem; }
 
-      .qr-box { padding: 0.8rem; }
-      .qr-fullscreen-btn { min-height: 36px; padding: 8px 16px; font-size: 0.75rem; }
+ .qr-box { padding: 0.8rem; }
+ .qr-fullscreen-btn { min-height: 36px; padding: 8px 16px; font-size: 0.75rem; }
 
-      #scan-reader { min-height: 220px; }
-      .ac-item { padding: 0.55rem 0.7rem; min-height: 44px; }
+ #scan-reader { min-height: 220px; }
+ .ac-item { padding: 0.55rem 0.7rem; min-height: 44px; }
 
-      .success-overlay { padding: 1.5rem 1rem; }
-      .success-pts { font-size: 2rem; }
-      .success-info { min-width: auto; }
-      .dup-match { min-height: 40px; padding: 6px 8px; }
-    }
+ .success-overlay { padding: 1.5rem 1rem; }
+ .success-pts { font-size: 2rem; }
+ .success-info { min-width: auto; }
+ .dup-match { min-height: 40px; padding: 6px 8px; }
+ }
 
-    @media (max-width: 380px) {
-      .seg button { font-size: 0.72rem; }
-      .seg button svg { width: 13px; height: 13px; }
-      .credit-page .form-control { font-size: 1rem; padding: 0.55rem 0.6rem; }
-    }
-  </style>
+ @media (max-width: 380px) {
+ .seg button { font-size: 0.72rem; }
+ .seg button svg { width: 13px; height: 13px; }
+ .credit-page .form-control { font-size: 1rem; padding: 0.55rem 0.6rem; }
+ }
+ </style>
 </head>
 <body class="credit-page">
-  <nav class="navbar">
-    <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
-    <div class="navbar-menu"></div>
-  </nav>
-
-  <div class="credit-wrap">
-    <h1 class="pg-title">Créditer des points</h1>
-
-    <div class="c-card">
-      <div class="c-card-body">
-        <div id="credit-alert"></div>
-
-        <div id="credit-form" autocomplete="off">
-          <!-- Segment toggle -->
-          <div class="seg">
-            <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              Email
-            </button>
-            <button type="button" id="toggle-phone" onclick="switchMode('phone')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
-              Tél
-            </button>
-            <button type="button" id="toggle-qr" onclick="switchMode('qr')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14"/><line x1="21" y1="21" x2="21" y2="21"/></svg>
-              QR
-            </button>
-            <button type="button" id="toggle-scan" onclick="switchMode('scan')">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-              Scan
-            </button>
-          </div>
-
-          <!-- Email -->
-          <div class="form-group" id="field-email">
-            <label class="form-label">Adresse email</label>
-            <div class="input-wrap">
-              <input type="text" inputmode="email" id="client-email" name="xfid_e7k" class="form-control" placeholder="client@email.com" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-              <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
-              <div class="autocomplete-list" id="ac-email"></div>
-            </div>
-            <div id="typo-email"></div>
-            <div class="lookup-strip" id="lookup-email"></div>
-          </div>
-
-          <!-- Phone -->
-          <div class="form-group" id="field-phone" style="display:none;">
-            <label class="form-label">Numéro de téléphone</label>
-            <div class="input-wrap">
-              <input type="tel" id="client-phone" name="xfid_p3m" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-              <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
-              <div class="autocomplete-list" id="ac-phone"></div>
-            </div>
-            <div class="form-hint">+32…, 0032…, 04…</div>
-            <div class="lookup-strip" id="lookup-phone"></div>
-          </div>
-
-          <!-- QR (static) -->
-          <div id="field-qr" style="display:none;">
-            <div class="qr-box" id="qr-inline">
-              <div class="qr-sub">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
-                Présentez ce QR au client
-              </div>
-              <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
-              <br>
-              <button type="button" class="qr-fullscreen-btn" onclick="showQRFullscreen()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                Plein écran
-              </button>
-            </div>
-
-            <!-- Pending identifications -->
-            <div id="pending-clients" style="margin-top:0.75rem;"></div>
-            <div class="lookup-strip" id="lookup-qr"></div>
-          </div>
-
-          <!-- Scanner (camera) -->
-          <div id="field-scan" style="display:none;">
-            <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;">
-              <div id="scan-reader" style="width:100%;min-height:250px;"></div>
-            </div>
-            <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
-              Scannez le QR du client
-            </div>
-            <div class="lookup-strip" id="lookup-scan"></div>
-          </div>
-
-          <!-- Duplicate warning -->
-          <div id="dup-container"></div>
-
-          <!-- Name -->
-          <div class="form-group">
-            <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
-            <div class="input-wrap">
-              <input type="text" id="client-name" name="xfid_n2q" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-              <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
-            </div>
-          </div>
-
-          <!-- Amount + Notes -->
-          <div class="row-2">
-            <div class="form-group">
-              <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
-              <div class="input-wrap">
-                <input type="number" id="amount" name="xfid_a8v" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-                <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
-              <div class="input-wrap">
-                <input type="text" id="notes" name="xfid_r5w" class="form-control" placeholder="Menu midi…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
-                <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" class="btn-credit" id="submit-btn">Créditer les points</button>
-        </div>
-      </div>
-
-      <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
-      <div class="success-overlay" id="success-overlay">
-        <div class="success-pts" id="s-pts"></div>
-        <div class="success-label">Crédités ✓</div>
-        <div class="success-info" id="s-info"></div>
-        <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()">🎁 Appliquer la récompense</button>
-        <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- Fullscreen QR overlay (for table service) -->
-  <div id="qr-fullscreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="closeQRFullscreen()">
-    <div style="text-align:center;">
-      <div style="font-size:1.1rem; font-weight:600; color:#1E293B; margin-bottom:0.5rem;" id="qr-fs-merchant"></div>
-      <div style="font-size:0.8rem; color:#64748B; margin-bottom:1.5rem;">Scannez pour gagner vos points fidélité</div>
-      <div id="qr-fs-canvas" style="display:inline-block; padding:16px; background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.1);"></div>
-      <div style="margin-top:1.5rem; font-size:0.7rem; color:#94A3B8;">Appuyez n'importe où pour fermer</div>
-    </div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-  <script src="/js/app.js"></script>
-  <script>
-    if (!requireAuth()) throw 'Not authenticated';
-
-    const merchant = Auth.getMerchant();
-    const staff = Auth.getStaff();
-    let currentMode = 'email';
-    let lastCreditKey = null; // anti-double-credit
-    let lookupIsNew = false;  // true when current client is new
-
-    // ═══════════════════════════════════════════════════════
-    // CREDIT METHODS — filter based on merchant preferences
-    // ═══════════════════════════════════════════════════════
-
-    (async () => {
-      try {
-        const data = await API.preferences.get();
-        const prefs = data.preferences || {};
-        const cm = prefs.credit_methods
-          ? (typeof prefs.credit_methods === 'string' ? JSON.parse(prefs.credit_methods) : prefs.credit_methods)
-          : { email: true, phone: true, qr: true, scan: true };
-
-        const methods = ['email', 'phone', 'qr', 'scan'];
-        methods.forEach(m => {
-          if (cm[m] === false) {
-            const btn = document.getElementById('toggle-' + m);
-            if (btn) btn.style.display = 'none';
-          }
-        });
-
-        // Switch to first enabled method
-        const firstEnabled = methods.find(m => cm[m] !== false);
-        if (firstEnabled && firstEnabled !== 'email') {
-          switchMode(firstEnabled);
-        } else if (!cm.email) {
-          switchMode(firstEnabled || 'email');
-        }
-      } catch (_) { /* defaults — show all */ }
-    })();
-
-    // ═══════════════════════════════════════════════════════
-    // LOOKUP — inline strip under the active field
-    // ═══════════════════════════════════════════════════════
-
-    function getLookupEl() {
-      return document.getElementById('lookup-' + currentMode);
-    }
-
-    function showLookup(data) {
-      const el = getLookupEl();
-      if (!el) return;
-
-      if (!data.found) {
-        lookupIsNew = true;
-        el.className = 'lookup-strip show new-client';
-        el.innerHTML = 'Nouveau client — sera créé au crédit.';
-        checkNearDuplicates();
-        return;
-      }
-      const c = data.client;
-      if (data.isNew) {
-        lookupIsNew = true;
-        el.className = 'lookup-strip show new-client';
-        el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + esc(c.name) : '');
-        if (c.name && !document.getElementById('client-name').value) {
-          document.getElementById('client-name').value = c.name;
-          document.getElementById('client-name').classList.add('has-value');
-        }
-        return;
-      }
-
-      lookupIsNew = false;
-      el.className = 'lookup-strip show found';
-      const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
-      let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
-        '<span class="l-name">' + esc(c.name || c.email || c.phone) + '</span>' +
-        (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
-        '<div class="l-meta">' + c.visit_count + ' visite(s) · ' + c.points_balance + '/' + c.reward_threshold + '</div>' +
-        '<div class="l-prog"><div class="l-prog-fill" style="width:' + pct + '%"></div></div>';
-      if (c.can_redeem) {
-        h += '<div class="l-reward" onclick="redeemReward(' + c.id + ')">' +
-          esc(c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
-      }
-      el.innerHTML = h;
-
-      if (c.name && !document.getElementById('client-name').value) {
-        document.getElementById('client-name').value = c.name;
-        document.getElementById('client-name').classList.add('has-value');
-      }
-    }
-
-    function hideLookup() {
-      document.querySelectorAll('.lookup-strip').forEach(el => {
-        el.classList.remove('show');
-        el.innerHTML = '';
-      });
-      document.getElementById('dup-container').innerHTML = '';
-      lookupIsNew = false;
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // PRE-FILL FROM URL
-    // ═══════════════════════════════════════════════════════
-    (function() {
-      const p = new URLSearchParams(window.location.search);
-      if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); }
-      else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); }
-      if (p.get('name')) document.getElementById('client-name').value = p.get('name');
-      if (p.get('email') || p.get('phone')) setTimeout(triggerLookup, 500);
-      if (p.toString()) window.history.replaceState({}, '', window.location.pathname);
-    })();
-
-    // ═══════════════════════════════════════════════════════
-    // MODE SWITCH
-    // ═══════════════════════════════════════════════════════
-
-    function getFirstEnabledMode() {
-      const methods = ['email', 'phone', 'qr', 'scan'];
-      return methods.find(m => {
-        const btn = document.getElementById('toggle-' + m);
-        return btn && btn.style.display !== 'none';
-      }) || 'email';
-    }
-
-    function resetToDefaultMode() {
-      switchMode(getFirstEnabledMode());
-    }
-
-    function switchMode(mode) {
-      if (currentMode === 'qr' && mode !== 'qr') {
-        stopPendingPoll();
-      }
-      if (currentMode === 'scan' && mode !== 'scan') {
-        stopScanner();
-      }
-      currentMode = mode;
-      document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
-      document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
-      document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
-      document.getElementById('toggle-scan').classList.toggle('active', mode === 'scan');
-      document.getElementById('field-email').style.display = mode === 'email' ? '' : 'none';
-      document.getElementById('field-phone').style.display = mode === 'phone' ? '' : 'none';
-      document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
-      document.getElementById('field-scan').style.display = mode === 'scan' ? '' : 'none';
-      if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
-      if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
-      document.getElementById('client-name').value = ''; document.getElementById('client-name').classList.remove('has-value');
-      qrVerifyTokenValue = null;
-      hideLookup();
-      if (mode === 'qr') startPendingPoll();
-      if (mode === 'scan') startScanner();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // CLEAR
-    // ═══════════════════════════════════════════════════════
-    function clearField(id) {
-      const el = document.getElementById(id);
-      el.value = ''; el.focus(); el.dispatchEvent(new Event('input'));
-      if (id === 'amount') document.getElementById('pts-badge').textContent = '0 pts';
-    }
-    document.querySelectorAll('.input-wrap .form-control').forEach(el => {
-      el.addEventListener('input', () => el.classList.toggle('has-value', el.value.length > 0));
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // POINTS BADGE
-    // ═══════════════════════════════════════════════════════
-    document.getElementById('amount').addEventListener('input', (e) => {
-      const pts = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
-      document.getElementById('pts-badge').textContent = pts + ' pts';
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // EMAIL TYPO
-    // ═══════════════════════════════════════════════════════
-    const TYPOS = {
-      'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com',
-      'gamil.com':'gmail.com','gnail.com':'gmail.com','gmali.com':'gmail.com',
-      'gmai.com':'gmail.com','gmail.co':'gmail.com','gmail.be':'gmail.com',
-      'hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmaill.com':'hotmail.com',
-      'hotmial.com':'hotmail.com','hotamil.com':'hotmail.com',
-      'outloo.com':'outlook.com','outlok.com':'outlook.com',
-      'yahooo.com':'yahoo.com','yaho.com':'yahoo.com','yahooo.fr':'yahoo.fr',
-      'iclould.com':'icloud.com','iclou.com':'icloud.com',
-    };
-    function checkEmailTypo(v) {
-      const c = document.getElementById('typo-email'); c.innerHTML = '';
-      if (!v || !v.includes('@')) return;
-      const parts = v.split('@'); if (parts.length !== 2) return;
-      const fix = TYPOS[parts[1].toLowerCase()];
-      if (fix) {
-        const corrected = parts[0] + '@' + fix;
-        c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + esc(corrected) + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + esc(corrected) + '\')">Corriger</button></div>';
-      }
-    }
-    function applyTypo(v) {
-      document.getElementById('client-email').value = v;
-      document.getElementById('typo-email').innerHTML = '';
-      triggerLookup();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // AUTOCOMPLETE
-    // ═══════════════════════════════════════════════════════
-    let acTimer;
-    function setupAC(inputId, listId) {
-      const inp = document.getElementById(inputId), list = document.getElementById(listId);
-      inp.addEventListener('input', () => {
-        clearTimeout(acTimer);
-        const v = inp.value.trim();
-        triggerLookup();
-        if (v.length < 3) { list.classList.remove('show'); if (inputId === 'client-email') checkEmailTypo(v); return; }
-        if (inputId === 'client-email') checkEmailTypo(v);
-        acTimer = setTimeout(async () => {
-          try {
-            const d = await API.clients.searchGlobal(v);
-            if (!d.clients || !d.clients.length) { list.classList.remove('show'); return; }
-            list.innerHTML = d.clients.slice(0, 6).map(c =>
-              '<div class="ac-item" data-email="' + esc(c.email || '') + '" data-phone="' + esc(c.phone || '') + '" data-name="' + esc(c.name || '') + '">' +
-              '<span class="ac-pts">' + (c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>') + '</span>' +
-              '<div class="ac-name">' + esc(c.name || c.email || c.phone || '?') + '</div>' +
-              '<div class="ac-meta">' + esc(c.email || '') + (c.email && c.phone ? ' · ' : '') + esc(c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
-            ).join('');
-            list.classList.add('show');
-            list.querySelectorAll('.ac-item').forEach(item => {
-              item.addEventListener('click', () => {
-                const e = item.dataset.email, p = item.dataset.phone, n = item.dataset.name;
-                if (currentMode === 'email' && e) { inp.value = e; inp.classList.add('has-value'); }
-                else if (currentMode === 'phone' && p) { inp.value = p; inp.classList.add('has-value'); }
-                else if (e) { switchMode('email'); document.getElementById('client-email').value = e; }
-                else if (p) { switchMode('phone'); document.getElementById('client-phone').value = p; }
-                if (n) { document.getElementById('client-name').value = n; document.getElementById('client-name').classList.add('has-value'); }
-                list.classList.remove('show');
-                document.getElementById('typo-email').innerHTML = '';
-                triggerLookup();
-              });
-            });
-          } catch (e) { list.classList.remove('show'); }
-        }, 350);
-      });
-      document.addEventListener('click', (e) => { if (!inp.contains(e.target) && !list.contains(e.target)) list.classList.remove('show'); });
-    }
-    setupAC('client-email', 'ac-email');
-    setupAC('client-phone', 'ac-phone');
-
-    // ═══════════════════════════════════════════════════════
-    // LOOKUP
-    // ═══════════════════════════════════════════════════════
-    let lookupTimer;
-    function triggerLookup() {
-      clearTimeout(lookupTimer);
-      const email = document.getElementById('client-email').value.trim();
-      const phone = document.getElementById('client-phone').value.trim();
-      if (!email && !phone) { hideLookup(); return; }
-      lookupTimer = setTimeout(async () => {
-        try {
-          const p = {};
-          if (email) p.email = email;
-          if (phone) p.phone = phone;
-          showLookup(await API.clients.lookup(p));
-        } catch (e) { console.error(e); }
-      }, 300);
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // REDEEM
-    // ═══════════════════════════════════════════════════════
-    async function redeemReward(mcId) {
-      let pin = null;
-      if (!qrVerifyTokenValue) {
-        pin = prompt('Code PIN du client (4 chiffres) :');
-        if (!pin) return; // cancelled
-        if (!/^\d{4}$/.test(pin)) {
-          UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
-          return;
-        }
-      }
-      try {
-        const r = await API.clients.reward({
-          merchantClientId: mcId,
-          pin: pin || undefined,
-          qrVerifyToken: qrVerifyTokenValue || undefined,
-        });
-        UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
-        triggerLookup();
-      } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // SUBMIT — with anti-double-credit
-    // ═══════════════════════════════════════════════════════
-    document.getElementById('submit-btn').addEventListener('click', async (e) => {
-      const email = document.getElementById('client-email').value.trim();
-      const phone = document.getElementById('client-phone').value.trim();
-      const name = document.getElementById('client-name').value.trim();
-      const amount = parseFloat(document.getElementById('amount').value);
-      const notes = document.getElementById('notes').value.trim();
-
-      if (!email && !phone) { UI.showAlert('credit-alert', (currentMode === 'qr' || currentMode === 'scan') ? 'Scannez d\'abord le QR du client' : 'Email ou téléphone requis', 'error'); return; }
-      if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
-
-      // ── Anti-double-credit: generate unique key per submission ──
-      const creditKey = (email || '') + '|' + (phone || '') + '|' + amount + '|' + Date.now();
-      if (lastCreditKey && lastCreditKey === creditKey) {
-        UI.showAlert('credit-alert', 'Ce crédit vient d\'être effectué', 'warning');
-        return;
-      }
-
-      try {
-        document.getElementById('submit-btn').disabled = true;
-        document.getElementById('submit-btn').textContent = 'Traitement…';
-        UI.clearAlert('credit-alert');
-
-        const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
-
-        const r = await API.clients.credit({
-          email: email || undefined, phone: phone || undefined,
-          name: name || undefined, amount, notes: notes || undefined,
-          idempotencyKey,
-        });
-
-        // ── Mark this credit as done (prevent re-submit) ──
-        lastCreditKey = creditKey;
-
-        // ── Show success overlay (blocks form access) ──
-        const n = r.client.name || r.client.email || r.client.phone || 'Client';
-        document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
-
-        let info = '<strong>' + esc(n) + '</strong>';
-        info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
-        if (r.client.email) info += '<br><span class="s-detail">' + esc(r.client.email) + '</span>';
-        if (r.client.phone) info += '<br><span class="s-detail">' + esc(r.client.phone) + '</span>';
-        if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
-
-        document.getElementById('s-info').innerHTML = info;
-
-        // ── Reward button if eligible ──
-        const rewardBtn = document.getElementById('s-reward');
-        if (r.client.can_redeem) {
-          rewardBtn.textContent = '🎁 ' + r.client.reward_description + ' — Appliquer';
-          rewardBtn.dataset.clientId = r.client.id;
-          rewardBtn.classList.add('show');
-        } else {
-          rewardBtn.classList.remove('show');
-        }
-
-        document.getElementById('success-overlay').classList.add('show');
-
-      } catch (err) {
-        UI.showAlert('credit-alert', err.message, 'error');
-      } finally {
-        document.getElementById('submit-btn').disabled = false;
-        document.getElementById('submit-btn').textContent = 'Créditer les points';
-      }
-    });
-
-    // ═══════════════════════════════════════════════════════
-    // RESET — only way back from success overlay
-    // ═══════════════════════════════════════════════════════
-
-    async function redeemFromSuccess() {
-      const btn = document.getElementById('s-reward');
-      const mcId = parseInt(btn.dataset.clientId);
-      if (!mcId) return;
-
-      // PIN required if not QR-verified
-      let pin = null;
-      if (!qrVerifyTokenValue) {
-        pin = prompt('Code PIN du client (4 chiffres) :');
-        if (!pin) return; // cancelled
-        if (!/^\d{4}$/.test(pin)) {
-          btn.textContent = '❌ Le code PIN doit contenir 4 chiffres';
-          btn.style.background = '#DC2626';
-          setTimeout(() => { btn.textContent = '🎁 Réessayer'; btn.style.background = ''; }, 2000);
-          return;
-        }
-      }
-
-      btn.disabled = true;
-      btn.textContent = 'Traitement…';
-      try {
-        const r = await API.clients.reward({
-          merchantClientId: mcId,
-          pin: pin || undefined,
-          qrVerifyToken: qrVerifyTokenValue || undefined,
-        });
-        btn.textContent = '✓ Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
-        btn.style.background = '#047857';
-        btn.onclick = null;
-      } catch (e) {
-        btn.textContent = '❌ ' + e.message;
-        btn.style.background = '#DC2626';
-        setTimeout(() => {
-          btn.disabled = false;
-          btn.textContent = '🎁 Réessayer';
-          btn.style.background = '';
-        }, 2000);
-      }
-    }
-
-    function resetForm() {
-      // Hide overlay
-      document.getElementById('success-overlay').classList.remove('show');
-
-      // Reset reward button
-      const rb = document.getElementById('s-reward');
-      rb.classList.remove('show');
-      rb.disabled = false;
-      rb.style.background = '';
-      rb.onclick = redeemFromSuccess;
-
-      // Full form reset
-      lastCreditKey = null;
-      qrVerifyTokenValue = null;
-      document.querySelectorAll('#credit-form .form-control').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
-      document.getElementById('pts-badge').textContent = '0 pts';
-      hideLookup();
-      UI.clearAlert('credit-alert');
-
-      // QR cleanup — poll refresh
-      if (currentMode === 'qr') pollPending();
-      else {
-        stopPendingPoll();
-      }
-
-      resetToDefaultMode();
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // QR CODE
-    // ═══════════════════════════════════════════════════════
-    // ═══════════════════════════════════════════════════════
-    // QR STATIC — Display + Pending identifications polling
-    // ═══════════════════════════════════════════════════════
-
-    let merchantQrUrl = null;
-    let merchantQrToken = null;
-    let qrInst = null;
-    let pendingPoll = null;
-
-    async function loadStaticQR() {
-      try {
-        const resp = await API.call('/qr/token');
-        merchantQrToken = resp.token;
-        merchantQrUrl = resp.url;
-
-        const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
-        qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-      } catch (e) {
-        console.error('QR load error:', e);
-      }
-    }
-
-    function showQRFullscreen() {
-      if (!merchantQrUrl) return;
-      const overlay = document.getElementById('qr-fullscreen');
-      const cv = document.getElementById('qr-fs-canvas'); cv.innerHTML = '';
-      document.getElementById('qr-fs-merchant').textContent = merchant.business_name;
-      new QRCode(cv, { text: merchantQrUrl, width: 260, height: 260, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
-      overlay.style.display = 'flex';
-    }
-
-    function closeQRFullscreen() {
-      document.getElementById('qr-fullscreen').style.display = 'none';
-    }
-
-    // Pending identifications polling
-    function startPendingPoll() {
-      stopPendingPoll();
-      pollPending(); // immediate first call
-      pendingPoll = setInterval(pollPending, 3000);
-    }
-
-    function stopPendingPoll() {
-      if (pendingPoll) { clearInterval(pendingPoll); pendingPoll = null; }
-    }
-
-    async function pollPending() {
-      try {
-        const resp = await API.call('/qr/pending');
-        renderPending(resp.clients);
-      } catch (e) {}
-    }
-
-    function renderPending(clients) {
-      const el = document.getElementById('pending-clients');
-      if (!clients || clients.length === 0) {
-        el.innerHTML = '<div style="text-align:center;padding:0.5rem;color:#94A3B8;font-size:0.75rem;">En attente de clients…</div>';
-        return;
-      }
-
-      // Auto-select if only one client AND not a recent credit
-      if (clients.length === 1 && !clients[0].recentCredit) {
-        consumeIdent(clients[0].identId);
-        return;
-      }
-
-      let html = '';
-      clients.forEach(c => {
-        const label = esc(c.name || c.email || c.phone || 'Client');
-        const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
-
-        if (c.recentCredit) {
-          // Warning style for recent credit
-          const badge = '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
-          html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
-            '<div><strong style="font-size:0.85rem;color:#92400E;">⚠️ ' + label + '</strong><br>' + badge +
-            '<br><span style="font-size:0.65rem;color:#B45309;">Déjà crédité il y a ' + c.minutesAgo + ' min</span></div>' +
-            '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
-            '<span style="font-size:0.7rem;color:#B45309;font-weight:600;">Créditer quand même →</span></div></div>';
-        } else {
-          // Normal style
-          const badge = c.isNew
-            ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
-            : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
-          html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
-            '<div><strong style="font-size:0.85rem;color:#166534;">✓ ' + label + '</strong><br>' + badge + '</div>' +
-            '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
-            '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
-        }
-      });
-      el.innerHTML = html;
-    }
-
-    async function consumeIdent(identId) {
-      try {
-        const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
-
-        // Client authenticated via their device — store server token for PIN bypass
-        if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
-
-        // Pre-fill the credit form
-        if (d.email) {
-          switchMode('email');
-          document.getElementById('client-email').value = d.email;
-          document.getElementById('client-email').classList.add('has-value');
-        } else if (d.phone) {
-          switchMode('phone');
-          document.getElementById('client-phone').value = d.phone;
-          document.getElementById('client-phone').classList.add('has-value');
-        }
-        if (d.name) {
-          document.getElementById('client-name').value = d.name;
-          document.getElementById('client-name').classList.add('has-value');
-        }
-
-        setTimeout(triggerLookup, 300);
-        setTimeout(() => document.getElementById('amount').focus(), 600);
-      } catch (e) {
-        console.error('Consume error:', e);
-      }
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // NEAR-DUPLICATE DETECTION
-    // ═══════════════════════════════════════════════════════
-
-    async function checkNearDuplicates() {
-      const container = document.getElementById('dup-container');
-      container.innerHTML = '';
-
-      const email = document.getElementById('client-email').value.trim();
-      const phone = document.getElementById('client-phone').value.trim();
-      if (!email && !phone) return;
-
-      try {
-        const params = new URLSearchParams();
-        if (email) params.set('email', email);
-        if (phone) params.set('phone', phone);
-
-        const data = await API.call('/clients/near-duplicates?' + params.toString());
-        if (!data.matches || data.matches.length === 0) return;
-
-        let html = '<div class="dup-warning">' +
-          '<div class="dup-warning-title">' +
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-            'Client similaire trouvé' +
-          '</div>';
-
-        data.matches.forEach(m => {
-          const identifier = esc(m.email || m.phone || '');
-          const useEmail = (m.email || '').replace(/'/g, "\\'");
-          const usePhone = (m.phone || '').replace(/'/g, "\\'");
-          const useName = (m.name || '').replace(/'/g, "\\'");
-          html += '<div class="dup-match" onclick="useDuplicate(\'' +
-            useEmail + "', '" + usePhone + "', '" + useName + '\')">' +
-            '<div class="dup-match-info">' +
-              '<span class="dup-match-name">' + esc(m.name || 'Sans nom') + '</span> ' +
-              '<span class="dup-match-id">' + identifier + '</span>' +
-              (m.pointsBalance > 0 ? ' · ' + m.pointsBalance + ' pts' : '') +
-            '</div>' +
-            '<span class="dup-match-use">Utiliser</span>' +
-          '</div>';
-        });
-
-        html += '</div>';
-        container.innerHTML = html;
-      } catch (e) {
-        // Silent fail
-      }
-    }
-
-    function useDuplicate(email, phone, name) {
-      document.getElementById('dup-container').innerHTML = '';
-      if (email) {
-        switchMode('email');
-        document.getElementById('client-email').value = email;
-        document.getElementById('client-email').classList.add('has-value');
-      } else if (phone) {
-        switchMode('phone');
-        document.getElementById('client-phone').value = phone;
-        document.getElementById('client-phone').classList.add('has-value');
-      }
-      if (name) {
-        document.getElementById('client-name').value = name;
-        document.getElementById('client-name').classList.add('has-value');
-      }
-      setTimeout(triggerLookup, 200);
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // QR SCANNER (camera)
-    // ═══════════════════════════════════════════════════════
-
-    let html5QrScanner = null;
-    let qrVerifyTokenValue = null;  // server-issued token for PIN bypass on redeem
-    let scannerBusy = false;     // debounce scan results
-
-    function startScanner() {
-      document.getElementById('scan-status').textContent = 'Démarrage de la caméra…';
-      document.getElementById('scan-status').style.color = '#64748B';
-      scannerBusy = false;
-
-      // Small delay to let the container become visible and get dimensions
-      setTimeout(() => {
-        try {
-          html5QrScanner = new Html5Qrcode('scan-reader');
-          html5QrScanner.start(
-            { facingMode: 'environment' },
-            {
-              fps: 10,
-              qrbox: function(vw, vh) {
-                const s = Math.min(vw, vh) * 0.7;
-                return { width: Math.floor(s), height: Math.floor(s) };
-              },
-              aspectRatio: 1.0,
-            },
-            onScanSuccess,
-            () => {} // ignore scan failures
-          ).then(() => {
-            document.getElementById('scan-status').textContent = 'Scannez le QR du client';
-            document.getElementById('scan-status').style.color = '#64748B';
-          }).catch(err => {
-            console.error('Scanner start error:', err);
-            document.getElementById('scan-status').innerHTML =
-              '⚠ Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
-            document.getElementById('scan-status').style.color = '#DC2626';
-          });
-        } catch (err) {
-          console.error('Scanner init error:', err);
-          document.getElementById('scan-status').textContent = '⚠ Erreur d\'initialisation du scanner';
-          document.getElementById('scan-status').style.color = '#DC2626';
-        }
-      }, 300);
-    }
-
-    function stopScanner() {
-      if (html5QrScanner) {
-        try {
-          html5QrScanner.stop().then(() => {
-            html5QrScanner.clear();
-            html5QrScanner = null;
-          }).catch(() => {
-            html5QrScanner = null;
-          });
-        } catch (e) {
-          html5QrScanner = null;
-        }
-      }
-    }
-
-    async function onScanSuccess(decodedText) {
-      if (scannerBusy) return;  // debounce
-      scannerBusy = true;
-
-      // Extract client token from URL: fiddo.be/c/TOKEN
-      let clientQrToken = null;
-      try {
-        const url = new URL(decodedText);
-        const parts = url.pathname.split('/');
-        if (parts[1] === 'c' && parts[2]) {
-          clientQrToken = parts[2];
-        }
-      } catch (e) {
-        // Not a URL — maybe just the token itself
-        if (/^[A-Za-z0-9_-]{6,20}$/.test(decodedText)) {
-          clientQrToken = decodedText;
-        }
-      }
-
-      if (!clientQrToken) {
-        document.getElementById('scan-status').textContent = '⚠ QR non reconnu';
-        document.getElementById('scan-status').style.color = '#D97706';
-        setTimeout(() => { scannerBusy = false; }, 2000);
-        return;
-      }
-
-      // Stop scanner immediately
-      stopScanner();
-      document.getElementById('scan-status').textContent = 'QR lu ! Recherche du client…';
-      document.getElementById('scan-status').style.color = '#059669';
-
-      // Lookup client
-      try {
-        const d = await API.call('/qr/client-lookup/' + clientQrToken);
-
-        // Store server-issued verify token for PIN bypass on redeem
-        if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
-
-        // Pre-fill credit form
-        if (d.email) {
-          switchMode('email');
-          document.getElementById('client-email').value = d.email;
-          document.getElementById('client-email').classList.add('has-value');
-        } else if (d.phone) {
-          switchMode('phone');
-          document.getElementById('client-phone').value = d.phone;
-          document.getElementById('client-phone').classList.add('has-value');
-        }
-        if (d.name) {
-          document.getElementById('client-name').value = d.name;
-          document.getElementById('client-name').classList.add('has-value');
-        }
-
-        UI.showAlert('credit-alert',
-          (d.isNew ? 'Nouveau client : ' : 'Client identifié : ') +
-          (d.name || d.email || d.phone) +
-          (d.pointsBalance > 0 ? ' — ' + d.pointsBalance + ' pts' : ''),
-          'success');
-
-        setTimeout(triggerLookup, 300);
-        setTimeout(() => document.getElementById('amount').focus(), 600);
-      } catch (e) {
-        document.getElementById('scan-status').textContent = '⚠ Client non trouvé';
-        document.getElementById('scan-status').style.color = '#DC2626';
-        scannerBusy = false;
-        setTimeout(() => switchMode('scan'), 2000); // restart scanner
-      }
-    }
-
-    // Load QR on page init (lazy)
-    loadStaticQR();
-
-    // Points badge pop on amount change
-    document.getElementById('amount').addEventListener('input', () => {
-      const b = document.getElementById('pts-badge');
-      b.classList.remove('pop'); void b.offsetWidth;
-      b.classList.add('pop');
-      setTimeout(() => b.classList.remove('pop'), 300);
-    });
-
-    window.addEventListener('beforeunload', () => { stopPendingPoll(); stopScanner(); });
-  </script>
+ <nav class="navbar">
+ <a href="/dashboard" class="navbar-brand">FIDDO<span></span></a>
+ <div class="navbar-menu"></div>
+ </nav>
+
+ <div class="credit-wrap">
+ <h1 class="pg-title">Créditer des points</h1>
+
+ <div class="c-card">
+ <div class="c-card-body">
+ <div id="credit-alert"></div>
+
+ <div id="credit-form" autocomplete="off">
+ <!-- Segment toggle -->
+ <div class="seg">
+ <button type="button" id="toggle-email" class="active" onclick="switchMode('email')">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+ Email
+ </button>
+ <button type="button" id="toggle-phone" onclick="switchMode('phone')">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18"/></svg>
+ Tél
+ </button>
+ <button type="button" id="toggle-qr" onclick="switchMode('qr')">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="14"/><line x1="21" y1="21" x2="21" y2="21"/></svg>
+ QR
+ </button>
+ <button type="button" id="toggle-scan" onclick="switchMode('scan')">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+ Scan
+ </button>
+ </div>
+
+ <!-- Email -->
+ <div class="form-group" id="field-email">
+ <label class="form-label">Adresse email</label>
+ <div class="input-wrap">
+ <input type="text" inputmode="email" id="client-email" name="xfid_e7k" class="form-control" placeholder="client@email.com" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+ <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
+ <div class="autocomplete-list" id="ac-email"></div>
+ </div>
+ <div id="typo-email"></div>
+ <div class="lookup-strip" id="lookup-email"></div>
+ </div>
+
+ <!-- Phone -->
+ <div class="form-group" id="field-phone" style="display:none;">
+ <label class="form-label">Numéro de téléphone</label>
+ <div class="input-wrap">
+ <input type="tel" id="client-phone" name="xfid_p3m" class="form-control" placeholder="+32 497 12 34 56" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+ <button type="button" class="btn-clear" onclick="clearField('client-phone')">×</button>
+ <div class="autocomplete-list" id="ac-phone"></div>
+ </div>
+ <div class="form-hint">+32…, 0032…, 04…</div>
+ <div class="lookup-strip" id="lookup-phone"></div>
+ </div>
+
+ <!-- QR (static) -->
+ <div id="field-qr" style="display:none;">
+ <div class="qr-box" id="qr-inline">
+ <div class="qr-sub">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/></svg>
+ Présentez ce QR au client
+ </div>
+ <div class="qr-frame" id="qr-frame"><div id="qr-canvas"></div></div>
+ <br>
+ <button type="button" class="qr-fullscreen-btn" onclick="showQRFullscreen()">
+ <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+ Plein écran
+ </button>
+ </div>
+
+ <!-- Pending identifications -->
+ <div id="pending-clients" style="margin-top:0.75rem;"></div>
+ <div class="lookup-strip" id="lookup-qr"></div>
+ </div>
+
+ <!-- Scanner (camera) -->
+ <div id="field-scan" style="display:none;">
+ <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;overflow:hidden;">
+ <div id="scan-reader" style="width:100%;min-height:250px;"></div>
+ </div>
+ <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
+ Scannez le QR du client
+ </div>
+ <div class="lookup-strip" id="lookup-scan"></div>
+ </div>
+
+ <!-- Duplicate warning -->
+ <div id="dup-container"></div>
+
+ <!-- Name -->
+ <div class="form-group">
+ <label class="form-label">Nom / surnom <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+ <div class="input-wrap">
+ <input type="text" id="client-name" name="xfid_n2q" class="form-control" placeholder="Pierre, Table 5…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+ <button type="button" class="btn-clear" onclick="clearField('client-name')">×</button>
+ </div>
+ </div>
+
+ <!-- Amount + Notes -->
+ <div class="row-2">
+ <div class="form-group">
+ <label class="form-label">Montant (€) * <span class="pts-badge" id="pts-badge">0 pts</span></label>
+ <div class="input-wrap">
+ <input type="number" id="amount" name="xfid_a8v" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+ <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
+ </div>
+ </div>
+ <div class="form-group">
+ <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
+ <div class="input-wrap">
+ <input type="text" id="notes" name="xfid_r5w" class="form-control" placeholder="Menu midi…" autocomplete="off" autocorrect="off" data-lpignore="true" data-1p-ignore data-form-type="other">
+ <button type="button" class="btn-clear" onclick="clearField('notes')">×</button>
+ </div>
+ </div>
+ </div>
+
+ <button type="button" class="btn-credit" id="submit-btn">Créditer les points</button>
+ </div>
+ </div>
+
+ <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
+ <div class="success-overlay" id="success-overlay">
+ <div class="success-pts" id="s-pts"></div>
+ <div class="success-label">Crédités </div>
+ <div class="success-info" id="s-info"></div>
+ <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()"> Appliquer la récompense</button>
+ <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
+ </div>
+
+ </div>
+ </div>
+
+ <!-- Fullscreen QR overlay (for table service) -->
+ <div id="qr-fullscreen" style="display:none; position:fixed; inset:0; z-index:9999; background:#fff; flex-direction:column; align-items:center; justify-content:center; cursor:pointer;" onclick="closeQRFullscreen()">
+ <div style="text-align:center;">
+ <div style="font-size:1.1rem; font-weight:600; color:#1E293B; margin-bottom:0.5rem;" id="qr-fs-merchant"></div>
+ <div style="font-size:0.8rem; color:#64748B; margin-bottom:1.5rem;">Scannez pour gagner vos points fidélité</div>
+ <div id="qr-fs-canvas" style="display:inline-block; padding:16px; background:#fff; border-radius:12px; box-shadow:0 4px 24px rgba(0,0,0,0.1);"></div>
+ <div style="margin-top:1.5rem; font-size:0.7rem; color:#94A3B8;">Appuyez n'importe où pour fermer</div>
+ </div>
+ </div>
+
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+ <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+ <script src="/js/app.js"></script>
+ <script>
+ if (!requireAuth()) throw 'Not authenticated';
+
+ const merchant = Auth.getMerchant();
+ const staff = Auth.getStaff();
+ let currentMode = 'email';
+ let lastCreditKey = null; // anti-double-credit
+ let lookupIsNew = false; // true when current client is new
+
+ // ═══════════════════════════════════════════════════════
+ // CREDIT METHODS — filter based on merchant preferences
+ // ═══════════════════════════════════════════════════════
+
+ (async () => {
+ try {
+ const data = await API.preferences.get();
+ const prefs = data.preferences || {};
+ const cm = prefs.credit_methods
+ ? (typeof prefs.credit_methods === 'string' ? JSON.parse(prefs.credit_methods) : prefs.credit_methods)
+ : { email: true, phone: true, qr: true, scan: true };
+
+ const methods = ['email', 'phone', 'qr', 'scan'];
+ methods.forEach(m => {
+ if (cm[m] === false) {
+ const btn = document.getElementById('toggle-' + m);
+ if (btn) btn.style.display = 'none';
+ }
+ });
+
+ // Switch to first enabled method
+ const firstEnabled = methods.find(m => cm[m] !== false);
+ if (firstEnabled && firstEnabled !== 'email') {
+ switchMode(firstEnabled);
+ } else if (!cm.email) {
+ switchMode(firstEnabled || 'email');
+ }
+ } catch (_) { /* defaults — show all */ }
+ })();
+
+ // ═══════════════════════════════════════════════════════
+ // LOOKUP — inline strip under the active field
+ // ═══════════════════════════════════════════════════════
+
+ function getLookupEl() {
+ return document.getElementById('lookup-' + currentMode);
+ }
+
+ function showLookup(data) {
+ const el = getLookupEl();
+ if (!el) return;
+
+ if (!data.found) {
+ lookupIsNew = true;
+ el.className = 'lookup-strip show new-client';
+ el.innerHTML = 'Nouveau client — sera créé au crédit.';
+ checkNearDuplicates();
+ return;
+ }
+ const c = data.client;
+ if (data.isNew) {
+ lookupIsNew = true;
+ el.className = 'lookup-strip show new-client';
+ el.innerHTML = 'Première visite ici.' + (c.name ? ' Nom : ' + esc(c.name) : '');
+ if (c.name && !document.getElementById('client-name').value) {
+ document.getElementById('client-name').value = c.name;
+ document.getElementById('client-name').classList.add('has-value');
+ }
+ return;
+ }
+
+ lookupIsNew = false;
+ el.className = 'lookup-strip show found';
+ const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
+ let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
+ '<span class="l-name">' + esc(c.name || c.email || c.phone) + '</span>' +
+ (c.is_blocked ? ' <span class="badge badge-danger">Bloqué</span>' : '') +
+ '<div class="l-meta">' + c.visit_count + ' visite(s) · ' + c.points_balance + '/' + c.reward_threshold + '</div>' +
+ '<div class="l-prog"><div class="l-prog-fill" style="width:' + pct + '%"></div></div>';
+ if (c.can_redeem) {
+ h += '<div class="l-reward" onclick="redeemReward(' + c.id + ')">' +
+ esc(c.reward_description || merchant.reward_description) + ' — Appliquer</div>';
+ }
+ el.innerHTML = h;
+
+ if (c.name && !document.getElementById('client-name').value) {
+ document.getElementById('client-name').value = c.name;
+ document.getElementById('client-name').classList.add('has-value');
+ }
+ }
+
+ function hideLookup() {
+ document.querySelectorAll('.lookup-strip').forEach(el => {
+ el.classList.remove('show');
+ el.innerHTML = '';
+ });
+ document.getElementById('dup-container').innerHTML = '';
+ lookupIsNew = false;
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // PRE-FILL FROM URL
+ // ═══════════════════════════════════════════════════════
+ (function() {
+ const p = new URLSearchParams(window.location.search);
+ if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); }
+ else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); }
+ if (p.get('name')) document.getElementById('client-name').value = p.get('name');
+ if (p.get('email') || p.get('phone')) setTimeout(triggerLookup, 500);
+ if (p.toString()) window.history.replaceState({}, '', window.location.pathname);
+ })();
+
+ // ═══════════════════════════════════════════════════════
+ // MODE SWITCH
+ // ═══════════════════════════════════════════════════════
+
+ function getFirstEnabledMode() {
+ const methods = ['email', 'phone', 'qr', 'scan'];
+ return methods.find(m => {
+ const btn = document.getElementById('toggle-' + m);
+ return btn && btn.style.display !== 'none';
+ }) || 'email';
+ }
+
+ function resetToDefaultMode() {
+ switchMode(getFirstEnabledMode());
+ }
+
+ function switchMode(mode) {
+ if (currentMode === 'qr' && mode !== 'qr') {
+ stopPendingPoll();
+ }
+ if (currentMode === 'scan' && mode !== 'scan') {
+ stopScanner();
+ }
+ currentMode = mode;
+ document.getElementById('toggle-email').classList.toggle('active', mode === 'email');
+ document.getElementById('toggle-phone').classList.toggle('active', mode === 'phone');
+ document.getElementById('toggle-qr').classList.toggle('active', mode === 'qr');
+ document.getElementById('toggle-scan').classList.toggle('active', mode === 'scan');
+ document.getElementById('field-email').style.display = mode === 'email' ? '' : 'none';
+ document.getElementById('field-phone').style.display = mode === 'phone' ? '' : 'none';
+ document.getElementById('field-qr').style.display = mode === 'qr' ? '' : 'none';
+ document.getElementById('field-scan').style.display = mode === 'scan' ? '' : 'none';
+ if (mode !== 'email') { document.getElementById('client-email').value = ''; document.getElementById('ac-email').classList.remove('show'); document.getElementById('typo-email').innerHTML = ''; }
+ if (mode !== 'phone') { document.getElementById('client-phone').value = ''; document.getElementById('ac-phone').classList.remove('show'); }
+ document.getElementById('client-name').value = ''; document.getElementById('client-name').classList.remove('has-value');
+ qrVerifyTokenValue = null;
+ hideLookup();
+ if (mode === 'qr') startPendingPoll();
+ if (mode === 'scan') startScanner();
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // CLEAR
+ // ═══════════════════════════════════════════════════════
+ function clearField(id) {
+ const el = document.getElementById(id);
+ el.value = ''; el.focus(); el.dispatchEvent(new Event('input'));
+ if (id === 'amount') document.getElementById('pts-badge').textContent = '0 pts';
+ }
+ document.querySelectorAll('.input-wrap .form-control').forEach(el => {
+ el.addEventListener('input', () => el.classList.toggle('has-value', el.value.length > 0));
+ });
+
+ // ═══════════════════════════════════════════════════════
+ // POINTS BADGE
+ // ═══════════════════════════════════════════════════════
+ document.getElementById('amount').addEventListener('input', (e) => {
+ const pts = Math.floor((parseFloat(e.target.value) || 0) * merchant.points_per_euro);
+ document.getElementById('pts-badge').textContent = pts + ' pts';
+ });
+
+ // ═══════════════════════════════════════════════════════
+ // EMAIL TYPO
+ // ═══════════════════════════════════════════════════════
+ const TYPOS = {
+ 'gmial.com':'gmail.com','gmal.com':'gmail.com','gmaill.com':'gmail.com',
+ 'gamil.com':'gmail.com','gnail.com':'gmail.com','gmali.com':'gmail.com',
+ 'gmai.com':'gmail.com','gmail.co':'gmail.com','gmail.be':'gmail.com',
+ 'hotmal.com':'hotmail.com','hotmai.com':'hotmail.com','hotmaill.com':'hotmail.com',
+ 'hotmial.com':'hotmail.com','hotamil.com':'hotmail.com',
+ 'outloo.com':'outlook.com','outlok.com':'outlook.com',
+ 'yahooo.com':'yahoo.com','yaho.com':'yahoo.com','yahooo.fr':'yahoo.fr',
+ 'iclould.com':'icloud.com','iclou.com':'icloud.com',
+ };
+ function checkEmailTypo(v) {
+ const c = document.getElementById('typo-email'); c.innerHTML = '';
+ if (!v || !v.includes('@')) return;
+ const parts = v.split('@'); if (parts.length !== 2) return;
+ const fix = TYPOS[parts[1].toLowerCase()];
+ if (fix) {
+ const corrected = parts[0] + '@' + fix;
+ c.innerHTML = '<div class="typo-warning"><span>→ <strong>' + esc(corrected) + '</strong> ?</span><button type="button" onclick="applyTypo(\'' + esc(corrected) + '\')">Corriger</button></div>';
+ }
+ }
+ function applyTypo(v) {
+ document.getElementById('client-email').value = v;
+ document.getElementById('typo-email').innerHTML = '';
+ triggerLookup();
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // AUTOCOMPLETE
+ // ═══════════════════════════════════════════════════════
+ let acTimer;
+ function setupAC(inputId, listId) {
+ const inp = document.getElementById(inputId), list = document.getElementById(listId);
+ inp.addEventListener('input', () => {
+ clearTimeout(acTimer);
+ const v = inp.value.trim();
+ triggerLookup();
+ if (v.length < 3) { list.classList.remove('show'); if (inputId === 'client-email') checkEmailTypo(v); return; }
+ if (inputId === 'client-email') checkEmailTypo(v);
+ acTimer = setTimeout(async () => {
+ try {
+ const d = await API.clients.searchGlobal(v);
+ if (!d.clients || !d.clients.length) { list.classList.remove('show'); return; }
+ list.innerHTML = d.clients.slice(0, 6).map(c =>
+ '<div class="ac-item" data-email="' + esc(c.email || '') + '" data-phone="' + esc(c.phone || '') + '" data-name="' + esc(c.name || '') + '">' +
+ '<span class="ac-pts">' + (c.is_local ? c.points_balance + ' pts' : '<span class="badge badge-info">Nouveau</span>') + '</span>' +
+ '<div class="ac-name">' + esc(c.name || c.email || c.phone || '?') + '</div>' +
+ '<div class="ac-meta">' + esc(c.email || '') + (c.email && c.phone ? ' · ' : '') + esc(c.phone || '') + (c.is_local ? ' · ' + c.visit_count + 'v' : '') + '</div></div>'
+ ).join('');
+ list.classList.add('show');
+ list.querySelectorAll('.ac-item').forEach(item => {
+ item.addEventListener('click', () => {
+ const e = item.dataset.email, p = item.dataset.phone, n = item.dataset.name;
+ if (currentMode === 'email' && e) { inp.value = e; inp.classList.add('has-value'); }
+ else if (currentMode === 'phone' && p) { inp.value = p; inp.classList.add('has-value'); }
+ else if (e) { switchMode('email'); document.getElementById('client-email').value = e; }
+ else if (p) { switchMode('phone'); document.getElementById('client-phone').value = p; }
+ if (n) { document.getElementById('client-name').value = n; document.getElementById('client-name').classList.add('has-value'); }
+ list.classList.remove('show');
+ document.getElementById('typo-email').innerHTML = '';
+ triggerLookup();
+ });
+ });
+ } catch (e) { list.classList.remove('show'); }
+ }, 350);
+ });
+ document.addEventListener('click', (e) => { if (!inp.contains(e.target) && !list.contains(e.target)) list.classList.remove('show'); });
+ }
+ setupAC('client-email', 'ac-email');
+ setupAC('client-phone', 'ac-phone');
+
+ // ═══════════════════════════════════════════════════════
+ // LOOKUP
+ // ═══════════════════════════════════════════════════════
+ let lookupTimer;
+ function triggerLookup() {
+ clearTimeout(lookupTimer);
+ const email = document.getElementById('client-email').value.trim();
+ const phone = document.getElementById('client-phone').value.trim();
+ if (!email && !phone) { hideLookup(); return; }
+ lookupTimer = setTimeout(async () => {
+ try {
+ const p = {};
+ if (email) p.email = email;
+ if (phone) p.phone = phone;
+ showLookup(await API.clients.lookup(p));
+ } catch (e) { console.error(e); }
+ }, 300);
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // REDEEM
+ // ═══════════════════════════════════════════════════════
+ async function redeemReward(mcId) {
+ let pin = null;
+ if (!qrVerifyTokenValue) {
+ pin = prompt('Code PIN du client (4 chiffres) :');
+ if (!pin) return; // cancelled
+ if (!/^\d{4}$/.test(pin)) {
+ UI.showAlert('credit-alert', 'Le code PIN doit contenir 4 chiffres', 'error');
+ return;
+ }
+ }
+ try {
+ const r = await API.clients.reward({
+ merchantClientId: mcId,
+ pin: pin || undefined,
+ qrVerifyToken: qrVerifyTokenValue || undefined,
+ });
+ UI.showAlert('credit-alert', 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts', 'success');
+ triggerLookup();
+ } catch (e) { UI.showAlert('credit-alert', e.message, 'error'); }
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // SUBMIT — with anti-double-credit
+ // ═══════════════════════════════════════════════════════
+ document.getElementById('submit-btn').addEventListener('click', async (e) => {
+ const email = document.getElementById('client-email').value.trim();
+ const phone = document.getElementById('client-phone').value.trim();
+ const name = document.getElementById('client-name').value.trim();
+ const amount = parseFloat(document.getElementById('amount').value);
+ const notes = document.getElementById('notes').value.trim();
+
+ if (!email && !phone) { UI.showAlert('credit-alert', (currentMode === 'qr' || currentMode === 'scan') ? 'Scannez d\'abord le QR du client' : 'Email ou téléphone requis', 'error'); return; }
+ if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
+
+ // ── Anti-double-credit: generate unique key per submission ──
+ const creditKey = (email || '') + '|' + (phone || '') + '|' + amount + '|' + Date.now();
+ if (lastCreditKey && lastCreditKey === creditKey) {
+ UI.showAlert('credit-alert', 'Ce crédit vient d\'être effectué', 'warning');
+ return;
+ }
+
+ try {
+ document.getElementById('submit-btn').disabled = true;
+ document.getElementById('submit-btn').textContent = 'Traitement…';
+ UI.clearAlert('credit-alert');
+
+ const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+
+ const r = await API.clients.credit({
+ email: email || undefined, phone: phone || undefined,
+ name: name || undefined, amount, notes: notes || undefined,
+ idempotencyKey,
+ });
+
+ // ── Mark this credit as done (prevent re-submit) ──
+ lastCreditKey = creditKey;
+
+ // ── Show success overlay (blocks form access) ──
+ const n = r.client.name || r.client.email || r.client.phone || 'Client';
+ document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
+
+ let info = '<strong>' + esc(n) + '</strong>';
+ info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
+ if (r.client.email) info += '<br><span class="s-detail">' + esc(r.client.email) + '</span>';
+ if (r.client.phone) info += '<br><span class="s-detail">' + esc(r.client.phone) + '</span>';
+ if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
+
+ document.getElementById('s-info').innerHTML = info;
+
+ // ── Reward button if eligible ──
+ const rewardBtn = document.getElementById('s-reward');
+ if (r.client.can_redeem) {
+ rewardBtn.textContent = ' ' + r.client.reward_description + ' — Appliquer';
+ rewardBtn.dataset.clientId = r.client.id;
+ rewardBtn.classList.add('show');
+ } else {
+ rewardBtn.classList.remove('show');
+ }
+
+ document.getElementById('success-overlay').classList.add('show');
+
+ } catch (err) {
+ UI.showAlert('credit-alert', err.message, 'error');
+ } finally {
+ document.getElementById('submit-btn').disabled = false;
+ document.getElementById('submit-btn').textContent = 'Créditer les points';
+ }
+ });
+
+ // ═══════════════════════════════════════════════════════
+ // RESET — only way back from success overlay
+ // ═══════════════════════════════════════════════════════
+
+ async function redeemFromSuccess() {
+ const btn = document.getElementById('s-reward');
+ const mcId = parseInt(btn.dataset.clientId);
+ if (!mcId) return;
+
+ // PIN required if not QR-verified
+ let pin = null;
+ if (!qrVerifyTokenValue) {
+ pin = prompt('Code PIN du client (4 chiffres) :');
+ if (!pin) return; // cancelled
+ if (!/^\d{4}$/.test(pin)) {
+ btn.textContent = ' Le code PIN doit contenir 4 chiffres';
+ btn.style.background = '#DC2626';
+ setTimeout(() => { btn.textContent = ' Réessayer'; btn.style.background = ''; }, 2000);
+ return;
+ }
+ }
+
+ btn.disabled = true;
+ btn.textContent = 'Traitement…';
+ try {
+ const r = await API.clients.reward({
+ merchantClientId: mcId,
+ pin: pin || undefined,
+ qrVerifyToken: qrVerifyTokenValue || undefined,
+ });
+ btn.textContent = ' Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
+ btn.style.background = '#047857';
+ btn.onclick = null;
+ } catch (e) {
+ btn.textContent = ' ' + e.message;
+ btn.style.background = '#DC2626';
+ setTimeout(() => {
+ btn.disabled = false;
+ btn.textContent = ' Réessayer';
+ btn.style.background = '';
+ }, 2000);
+ }
+ }
+
+ function resetForm() {
+ // Hide overlay
+ document.getElementById('success-overlay').classList.remove('show');
+
+ // Reset reward button
+ const rb = document.getElementById('s-reward');
+ rb.classList.remove('show');
+ rb.disabled = false;
+ rb.style.background = '';
+ rb.onclick = redeemFromSuccess;
+
+ // Full form reset
+ lastCreditKey = null;
+ qrVerifyTokenValue = null;
+ document.querySelectorAll('#credit-form .form-control').forEach(el => { el.value = ''; el.classList.remove('has-value'); });
+ document.getElementById('pts-badge').textContent = '0 pts';
+ hideLookup();
+ UI.clearAlert('credit-alert');
+
+ // QR cleanup — poll refresh
+ if (currentMode === 'qr') pollPending();
+ else {
+ stopPendingPoll();
+ }
+
+ resetToDefaultMode();
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // QR CODE
+ // ═══════════════════════════════════════════════════════
+ // ═══════════════════════════════════════════════════════
+ // QR STATIC — Display + Pending identifications polling
+ // ═══════════════════════════════════════════════════════
+
+ let merchantQrUrl = null;
+ let merchantQrToken = null;
+ let qrInst = null;
+ let pendingPoll = null;
+
+ async function loadStaticQR() {
+ try {
+ const resp = await API.call('/qr/token');
+ merchantQrToken = resp.token;
+ merchantQrUrl = resp.url;
+
+ const cv = document.getElementById('qr-canvas'); cv.innerHTML = '';
+ qrInst = new QRCode(cv, { text: resp.url, width: 120, height: 120, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+ } catch (e) {
+ console.error('QR load error:', e);
+ }
+ }
+
+ function showQRFullscreen() {
+ if (!merchantQrUrl) return;
+ const overlay = document.getElementById('qr-fullscreen');
+ const cv = document.getElementById('qr-fs-canvas'); cv.innerHTML = '';
+ document.getElementById('qr-fs-merchant').textContent = merchant.business_name;
+ new QRCode(cv, { text: merchantQrUrl, width: 260, height: 260, colorDark: '#1F2937', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M });
+ overlay.style.display = 'flex';
+ }
+
+ function closeQRFullscreen() {
+ document.getElementById('qr-fullscreen').style.display = 'none';
+ }
+
+ // Pending identifications polling
+ function startPendingPoll() {
+ stopPendingPoll();
+ pollPending(); // immediate first call
+ pendingPoll = setInterval(pollPending, 3000);
+ }
+
+ function stopPendingPoll() {
+ if (pendingPoll) { clearInterval(pendingPoll); pendingPoll = null; }
+ }
+
+ async function pollPending() {
+ try {
+ const resp = await API.call('/qr/pending');
+ renderPending(resp.clients);
+ } catch (e) {}
+ }
+
+ function renderPending(clients) {
+ const el = document.getElementById('pending-clients');
+ if (!clients || clients.length === 0) {
+ el.innerHTML = '<div style="text-align:center;padding:0.5rem;color:#94A3B8;font-size:0.75rem;">En attente de clients…</div>';
+ return;
+ }
+
+ // Auto-select if only one client AND not a recent credit
+ if (clients.length === 1 && !clients[0].recentCredit) {
+ consumeIdent(clients[0].identId);
+ return;
+ }
+
+ let html = '';
+ clients.forEach(c => {
+ const label = esc(c.name || c.email || c.phone || 'Client');
+ const ago = c.secondsAgo < 60 ? 'à l\'instant' : Math.floor(c.secondsAgo / 60) + ' min';
+
+ if (c.recentCredit) {
+ // Warning style for recent credit
+ const badge = '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+ html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#FEF3C7;border:1px solid #FDE68A;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
+ '<div><strong style="font-size:0.85rem;color:#92400E;"> ' + label + '</strong><br>' + badge +
+ '<br><span style="font-size:0.65rem;color:#B45309;">Déjà crédité il y a ' + c.minutesAgo + ' min</span></div>' +
+ '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+ '<span style="font-size:0.7rem;color:#B45309;font-weight:600;">Créditer quand même →</span></div></div>';
+ } else {
+ // Normal style
+ const badge = c.isNew
+ ? '<span style="font-size:0.65rem;background:#DBEAFE;color:#1E40AF;padding:1px 6px;border-radius:8px;margin-left:4px;">Nouveau</span>'
+ : '<span style="font-size:0.65rem;color:#64748B;">' + c.pointsBalance + ' pts · ' + c.visitCount + ' visite(s)</span>';
+ html += '<div style="display:flex;align-items:center;justify-content:space-between;background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:0.5rem 0.75rem;margin-bottom:0.35rem;cursor:pointer;" onclick="consumeIdent(\'' + esc(c.identId) + '\')">' +
+ '<div><strong style="font-size:0.85rem;color:#166534;"> ' + label + '</strong><br>' + badge + '</div>' +
+ '<div style="text-align:right;"><span style="font-size:0.65rem;color:#94A3B8;">' + ago + '</span><br>' +
+ '<span style="font-size:0.7rem;color:#059669;font-weight:600;">Sélectionner →</span></div></div>';
+ }
+ });
+ el.innerHTML = html;
+ }
+
+ async function consumeIdent(identId) {
+ try {
+ const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
+
+ // Client authenticated via their device — store server token for PIN bypass
+ if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
+
+ // Pre-fill the credit form
+ if (d.email) {
+ switchMode('email');
+ document.getElementById('client-email').value = d.email;
+ document.getElementById('client-email').classList.add('has-value');
+ } else if (d.phone) {
+ switchMode('phone');
+ document.getElementById('client-phone').value = d.phone;
+ document.getElementById('client-phone').classList.add('has-value');
+ }
+ if (d.name) {
+ document.getElementById('client-name').value = d.name;
+ document.getElementById('client-name').classList.add('has-value');
+ }
+
+ setTimeout(triggerLookup, 300);
+ setTimeout(() => document.getElementById('amount').focus(), 600);
+ } catch (e) {
+ console.error('Consume error:', e);
+ }
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // NEAR-DUPLICATE DETECTION
+ // ═══════════════════════════════════════════════════════
+
+ async function checkNearDuplicates() {
+ const container = document.getElementById('dup-container');
+ container.innerHTML = '';
+
+ const email = document.getElementById('client-email').value.trim();
+ const phone = document.getElementById('client-phone').value.trim();
+ if (!email && !phone) return;
+
+ try {
+ const params = new URLSearchParams();
+ if (email) params.set('email', email);
+ if (phone) params.set('phone', phone);
+
+ const data = await API.call('/clients/near-duplicates?' + params.toString());
+ if (!data.matches || data.matches.length === 0) return;
+
+ let html = '<div class="dup-warning">' +
+ '<div class="dup-warning-title">' +
+ '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
+ 'Client similaire trouvé' +
+ '</div>';
+
+ data.matches.forEach(m => {
+ const identifier = esc(m.email || m.phone || '');
+ const useEmail = (m.email || '').replace(/'/g, "\\'");
+ const usePhone = (m.phone || '').replace(/'/g, "\\'");
+ const useName = (m.name || '').replace(/'/g, "\\'");
+ html += '<div class="dup-match" onclick="useDuplicate(\'' +
+ useEmail + "', '" + usePhone + "', '" + useName + '\')">' +
+ '<div class="dup-match-info">' +
+ '<span class="dup-match-name">' + esc(m.name || 'Sans nom') + '</span> ' +
+ '<span class="dup-match-id">' + identifier + '</span>' +
+ (m.pointsBalance > 0 ? ' · ' + m.pointsBalance + ' pts' : '') +
+ '</div>' +
+ '<span class="dup-match-use">Utiliser</span>' +
+ '</div>';
+ });
+
+ html += '</div>';
+ container.innerHTML = html;
+ } catch (e) {
+ // Silent fail
+ }
+ }
+
+ function useDuplicate(email, phone, name) {
+ document.getElementById('dup-container').innerHTML = '';
+ if (email) {
+ switchMode('email');
+ document.getElementById('client-email').value = email;
+ document.getElementById('client-email').classList.add('has-value');
+ } else if (phone) {
+ switchMode('phone');
+ document.getElementById('client-phone').value = phone;
+ document.getElementById('client-phone').classList.add('has-value');
+ }
+ if (name) {
+ document.getElementById('client-name').value = name;
+ document.getElementById('client-name').classList.add('has-value');
+ }
+ setTimeout(triggerLookup, 200);
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // QR SCANNER (camera)
+ // ═══════════════════════════════════════════════════════
+
+ let html5QrScanner = null;
+ let qrVerifyTokenValue = null; // server-issued token for PIN bypass on redeem
+ let scannerBusy = false; // debounce scan results
+
+ function startScanner() {
+ document.getElementById('scan-status').textContent = 'Démarrage de la caméra…';
+ document.getElementById('scan-status').style.color = '#64748B';
+ scannerBusy = false;
+
+ // Small delay to let the container become visible and get dimensions
+ setTimeout(() => {
+ try {
+ html5QrScanner = new Html5Qrcode('scan-reader');
+ html5QrScanner.start(
+ { facingMode: 'environment' },
+ {
+ fps: 10,
+ qrbox: function(vw, vh) {
+ const s = Math.min(vw, vh) * 0.7;
+ return { width: Math.floor(s), height: Math.floor(s) };
+ },
+ aspectRatio: 1.0,
+ },
+ onScanSuccess,
+ () => {} // ignore scan failures
+ ).then(() => {
+ document.getElementById('scan-status').textContent = 'Scannez le QR du client';
+ document.getElementById('scan-status').style.color = '#64748B';
+ }).catch(err => {
+ console.error('Scanner start error:', err);
+ document.getElementById('scan-status').innerHTML =
+ ' Impossible d\'accéder à la caméra<br><span style="font-size:0.7rem;">Vérifiez les permissions du navigateur</span>';
+ document.getElementById('scan-status').style.color = '#DC2626';
+ });
+ } catch (err) {
+ console.error('Scanner init error:', err);
+ document.getElementById('scan-status').textContent = ' Erreur d\'initialisation du scanner';
+ document.getElementById('scan-status').style.color = '#DC2626';
+ }
+ }, 300);
+ }
+
+ function stopScanner() {
+ if (html5QrScanner) {
+ try {
+ html5QrScanner.stop().then(() => {
+ html5QrScanner.clear();
+ html5QrScanner = null;
+ }).catch(() => {
+ html5QrScanner = null;
+ });
+ } catch (e) {
+ html5QrScanner = null;
+ }
+ }
+ }
+
+ async function onScanSuccess(decodedText) {
+ if (scannerBusy) return; // debounce
+ scannerBusy = true;
+
+ // Extract client token from URL: fiddo.be/c/TOKEN
+ let clientQrToken = null;
+ try {
+ const url = new URL(decodedText);
+ const parts = url.pathname.split('/');
+ if (parts[1] === 'c' && parts[2]) {
+ clientQrToken = parts[2];
+ }
+ } catch (e) {
+ // Not a URL — maybe just the token itself
+ if (/^[A-Za-z0-9_-]{6,20}$/.test(decodedText)) {
+ clientQrToken = decodedText;
+ }
+ }
+
+ if (!clientQrToken) {
+ document.getElementById('scan-status').textContent = ' QR non reconnu';
+ document.getElementById('scan-status').style.color = '#D97706';
+ setTimeout(() => { scannerBusy = false; }, 2000);
+ return;
+ }
+
+ // Stop scanner immediately
+ stopScanner();
+ document.getElementById('scan-status').textContent = 'QR lu ! Recherche du client…';
+ document.getElementById('scan-status').style.color = '#059669';
+
+ // Lookup client
+ try {
+ const d = await API.call('/qr/client-lookup/' + clientQrToken);
+
+ // Store server-issued verify token for PIN bypass on redeem
+ if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
+
+ // Pre-fill credit form
+ if (d.email) {
+ switchMode('email');
+ document.getElementById('client-email').value = d.email;
+ document.getElementById('client-email').classList.add('has-value');
+ } else if (d.phone) {
+ switchMode('phone');
+ document.getElementById('client-phone').value = d.phone;
+ document.getElementById('client-phone').classList.add('has-value');
+ }
+ if (d.name) {
+ document.getElementById('client-name').value = d.name;
+ document.getElementById('client-name').classList.add('has-value');
+ }
+
+ UI.showAlert('credit-alert',
+ (d.isNew ? 'Nouveau client : ' : 'Client identifié : ') +
+ (d.name || d.email || d.phone) +
+ (d.pointsBalance > 0 ? ' — ' + d.pointsBalance + ' pts' : ''),
+ 'success');
+
+ setTimeout(triggerLookup, 300);
+ setTimeout(() => document.getElementById('amount').focus(), 600);
+ } catch (e) {
+ document.getElementById('scan-status').textContent = ' Client non trouvé';
+ document.getElementById('scan-status').style.color = '#DC2626';
+ scannerBusy = false;
+ setTimeout(() => switchMode('scan'), 2000); // restart scanner
+ }
+ }
+
+ // Load QR on page init (lazy)
+ loadStaticQR();
+
+ // Points badge pop on amount change
+ document.getElementById('amount').addEventListener('input', () => {
+ const b = document.getElementById('pts-badge');
+ b.classList.remove('pop'); void b.offsetWidth;
+ b.classList.add('pop');
+ setTimeout(() => b.classList.remove('pop'), 300);
+ });
+
+ window.addEventListener('beforeunload', () => { stopPendingPoll(); stopScanner(); });
+ </script>
 </body>
 </html>

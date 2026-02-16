@@ -1,292 +1,292 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#0891B2">
-  <title>FIDDO — Carte fidélité</title>
-  <link rel="icon" type="image/png" sizes="192x192" href="/app/assets/icon-192.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Satoshi',-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(160deg,#060810 0%,#0a1a24 40%,#0e7490 100%);min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;overflow-x:hidden}
-    .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.35;pointer-events:none}
-    .orb-1{width:280px;height:280px;background:radial-gradient(circle,#22d3ee,transparent 70%);top:-60px;right:-40px;animation:orbFloat 8s ease-in-out infinite}
-    .orb-2{width:220px;height:220px;background:radial-gradient(circle,#0891B2,transparent 70%);bottom:10%;left:-30px;animation:orbFloat 8s ease-in-out infinite 2.5s}
-    @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(15px,-20px) scale(1.08)}}
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+ <meta name="theme-color" content="#0891B2">
+ <title>FIDDO — Carte fidélité</title>
+ <link rel="icon" type="image/png" sizes="192x192" href="/app/assets/icon-192.png">
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800&display=swap" rel="stylesheet">
+ <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap" rel="stylesheet">
+ <style>
+ *{margin:0;padding:0;box-sizing:border-box}
+ body{font-family:'Satoshi',-apple-system,BlinkMacSystemFont,sans-serif;background:linear-gradient(160deg,#060810 0%,#0a1a24 40%,#0e7490 100%);min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:20px;overflow-x:hidden}
+ .orb{position:fixed;border-radius:50%;filter:blur(80px);opacity:.35;pointer-events:none}
+ .orb-1{width:280px;height:280px;background:radial-gradient(circle,#22d3ee,transparent 70%);top:-60px;right:-40px;animation:orbFloat 8s ease-in-out infinite}
+ .orb-2{width:220px;height:220px;background:radial-gradient(circle,#0891B2,transparent 70%);bottom:10%;left:-30px;animation:orbFloat 8s ease-in-out infinite 2.5s}
+ @keyframes orbFloat{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(15px,-20px) scale(1.08)}}
 
-    .card{position:relative;z-index:1;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,.12);border-radius:28px;padding:40px 28px 36px;max-width:400px;width:100%;text-align:center}
-    .logo-text{font-family:'Satoshi',-apple-system,sans-serif;font-size:28px;font-weight:800;color:#0891B2;letter-spacing:1px;margin:0 auto 12px}
+ .card{position:relative;z-index:1;background:rgba(255,255,255,.08);backdrop-filter:blur(20px);border:1.5px solid rgba(255,255,255,.12);border-radius:28px;padding:40px 28px 36px;max-width:400px;width:100%;text-align:center}
+ .logo-text{font-family:'Satoshi',-apple-system,sans-serif;font-size:28px;font-weight:800;color:#0891B2;letter-spacing:1px;margin:0 auto 12px}
 
-    h1{font-size:20px;font-weight:800;color:#fff;margin-bottom:4px}
-    .merchant-name{font-size:15px;color:#22d3ee;font-weight:600;margin-bottom:20px}
-    p{color:rgba(255,255,255,.6);font-size:14px;line-height:1.6}
+ h1{font-size:20px;font-weight:800;color:#fff;margin-bottom:4px}
+ .merchant-name{font-size:15px;color:#22d3ee;font-weight:600;margin-bottom:20px}
+ p{color:rgba(255,255,255,.6);font-size:14px;line-height:1.6}
 
-    .field{position:relative;margin:20px 0 12px}
-    .field input{width:100%;padding:16px 16px 16px 48px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;font-size:16px;font-family:inherit;color:#fff;outline:none;transition:border-color .2s}
-    .field input::placeholder{color:rgba(255,255,255,.35)}
-    .field input:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.12)}
-    .field .icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:20px}
+ .field{position:relative;margin:20px 0 12px}
+ .field input{width:100%;padding:16px 16px 16px 48px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.15);border-radius:14px;font-size:16px;font-family:inherit;color:#fff;outline:none;transition:border-color .2s}
+ .field input::placeholder{color:rgba(255,255,255,.35)}
+ .field input:focus{border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.12)}
+ .field .icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.4);font-size:20px}
 
-    .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;background:linear-gradient(135deg,#0891B2,#0e7490);color:#fff;font-size:16px;font-weight:700;border-radius:16px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(8,145,178,.3);transition:transform .15s;font-family:inherit}
-    .btn:active{transform:scale(.97)}
-    .btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
-    .btn .material-symbols-rounded{font-size:20px}
-    .btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,.2);box-shadow:none;font-size:14px;padding:13px}
-    .btn-outline:active{background:rgba(255,255,255,.06)}
+ .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:16px;background:linear-gradient(135deg,#0891B2,#0e7490);color:#fff;font-size:16px;font-weight:700;border-radius:16px;border:none;cursor:pointer;box-shadow:0 4px 20px rgba(8,145,178,.3);transition:transform .15s;font-family:inherit}
+ .btn:active{transform:scale(.97)}
+ .btn:disabled{opacity:.5;transform:none;cursor:not-allowed}
+ .btn .material-symbols-rounded{font-size:20px}
+ .btn-outline{background:transparent;border:1.5px solid rgba(255,255,255,.2);box-shadow:none;font-size:14px;padding:13px}
+ .btn-outline:active{background:rgba(255,255,255,.06)}
 
-    .hint{margin-top:12px;font-size:12px;color:rgba(255,255,255,.3)}
+ .hint{margin-top:12px;font-size:12px;color:rgba(255,255,255,.3)}
 
-    .step{display:none}
-    .step.active{display:block;animation:fadeUp .35s ease}
-    @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+ .step{display:none}
+ .step.active{display:block;animation:fadeUp .35s ease}
+ @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
-    .confirm-email{font-size:18px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);border-radius:12px;padding:14px 20px;margin:16px 0;word-break:break-all}
-    .confirm-btns{display:flex;gap:10px;margin-top:16px}
-    .confirm-btns .btn{flex:1}
-    .btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,.15);box-shadow:none}
+ .confirm-email{font-size:18px;font-weight:700;color:#fff;background:rgba(255,255,255,.08);border-radius:12px;padding:14px 20px;margin:16px 0;word-break:break-all}
+ .confirm-btns{display:flex;gap:10px;margin-top:16px}
+ .confirm-btns .btn{flex:1}
+ .btn-ghost{background:transparent;border:1.5px solid rgba(255,255,255,.15);box-shadow:none}
 
-    .success-icon{width:72px;height:72px;border-radius:50%;background:rgba(5,150,105,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1)}
-    .success-icon .material-symbols-rounded{font-size:40px;color:#34d399}
-    @keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+ .success-icon{width:72px;height:72px;border-radius:50%;background:rgba(5,150,105,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;animation:popIn .5s cubic-bezier(.34,1.56,.64,1)}
+ .success-icon .material-symbols-rounded{font-size:40px;color:#34d399}
+ @keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
 
-    .points-card{background:linear-gradient(135deg,#0891B2,#0e7490);border-radius:16px;padding:20px;margin:20px 0;color:#fff}
-    .points-big{font-size:40px;font-weight:800}
-    .points-label{font-size:13px;opacity:.85;margin-top:2px}
+ .points-card{background:linear-gradient(135deg,#0891B2,#0e7490);border-radius:16px;padding:20px;margin:20px 0;color:#fff}
+ .points-big{font-size:40px;font-weight:800}
+ .points-label{font-size:13px;opacity:.85;margin-top:2px}
 
-    .stores{display:flex;gap:10px;justify-content:center;margin-top:16px}
-    .store-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 16px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;text-decoration:none;font-size:12px;font-weight:600;transition:transform .15s}
-    .store-btn:active{transform:scale(.95)}
+ .stores{display:flex;gap:10px;justify-content:center;margin-top:16px}
+ .store-btn{display:inline-flex;align-items:center;gap:6px;padding:11px 16px;border-radius:12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;text-decoration:none;font-size:12px;font-weight:600;transition:transform .15s}
+ .store-btn:active{transform:scale(.95)}
 
-    .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.15);border-top-color:#22d3ee;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
-    @keyframes spin{to{transform:rotate(360deg)}}
+ .spinner{width:32px;height:32px;border:3px solid rgba(255,255,255,.15);border-top-color:#22d3ee;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px}
+ @keyframes spin{to{transform:rotate(360deg)}}
 
-    .err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px 14px;color:#fca5a5;font-size:13px;margin-top:10px;display:none}
-    .err.show{display:block}
-  </style>
+ .err{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:10px 14px;color:#fca5a5;font-size:13px;margin-top:10px;display:none}
+ .err.show{display:block}
+ </style>
 </head>
 <body>
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
+ <div class="orb orb-1"></div>
+ <div class="orb orb-2"></div>
 
-  <div class="card">
-    <div class="logo-text">FIDDO</div>
+ <div class="card">
+ <div class="logo-text">FIDDO</div>
 
-    <!-- STEP 1: Email -->
-    <div id="step-email" class="step active">
-      <h1>Carte fidélité</h1>
-      <p class="merchant-name" id="merchant-name">Chargement…</p>
-      <p>Entrez votre email pour activer votre carte ou récupérer vos points</p>
-      <div class="field">
-        <span class="material-symbols-rounded icon">mail</span>
-        <input type="email" id="input-email" placeholder="votre@email.com" autocomplete="email" inputmode="email" autofocus>
-      </div>
-      <button class="btn" id="btn-next" onclick="goConfirm()">
-        <span>Continuer</span>
-        <span class="material-symbols-rounded">east</span>
-      </button>
-      <div class="err" id="err-email"></div>
-      <p class="hint">Aucun mot de passe requis. Rapide et sécurisé.</p>
-    </div>
+ <!-- STEP 1: Email -->
+ <div id="step-email" class="step active">
+ <h1>Carte fidélité</h1>
+ <p class="merchant-name" id="merchant-name">Chargement…</p>
+ <p>Entrez votre email pour activer votre carte ou récupérer vos points</p>
+ <div class="field">
+ <span class="material-symbols-rounded icon">mail</span>
+ <input type="email" id="input-email" placeholder="votre@email.com" autocomplete="email" inputmode="email" autofocus>
+ </div>
+ <button class="btn" id="btn-next" onclick="goConfirm()">
+ <span>Continuer</span>
+ <span class="material-symbols-rounded">east</span>
+ </button>
+ <div class="err" id="err-email"></div>
+ <p class="hint">Aucun mot de passe requis. Rapide et sécurisé.</p>
+ </div>
 
-    <!-- STEP 2: Confirm -->
-    <div id="step-confirm" class="step">
-      <h1>Confirmez votre email</h1>
-      <p>C'est bien votre adresse ?</p>
-      <div class="confirm-email" id="confirm-display"></div>
-      <div class="confirm-btns">
-        <button class="btn btn-ghost" onclick="goBack()">
-          <span class="material-symbols-rounded">edit</span>
-          Modifier
-        </button>
-        <button class="btn" id="btn-confirm" onclick="doRegister()">
-          <span>C'est moi !</span>
-          <span class="material-symbols-rounded">check</span>
-        </button>
-      </div>
-      <div class="err" id="err-confirm"></div>
-    </div>
+ <!-- STEP 2: Confirm -->
+ <div id="step-confirm" class="step">
+ <h1>Confirmez votre email</h1>
+ <p>C'est bien votre adresse ?</p>
+ <div class="confirm-email" id="confirm-display"></div>
+ <div class="confirm-btns">
+ <button class="btn btn-ghost" onclick="goBack()">
+ <span class="material-symbols-rounded">edit</span>
+ Modifier
+ </button>
+ <button class="btn" id="btn-confirm" onclick="doRegister()">
+ <span>C'est moi !</span>
+ <span class="material-symbols-rounded">check</span>
+ </button>
+ </div>
+ <div class="err" id="err-confirm"></div>
+ </div>
 
-    <!-- STEP 3: Loading -->
-    <div id="step-loading" class="step">
-      <div class="spinner"></div>
-      <h1>Identification…</h1>
-      <p>Un instant</p>
-    </div>
+ <!-- STEP 3: Loading -->
+ <div id="step-loading" class="step">
+ <div class="spinner"></div>
+ <h1>Identification…</h1>
+ <p>Un instant</p>
+ </div>
 
-    <!-- STEP 4: Success -->
-    <div id="step-success" class="step">
-      <div class="success-icon"><span class="material-symbols-rounded">check_circle</span></div>
-      <h1 id="success-title">Bienvenue !</h1>
-      <p id="success-sub">Votre carte fidélité est activée</p>
+ <!-- STEP 4: Success -->
+ <div id="step-success" class="step">
+ <div class="success-icon"><span class="material-symbols-rounded">check_circle</span></div>
+ <h1 id="success-title">Bienvenue !</h1>
+ <p id="success-sub">Votre carte fidélité est activée</p>
 
-      <div class="points-card">
-        <div class="points-big" id="success-pts">0</div>
-        <div class="points-label">points chez <span id="success-merchant"></span></div>
-      </div>
+ <div class="points-card">
+ <div class="points-big" id="success-pts">0</div>
+ <div class="points-label">points chez <span id="success-merchant"></span></div>
+ </div>
 
-      <p style="margin-bottom:16px;font-size:13px;color:rgba(255,255,255,.5)">
-        Téléchargez l'app pour suivre vos points et recevoir vos récompenses
-      </p>
+ <p style="margin-bottom:16px;font-size:13px;color:rgba(255,255,255,.5)">
+ Téléchargez l'app pour suivre vos points et recevoir vos récompenses
+ </p>
 
-      <div class="stores">
-        <a class="store-btn" href="https://apps.apple.com" target="_blank" id="link-ios">
-          <span class="material-symbols-rounded" style="font-size:18px">phone_iphone</span>
-          App Store
-        </a>
-        <a class="store-btn" href="https://play.google.com" target="_blank" id="link-android">
-          <span class="material-symbols-rounded" style="font-size:18px">android</span>
-          Google Play
-        </a>
-      </div>
+ <div class="stores">
+ <a class="store-btn" href="https://apps.apple.com" target="_blank" id="link-ios">
+ <span class="material-symbols-rounded" style="font-size:18px">phone_iphone</span>
+ App Store
+ </a>
+ <a class="store-btn" href="https://play.google.com" target="_blank" id="link-android">
+ <span class="material-symbols-rounded" style="font-size:18px">android</span>
+ Google Play
+ </a>
+ </div>
 
-      <button class="btn-outline btn" style="margin-top:16px" onclick="window.location.href='/app/'">
-        <span class="material-symbols-rounded">language</span>
-        Ouvrir la version web
-      </button>
-    </div>
+ <button class="btn-outline btn" style="margin-top:16px" onclick="window.location.href='/app/'">
+ <span class="material-symbols-rounded">language</span>
+ Ouvrir la version web
+ </button>
+ </div>
 
-    <!-- STEP 5: Error -->
-    <div id="step-error" class="step">
-      <div style="width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
-        <span class="material-symbols-rounded" style="font-size:40px;color:#f87171">error</span>
-      </div>
-      <h1>Oups</h1>
-      <p id="err-msg">Une erreur est survenue</p>
-      <button class="btn" style="margin-top:20px" onclick="reset()">
-        <span class="material-symbols-rounded">refresh</span>
-        Réessayer
-      </button>
-    </div>
-  </div>
+ <!-- STEP 5: Error -->
+ <div id="step-error" class="step">
+ <div style="width:72px;height:72px;border-radius:50%;background:rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+ <span class="material-symbols-rounded" style="font-size:40px;color:#f87171">error</span>
+ </div>
+ <h1>Oups</h1>
+ <p id="err-msg">Une erreur est survenue</p>
+ <button class="btn" style="margin-top:20px" onclick="reset()">
+ <span class="material-symbols-rounded">refresh</span>
+ Réessayer
+ </button>
+ </div>
+ </div>
 
-  <script>
-    var API_BASE = '';
-    var qrToken = '';
-    var merchantInfo = null;
-    var emailValue = '';
+ <script>
+ var API_BASE = '';
+ var qrToken = '';
+ var merchantInfo = null;
+ var emailValue = '';
 
-    (function() {
-      var parts = window.location.pathname.split('/');
-      qrToken = parts[parts.length - 1];
-      if (!qrToken || qrToken === 'q') {
-        showStep('error');
-        document.getElementById('err-msg').textContent = 'QR code invalide';
-        return;
-      }
+ (function() {
+ var parts = window.location.pathname.split('/');
+ qrToken = parts[parts.length - 1];
+ if (!qrToken || qrToken === 'q') {
+ showStep('error');
+ document.getElementById('err-msg').textContent = 'QR code invalide';
+ return;
+ }
 
-      // If user already has the PWA installed, redirect directly
-      if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-        window.location.replace('/app/?merchant=' + encodeURIComponent(qrToken));
-        return;
-      }
+ // If user already has the PWA installed, redirect directly
+ if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+ window.location.replace('/app/?merchant=' + encodeURIComponent(qrToken));
+ return;
+ }
 
-      loadMerchantInfo();
-    })();
+ loadMerchantInfo();
+ })();
 
-    async function loadMerchantInfo() {
-      try {
-        var res = await fetch(API_BASE + '/api/qr/info/' + qrToken);
-        if (!res.ok) throw new Error();
-        merchantInfo = await res.json();
-        document.getElementById('merchant-name').textContent = merchantInfo.businessName || 'Commerce FIDDO';
-      } catch (e) {
-        document.getElementById('merchant-name').textContent = 'Commerce FIDDO';
-      }
-    }
+ async function loadMerchantInfo() {
+ try {
+ var res = await fetch(API_BASE + '/api/qr/info/' + qrToken);
+ if (!res.ok) throw new Error();
+ merchantInfo = await res.json();
+ document.getElementById('merchant-name').textContent = merchantInfo.businessName || 'Commerce FIDDO';
+ } catch (e) {
+ document.getElementById('merchant-name').textContent = 'Commerce FIDDO';
+ }
+ }
 
-    document.getElementById('input-email').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') goConfirm();
-    });
+ document.getElementById('input-email').addEventListener('keydown', function(e) {
+ if (e.key === 'Enter') goConfirm();
+ });
 
-    function showStep(id) {
-      document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
-      document.getElementById('step-' + id).classList.add('active');
-    }
+ function showStep(id) {
+ document.querySelectorAll('.step').forEach(function(s) { s.classList.remove('active'); });
+ document.getElementById('step-' + id).classList.add('active');
+ }
 
-    function showErr(id, msg) {
-      var el = document.getElementById(id);
-      el.textContent = msg;
-      el.classList.add('show');
-      setTimeout(function() { el.classList.remove('show'); }, 4000);
-    }
+ function showErr(id, msg) {
+ var el = document.getElementById(id);
+ el.textContent = msg;
+ el.classList.add('show');
+ setTimeout(function() { el.classList.remove('show'); }, 4000);
+ }
 
-    function goConfirm() {
-      emailValue = document.getElementById('input-email').value.trim().toLowerCase();
-      if (!emailValue || !emailValue.includes('@') || !emailValue.includes('.')) {
-        showErr('err-email', 'Entrez une adresse email valide');
-        return;
-      }
-      document.getElementById('confirm-display').textContent = emailValue;
-      showStep('confirm');
-    }
+ function goConfirm() {
+ emailValue = document.getElementById('input-email').value.trim().toLowerCase();
+ if (!emailValue || !emailValue.includes('@') || !emailValue.includes('.')) {
+ showErr('err-email', 'Entrez une adresse email valide');
+ return;
+ }
+ document.getElementById('confirm-display').textContent = emailValue;
+ showStep('confirm');
+ }
 
-    function goBack() {
-      showStep('email');
-      setTimeout(function() { document.getElementById('input-email').focus(); }, 100);
-    }
+ function goBack() {
+ showStep('email');
+ setTimeout(function() { document.getElementById('input-email').focus(); }, 100);
+ }
 
-    async function doRegister() {
-      var btn = document.getElementById('btn-confirm');
-      btn.disabled = true;
-      showStep('loading');
+ async function doRegister() {
+ var btn = document.getElementById('btn-confirm');
+ btn.disabled = true;
+ showStep('loading');
 
-      try {
-        var res = await fetch(API_BASE + '/api/qr/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            qrToken: qrToken,
-            email: emailValue,
-          })
-        });
+ try {
+ var res = await fetch(API_BASE + '/api/qr/register', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({
+ qrToken: qrToken,
+ email: emailValue,
+ })
+ });
 
-        var data = await res.json();
+ var data = await res.json();
 
-        if (!res.ok) {
-          showStep('error');
-          document.getElementById('err-msg').textContent = data.error || 'Erreur serveur';
-          btn.disabled = false;
-          return;
-        }
+ if (!res.ok) {
+ showStep('error');
+ document.getElementById('err-msg').textContent = data.error || 'Erreur serveur';
+ btn.disabled = false;
+ return;
+ }
 
-        var name = data.clientName || '';
-        var pts = data.pointsBalance || 0;
-        var mName = merchantInfo ? merchantInfo.businessName : 'ce commerce';
+ var name = data.clientName || '';
+ var pts = data.pointsBalance || 0;
+ var mName = merchantInfo ? merchantInfo.businessName : 'ce commerce';
 
-        // Existing user → identified, show success with app link + stores
-        if (!data.isNew) {
-          document.getElementById('success-title').textContent = 'Content de vous revoir' + (name ? ', ' + name.split(' ')[0] : '') + ' !';
-          document.getElementById('success-sub').textContent = 'Vous êtes identifié';
-          document.getElementById('success-pts').textContent = pts;
-          document.getElementById('success-merchant').textContent = mName;
-          showStep('success');
-          return;
-        }
+ // Existing user → identified, show success with app link + stores
+ if (!data.isNew) {
+ document.getElementById('success-title').textContent = 'Content de vous revoir' + (name ? ', ' + name.split(' ')[0] : '') + ' !';
+ document.getElementById('success-sub').textContent = 'Vous êtes identifié';
+ document.getElementById('success-pts').textContent = pts;
+ document.getElementById('success-merchant').textContent = mName;
+ showStep('success');
+ return;
+ }
 
-        // New user → show success + download links
-        document.getElementById('success-title').textContent = 'Bienvenue !';
-        document.getElementById('success-sub').textContent = 'Votre carte fidélité est activée';
-        document.getElementById('success-pts').textContent = pts;
-        document.getElementById('success-merchant').textContent = mName;
+ // New user → show success + download links
+ document.getElementById('success-title').textContent = 'Bienvenue !';
+ document.getElementById('success-sub').textContent = 'Votre carte fidélité est activée';
+ document.getElementById('success-pts').textContent = pts;
+ document.getElementById('success-merchant').textContent = mName;
 
-        showStep('success');
+ showStep('success');
 
-      } catch (e) {
-        showStep('error');
-        document.getElementById('err-msg').textContent = 'Erreur réseau. Vérifiez votre connexion.';
-        btn.disabled = false;
-      }
-    }
+ } catch (e) {
+ showStep('error');
+ document.getElementById('err-msg').textContent = 'Erreur réseau. Vérifiez votre connexion.';
+ btn.disabled = false;
+ }
+ }
 
-    function reset() {
-      document.getElementById('input-email').value = '';
-      document.getElementById('btn-confirm').disabled = false;
-      showStep('email');
-      setTimeout(function() { document.getElementById('input-email').focus(); }, 100);
-    }
-  </script>
+ function reset() {
+ document.getElementById('input-email').value = '';
+ document.getElementById('btn-confirm').disabled = false;
+ showStep('email');
+ setTimeout(function() { document.getElementById('input-email').focus(); }, 100);
+ }
+ </script>
 </body>
 </html>
