@@ -381,7 +381,7 @@ const App = (() => {
   }
 
   function buildFilterPills() {
-    const types = new Set(cards.map(c => c.businessType || 'horeca'));
+    const types = new Set(cards.map(c => c.businessType || 'autre'));
     const row = document.getElementById('filter-row');
     let html = '<button class="pill active" data-type="all" onclick="App.filterType(\'all\')">Tous</button>';
     types.forEach(t => {
@@ -394,7 +394,7 @@ const App = (() => {
 
   function renderFilteredCards() {
     let filtered = cards;
-    if (activeFilter !== 'all') filtered = filtered.filter(c => (c.businessType || 'horeca') === activeFilter);
+    if (activeFilter !== 'all') filtered = filtered.filter(c => (c.businessType || 'autre') === activeFilter);
     if (searchQuery) filtered = filtered.filter(c => c.merchantName.toLowerCase().includes(searchQuery));
 
     const list = document.getElementById('cards-list');
@@ -419,7 +419,7 @@ const App = (() => {
       const left = Math.max(c.pointsForReward - c.pointsBalance, 0);
       const pct = Math.min(c.progress || 0, 100);
       const date = c.lastVisit ? relDate(c.lastVisit) : '';
-      const biz = BIZ_TYPES[c.businessType || 'horeca'] || BIZ_TYPES.autre;
+      const biz = BIZ_TYPES[c.businessType || 'autre'] || BIZ_TYPES.autre;
       const isFav = c.isFavorite;
 
       return `
@@ -594,7 +594,7 @@ const App = (() => {
     currentMerchant = merchant;
     const theme = merchant.theme || 'navy';
     const color = THEMES[theme] || THEMES.navy;
-    const biz = BIZ_TYPES[merchant.businessType || 'horeca'] || BIZ_TYPES.autre;
+    const biz = BIZ_TYPES[merchant.businessType || 'autre'] || BIZ_TYPES.autre;
 
     document.getElementById('card-hero').className = 'card-hero theme-' + theme;
     document.getElementById('cd-name').textContent = merchant.name;
