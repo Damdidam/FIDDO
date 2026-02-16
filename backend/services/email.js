@@ -435,6 +435,31 @@ function sendAppReminderEmail(clientEmail, merchantName, pointsBalance, appUrl) 
 }
 
 
+function sendAccountDeletedEmail(clientEmail) {
+  return sendMail({
+    to: clientEmail,
+    subject: 'FIDDO — Votre compte a été supprimé',
+    html: `
+      <div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:inline-flex;align-items:center;justify-content:center;">
+            <span style="font-size:28px;">🗑️</span>
+          </div>
+        </div>
+        <h2 style="text-align:center;font-size:20px;margin-bottom:12px;">Compte supprimé</h2>
+        <p style="color:#64748b;line-height:1.6;text-align:center;">
+          Votre compte FIDDO a été supprimé avec succès. Toutes vos données personnelles ont été anonymisées.
+        </p>
+        <p style="color:#94a3b8;font-size:13px;line-height:1.6;text-align:center;margin-top:20px;">
+          Si vous n'êtes pas à l'origine de cette demande, contactez-nous immédiatement à <a href="mailto:support@fiddo.be" style="color:#3b82f6;">support@fiddo.be</a>.
+        </p>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
+        <p style="color:#cbd5e1;font-size:12px;text-align:center;">FIDDO — Programme de fidélité digital</p>
+      </div>
+    `,
+  });
+}
+
 module.exports = {
   sendMail,
   escHtml,
@@ -450,4 +475,5 @@ module.exports = {
   sendGlobalMergeNotificationEmail,
   sendWelcomeEmail,
   sendAppReminderEmail,
+  sendAccountDeletedEmail,
 };
