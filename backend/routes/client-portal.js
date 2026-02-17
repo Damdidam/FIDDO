@@ -173,6 +173,7 @@ router.post('/verify', (req, res) => {
       email: endUser.email,
       phone: endUser.phone,
       qrToken: endUser.qr_token,
+      dateOfBirth: endUser.date_of_birth || null,
     };
 
     // ── Notify polling session in SQLite (for native app) ──
@@ -250,6 +251,7 @@ router.get('/cards', authenticateClient, (req, res) => {
         phone: endUser.phone,
         qrToken: endUser.qr_token,
         hasPin: !!endUser.pin_hash,
+        dateOfBirth: endUser.date_of_birth || null,
       },
       cards: result,
     });
@@ -429,7 +431,23 @@ router.put('/profile', authenticateClient, (req, res) => {
       const p = phone.trim();
       params.push(p, p.startsWith('+') ? p : (p ? '+32' + p.replace(/^0/, '') : null));
     }
-    if (dateOfBirth !== undefined) { updates.push('date_of_birth = ?'); params.push(dateOfBirth || null); }
+    if (dateOfBirth !== undefined) {
+      // One-time only: can't change once set
+      if (endUser.date_of_birth) {
+        return res.status(400).json({ error: 'La date de naissance ne peut pas être modifiée une fois renseignée' });
+      }
+      // Validate format YYYY-MM-DD
+      if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+        return res.status(400).json({ error: 'Format de date invalide' });
+      }
+      // Validate reasonable date (13-120 years old)
+      if (dateOfBirth) {
+        const bd = new Date(dateOfBirth);
+        const age = (Date.now() - bd.getTime()) / (365.25 * 24 * 60 * 60 * 1000);
+        if (age < 13 || age > 120) return res.status(400).json({ error: 'Date de naissance invalide' });
+      }
+      updates.push('date_of_birth = ?'); params.push(dateOfBirth || null);
+    }
 
     if (updates.length === 0) return res.status(400).json({ error: 'Rien à modifier' });
 

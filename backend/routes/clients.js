@@ -115,6 +115,7 @@ router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
              mc.first_visit, mc.last_visit, mc.is_blocked, mc.created_at,
              mc.end_user_id, mc.notes_private, mc.custom_reward,
              eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
+             eu.date_of_birth,
              last_tx.staff_name as last_credited_by,
              last_tx.created_at as last_tx_at,
              last_tx.points_delta as last_tx_points,

@@ -190,9 +190,10 @@
  <span class="material-symbols-rounded">phone</span>
  <span id="prof-phone">—</span>
  </div>
- <div class="prof-row hidden" id="prof-dob-row">
+ <div class="prof-row" id="prof-dob-row" onclick="App.editDob()" style="cursor:pointer">
  <span class="material-symbols-rounded">cake</span>
- <span id="prof-dob">—</span>
+ <span id="prof-dob" style="flex:1">Ajouter votre date de naissance</span>
+ <span id="prof-dob-action" class="material-symbols-rounded" style="font-size:16px;color:var(--tx3)">edit</span>
  </div>
  </div>
  </div>
@@ -454,6 +455,34 @@
  <span class="material-symbols-rounded">delete_forever</span>Supprimer
  </button>
  </div>
+ </div>
+ </div>
+
+ <!-- Hidden cards modal -->
+ <!-- Birthday Modal -->
+ <div id="modal-dob" class="modal" onclick="App.closeModal()">
+ <div class="modal-bg"></div>
+ <div class="modal-sheet sm" onclick="event.stopPropagation()">
+ <div class="modal-pill"></div>
+ <div style="text-align:center;margin-bottom:12px">
+ <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+ <rect width="48" height="48" rx="14" fill="url(#bday-bg)"/>
+ <path d="M24 14c1.2-2.4 0-4.5 0-4.5s-1.2 2.1 0 4.5z" fill="#FF9800" opacity="0.9"/>
+ <path d="M24 14c-.8-1.6 0-3 0-3s.8 1.4 0 3z" fill="#FFC107"/>
+ <rect x="13" y="20" width="22" height="14" rx="3" fill="#fff" opacity="0.95"/>
+ <rect x="13" y="26" width="22" height="8" rx="2" fill="#fff" opacity="0.5"/>
+ <rect x="22" y="16" width="4" height="6" rx="2" fill="#F8BBD0"/>
+ <rect x="15" y="23" width="18" height="2" rx="1" fill="#F48FB1" opacity="0.5"/>
+ <defs><linearGradient id="bday-bg" x1="0" y1="0" x2="48" y2="48"><stop stop-color="#EC407A"/><stop offset="1" stop-color="#AB47BC"/></linearGradient></defs>
+ </svg>
+ </div>
+ <h2>Date de naissance</h2>
+ <p class="modal-sub">Renseignez-la pour recevoir une surprise le jour J. Cette information ne pourra plus être modifiée.</p>
+ <div class="field solid-field" style="margin-bottom:16px">
+ <span class="material-symbols-rounded field-icon">cake</span>
+ <input type="date" id="edit-dob" style="width:100%">
+ </div>
+ <button class="btn-primary" id="btn-save-dob"><span>Enregistrer</span></button>
  </div>
  </div>
 

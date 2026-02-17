@@ -239,6 +239,7 @@ function initDatabase() {
   try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token_expires TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE end_users ADD COLUMN last_app_login TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE end_users ADD COLUMN first_merchant_id INTEGER'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE end_users ADD COLUMN date_of_birth TEXT'); } catch (e) { /* already exists */ }
 
   // Backfill qr_tokens for existing end_users
   const usersWithoutQr = db.prepare('SELECT id FROM end_users WHERE qr_token IS NULL AND deleted_at IS NULL').all();

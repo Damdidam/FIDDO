@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { merchantQueries, staffQueries } = require('../database');
+const { db, merchantQueries, staffQueries } = require('../database');
 const {
   authenticateStaff,
   generateStaffToken,
@@ -294,13 +294,81 @@ router.post('/logout', (req, res) => {
 // PUT /api/auth/settings — Update merchant settings (owner only)
 // ═══════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════
+// POST /api/auth/settings/preview-switch — Preview mode switch impact
+// ═══════════════════════════════════════════════════════
+
+router.post('/settings/preview-switch', authenticateStaff, (req, res) => {
+  if (req.staff.role !== 'owner') {
+    return res.status(403).json({ error: 'Seul le propriétaire peut modifier les paramètres' });
+  }
+
+  try {
+    const merchantId = req.staff.merchant_id;
+    const merchant = merchantQueries.findById.get(merchantId);
+    if (!merchant) return res.status(404).json({ error: 'Commerce non trouvé' });
+
+    const { newMode, newThreshold } = req.body;
+    const oldMode = merchant.loyalty_mode || 'points';
+    const oldThreshold = merchant.points_for_reward;
+
+    if (oldMode === newMode) {
+      return res.json({ changed: false, message: 'Même mode, aucune conversion nécessaire' });
+    }
+
+    // Get all active clients with balance > 0
+    const clients = db.prepare(`
+      SELECT mc.id, mc.points_balance, mc.visit_count, eu.name, eu.email, eu.phone
+      FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      WHERE mc.merchant_id = ? AND mc.points_balance > 0
+      ORDER BY mc.points_balance DESC
+    `).all(merchantId);
+
+    const conversions = clients.map(c => {
+      const newBalance = Math.ceil((c.points_balance / oldThreshold) * newThreshold);
+      return {
+        id: c.id,
+        name: c.name || c.email || c.phone || 'N/A',
+        oldBalance: c.points_balance,
+        newBalance,
+        visitCount: c.visit_count,
+      };
+    });
+
+    const oldUnit = oldMode === 'visits' ? 'visites' : 'points';
+    const newUnit = newMode === 'visits' ? 'visites' : 'points';
+
+    res.json({
+      changed: true,
+      oldMode,
+      newMode,
+      oldThreshold,
+      newThreshold,
+      oldUnit,
+      newUnit,
+      clientCount: conversions.length,
+      examples: conversions.slice(0, 5),
+      allConversions: conversions,
+    });
+  } catch (error) {
+    console.error('Erreur preview switch:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/auth/settings — Update merchant settings (owner only)
+// ═══════════════════════════════════════════════════════
+
 router.put('/settings', authenticateStaff, (req, res) => {
   if (req.staff.role !== 'owner') {
     return res.status(403).json({ error: 'Seul le propriétaire peut modifier les paramètres' });
   }
 
   try {
-    const { pointsPerEuro, pointsForReward, rewardDescription, loyaltyMode } = req.body;
+    const { pointsPerEuro, pointsForReward, rewardDescription, loyaltyMode, confirmModeSwitch } = req.body;
 
     const validModes = ['points', 'visits'];
     const mode = (loyaltyMode && validModes.includes(loyaltyMode)) ? loyaltyMode : 'points';
@@ -320,23 +388,71 @@ router.put('/settings', authenticateStaff, (req, res) => {
       return res.status(400).json({ error: 'Description de la récompense trop longue (max 200 caractères)' });
     }
 
-    merchantQueries.updateSettings.run(
-      mode === 'visits' ? 1 : ppe, pfr, rdesc, mode,
-      req.staff.merchant_id
-    );
+    const merchantId = req.staff.merchant_id;
+    const merchant = merchantQueries.findById.get(merchantId);
+    const oldMode = merchant ? (merchant.loyalty_mode || 'points') : 'points';
+    const oldThreshold = merchant ? merchant.points_for_reward : 100;
+    const modeChanged = oldMode !== mode;
+
+    // If mode is changing, require explicit confirmation
+    if (modeChanged && !confirmModeSwitch) {
+      return res.status(400).json({
+        error: 'mode_switch_requires_confirmation',
+        message: 'Le changement de mode nécessite une confirmation',
+      });
+    }
+
+    // Perform conversion in a transaction
+    const doUpdate = db.transaction(() => {
+      // Update merchant settings
+      merchantQueries.updateSettings.run(
+        mode === 'visits' ? 1 : ppe, pfr, rdesc, mode,
+        merchantId
+      );
+
+      let converted = 0;
+
+      // Convert balances if mode changed
+      if (modeChanged) {
+        const clients = db.prepare(
+          'SELECT id, points_balance FROM merchant_clients WHERE merchant_id = ? AND points_balance > 0'
+        ).all(merchantId);
+
+        const updateStmt = db.prepare(
+          "UPDATE merchant_clients SET points_balance = ?, updated_at = datetime('now') WHERE id = ?"
+        );
+
+        for (const c of clients) {
+          const newBalance = Math.ceil((c.points_balance / oldThreshold) * pfr);
+          updateStmt.run(newBalance, c.id);
+          converted++;
+        }
+      }
+
+      return converted;
+    });
+
+    const converted = doUpdate();
 
     logAudit({
       ...auditCtx(req),
       actorType: 'staff',
       actorId: req.staff.id,
-      merchantId: req.staff.merchant_id,
+      merchantId,
       action: 'settings_updated',
       targetType: 'merchant',
-      targetId: req.staff.merchant_id,
-      details: { pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: rdesc, loyaltyMode: mode },
+      targetId: merchantId,
+      details: {
+        pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: rdesc, loyaltyMode: mode,
+        modeChanged, oldMode, converted,
+      },
     });
 
-    res.json({ message: 'Paramètres mis à jour', loyaltyMode: mode });
+    const msg = modeChanged
+      ? `Mode changé : ${oldMode} → ${mode}. ${converted} client${converted > 1 ? 's' : ''} converti${converted > 1 ? 's' : ''}.`
+      : 'Paramètres mis à jour';
+
+    res.json({ message: msg, loyaltyMode: mode, converted });
   } catch (error) {
     console.error('Erreur update settings:', error);
     res.status(500).json({ error: 'Erreur lors de la mise à jour' });

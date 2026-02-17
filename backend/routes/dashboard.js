@@ -211,4 +211,56 @@ router.get('/activity', (req, res) => {
 });
 
 
+// ═══════════════════════════════════════════════════════
+// GET /api/dashboard/birthdays — Upcoming birthdays (next 7 days)
+// ═══════════════════════════════════════════════════════
+
+router.get('/birthdays', (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+
+    const clients = db.prepare(`
+      SELECT mc.id, eu.name, eu.email, eu.phone, eu.date_of_birth,
+             mc.points_balance, mc.visit_count, mc.last_visit
+      FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
+        AND eu.date_of_birth IS NOT NULL AND mc.is_blocked = 0
+    `).all(merchantId);
+
+    const now = new Date();
+    const upcoming = [];
+
+    for (const c of clients) {
+      const [, mm, dd] = c.date_of_birth.split('-').map(Number);
+      for (let d = 0; d <= 7; d++) {
+        const check = new Date(now);
+        check.setDate(check.getDate() + d);
+        if (check.getMonth() + 1 === mm && check.getDate() === dd) {
+          upcoming.push({
+            id: c.id,
+            name: c.name || c.email || c.phone || 'N/A',
+            email: c.email,
+            phone: c.phone,
+            dateOfBirth: c.date_of_birth,
+            birthdayDate: `${String(mm).padStart(2, '0')}-${String(dd).padStart(2, '0')}`,
+            daysUntil: d,
+            pointsBalance: c.points_balance,
+            visitCount: c.visit_count,
+          });
+          break;
+        }
+      }
+    }
+
+    upcoming.sort((a, b) => a.daysUntil - b.daysUntil);
+
+    res.json({ birthdays: upcoming, count: upcoming.length });
+  } catch (error) {
+    console.error('Erreur birthdays:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
 module.exports = router;

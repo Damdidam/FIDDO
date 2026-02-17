@@ -907,16 +907,79 @@
  if (!pfr || pfr <= 0) return showAlert('reward-alert', loyaltyMode === 'visits' ? 'Nombre de passages doit être supérieur à 0' : 'Points pour récompense doit être supérieur à 0', 'error');
  if (!desc) return showAlert('reward-alert', 'Description requise', 'error');
 
+ const oldMode = merchant.loyalty_mode || 'points';
+ const modeChanged = oldMode !== loyaltyMode;
+
+ // If mode changed → preview first
+ if (modeChanged) {
  try {
- // Save reward settings
- await API.auth.updateSettings({ pointsPerEuro: loyaltyMode === 'visits' ? 1 : ppe, pointsForReward: pfr, rewardDescription: desc, loyaltyMode: loyaltyMode });
+ const preview = await fetch('/api/auth/settings/preview-switch', {
+ method: 'POST', headers: { 'Content-Type': 'application/json' },
+ credentials: 'include',
+ body: JSON.stringify({ newMode: loyaltyMode, newThreshold: pfr }),
+ }).then(r => r.json());
+
+ if (preview.error) { showAlert('reward-alert', preview.error, 'error'); return; }
+ if (!preview.changed) { doSaveSettings(ppe, pfr, desc, rewardMsg, loyaltyMode, false); return; }
+
+ // Build confirmation modal content
+ var oldUnit = preview.oldUnit;
+ var newUnit = preview.newUnit;
+ var html = '<p style="margin-bottom:12px"><strong>' + preview.clientCount + ' client' + (preview.clientCount > 1 ? 's' : '') + '</strong> ' + (preview.clientCount > 1 ? 'seront convertis' : 'sera converti') + ' :</p>';
+ html += '<p style="font-size:13px;color:var(--tx2);margin-bottom:14px">' + oldUnit + ' → ' + newUnit + '&nbsp;&nbsp;(seuil : ' + preview.oldThreshold + ' → ' + preview.newThreshold + ')</p>';
+
+ if (preview.examples.length > 0) {
+ html += '<div style="background:var(--bg2);border-radius:10px;padding:12px;margin-bottom:16px">';
+ preview.examples.forEach(function(ex) {
+ html += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--brd);font-size:13px">' +
+ '<span>' + esc(ex.name) + '</span>' +
+ '<span><strong>' + ex.oldBalance + '</strong> ' + oldUnit + ' → <strong>' + ex.newBalance + '</strong> ' + newUnit + '</span></div>';
+ });
+ if (preview.clientCount > 5) html += '<div style="text-align:center;font-size:12px;color:var(--tx3);padding-top:8px">…et ' + (preview.clientCount - 5) + ' autre' + (preview.clientCount - 5 > 1 ? 's' : '') + '</div>';
+ html += '</div>';
+ }
+
+ html += '<p style="font-size:12px;color:var(--tx3);line-height:1.5">Les soldes seront convertis proportionnellement (arrondi supérieur en faveur du client).</p>';
+ document.getElementById('mode-switch-body').innerHTML = html;
+ document.getElementById('mode-switch-modal').style.display = 'flex';
+
+ // Store params for confirmation
+ window._pendingSave = { ppe: ppe, pfr: pfr, desc: desc, rewardMsg: rewardMsg, loyaltyMode: loyaltyMode };
+ } catch (err) {
+ showAlert('reward-alert', err.message || 'Erreur', 'error');
+ }
+ return;
+ }
+
+ doSaveSettings(ppe, pfr, desc, rewardMsg, loyaltyMode, false);
+ });
+
+ function closeModeModal() {
+ document.getElementById('mode-switch-modal').style.display = 'none';
+ }
+
+ async function confirmModeSwitch() {
+ closeModeModal();
+ var p = window._pendingSave;
+ if (!p) return;
+ await doSaveSettings(p.ppe, p.pfr, p.desc, p.rewardMsg, p.loyaltyMode, true);
+ }
+
+ async function doSaveSettings(ppe, pfr, desc, rewardMsg, loyaltyMode, confirmSwitch) {
+ try {
+ await API.auth.updateSettings({
+ pointsPerEuro: loyaltyMode === 'visits' ? 1 : ppe,
+ pointsForReward: pfr,
+ rewardDescription: desc,
+ loyaltyMode: loyaltyMode,
+ confirmModeSwitch: confirmSwitch || false,
+ });
  merchant.points_per_euro = loyaltyMode === 'visits' ? 1 : ppe;
  merchant.points_for_reward = pfr;
  merchant.reward_description = desc;
  merchant.loyalty_mode = loyaltyMode;
  Auth.setSession(staff, merchant);
 
- // Save reward message in preferences
  if (rewardMsg !== (currentPrefs.reward_message || '')) {
  await API.preferences.update({ reward_message: rewardMsg });
  currentPrefs.reward_message = rewardMsg;
@@ -927,7 +990,7 @@
  } catch (err) {
  showAlert('reward-alert', err.message, 'error');
  }
- });
+ }
 
  // ═══════════════════════════════════════════════════════
  // TAB 2: THEME
@@ -1433,5 +1496,22 @@
  downloadQRPdf(); // same flow — browser print dialog handles both print & save-as-PDF
  }
  </script>
+<!-- Mode switch confirmation modal -->
+<div id="mode-switch-modal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px">
+<div style="background:var(--bg);border-radius:16px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+<div style="padding:24px">
+<div style="text-align:center;margin-bottom:16px">
+<span class="material-symbols-rounded" style="font-size:48px;color:#D97706">sync_alt</span>
+</div>
+<h3 style="text-align:center;font-size:1.1rem;margin-bottom:16px">Changement de mode de fidélité</h3>
+<div id="mode-switch-body"></div>
+<div style="display:flex;gap:12px;margin-top:20px">
+<button onclick="closeModeModal()" style="flex:1;padding:12px;border-radius:10px;border:1px solid var(--brd);background:var(--bg);font-size:14px;font-weight:600;cursor:pointer">Annuler</button>
+<button onclick="confirmModeSwitch()" style="flex:1;padding:12px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-size:14px;font-weight:600;cursor:pointer">Confirmer la conversion</button>
+</div>
+</div>
+</div>
+</div>
+
 </body>
 </html>

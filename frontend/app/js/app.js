@@ -874,8 +874,25 @@ const App = (() => {
  else phoneRow.classList.add('hidden');
 
  const dobRow = document.getElementById('prof-dob-row');
- if (client.dateOfBirth) { dobRow.classList.remove('hidden'); document.getElementById('prof-dob').textContent = client.dateOfBirth; }
- else dobRow.classList.add('hidden');
+ const dobText = document.getElementById('prof-dob');
+ const dobAction = document.getElementById('prof-dob-action');
+ if (client.dateOfBirth) {
+ const [y, m, d] = client.dateOfBirth.split('-');
+ const months = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+ dobText.textContent = parseInt(d) + ' ' + months[parseInt(m)] + ' ' + y;
+ dobText.style.color = '';
+ dobAction.textContent = 'lock';
+ dobAction.style.color = '#059669';
+ dobRow.style.cursor = 'default';
+ dobRow.onclick = null;
+ } else {
+ dobText.textContent = 'Ajouter votre date de naissance';
+ dobText.style.color = 'var(--tx3)';
+ dobAction.textContent = 'edit';
+ dobAction.style.color = 'var(--tx3)';
+ dobRow.style.cursor = 'pointer';
+ dobRow.onclick = function() { App.editDob(); };
+ }
 
  const hasPin = client.hasPin;
  document.getElementById('pin-label').textContent = hasPin ? 'PIN défini' : 'Aucun PIN défini';
@@ -925,6 +942,22 @@ const App = (() => {
  if (!email || !email.includes('@')) { toast('Email invalide'); return; }
  const res = await API.updateEmail(email);
  if (res.ok) { client.email = email; loadProfile(); closeModal(); toast('Email mis à jour'); }
+ else toast(res.data?.error || 'Erreur');
+ }
+
+ // ─── BIRTHDAY ─────────────────────────────
+
+ function editDob() {
+ if (client?.dateOfBirth) { toast('La date de naissance ne peut pas être modifiée'); return; }
+ document.getElementById('edit-dob').value = '';
+ openModal('modal-dob');
+ }
+
+ async function saveDob() {
+ const dob = document.getElementById('edit-dob').value;
+ if (!dob) { toast('Sélectionnez une date'); return; }
+ const res = await API.updateProfile({ dateOfBirth: dob });
+ if (res.ok) { client.dateOfBirth = dob; loadProfile(); closeModal(); toast('Date de naissance enregistrée'); }
  else toast(res.data?.error || 'Erreur');
  }
 
@@ -1248,6 +1281,7 @@ const App = (() => {
  document.getElementById('edit-name').addEventListener('keydown', e => { if (e.key === 'Enter') saveName(); });
  document.getElementById('btn-save-email').addEventListener('click', saveEmail);
  document.getElementById('edit-email').addEventListener('keydown', e => { if (e.key === 'Enter') saveEmail(); });
+ document.getElementById('btn-save-dob').addEventListener('click', saveDob);
  document.getElementById('btn-confirm-gift').addEventListener('click', confirmGift);
  document.getElementById('search-input').addEventListener('input', handleSearch);
  document.querySelectorAll('.notif-row input').forEach(el => el.addEventListener('change', saveNotifs));
@@ -1271,6 +1305,7 @@ const App = (() => {
  show, goBack, switchTab, showApp,
  openCard, showHistory, openMaps,
  showMyQR, editName, saveName, editEmail, saveEmail,
+ editDob, saveDob,
  openPinModal, savePin,
  startScanner, closeModal,
  logout, saveNotifs, toast,

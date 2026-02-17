@@ -61,22 +61,36 @@
  /* ═══ STAT CARDS ═══ */
 
  .stats-row {
- display: grid; grid-template-columns: repeat(6, 1fr);
- gap: 0.5rem; margin-bottom: 1rem;
+ display: flex; gap: 0.4rem; margin-bottom: 0.9rem;
+ overflow-x: auto; -webkit-overflow-scrolling: touch;
+ scrollbar-width: none; padding-bottom: 2px;
  }
+ .stats-row::-webkit-scrollbar { display: none; }
  .st {
- background: white; border-radius: 8px; padding: 0.45rem 0.4rem;
+ background: white; border-radius: 8px; padding: 0.35rem 0.55rem;
  text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+ min-width: 0; flex: 1 0 auto; white-space: nowrap;
  }
+ .st.st-click {
+ cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent;
+ }
+ .st.st-click:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 30%, white); }
+ .st.st-click:active { transform: scale(0.97); }
+ .st.st-click.active { border-color: var(--primary); background: color-mix(in srgb, var(--primary-light) 40%, white); }
+ .st.st-click.active .st-lbl { color: var(--primary-dark); }
+ .st.st-bday { border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; }
+ .st.st-bday:hover { border-color: #9333EA; background: #FAF5FF; }
+ .st.st-bday .st-val { color: #9333EA; display: flex; align-items: center; justify-content: center; gap: 4px; }
+ .st.st-bday .st-lbl { color: #9333EA; opacity: 0.7; }
  .st-val {
- font-size: 1.15rem; font-weight: 700; color: var(--primary);
+ font-size: 1.05rem; font-weight: 700; color: var(--primary);
  line-height: 1.15; letter-spacing: -0.5px;
  }
  .st-val.green { color: #059669; }
  .st-val.amber { color: #D97706; }
  .st-lbl {
- font-size: 0.55rem; color: #94A3B8; text-transform: uppercase;
- letter-spacing: 0.3px; margin-top: 0.1rem; font-weight: 600;
+ font-size: 0.5rem; color: #94A3B8; text-transform: uppercase;
+ letter-spacing: 0.3px; margin-top: 0.05rem; font-weight: 600;
  }
  .st.st-action {
  cursor: pointer; transition: all 0.15s; border: 1.5px solid #E2E8F0;
@@ -85,6 +99,47 @@
  .st.st-action .st-icon { color: #64748B; margin-bottom: 1px; }
  .st.st-action .st-icon svg { width: 18px; height: 18px; }
  .st.st-action:hover .st-icon { color: var(--primary); }
+
+ /* ═══ BIRTHDAY WIDGET ═══ */
+
+ .bday-card {
+ background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+ margin-bottom: 0.9rem; overflow: hidden; display: none;
+ }
+ .bday-card.has-data { display: block; }
+ .bday-hdr {
+ display: flex; align-items: center; gap: 8px; padding: 0.6rem 0.85rem;
+ border-bottom: 1px solid #F1F5F9;
+ }
+ .bday-icon-wrap {
+ width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+ background: linear-gradient(135deg, #FDE7F0, #F5E6FF);
+ }
+ .bday-title { font-size: 0.78rem; font-weight: 700; color: #1E293B; }
+ .bday-count {
+ margin-left: auto; font-size: 0.62rem; font-weight: 600; color: #9333EA;
+ background: #F5E6FF; padding: 2px 8px; border-radius: 10px;
+ }
+ .bday-list { padding: 0.3rem 0; }
+ .bday-row {
+ display: flex; align-items: center; gap: 10px; padding: 0.45rem 0.85rem;
+ cursor: pointer; transition: background 0.12s;
+ }
+ .bday-row:hover { background: #FAFAFA; }
+ .bday-avatar {
+ width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+ font-size: 0.7rem; font-weight: 700; color: white;
+ background: linear-gradient(135deg, #EC407A, #AB47BC);
+ }
+ .bday-info { flex: 1; min-width: 0; }
+ .bday-name { font-size: 0.78rem; font-weight: 600; color: #1E293B; }
+ .bday-sub { font-size: 0.62rem; color: #94A3B8; }
+ .bday-when {
+ font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
+ white-space: nowrap;
+ }
+ .bday-when.today { background: #FDE7F0; color: #DB2777; }
+ .bday-when.soon { background: #FEF3C7; color: #92400E; }
 
  /* ═══ ACTIVITY FEED ═══ */
 
@@ -222,8 +277,8 @@
  @media (max-width: 768px) {
  .dash-wrap { padding: 0.4rem; }
  .pg-title { font-size: 0.95rem; }
- .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.4rem; }
- .st-val { font-size: 1.05rem; }
+ .stats-row { gap: 0.35rem; }
+ .st-val { font-size: 0.95rem; }
  .feed-body { max-height: 420px; }
 
  /* Period pills — bigger tap targets */
@@ -242,8 +297,8 @@
  .feed-tab { min-height: 36px; padding: 0.4rem 0.65rem; }
  }
  @media (max-width: 480px) {
- .stats-row { grid-template-columns: repeat(3, 1fr); gap: 0.3rem; }
- .st { padding: 0.35rem 0.3rem; }
+ .stats-row { gap: 0.3rem; }
+ .st { padding: 0.3rem 0.4rem; }
  .st-val { font-size: 1rem; }
  .feed-tab { padding: 0.35rem 0.5rem; font-size: 0.7rem; }
  }
@@ -275,15 +330,28 @@
 
  <!-- ════════ STATS ════════ -->
  <div class="stats-row">
- <div class="st"><div class="st-val" id="s-visits">–</div><div class="st-lbl">Passages</div></div>
+ <div class="st st-click" onclick="statFilter('credit')" id="st-visits" title="Filtrer les crédits"><div class="st-val" id="s-visits">–</div><div class="st-lbl">Passages</div></div>
  <div class="st"><div class="st-val" id="s-pts-out">–</div><div class="st-lbl">Points distribués</div></div>
- <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
- <div class="st"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
- <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
+ <div class="st st-click" onclick="statFilter('reward')" id="st-rewards" title="Filtrer les récompenses"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
+ <div class="st st-click" onclick="goClients()" id="st-new" title="Voir les clients"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
+ <div class="st st-click" onclick="goClients()" id="st-active" title="Voir les clients"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
+ <div class="st st-bday" id="st-bday" onclick="scrollToBday()" title="Anniversaires cette semaine" style="display:none"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday">0</span></div><div class="st-lbl">Anniversaires</div></div>
  <div class="st st-action" onclick="API.clients.exportCSV()" title="Exporter les clients">
  <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
  <div class="st-lbl">Export CSV</div>
  </div>
+ </div>
+
+ <!-- ════════ BIRTHDAY WIDGET ════════ -->
+ <div class="bday-card" id="bday-card">
+ <div class="bday-hdr">
+ <div class="bday-icon-wrap">
+ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>
+ </div>
+ <span class="bday-title">Anniversaires cette semaine</span>
+ <span class="bday-count" id="bday-count">0</span>
+ </div>
+ <div class="bday-list" id="bday-list"></div>
  </div>
 
  <!-- ════════ ACTIVITY FEED ════════ -->
@@ -398,9 +466,36 @@
  currentType = type;
  document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
  if (btn) btn.classList.add('active');
+ // Sync stat tile highlights
+ document.querySelectorAll('.st.st-click').forEach(s => s.classList.remove('active'));
+ if (type === 'credit') document.getElementById('st-visits').classList.add('active');
+ else if (type === 'reward') document.getElementById('st-rewards').classList.add('active');
  currentOffset = 0;
  allTransactions = [];
  loadActivity();
+ }
+
+ function statFilter(type) {
+ // Toggle: click again to reset
+ var newType = (currentType === type) ? '' : type;
+ // Find matching feed tab button
+ var tabs = document.querySelectorAll('.feed-tab');
+ var matchBtn = null;
+ tabs.forEach(function(t) {
+ if (newType === '' && t.textContent.trim().startsWith('Tous')) matchBtn = t;
+ else if (newType === 'credit' && t.textContent.trim().startsWith('Crédits')) matchBtn = t;
+ else if (newType === 'reward' && t.textContent.trim().startsWith('Récompenses')) matchBtn = t;
+ });
+ setType(newType, matchBtn);
+ }
+
+ function goClients() {
+ window.location.href = '/clients';
+ }
+
+ function scrollToBday() {
+ var el = document.getElementById('bday-card');
+ if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
  }
 
  // ═══ COLUMN SORT ═══
@@ -603,7 +698,45 @@
 
  // ═══ INIT ═══
 
- function reload() { currentOffset = 0; allTransactions = []; loadStats(); loadActivity(); }
+ function reload() { currentOffset = 0; allTransactions = []; loadStats(); loadActivity(); loadBirthdays(); }
+
+ async function loadBirthdays() {
+ try {
+ const data = await API.call('/dashboard/birthdays');
+ const card = document.getElementById('bday-card');
+ const list = document.getElementById('bday-list');
+ const count = document.getElementById('bday-count');
+ const statTile = document.getElementById('st-bday');
+ const statVal = document.getElementById('s-bday');
+
+ if (!data.birthdays || data.birthdays.length === 0) {
+ card.classList.remove('has-data');
+ statTile.style.display = 'none';
+ return;
+ }
+
+ card.classList.add('has-data');
+ count.textContent = data.count;
+ statTile.style.display = '';
+ statVal.textContent = data.count;
+
+ var html = '';
+ data.birthdays.forEach(function(b) {
+ var initials = (b.name || '?').split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
+ var whenClass = b.daysUntil === 0 ? 'today' : 'soon';
+ var whenText = b.daysUntil === 0 ? "Aujourd'hui !" : b.daysUntil === 1 ? 'Demain' : 'Dans ' + b.daysUntil + ' jours';
+ html += '<div class="bday-row" onclick="window.location.href=\'/clients\'">';
+ html += '<div class="bday-avatar">' + initials + '</div>';
+ html += '<div class="bday-info"><div class="bday-name">' + esc(b.name) + '</div>';
+ html += '<div class="bday-sub">' + esc(b.email || b.phone || '') + '</div></div>';
+ html += '<span class="bday-when ' + whenClass + '">' + whenText + '</span>';
+ html += '</div>';
+ });
+ list.innerHTML = html;
+ } catch (e) {
+ console.error('Erreur chargement anniversaires:', e);
+ }
+ }
 
  const today = new Date().toISOString().substring(0, 10);
  document.getElementById('date-from').value = today;

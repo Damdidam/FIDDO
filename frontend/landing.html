@@ -277,6 +277,31 @@
  position: relative;
  }
  .mock-pts-label { font-size: 0.8rem; opacity: 0.7; margin-top: 0.3rem; position: relative; }
+
+ /* Mode toggle animation */
+ .mock-mode-toggle {
+ display: flex; gap: 0; margin-bottom: 0.8rem;
+ background: rgba(8,145,178,0.08); border-radius: 8px; overflow: hidden;
+ border: 1px solid rgba(8,145,178,0.12);
+ }
+ .mock-mode-btn {
+ flex: 1; padding: 0.4rem 0; font-size: 0.7rem; font-weight: 600;
+ text-align: center; transition: all 0.4s; color: var(--text-muted, #888);
+ }
+ .mock-mode-btn.active {
+ background: var(--teal); color: #fff; border-radius: 7px;
+ }
+ @keyframes toggleMode {
+ 0%, 45% { /* points mode */ }
+ 50%, 95% { /* visits mode */ }
+ }
+ .mock-card { animation: none; }
+ .mock-pts-num, .mock-pts-label, .mock-bar-meta, .mock-tx,
+ .mock-mode-btn, .float-pill { transition: all 0.5s ease; }
+
+ /* Auto-switch: points ↔ visits */
+ .mock-card[data-mode="visits"] .mock-pts-num { content: '7'; }
+ .mock-card[data-mode="visits"] .mock-bar-fill { width: 70% !important; }
  .mock-bar { margin-bottom: 1rem; }
  .mock-bar-track {
  height: 6px; background: rgba(255,255,255,0.06);
@@ -905,7 +930,7 @@
  Votre programme de fidélité. Pas un agrégateur.
  </div>
  <h1>Vos clients reviennent.<br><em>Vous savez pourquoi.</em></h1>
- <p class="hero-sub">FIDDO n'est pas un agrégateur de cartes existantes. C'est une solution complète et abordable pour créer et gérer votre propre programme de fidélité digital. Vos clients cumulent des points, reçoivent leurs récompenses, et reviennent plus souvent — sans carte tampon à perdre.</p>
+ <p class="hero-sub">FIDDO n'est pas un agrégateur de cartes existantes. C'est une solution complète et abordable pour créer et gérer votre propre programme de fidélité digital. Points par euro ou compteur de visites — vous choisissez le mode qui vous convient, et vous pouvez changer à tout moment. Vos clients cumulent, reçoivent leurs récompenses, et reviennent plus souvent — sans carte tampon à perdre.</p>
  <div class="hero-actions">
  <a href="/login#register" class="btn-main">Essai gratuit — 30 jours <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-left:2px"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></a>
  <a href="#how" class="btn-ghost">Comment ça marche</a>
@@ -926,24 +951,28 @@
  </div>
  </div>
  <div class="hero-visual">
- <div class="mock-card">
+ <div class="mock-card" id="mock-card">
  <div class="mock-header">
  <span class="mock-name">Sophie M.</span>
  <span class="mock-badge">Fidèle</span>
  </div>
+ <div class="mock-mode-toggle">
+ <div class="mock-mode-btn active" id="mock-m-pts">Points</div>
+ <div class="mock-mode-btn" id="mock-m-vis">Visites</div>
+ </div>
  <div class="mock-pts">
- <div class="mock-pts-num">72</div>
- <div class="mock-pts-label">points cumulés</div>
+ <div class="mock-pts-num" id="mock-num">72</div>
+ <div class="mock-pts-label" id="mock-label">points cumulés</div>
  </div>
  <div class="mock-bar">
- <div class="mock-bar-track"><div class="mock-bar-fill"></div></div>
- <div class="mock-bar-meta"><span>72 / 100 points</span><span>Récompense offerte</span></div>
+ <div class="mock-bar-track"><div class="mock-bar-fill" id="mock-fill"></div></div>
+ <div class="mock-bar-meta"><span id="mock-meta-l">72 / 100 points</span><span>Récompense offerte</span></div>
  </div>
- <div class="mock-tx"><span>Aujourd'hui — Menu midi</span><span class="mock-tx-pts">+15 pts</span></div>
- <div class="mock-tx"><span>Lundi — Dîner</span><span class="mock-tx-pts">+32 pts</span></div>
+ <div class="mock-tx"><span>Aujourd'hui — Menu midi</span><span class="mock-tx-pts" id="mock-tx1">+15 pts</span></div>
+ <div class="mock-tx"><span>Lundi — Dîner</span><span class="mock-tx-pts" id="mock-tx2">+32 pts</span></div>
  </div>
- <div class="float-pill fp1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> +15 points crédités</div>
- <div class="float-pill fp2">Récompense dans 28 pts</div>
+ <div class="float-pill fp1" id="mock-fp1"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><polyline points="20 6 9 17 4 12"/></svg> <span id="mock-fp1-t">+15 points crédités</span></div>
+ <div class="float-pill fp2" id="mock-fp2">Récompense dans 28 pts</div>
  </div>
  </div>
  </section>
@@ -989,12 +1018,12 @@
  <div class="step rv">
  <div class="step-n">1</div>
  <div class="step-t">Inscrivez-vous</div>
- <div class="step-d">Créez votre compte en 2 minutes. Définissez vos règles : points par euro, récompense à offrir.</div>
+ <div class="step-d">Créez votre compte en 2 minutes. Choisissez votre mode — points par euro ou compteur de visites — et définissez la récompense à offrir.</div>
  </div>
  <div class="step rv rd1">
  <div class="step-n">2</div>
- <div class="step-t">Créditez les points</div>
- <div class="step-d">Votre caissier entre l'email ou le téléphone du client et le montant. Les points sont ajoutés automatiquement.</div>
+ <div class="step-t">Créditez en un geste</div>
+ <div class="step-d">En mode points : entrez le montant, les points se calculent. En mode visites : un simple clic suffit pour enregistrer le passage.</div>
  </div>
  <div class="step rv rd2">
  <div class="step-n">3</div>
@@ -1048,9 +1077,9 @@
  <div class="fgrid">
  <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div><div class="feat-t">Tableau de bord</div><div class="feat-d">Clients actifs, fréquence de visite, top clients, récompenses réclamées. Analysez l'engagement et prenez des décisions éclairées, tout en un coup d'œil.</div></div>
  <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div><div class="feat-t">Gestion d'équipe</div><div class="feat-d">Attribuez des rôles distincts — propriétaire, manager, caissier — avec des permissions adaptées. Chacun a les bons accès, vous gardez le contrôle total.</div></div>
- <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></div><div class="feat-t">Récompenses flexibles</div><div class="feat-d">Cadeau offert, -10%, service gratuit… Vous définissez les règles de votre programme. FIDDO s'adapte à votre commerce, qu'il s'agisse d'une boutique locale ou d'une chaîne de restaurants.</div></div>
+ <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><line x1="3" y1="5" x2="21" y2="5"/><polyline points="7 23 3 19 7 15"/><line x1="21" y1="19" x2="3" y2="19"/></svg></div><div class="feat-t">Points ou visites — vous choisissez</div><div class="feat-d">Mode points pour les restaurants et commerces au panier variable. Mode visites pour les coiffeurs, pressings et boutiques au tarif fixe. Changez de mode à tout moment — les soldes de vos clients sont convertis automatiquement.</div></div>
  <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="8" height="8" rx="1"/><rect x="14" y="2" width="8" height="8" rx="1"/><rect x="2" y="14" width="8" height="8" rx="1"/><rect x="14" y="14" width="4" height="4" rx="0.5"/><line x1="22" y1="14" x2="22" y2="14.01"/><line x1="22" y1="18" x2="22" y2="22"/><line x1="18" y1="22" x2="18" y2="22.01"/></svg></div><div class="feat-t">QR code client</div><div class="feat-d">Vos clients s'identifient eux-mêmes via QR code. Zéro friction au comptoir.</div></div>
- <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div><div class="feat-t">Personnalisable</div><div class="feat-d">Adaptez chaque aspect de votre programme : identité visuelle, règles de fidélisation, messages et récompenses. Votre marque, votre style.</div></div>
+ <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/><line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/><line x1="17" y1="16" x2="23" y2="16"/></svg></div><div class="feat-t">Entièrement personnalisable</div><div class="feat-d">Identité visuelle, seuils de récompense, descriptions, messages… Cadeau offert, -10%, service gratuit — vous définissez les règles. Votre programme, votre marque, votre style.</div></div>
  <div class="feat rv rd2"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div class="feat-t">Sécurisé et RGPD</div><div class="feat-d">Données isolées par commerce, hébergées en Europe. Conforme au RGPD.</div></div>
  <div class="feat rv"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div><div class="feat-t">Export CSV</div><div class="feat-d">Exportez votre base clients quand vous voulez. Vos données vous appartiennent.</div></div>
  <div class="feat rv rd1"><div class="feat-i"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 7.65l.78.77L12 20.65l7.65-7.65.77-.77a5.4 5.4 0 0 0 0-7.65z"/></svg></div><div class="feat-t">Accompagnement dédié</div><div class="feat-d">Conseils personnalisés et mises à jour régulières. Notre équipe vous accompagne pour tirer le meilleur de FIDDO et rester à la pointe.</div></div>
@@ -1091,7 +1120,7 @@
  <div class="prprice"><span class="pramt">29€</span><span class="prper">/ mois</span></div>
  <div class="prnote">HTVA · Sans engagement</div>
  <ul class="prlist">
- <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Programme de fidélité complet</li>
+ <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Programme de fidélité complet (points ou visites)</li>
  <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Gestion d'équipe illimitée</li>
  <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> Tableau de bord</li>
  <li><span class="chk"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" width="15" height="15" style="flex-shrink:0"><polyline points="20 6 9 17 4 12"/></svg></span> QR code clients</li>
@@ -1239,4 +1268,29 @@
  const t = document.querySelector(a.getAttribute('href'));
  if (t) {
  e.preventDefault();
- t.scrollIntoVi
+ t.scrollIntoView({ behavior: 'smooth' });
+ }
+ });
+ });
+
+ // ── Mock card: auto-toggle points ↔ visits ──
+ (function() {
+ var isVisits = false;
+ function toggle() {
+ isVisits = !isVisits;
+ document.getElementById('mock-m-pts').classList.toggle('active', !isVisits);
+ document.getElementById('mock-m-vis').classList.toggle('active', isVisits);
+ document.getElementById('mock-num').textContent = isVisits ? '7' : '72';
+ document.getElementById('mock-label').textContent = isVisits ? 'visites enregistrées' : 'points cumulés';
+ document.getElementById('mock-meta-l').textContent = isVisits ? '7 / 10 visites' : '72 / 100 points';
+ document.getElementById('mock-fill').style.width = isVisits ? '70%' : '72%';
+ document.getElementById('mock-tx1').textContent = isVisits ? '+1 visite' : '+15 pts';
+ document.getElementById('mock-tx2').textContent = isVisits ? '+1 visite' : '+32 pts';
+ document.getElementById('mock-fp1-t').textContent = isVisits ? '+1 visite enregistrée' : '+15 points crédités';
+ document.getElementById('mock-fp2').textContent = isVisits ? 'Récompense dans 3 visites' : 'Récompense dans 28 pts';
+ }
+ setInterval(toggle, 4000);
+ })();
+ </script>
+</body>
+</html>

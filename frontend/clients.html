@@ -34,6 +34,11 @@
  /* ═══ STAT CARDS ═══ */
  .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
  .st { background: white; border-radius: 8px; padding: 0.45rem 0.4rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+ .st.st-click { cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
+ .st.st-click:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary-light, #CFFAFE) 30%, white); }
+ .st.st-click:active { transform: scale(0.97); }
+ .st.st-click.active { border-color: var(--primary); background: color-mix(in srgb, var(--primary-light, #CFFAFE) 40%, white); }
+ .st.st-click.active .st-lbl { color: var(--primary-dark); }
  .st-val { font-size: 1.15rem; font-weight: 700; color: var(--primary); line-height: 1.15; letter-spacing: -0.5px; }
  .st-val.green { color: #059669; }
  .st-val.amber { color: #D97706; }
@@ -70,6 +75,7 @@
  .cl-badge.blocked { background: #FEE2E2; color: #B91C1C; }
  .cl-badge.reward { background: #D1FAE5; color: #047857; }
  .cl-badge.custom { background: #E0F2FE; color: #0369A1; }
+ .cl-badge.birthday { background: linear-gradient(135deg, #FDE7F0, #F5E6FF); color: #9333EA; display: inline-flex; align-items: center; gap: 2px; }
  .cl-pts { font-weight: 700; font-size: 0.88rem; color: var(--primary); text-align: right; }
  .cl-visits { font-size: 0.82rem; color: #64748B; text-align: center; font-weight: 500; }
  .cl-last { font-size: 0.72rem; color: #64748B; text-align: right; }
@@ -303,9 +309,9 @@
  </div>
 
  <div class="stats-row" id="stats-row">
- <div class="st"><div class="st-val" id="s-total">–</div><div class="st-lbl">Clients</div></div>
- <div class="st"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Actifs (30j)</div></div>
- <div class="st"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses dispo</div></div>
+ <div class="st st-click active" id="st-total" onclick="statFilter('all')" title="Tous les clients"><div class="st-val" id="s-total">–</div><div class="st-lbl">Clients</div></div>
+ <div class="st st-click" id="st-active" onclick="statFilter('active')" title="Clients actifs (30 derniers jours)"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Actifs (30j)</div></div>
+ <div class="st st-click" id="st-rewards" onclick="statFilter('redeemable')" title="Récompense disponible"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses dispo</div></div>
  <div class="st st-action" id="csv-card" style="display:none" onclick="API.clients.exportCSV()" title="Exporter les clients">
  <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
  <div class="st-lbl">Export CSV</div>
@@ -387,6 +393,7 @@
 
  let allClients = [];
  let displayedClients = [];
+ let currentStatFilter = 'all';
  let currentClientId = null;
  let currentClientData = null;
  let mergeSourceId = null;
@@ -426,7 +433,16 @@
  }
 
  function enrich(c) {
- return { ...c, _label: c.name || c.email || c.phone || 'N/A', _sub: c.name ? (c.email || c.phone || '') : (c.phone || ''), _days: daysSince(c.last_visit), _progress: Math.min(Math.round((c.points_balance / rewardThreshold) * 100), 100), _canRedeem: c.points_balance >= rewardThreshold };
+ var isBday = false, bdayDays = -1;
+ if (c.date_of_birth) {
+ var now = new Date(), parts = c.date_of_birth.split('-');
+ var mm = parseInt(parts[1]), dd = parseInt(parts[2]);
+ for (var d = 0; d <= 7; d++) {
+ var chk = new Date(now); chk.setDate(chk.getDate() + d);
+ if (chk.getMonth() + 1 === mm && chk.getDate() === dd) { isBday = true; bdayDays = d; break; }
+ }
+ }
+ return { ...c, _label: c.name || c.email || c.phone || 'N/A', _sub: c.name ? (c.email || c.phone || '') : (c.phone || ''), _days: daysSince(c.last_visit), _progress: Math.min(Math.round((c.points_balance / rewardThreshold) * 100), 100), _canRedeem: c.points_balance >= rewardThreshold, _isBirthday: isBday, _bdayDays: bdayDays };
  }
 
  function updateStats() {
@@ -435,11 +451,39 @@
  document.getElementById('s-rewards').textContent = fmtNum(allClients.filter(c => c._canRedeem).length);
  }
 
+ function statFilter(filter) {
+ currentStatFilter = filter;
+ // Reset search
+ document.getElementById('search-input').value = '';
+
+ // Apply filter
+ if (filter === 'active') {
+ displayedClients = allClients.filter(c => c._days <= 30);
+ } else if (filter === 'redeemable') {
+ displayedClients = allClients.filter(c => c._canRedeem);
+ } else {
+ displayedClients = allClients;
+ }
+
+ // Update active tile
+ document.querySelectorAll('.st.st-click').forEach(s => s.classList.remove('active'));
+ var activeId = filter === 'active' ? 'st-active' : filter === 'redeemable' ? 'st-rewards' : 'st-total';
+ document.getElementById(activeId).classList.add('active');
+
+ renderClients();
+ }
+
  // ═══ SEARCH ═══
  let searchTimeout;
  document.getElementById('search-input').addEventListener('input', (e) => {
  const q = e.target.value.trim();
  clearTimeout(searchTimeout);
+ // Reset stat filter highlight when searching
+ if (q.length > 0) {
+ currentStatFilter = 'all';
+ document.querySelectorAll('.st.st-click').forEach(s => s.classList.remove('active'));
+ document.getElementById('st-total').classList.add('active');
+ }
  if (q.length === 0) { displayedClients = allClients; renderClients(); return; }
  if (q.length < 2) return;
  searchTimeout = setTimeout(async () => {
@@ -490,6 +534,7 @@
  else html += '<span class="cl-badge inactive">inactif</span>';
  if (c._canRedeem) html += '<span class="cl-badge reward"></span>';
  if (hasCustom) html += '<span class="cl-badge custom"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> perso</span>';
+ if (c._isBirthday) html += '<span class="cl-badge birthday"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>' + (c._bdayDays === 0 ? "aujourd'hui" : 'J-' + c._bdayDays) + '</span>';
  html += '</div></div>';
  html += '<div class="cl-pts">' + c.points_balance + ' ' + unitLabel + '</div>';
  html += '<div class="cl-visits cl-visits-cell">' + c.visit_count + '</div>';
