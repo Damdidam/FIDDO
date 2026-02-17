@@ -116,7 +116,6 @@
  background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 7px;
  padding: 0.38rem 0.65rem; margin-top: 0.25rem; font-size: 0.73rem; color: #92400E;
  display: flex; align-items: center; gap: 0.4rem;
- animation: slideUp 0.2s ease;
  }
  .typo-warning button {
  background: linear-gradient(135deg, #F59E0B, #D97706); color: white;
@@ -149,7 +148,6 @@
  border-radius: 9px; padding: 0.5rem 0.7rem;
  font-size: 0.78rem; margin-top: 0.35rem;
  line-height: 1.5; display: none;
- animation: slideUp 0.25s ease;
  }
  .lookup-strip.show { display: block; }
  .lookup-strip.found {
@@ -223,18 +221,16 @@
  }
  .success-overlay.show {
  display: flex;
- animation: scaleIn 0.35s cubic-bezier(0.34,1.56,0.64,1);
+ animation: scaleIn 0.1s ease-out;
  }
 
  .success-pts {
  font-size: 2.6rem; font-weight: 700; color: #059669;
  line-height: 1; letter-spacing: -1.5px;
- animation: slideUp 0.35s ease 0.08s both;
  }
  .success-label {
  font-size: 0.73rem; color: #10B981; text-transform: uppercase;
  letter-spacing: 1px; margin-top: 3px; font-weight: 600;
- animation: slideUp 0.35s ease 0.14s both;
  }
  .success-info {
  margin-top: 1rem; font-size: 0.84rem; color: #1E293B;
@@ -242,7 +238,6 @@
  background: #F0FDF4; border: 1px solid #BBF7D0;
  border-radius: 10px; padding: 0.75rem 1.2rem;
  min-width: 240px;
- animation: slideUp 0.35s ease 0.2s both;
  }
  .success-info strong { color: #047857; }
  .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
@@ -259,7 +254,6 @@
  border: 1px solid #E9D5FF; border-radius: 10px;
  font-size: 0.78rem; font-weight: 600; color: #7C3AED;
  max-width: 300px; width: 100%;
- animation: slideUp 0.35s ease 0.28s both;
  }
  .success-reward {
  display: none; margin-top: 1rem; padding: 0.65rem 1.25rem;
@@ -322,7 +316,7 @@
  .dup-warning {
  background: #FFFBEB; border: 1px solid #FDE68A; border-radius: 8px;
  padding: 0.5rem 0.65rem; margin-top: 0.35rem; font-size: 0.73rem;
- color: #92400E; line-height: 1.5; animation: fadeSlide 0.3s ease;
+ color: #92400E; line-height: 1.5;
  }
  .dup-warning svg { width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px; flex-shrink: 0; }
  .dup-warning-title { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 4px; }
