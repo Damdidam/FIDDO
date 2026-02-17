@@ -28,9 +28,8 @@ a{text-decoration:none;cursor:pointer}
 
 /* ─── Screens ───────────────────────────────── */
 .screen{position:absolute;inset:0;display:none;flex-direction:column;background:var(--bg);z-index:1;overflow:hidden}
-.screen.active{display:flex;animation:screenIn .3s ease forwards}
-@keyframes screenIn{from{opacity:0}to{opacity:1}}
-.slide-r{z-index:10;transform:translateX(100%);transition:transform .32s cubic-bezier(.25,.46,.45,.94);box-shadow:-8px 0 30px rgba(0,0,0,.08)}
+.screen.active{display:flex}
+.slide-r{z-index:10;transform:translateX(100%);transition:transform .35s var(--ease)}
 .slide-r.active{transform:translateX(0)}
 
 /* ─── Scrollable ────────────────────────────── */
@@ -113,9 +112,8 @@ a{text-decoration:none;cursor:pointer}
  ═══════════════════════════════════════════════ */
 #screen-app{display:none;flex-direction:column}
 #screen-app.active{display:flex}
-.tab{position:absolute;inset:0;bottom:calc(var(--tab-h) + var(--sab));display:none;flex-direction:column;opacity:0}
-.tab.active{display:flex;animation:tabIn .2s ease forwards}
-@keyframes tabIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.tab{position:absolute;inset:0;bottom:calc(var(--tab-h) + var(--sab));display:none;flex-direction:column}
+.tab.active{display:flex}
 .tab-head{padding:calc(var(--sat) + 16px) 24px 12px;background:var(--bg)}
 .tab-head h1{font-size:26px;font-weight:800}
 .tab-head .sub{font-size:14px;color:var(--tx2);margin-top:2px}
