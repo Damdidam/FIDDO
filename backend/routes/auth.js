@@ -25,6 +25,7 @@ router.post('/register', async (req, res) => {
       email, phone, ownerPhone,
       ownerEmail, ownerPassword, ownerName,
       pointsPerEuro, pointsForReward, rewardDescription,
+      loyaltyMode,
     } = req.body;
 
     // ── Validate required fields ──
@@ -62,8 +63,10 @@ router.post('/register', async (req, res) => {
     email = email.toLowerCase().trim();
 
     // ── Validate loyalty config ──
-    const ppe = pointsPerEuro !== undefined && pointsPerEuro !== '' ? parseFloat(pointsPerEuro) : 1.0;
-    const pfr = pointsForReward !== undefined && pointsForReward !== '' ? parseInt(pointsForReward) : 100;
+    const validModes = ['points', 'visits'];
+    const mode = validModes.includes(loyaltyMode) ? loyaltyMode : 'points';
+    const ppe = mode === 'visits' ? 1 : (pointsPerEuro !== undefined && pointsPerEuro !== '' ? parseFloat(pointsPerEuro) : 1.0);
+    const pfr = pointsForReward !== undefined && pointsForReward !== '' ? parseInt(pointsForReward) : (mode === 'visits' ? 10 : 100);
     const rdesc = (rewardDescription && rewardDescription.trim()) ? rewardDescription.trim() : 'Récompense offerte';
 
     if (isNaN(ppe) || ppe <= 0) {
@@ -91,7 +94,7 @@ router.post('/register', async (req, res) => {
     const merchantResult = merchantQueries.create.run(
       businessName.trim(), address.trim(), normalizedVat,
       email, phone.trim(), ownerPhone.trim(),
-      ppe, pfr, rdesc
+      ppe, pfr, rdesc, mode
     );
     const merchantId = merchantResult.lastInsertRowid;
 
@@ -114,6 +117,7 @@ router.post('/register', async (req, res) => {
         businessName,
         vatNumber: normalizedVat,
         ownerEmail: normalizedOwnerEmail,
+        loyaltyMode: mode,
         pointsPerEuro: ppe,
         pointsForReward: pfr,
         rewardDescription: rdesc,
