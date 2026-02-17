@@ -541,6 +541,7 @@
  let currentMode = 'email';
  let lastCreditKey = null; // anti-double-credit
  let lookupIsNew = false; // true when current client is new
+ let qrVerifyTokenValue = null; // server-issued token for PIN bypass on redeem
 
  // Hide amount field in visits mode
  if (isVisitsMode) {
@@ -1181,7 +1182,6 @@
  // ═══════════════════════════════════════════════════════
 
  let html5QrScanner = null;
- let qrVerifyTokenValue = null; // server-issued token for PIN bypass on redeem
  let scannerBusy = false; // debounce scan results
 
  function startScanner() {
