@@ -521,11 +521,11 @@ select.form-control { appearance: auto; }
  display: flex;
  flex-direction: column;
  box-shadow: var(--shadow-lg);
- animation: modalIn 0.3s var(--ease) both;
+ animation: modalIn 0.08s ease-out both;
 }
 @keyframes modalIn {
- from { opacity: 0; transform: translateY(20px) scale(0.97); }
- to { opacity: 1; transform: translateY(0) scale(1); }
+ from { opacity: 0; }
+ to { opacity: 1; }
 }
 .modal-header {
  padding: 1.25rem 1.5rem;
@@ -684,7 +684,7 @@ select.form-control { appearance: auto; }
  padding: 2.5rem;
  position: relative;
  z-index: 1;
- animation: modalIn 0.5s var(--ease) both;
+ animation: modalIn 0.1s ease-out both;
 }
 .auth-logo {
  font-family: var(--font);
@@ -866,7 +866,7 @@ select.form-control { appearance: auto; }
  border-radius: var(--r-xl) var(--r-xl) 0 0;
  padding: 0.6rem 0 0;
  padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
- animation: sheetUp 0.3s var(--ease) both;
+ animation: sheetUp 0.08s ease-out both;
 }
 @keyframes sheetUp {
  from { transform: translateY(100%); }
@@ -962,11 +962,4 @@ select.form-control { appearance: auto; }
 
 ::selection { background: var(--primary-light); color: var(--primary-dark); }
 
-/* ─── Page transitions ─────────────────────────────── */
-body {
- animation: pageIn 0.18s ease-out;
-}
-@keyframes pageIn {
- from { opacity: 0; }
- to { opacity: 1; }
-}
+/* ─── Page transitions — disabled for snappy nav ───── */
