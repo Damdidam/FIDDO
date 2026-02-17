@@ -220,7 +220,7 @@ function creditPoints({
 // Uses custom_reward if set, otherwise default merchant reward
 // ═══════════════════════════════════════════════════════
 
-function redeemReward({
+async function redeemReward({
   merchantId,
   merchantClientId,
   staffId = null,
@@ -258,7 +258,7 @@ function redeemReward({
     if (!pin) {
       throw new Error('Code PIN requis pour appliquer la récompense');
     }
-    if (!bcrypt.compareSync(pin, endUser.pin_hash)) {
+    if (!(await bcrypt.compare(pin, endUser.pin_hash))) {
       throw new Error('Code PIN incorrect');
     }
   }
