@@ -968,20 +968,38 @@ const App = (() => {
 
  // ─── BIRTHDAY ─────────────────────────────
 
+ // Auto-format dd/mm/yyyy
+ function _autoFmtDate(e) {
+ var v = e.target.value.replace(/[^\d]/g, '');
+ if (v.length > 8) v = v.substring(0, 8);
+ if (v.length > 4) v = v.substring(0,2) + '/' + v.substring(2,4) + '/' + v.substring(4);
+ else if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
+ e.target.value = v;
+ }
+ function _parseBE(s) {
+ if (!s || s.length !== 10) return null;
+ var p = s.split('/'); if (p.length !== 3) return null;
+ return p[2] + '-' + p[1] + '-' + p[0]; // YYYY-MM-DD
+ }
+
  function editDob() {
  if (client?.dateOfBirth) { toast('La date de naissance ne peut pas être modifiée'); return; }
  document.getElementById('edit-dob').value = '';
+ var el = document.getElementById('edit-dob');
+ el.removeEventListener('input', _autoFmtDate);
+ el.addEventListener('input', _autoFmtDate);
  openModal('modal-dob');
  }
 
  let _dobPendingConfirm = false;
 
  async function saveDob() {
- const dob = document.getElementById('edit-dob').value;
- if (!dob) { toast('Sélectionnez une date'); return; }
+ const raw = document.getElementById('edit-dob').value;
+ if (!raw || raw.length !== 10) { toast('Entrez une date valide (jj/mm/aaaa)'); return; }
+ const dob = _parseBE(raw); // YYYY-MM-DD for API
+ if (!dob) { toast('Date invalide'); return; }
 
  if (!_dobPendingConfirm) {
- // Show confirmation view
  _dobPendingConfirm = true;
  const [y, m, d] = dob.split('-');
  const months = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
