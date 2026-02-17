@@ -581,7 +581,7 @@ const endUserQueries = {
   search: db.prepare(`
     SELECT * FROM end_users
     WHERE deleted_at IS NULL
-      AND (email_lower LIKE ? OR phone_e164 LIKE ? OR name LIKE ?)
+      AND (email_lower LIKE ? OR phone_e164 LIKE ? OR phone LIKE ? OR name LIKE ?)
     ORDER BY created_at DESC
   `),
 
