@@ -506,34 +506,6 @@ if (screen.orientation && screen.orientation.lock) {
  screen.orientation.lock('portrait').catch(() => {});
 }
 
-// ─── Smooth page transitions ────────────────────────
+// ─── Page navigation helper ─────────────────────────
 
-(function() {
- function navigateTo(url) {
- document.body.classList.add('page-exit');
- setTimeout(function() { window.location.href = url; }, 150);
- }
-
- // Intercept all internal <a> clicks
- document.addEventListener('click', function(e) {
- var a = e.target.closest('a');
- if (!a) return;
- var href = a.getAttribute('href');
- if (!href || href.startsWith('#') || href.startsWith('mailto:') || href.startsWith('tel:') || href.startsWith('http') || a.target === '_blank') return;
- e.preventDefault();
- navigateTo(href);
- });
-
- // Expose for programmatic navigation (onclick="navigateTo('/clients')")
- window.navigateTo = navigateTo;
-
- // Handle back/forward (bfcache) — reset exit state
- window.addEventListener('pageshow', function(e) {
- if (e.persisted) {
- document.body.classList.remove('page-exit');
- document.body.style.animation = 'none';
- document.body.offsetHeight; // reflow
- document.body.style.animation = '';
- }
- });
-})();
+function navigateTo(url) { window.location.href = url; }
