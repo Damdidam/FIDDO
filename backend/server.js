@@ -3,6 +3,8 @@ const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const path = require('path');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 const { requestIdMiddleware } = require('./middleware/audit');
 
 const app = express();
@@ -31,6 +33,34 @@ const corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
+
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: false, // CSP disabled — inline scripts in HTML pages
+  crossOriginEmbedderPolicy: false,
+}));
+
+// Global rate limiting
+app.use('/api/', rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 200,                  // 200 requests per window per IP
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Trop de requêtes, réessayez dans quelques minutes' },
+}));
+
+// Strict rate limit on auth endpoints
+app.use('/api/auth/login', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives de connexion' },
+}));
+app.use('/api/admin/auth', rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives de connexion' },
+}));
+
 app.use(express.json({ limit: '1mb' }));
 // Raised limit only for backup import (large JSON payloads)
 app.use('/api/preferences/backup', express.json({ limit: '10mb' }));
@@ -133,23 +163,23 @@ app.get('/admin/messages',  (req, res) => res.sendFile(path.join(__dirname, '../
 // Email validation
 app.get('/validate', (req, res) => {
   const { token } = req.query;
-  if (!token) {
-    return res.status(400).send('<h1 style="color:#EF4444;">Token manquant</h1>');
+  if (!token || typeof token !== 'string' || token.length > 100) {
+    return res.status(400).send('<!DOCTYPE html><html><body><h1 style="color:#EF4444;">Token manquant ou invalide</h1></body></html>');
   }
 
   const { endUserQueries } = require('./database');
   const result = endUserQueries.validateEmail.run(token);
 
   if (result.changes === 0) {
-    return res.status(400).send('<h1 style="color:#F59E0B;">Token invalide ou déjà utilisé</h1>');
+    return res.status(400).send('<!DOCTYPE html><html><body><h1 style="color:#F59E0B;">Token invalide ou d&eacute;j&agrave; utilis&eacute;</h1></body></html>');
   }
 
-  res.send(`
+  res.send(`<!DOCTYPE html><html><body>
     <div style="font-family: Arial; text-align: center; margin-top: 100px;">
-      <h1 style="color: #10B981;">✅ Email validé avec succès !</h1>
+      <h1 style="color: #10B981;">&#10004; Email validé avec succès !</h1>
       <p>Vous recevrez désormais vos notifications de points par email.</p>
     </div>
-  `);
+  </body></html>`);
 });
 
 // ═══════════════════════════════════════════════════════
@@ -170,5 +200,18 @@ if (require.main === module) {
     console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT}`);
   });
 }
+
+// ═══════════════════════════════════════════════════════
+// GLOBAL ERROR HANDLERS
+// ═══════════════════════════════════════════════════════
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('⛔ Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('⛔ Uncaught Exception:', err);
+  process.exit(1);
+});
 
 module.exports = app;
