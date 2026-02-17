@@ -152,8 +152,15 @@ router.post('/credit', async (req, res) => {
     const { email, phone, name, amount, notes, idempotencyKey, pin, pinToken } = req.body;
 
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
-    if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
-    if (req.staff.role === 'cashier' && parseFloat(amount) > 200) return res.status(403).json({ error: 'Max 200€ pour un caissier' });
+
+    // Check loyalty mode — visits don't require amount
+    const merchant = merchantQueries.findById.get(merchantId);
+    const isVisits = merchant && merchant.loyalty_mode === 'visits';
+
+    if (!isVisits) {
+      if (!amount || parseFloat(amount) <= 0) return res.status(400).json({ error: 'Montant invalide' });
+      if (req.staff.role === 'cashier' && parseFloat(amount) > 200) return res.status(403).json({ error: 'Max 200€ pour un caissier' });
+    }
 
     // Input length limits
     if (email && email.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
@@ -166,11 +173,11 @@ router.post('/credit', async (req, res) => {
 
     const result = creditPoints({
       merchantId, staffId, email: email || null, phone: phone || null, name: name || null,
-      amount: parseFloat(amount), notes: notes || null, idempotencyKey: idempotencyKey || null, source: 'manual',
+      amount: isVisits ? 0 : parseFloat(amount), notes: notes || null, idempotencyKey: idempotencyKey || null, source: 'manual',
       pinHash,
     });
 
-    const merchant = merchantQueries.findById.get(merchantId);
+    // merchant already fetched above for loyalty_mode check
 
     if (!result.idempotent) {
       logAudit({ ...auditCtx(req), actorType: 'staff', actorId: staffId, merchantId, action: 'points_credited',
@@ -195,8 +202,9 @@ router.post('/credit', async (req, res) => {
         total_spent: result.merchantClient.total_spent, visit_count: result.merchantClient.visit_count,
         can_redeem: canRedeem, reward_threshold: merchant.points_for_reward,
         reward_description: result.merchantClient.custom_reward || merchant.reward_description },
-      transaction: { amount: parseFloat(amount), points_delta: result.transaction.points_delta },
+      transaction: { amount: isVisits ? 0 : parseFloat(amount), points_delta: result.transaction.points_delta },
       isNewClient: result.isNewClient,
+      loyaltyMode: isVisits ? 'visits' : 'points',
     });
   } catch (error) {
     console.error('Erreur crédit:', error);

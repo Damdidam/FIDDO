@@ -300,16 +300,19 @@ router.put('/settings', authenticateStaff, (req, res) => {
   }
 
   try {
-    const { pointsPerEuro, pointsForReward, rewardDescription } = req.body;
+    const { pointsPerEuro, pointsForReward, rewardDescription, loyaltyMode } = req.body;
+
+    const validModes = ['points', 'visits'];
+    const mode = (loyaltyMode && validModes.includes(loyaltyMode)) ? loyaltyMode : 'points';
 
     const ppe = parseFloat(pointsPerEuro);
     const pfr = parseInt(pointsForReward);
 
-    if (isNaN(ppe) || ppe <= 0) {
+    if (mode === 'points' && (isNaN(ppe) || ppe <= 0)) {
       return res.status(400).json({ error: 'Points par euro invalide' });
     }
     if (isNaN(pfr) || pfr <= 0) {
-      return res.status(400).json({ error: 'Points pour récompense invalide' });
+      return res.status(400).json({ error: mode === 'visits' ? 'Nombre de passages invalide' : 'Points pour récompense invalide' });
     }
 
     const rdesc = (rewardDescription && rewardDescription.trim()) ? rewardDescription.trim() : 'Récompense offerte';
@@ -318,7 +321,7 @@ router.put('/settings', authenticateStaff, (req, res) => {
     }
 
     merchantQueries.updateSettings.run(
-      ppe, pfr, rdesc,
+      mode === 'visits' ? 1 : ppe, pfr, rdesc, mode,
       req.staff.merchant_id
     );
 
@@ -330,10 +333,10 @@ router.put('/settings', authenticateStaff, (req, res) => {
       action: 'settings_updated',
       targetType: 'merchant',
       targetId: req.staff.merchant_id,
-      details: { pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: rdesc },
+      details: { pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: rdesc, loyaltyMode: mode },
     });
 
-    res.json({ message: 'Paramètres mis à jour' });
+    res.json({ message: 'Paramètres mis à jour', loyaltyMode: mode });
   } catch (error) {
     console.error('Erreur update settings:', error);
     res.status(500).json({ error: 'Erreur lors de la mise à jour' });

@@ -305,19 +305,27 @@
  <div class="pref-grid">
  <div>
  <div class="pref-card">
- <div class="pref-card-title">Système de points</div>
+ <div class="pref-card-title">Système de fidélité</div>
  <div id="reward-alert"></div>
 
  <form id="reward-form">
  <div class="fg">
+ <label>Mode de fidélité</label>
+ <select id="set-mode" onchange="toggleLoyaltyMode()">
+ <option value="points">Points par euro dépensé</option>
+ <option value="visits">Nombre de passages (visites)</option>
+ </select>
+ <div class="help">Détermine comment les clients accumulent leur progression</div>
+ </div>
+ <div class="fg" id="fg-ppe">
  <label>Points par euro dépensé</label>
  <input type="number" id="set-ppe" step="0.1" min="0.1">
  <div class="help">Nombre de points gagnés pour chaque euro</div>
  </div>
  <div class="fg">
- <label>Points pour la récompense</label>
+ <label id="lbl-pfr">Points pour la récompense</label>
  <input type="number" id="set-pfr" min="1">
- <div class="help">Seuil à atteindre pour débloquer la récompense</div>
+ <div class="help" id="help-pfr">Seuil à atteindre pour débloquer la récompense</div>
  </div>
  <div class="fg">
  <label>Description de la récompense</label>
@@ -796,6 +804,18 @@
  document.getElementById('set-ppe').value = merchant.points_per_euro;
  document.getElementById('set-pfr').value = merchant.points_for_reward;
  document.getElementById('set-desc').value = merchant.reward_description;
+ document.getElementById('set-mode').value = merchant.loyalty_mode || 'points';
+ toggleLoyaltyMode();
+
+ function toggleLoyaltyMode() {
+ var mode = document.getElementById('set-mode').value;
+ document.getElementById('fg-ppe').style.display = mode === 'visits' ? 'none' : '';
+ document.getElementById('lbl-pfr').textContent = mode === 'visits' ? 'Passages pour la récompense' : 'Points pour la récompense';
+ document.getElementById('help-pfr').textContent = mode === 'visits'
+ ? 'Nombre de visites nécessaires pour débloquer la récompense'
+ : 'Seuil à atteindre pour débloquer la récompense';
+ updateRewardPreview();
+ }
 
  // Load reward message from prefs
  let currentPrefs = {};
@@ -844,11 +864,21 @@
  })();
 
  function updateRewardPreview() {
- const ppe = parseFloat(document.getElementById('set-ppe').value) || 1;
- const pfr = parseInt(document.getElementById('set-pfr').value) || 100;
- const desc = document.getElementById('set-desc').value.trim() || 'Récompense offerte';
- const eurosNeeded = Math.ceil(pfr / ppe);
+ var mode = document.getElementById('set-mode').value;
+ var pfr = parseInt(document.getElementById('set-pfr').value) || 100;
+ var desc = document.getElementById('set-desc').value.trim() || 'Récompense offerte';
 
+ if (mode === 'visits') {
+ document.getElementById('reward-preview').innerHTML =
+ '<strong>Aperçu du programme</strong>' +
+ '<div class="preview-box">' +
+ 'Chaque passage = <strong>+1 visite</strong><br>' +
+ 'Seuil : <strong>' + pfr + ' passage' + (pfr > 1 ? 's' : '') + '</strong><br><br>' +
+ '→ <strong>' + esc(desc) + '</strong>' +
+ '</div>';
+ } else {
+ var ppe = parseFloat(document.getElementById('set-ppe').value) || 1;
+ var eurosNeeded = Math.ceil(pfr / ppe);
  document.getElementById('reward-preview').innerHTML =
  '<strong>Aperçu du programme</strong>' +
  '<div class="preview-box">' +
@@ -857,10 +887,12 @@
  '→ <strong>' + esc(desc) + '</strong>' +
  '</div>';
  }
+ }
 
  document.getElementById('set-ppe').addEventListener('input', updateRewardPreview);
  document.getElementById('set-pfr').addEventListener('input', updateRewardPreview);
  document.getElementById('set-desc').addEventListener('input', updateRewardPreview);
+ document.getElementById('set-mode').addEventListener('change', updateRewardPreview);
  updateRewardPreview();
 
  document.getElementById('reward-form').addEventListener('submit', async (e) => {
@@ -869,17 +901,19 @@
  const pfr = parseInt(document.getElementById('set-pfr').value);
  const desc = document.getElementById('set-desc').value.trim();
  const rewardMsg = document.getElementById('set-reward-msg').value.trim();
+ const loyaltyMode = document.getElementById('set-mode').value;
 
- if (!ppe || ppe <= 0) return showAlert('reward-alert', 'Points par euro doit être supérieur à 0', 'error');
- if (!pfr || pfr <= 0) return showAlert('reward-alert', 'Points pour récompense doit être supérieur à 0', 'error');
+ if (loyaltyMode === 'points' && (!ppe || ppe <= 0)) return showAlert('reward-alert', 'Points par euro doit être supérieur à 0', 'error');
+ if (!pfr || pfr <= 0) return showAlert('reward-alert', loyaltyMode === 'visits' ? 'Nombre de passages doit être supérieur à 0' : 'Points pour récompense doit être supérieur à 0', 'error');
  if (!desc) return showAlert('reward-alert', 'Description requise', 'error');
 
  try {
  // Save reward settings
- await API.auth.updateSettings({ pointsPerEuro: ppe, pointsForReward: pfr, rewardDescription: desc });
- merchant.points_per_euro = ppe;
+ await API.auth.updateSettings({ pointsPerEuro: loyaltyMode === 'visits' ? 1 : ppe, pointsForReward: pfr, rewardDescription: desc, loyaltyMode: loyaltyMode });
+ merchant.points_per_euro = loyaltyMode === 'visits' ? 1 : ppe;
  merchant.points_for_reward = pfr;
  merchant.reward_description = desc;
+ merchant.loyalty_mode = loyaltyMode;
  Auth.setSession(staff, merchant);
 
  // Save reward message in preferences

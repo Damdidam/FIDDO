@@ -530,9 +530,16 @@
 
  const merchant = Auth.getMerchant();
  const staff = Auth.getStaff();
+ const isVisitsMode = merchant.loyalty_mode === 'visits';
  let currentMode = 'email';
  let lastCreditKey = null; // anti-double-credit
  let lookupIsNew = false; // true when current client is new
+
+ // Hide amount field in visits mode
+ if (isVisitsMode) {
+ var amountGroup = document.getElementById('amount').closest('.form-group');
+ if (amountGroup) amountGroup.style.display = 'none';
+ }
 
  // ═══════════════════════════════════════════════════════
  // CREDIT METHODS — filter based on merchant preferences
@@ -820,14 +827,14 @@
  const email = document.getElementById('client-email').value.trim();
  const phone = document.getElementById('client-phone').value.trim();
  const name = document.getElementById('client-name').value.trim();
- const amount = parseFloat(document.getElementById('amount').value);
+ const amount = isVisitsMode ? 0 : parseFloat(document.getElementById('amount').value);
  const notes = document.getElementById('notes').value.trim();
 
  if (!email && !phone) { UI.showAlert('credit-alert', (currentMode === 'qr' || currentMode === 'scan') ? 'Scannez d\'abord le QR du client' : 'Email ou téléphone requis', 'error'); return; }
- if (!amount || amount <= 0) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
+ if (!isVisitsMode && (!amount || amount <= 0)) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
 
  // ── Anti-double-credit: generate unique key per submission ──
- const creditKey = (email || '') + '|' + (phone || '') + '|' + amount + '|' + Date.now();
+ const creditKey = (email || '') + '|' + (phone || '') + '|' + (isVisitsMode ? 'visit' : amount) + '|' + Date.now();
  if (lastCreditKey && lastCreditKey === creditKey) {
  UI.showAlert('credit-alert', 'Ce crédit vient d\'être effectué', 'warning');
  return;
@@ -835,7 +842,7 @@
 
  try {
  document.getElementById('submit-btn').disabled = true;
- document.getElementById('submit-btn').textContent = 'Traitement…';
+ document.getElementById('submit-btn').textContent = isVisitsMode ? 'Enregistrement…' : 'Traitement…';
  UI.clearAlert('credit-alert');
 
  const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
@@ -851,10 +858,10 @@
 
  // ── Show success overlay (blocks form access) ──
  const n = r.client.name || r.client.email || r.client.phone || 'Client';
- document.getElementById('s-pts').textContent = '+' + r.transaction.points_delta + ' pts';
+ document.getElementById('s-pts').textContent = isVisitsMode ? '+1 visite' : ('+' + r.transaction.points_delta + ' pts');
 
  let info = '<strong>' + esc(n) + '</strong>';
- info += '<br>Nouveau solde : <strong>' + r.client.points_balance + ' points</strong>';
+ info += '<br>Nouveau solde : <strong>' + r.client.points_balance + (isVisitsMode ? ' visite' + (r.client.points_balance > 1 ? 's' : '') : ' points') + '</strong>';
  if (r.client.email) info += '<br><span class="s-detail">' + esc(r.client.email) + '</span>';
  if (r.client.phone) info += '<br><span class="s-detail">' + esc(r.client.phone) + '</span>';
  if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';

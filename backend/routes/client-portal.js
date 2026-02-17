@@ -211,7 +211,8 @@ router.get('/cards', authenticateClient, (req, res) => {
              mc.last_visit, mc.is_blocked, mc.custom_reward,
              mc.is_favorite, mc.is_hidden,
              m.business_name, m.points_per_euro, m.points_for_reward,
-             m.reward_description, m.status, m.business_type, m.allow_gifts
+             m.reward_description, m.status, m.business_type, m.allow_gifts,
+             m.loyalty_mode
       FROM merchant_clients mc
       JOIN merchants m ON mc.merchant_id = m.id
       WHERE mc.end_user_id = ? AND m.status = 'active'
@@ -229,6 +230,7 @@ router.get('/cards', authenticateClient, (req, res) => {
       theme: getTheme.get(c.merchant_id)?.theme || 'teal',
       businessType: c.business_type || '',
       allowGifts: !!c.allow_gifts,
+      loyaltyMode: c.loyalty_mode || 'points',
       pointsBalance: c.points_balance,
       totalSpent: c.total_spent,
       visitCount: c.visit_count,
@@ -274,7 +276,8 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
       SELECT mc.*, m.business_name, m.points_per_euro, m.points_for_reward,
              m.reward_description, m.address, m.phone, m.email,
              m.business_type, m.website_url, m.instagram_url, m.facebook_url,
-             m.opening_hours, m.latitude, m.longitude, m.description, m.allow_gifts
+             m.opening_hours, m.latitude, m.longitude, m.description, m.allow_gifts,
+             m.loyalty_mode
       FROM merchant_clients mc
       JOIN merchants m ON mc.merchant_id = m.id
       WHERE mc.merchant_id = ? AND mc.end_user_id = ? AND m.status = 'active'
@@ -317,6 +320,7 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
         longitude: mc.longitude,
         description: mc.description,
         allowGifts: !!mc.allow_gifts,
+        loyaltyMode: mc.loyalty_mode || 'points',
       },
     });
   } catch (error) {
@@ -695,6 +699,61 @@ router.put('/cards/:merchantId/hide', authenticateClient, (req, res) => {
     res.json({ ok: true, isHidden: !!newVal });
   } catch (error) {
     console.error('Hide error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/me/cards/hidden — List hidden cards
+// ═══════════════════════════════════════════════════════
+
+router.get('/cards-hidden', authenticateClient, (req, res) => {
+  try {
+    const cards = db.prepare(`
+      SELECT mc.merchant_id, mc.points_balance, mc.visit_count, mc.last_visit,
+             m.business_name, m.business_type, m.loyalty_mode
+      FROM merchant_clients mc
+      JOIN merchants m ON mc.merchant_id = m.id
+      WHERE mc.end_user_id = ? AND mc.is_hidden = 1 AND m.status = 'active'
+      ORDER BY mc.last_visit DESC
+    `).all(req.endUserId);
+
+    const getTheme = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?');
+
+    res.json({
+      cards: cards.map(c => ({
+        merchantId: c.merchant_id,
+        merchantName: c.business_name,
+        businessType: c.business_type || '',
+        theme: getTheme.get(c.merchant_id)?.theme || 'teal',
+        loyaltyMode: c.loyalty_mode || 'points',
+        pointsBalance: c.points_balance,
+        visitCount: c.visit_count,
+        lastVisit: c.last_visit,
+      })),
+    });
+  } catch (error) {
+    console.error('Hidden cards error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// PUT /api/me/cards/:merchantId/unhide — Restore a hidden card
+// ═══════════════════════════════════════════════════════
+
+router.put('/cards/:merchantId/unhide', authenticateClient, (req, res) => {
+  try {
+    const mc = db.prepare('SELECT id, is_hidden FROM merchant_clients WHERE end_user_id = ? AND merchant_id = ?')
+      .get(req.endUserId, req.params.merchantId);
+    if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
+
+    db.prepare("UPDATE merchant_clients SET is_hidden = 0, updated_at = datetime('now') WHERE id = ?").run(mc.id);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Unhide error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });

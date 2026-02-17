@@ -381,6 +381,9 @@
  const isOwner = staff.role === 'owner';
  const isManager = ['owner', 'manager'].includes(staff.role);
  const rewardThreshold = merchant.points_for_reward;
+ const isVisitsMode = merchant.loyalty_mode === 'visits';
+ const unitLabel = isVisitsMode ? 'visites' : 'pts';
+ const unitLabelSingle = isVisitsMode ? 'visite' : 'pt';
 
  let allClients = [];
  let displayedClients = [];
@@ -488,7 +491,7 @@
  if (c._canRedeem) html += '<span class="cl-badge reward"></span>';
  if (hasCustom) html += '<span class="cl-badge custom"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> perso</span>';
  html += '</div></div>';
- html += '<div class="cl-pts">' + c.points_balance + '</div>';
+ html += '<div class="cl-pts">' + c.points_balance + ' ' + unitLabel + '</div>';
  html += '<div class="cl-visits cl-visits-cell">' + c.visit_count + '</div>';
  html += '<div class="cl-last">' + fmtSince(c.last_visit) + '</div>';
  html += '<div class="cl-prog cl-prog-cell"><div class="prog-bar"><div class="prog-fill ' + pClass + '" style="width:' + c._progress + '%"></div></div><span class="prog-pct ' + pClass + '">' + c._progress + '%</span></div>';
@@ -529,7 +532,7 @@
 
  // ── FLOATING STATS ──
  h += '<div class="float-stats">';
- h += '<div class="float-st"><div class="float-st-val">' + c.points_balance + '</div><div class="float-st-lbl">Points</div></div>';
+ h += '<div class="float-st"><div class="float-st-val">' + c.points_balance + '</div><div class="float-st-lbl">' + (isVisitsMode ? 'Visites' : 'Points') + '</div></div>';
  h += '<div class="float-st"><div class="float-st-val">' + c.visit_count + '</div><div class="float-st-lbl">Visites</div></div>';
  h += '<div class="float-st"><div class="float-st-val">' + Format.date(c.first_visit) + '</div><div class="float-st-lbl">Depuis</div></div>';
  h += '</div>';
@@ -546,7 +549,7 @@
  if (isManager) h += '<button class="rw-edit-btn" onclick="toggleRewardEdit()">Modifier</button>';
  h += '</div>';
  h += '<div class="rw-prog-bar"><div class="rw-prog-fill ' + (isReady ? 'ready' : 'near') + '" style="width:' + progress + '%"></div></div>';
- h += '<div class="rw-prog-text"><span>' + c.points_balance + ' / ' + c.reward_threshold + ' pts</span><span>' + (isReady ? ' Prêt !' : 'Encore ' + (c.reward_threshold - c.points_balance)) + '</span></div>';
+ h += '<div class="rw-prog-text"><span>' + c.points_balance + ' / ' + c.reward_threshold + ' pts</span><span>' + (isReady ? ' Prêt !' : 'Encore ' + (c.reward_threshold - c.points_balance) + ' ' + unitLabel) + '</span></div>';
 
  if (isReady) {
  h += '<div class="rw-ready" onclick="redeemReward(' + c.id + ')">';
@@ -705,7 +708,7 @@
  return;
  }
 
- if (!confirm('Appliquer la récompense ?\n\n→ ' + rewardDesc + '\n\nSolde : ' + c.points_balance + ' pts → ' + newBal + ' pts')) return;
+ if (!confirm('Appliquer la récompense ?\n\n→ ' + rewardDesc + '\n\nSolde : ' + c.points_balance + ' ' + unitLabel + ' → ' + newBal + ' ' + unitLabel)) return;
  try {
  const result = await API.clients.reward({ merchantClientId: mcId, pin });
  const box = document.getElementById('detail-box');

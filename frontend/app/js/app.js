@@ -432,13 +432,13 @@ const App = (() => {
  </div>
  <div class="lc-pts">
  <span class="lc-pts-big">${c.pointsBalance}</span>
- <span class="lc-pts-tot">/ ${c.pointsForReward} pts</span>
+ <span class="lc-pts-tot">/ ${c.pointsForReward} ${c.loyaltyMode === "visits" ? "visites" : "pts"}</span>
  </div>
  <div class="lc-prog"><div class="lc-prog-fill" style="width:${pct}%"></div></div>
  <div class="lc-foot">
  ${c.canRedeem
  ? `<span class="lc-reward" style="color:${color}"><span class="material-symbols-rounded">redeem</span>Récompense dispo !</span>`
- : `<span class="lc-left">Encore ${left} pts</span>`}
+ : `<span class="lc-left">Encore ${left} ${c.loyaltyMode === "visits" ? "visite" + (left > 1 ? "s" : "") : "pts"}</span>`}
  <span class="lc-date">${date}</span>
  </div>
  </div>`;
@@ -478,7 +478,7 @@ const App = (() => {
  switchTab('cards');
  renderCards();
  setTimeout(() => {
- showAnimation('credit', `+${diff} pts`, card.merchantName || 'Points crédités');
+ showAnimation('credit', card.loyaltyMode === 'visits' ? '+1 visite' : `+${diff} pts`, card.merchantName || (card.loyaltyMode === 'visits' ? 'Passage enregistré' : 'Points crédités'));
  setTimeout(() => { animating = false; lastRenderTime = Date.now(); }, 3000);
  }, 300);
  refreshing = false;
@@ -506,7 +506,7 @@ const App = (() => {
  switchTab('cards');
  renderCards();
  setTimeout(() => {
- showAnimation('credit', `+${card.pointsBalance} pts`, card.merchantName || 'Points crédités');
+ showAnimation('credit', card.loyaltyMode === 'visits' ? '+1 visite' : `+${card.pointsBalance} pts`, card.merchantName || (card.loyaltyMode === 'visits' ? 'Passage enregistré' : 'Points crédités'));
  setTimeout(() => { animating = false; lastRenderTime = Date.now(); }, 3000);
  }, 300);
  refreshing = false;
@@ -569,7 +569,7 @@ const App = (() => {
 
  async function hideCard() {
  if (!currentMerchant) return;
- if (!confirm(`Masquer la carte "${currentMerchant.name}" ?\n\nVos points seront conservés. Si vous rescannez le QR du commerçant, la carte réapparaîtra.`)) return;
+ if (!confirm(`Masquer la carte "${currentMerchant.name}" ?\n\nVotre progression sera conservée. Si vous rescannez le QR du commerçant, la carte réapparaîtra.`)) return;
  const id = currentMerchant.id;
  const res = await API.call(`/api/me/cards/${id}/hide`, { method: 'PUT' });
  if (res.ok) {
@@ -578,6 +578,48 @@ const App = (() => {
  goBack();
  renderCards();
  buildFilterPills();
+ } else {
+ toast('Erreur');
+ }
+ }
+
+ async function showHiddenCards() {
+ try {
+ const res = await API.call('/api/me/cards-hidden');
+ if (!res.ok) { toast('Erreur'); return; }
+ const list = document.getElementById('hidden-cards-list');
+ const hiddenCards = res.data.cards || [];
+ if (hiddenCards.length === 0) {
+ list.innerHTML = '<p style="text-align:center;color:var(--tx3);font-size:14px;padding:20px 0">Aucune carte masquée</p>';
+ } else {
+ list.innerHTML = hiddenCards.map(c => {
+ const unit = c.loyaltyMode === 'visits' ? 'visite' + (c.pointsBalance > 1 ? 's' : '') : 'pts';
+ return '<div style="display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--brd-l)">' +
+ '<div style="flex:1">' +
+ '<div style="font-size:15px;font-weight:700">' + c.merchantName + '</div>' +
+ '<div style="font-size:12px;color:var(--tx3)">' + c.pointsBalance + ' ' + unit + '</div>' +
+ '</div>' +
+ '<button onclick="App.unhideCard(' + c.merchantId + ')" style="padding:8px 16px;border-radius:var(--r-full);background:var(--pri);color:#fff;font-size:13px;font-weight:600;border:none">Restaurer</button>' +
+ '</div>';
+ }).join('');
+ }
+ openModal('hidden');
+ } catch (e) {
+ toast('Erreur');
+ }
+ }
+
+ async function unhideCard(merchantId) {
+ const res = await API.call('/api/me/cards/' + merchantId + '/unhide', { method: 'PUT' });
+ if (res.ok) {
+ toast('Carte restaurée');
+ closeModal();
+ const cardsRes = await API.getCards();
+ if (cardsRes.ok) {
+ cards = cardsRes.data.cards || [];
+ renderCards();
+ buildFilterPills();
+ }
  } else {
  toast('Erreur');
  }
@@ -600,12 +642,12 @@ const App = (() => {
  document.getElementById('cd-name').textContent = merchant.name;
  document.getElementById('cd-type').textContent = biz.label;
  document.getElementById('cd-pts').textContent = card.pointsBalance;
- document.getElementById('cd-pts-tot').textContent = '/ ' + card.pointsForReward + ' pts';
+ document.getElementById('cd-pts-tot').textContent = '/ ' + card.pointsForReward + (currentMerchant && currentMerchant.loyaltyMode === 'visits' ? ' visites' : ' pts');
  document.getElementById('cd-prog').style.width = Math.min(card.progress || 0, 100) + '%';
 
  const badge = document.getElementById('cd-badge');
  if (card.canRedeem) badge.innerHTML = `<span class="cd-reward-pill" style="color:${color}"><span class="material-symbols-rounded">redeem</span>${esc(card.rewardDescription)}</span>`;
- else badge.innerHTML = `<span class="cd-until">Encore ${card.pointsUntilReward} points</span>`;
+ else { var _u = merchant.loyaltyMode === "visits" ? "visite" + (card.pointsUntilReward > 1 ? "s" : "") : "points"; badge.innerHTML = `<span class="cd-until">Encore ${card.pointsUntilReward} ${_u}</span>`; }
 
  document.getElementById('cd-visits').textContent = card.visitCount;
  document.getElementById('cd-spent').textContent = card.totalSpent + '€';
@@ -737,7 +779,7 @@ const App = (() => {
  currentCard.pointsBalance = 0;
  document.getElementById('cd-pts').textContent = '0';
  document.getElementById('cd-prog').style.width = '0%';
- document.getElementById('cd-badge').innerHTML = '<span class="cd-until">Encore ' + currentCard.pointsForReward + ' points</span>';
+ document.getElementById('cd-badge').innerHTML = '<span class="cd-until">Encore ' + currentCard.pointsForReward + (currentMerchant && currentMerchant.loyaltyMode === 'visits' ? ' visites' : ' points') + '</span>';
  document.getElementById('btn-gift').classList.add('hidden');
 
  document.getElementById('gift-link').value = lastGiftLink;
@@ -1233,6 +1275,7 @@ const App = (() => {
  startScanner, closeModal,
  logout, saveNotifs, toast,
  filterType, clearSearch, toggleFav, hideCard,
+    showHiddenCards, unhideCard,
  startGift, confirmGift, copyGiftLink, shareGift,
  confirmDeleteAccount, deleteAccount,
  };

@@ -357,6 +357,7 @@ initDatabase();
     longitude: 'REAL',
     description: 'TEXT',
     allow_gifts: 'INTEGER NOT NULL DEFAULT 0',
+    loyalty_mode: "TEXT NOT NULL DEFAULT 'points'",
   };
 
   for (const [col, def] of Object.entries(newCols)) {
@@ -506,7 +507,7 @@ const merchantQueries = {
     UPDATE merchants SET status = 'active', suspended_at = NULL WHERE id = ?
   `),
   updateSettings: db.prepare(`
-    UPDATE merchants SET points_per_euro = ?, points_for_reward = ?, reward_description = ? WHERE id = ?
+    UPDATE merchants SET points_per_euro = ?, points_for_reward = ?, reward_description = ?, loyalty_mode = ? WHERE id = ?
   `),
   findByQrToken: db.prepare('SELECT * FROM merchants WHERE qr_token = ?'),
   setQrToken:    db.prepare("UPDATE merchants SET qr_token = ? WHERE id = ?"),

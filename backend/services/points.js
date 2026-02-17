@@ -117,14 +117,15 @@ function creditPoints({
   source = 'manual',
   pinHash = null,
 }) {
-  if (!amount || amount <= 0) {
+  if (!isVisits && (!amount || amount <= 0)) {
     throw new Error('Montant invalide');
   }
 
   const merchant = merchantQueries.findById.get(merchantId);
   if (!merchant) throw new Error('Commerce non trouvé');
 
-  const pointsDelta = Math.floor(amount * merchant.points_per_euro);
+  const isVisits = merchant.loyalty_mode === 'visits';
+  const pointsDelta = isVisits ? 1 : Math.floor(amount * merchant.points_per_euro);
 
   // Idempotency check
   if (idempotencyKey) {
