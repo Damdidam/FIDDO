@@ -642,7 +642,10 @@ router.get('/search-global', requireRole('owner', 'manager'), (req, res) => {
     if (!q || q.length < 2) return res.status(400).json({ error: 'Min 2 caractères' });
 
     const term = `%${q.toLowerCase()}%`;
-    const endUsers = endUserQueries.search.all(term, term, term);
+    // Also search with digits-only for phone matching (0497 → 497 matches +32497...)
+    const digits = q.replace(/[^\d]/g, '');
+    const phoneTerm = digits.length >= 2 ? `%${digits}%` : term;
+    const endUsers = endUserQueries.search.all(term, phoneTerm, term, term);
 
     const results = endUsers.slice(0, 10).map(eu => {
       const mc = merchantClientQueries.find.get(merchantId, eu.id);
