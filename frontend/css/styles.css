@@ -791,7 +791,7 @@ select.form-control { appearance: auto; }
  align-items: center;
  justify-content: center;
  flex: 1;
- min-height: 56px;
+ min-height: 62px;
  padding: 6px 4px 6px;
  text-decoration: none;
  color: rgba(255,255,255,0.32);
@@ -804,8 +804,8 @@ select.form-control { appearance: auto; }
  -webkit-tap-highlight-color: transparent;
 }
 .bnav-item svg {
- width: 22px;
- height: 22px;
+ width: 26px;
+ height: 26px;
  margin-bottom: 2px;
  flex-shrink: 0;
  transition: transform 0.2s var(--bounce);
