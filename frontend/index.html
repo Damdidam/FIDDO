@@ -892,7 +892,7 @@
  // ═══════════════════════════════════════════════════════
 
  if (Auth.isAuthenticated()) {
- window.location.href = '/credit';
+ navigateTo('/credit');
  } else {
  (async () => {
  try {
@@ -904,7 +904,7 @@
  var data = await res.json();
  if (data && data.staff && data.merchant) {
  Auth.setSession(data.staff, data.merchant);
- window.location.href = '/credit';
+ navigateTo('/credit');
  }
  }
  } catch (e) { /* no cookie */ }
@@ -973,7 +973,7 @@
  Auth.setSession(data.staff, data.merchant);
  showPageAlert('login-alert', 'Connexion réussie, redirection en cours...', 'success');
  setTimeout(function() {
- window.location.href = '/credit';
+ navigateTo('/credit');
  }, 400);
  } catch (err) {
  setLoading('login-btn', false);
