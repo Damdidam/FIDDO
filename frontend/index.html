@@ -490,6 +490,29 @@
 
  #register-form { display: none; }
 
+ /* ── Loyalty mode toggle ── */
+ .mode-toggle {
+ display: flex; gap: 0.5rem; margin-bottom: 1.35rem;
+ }
+ .mode-toggle button {
+ flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.35rem;
+ padding: 0.85rem 0.5rem;
+ border: 2px solid var(--border); border-radius: var(--radius);
+ background: var(--bg-card); color: var(--text-secondary);
+ font-family: inherit; font-size: 0.82rem; font-weight: 600;
+ cursor: pointer; transition: all 0.2s;
+ }
+ .mode-toggle button:hover { border-color: var(--teal); color: var(--text-primary); }
+ .mode-toggle button.active {
+ border-color: var(--teal); background: rgba(8,145,178,0.06);
+ color: var(--teal); box-shadow: 0 0 0 3px rgba(8,145,178,0.08);
+ }
+ .mode-toggle button .mode-icon { font-size: 1.5rem; line-height: 1; }
+ .mode-toggle button .mode-desc {
+ font-size: 0.7rem; font-weight: 400; color: var(--text-secondary);
+ margin-top: 0.1rem;
+ }
+
  @keyframes fadeUp {
  from { opacity: 0; transform: translateY(20px); }
  to { opacity: 1; transform: translateY(0); }
@@ -760,16 +783,33 @@
 
  <div class="section-divider"><span>Programme de fidélité</span></div>
 
- <div class="field-row">
  <div class="field">
- <label class="field-label" for="reg-ppe">Points par euro</label>
+ <label class="field-label">Mode de fidélité *</label>
+ <div class="mode-toggle" id="mode-toggle">
+ <button type="button" id="mode-points" class="active" onclick="setLoyaltyMode('points')">
+ <span class="mode-icon">🪙</span>
+ <span>Points</span>
+ <span class="mode-desc">1 € = X points</span>
+ </button>
+ <button type="button" id="mode-visits" onclick="setLoyaltyMode('visits')">
+ <span class="mode-icon">🎫</span>
+ <span>Visites</span>
+ <span class="mode-desc">1 passage = 1 tampon</span>
+ </button>
+ </div>
+ </div>
+ <input type="hidden" id="reg-loyalty-mode" value="points">
+
+ <div class="field-row" id="row-loyalty-config">
+ <div class="field" id="field-ppe">
+ <label class="field-label" for="reg-ppe" id="label-ppe">Points par euro</label>
  <input type="number" id="reg-ppe" class="field-input" step="0.1" min="0.1" value="1" placeholder="1">
- <div class="field-hint">Ex : 1 = 1 point par euro</div>
+ <div class="field-hint" id="hint-ppe">Ex : 1 = 1 point par euro</div>
  </div>
  <div class="field">
- <label class="field-label" for="reg-pfr">Points pour récompense</label>
+ <label class="field-label" for="reg-pfr" id="label-pfr">Points pour récompense</label>
  <input type="number" id="reg-pfr" class="field-input" min="1" value="100" placeholder="100">
- <div class="field-hint">Seuil à atteindre par le client</div>
+ <div class="field-hint" id="hint-pfr">Seuil à atteindre par le client</div>
  </div>
  </div>
 
@@ -878,6 +918,33 @@
  input.addEventListener('input', function() { clearFieldError(this.id); });
  input.addEventListener('change', function() { clearFieldError(this.id); });
  });
+
+ // ── Loyalty mode toggle ──
+ function setLoyaltyMode(mode) {
+ document.getElementById('reg-loyalty-mode').value = mode;
+ document.getElementById('mode-points').classList.toggle('active', mode === 'points');
+ document.getElementById('mode-visits').classList.toggle('active', mode === 'visits');
+
+ var fieldPpe = document.getElementById('field-ppe');
+ var labelPfr = document.getElementById('label-pfr');
+ var hintPfr = document.getElementById('hint-pfr');
+ var inputPfr = document.getElementById('reg-pfr');
+
+ if (mode === 'visits') {
+ fieldPpe.style.display = 'none';
+ labelPfr.textContent = 'Visites pour récompense';
+ hintPfr.textContent = 'Nombre de passages avant la récompense';
+ if (!inputPfr.dataset.touched) { inputPfr.value = 10; inputPfr.placeholder = '10'; }
+ } else {
+ fieldPpe.style.display = '';
+ labelPfr.textContent = 'Points pour récompense';
+ hintPfr.textContent = 'Seuil à atteindre par le client';
+ if (!inputPfr.dataset.touched) { inputPfr.value = 100; inputPfr.placeholder = '100'; }
+ }
+ }
+
+ // Track manual edits on pfr so toggle doesn't overwrite user input
+ document.getElementById('reg-pfr').addEventListener('input', function() { this.dataset.touched = '1'; });
 
  // ═══════════════════════════════════════════════════════
  // VALIDATORS
@@ -1010,6 +1077,7 @@
  vat: document.getElementById('reg-vat').value.trim(),
  phone: document.getElementById('reg-phone').value.trim(),
  bizEmail: document.getElementById('reg-biz-email').value.trim(),
+ loyaltyMode: document.getElementById('reg-loyalty-mode').value,
  rewardDesc: document.getElementById('reg-reward-desc').value.trim(),
  ppe: document.getElementById('reg-ppe').value,
  pfr: document.getElementById('reg-pfr').value,
@@ -1054,7 +1122,8 @@
  businessName: f.business, businessType: f.bizType, address: f.address, vatNumber: f.vat,
  email: f.bizEmail, phone: f.phone, ownerPhone: f.ownerPhone,
  ownerEmail: f.ownerEmail, ownerPassword: f.password, ownerName: f.ownerName,
- pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || 100,
+ loyaltyMode: f.loyaltyMode,
+ pointsPerEuro: parseFloat(f.ppe) || 1, pointsForReward: parseInt(f.pfr) || (f.loyaltyMode === 'visits' ? 10 : 100),
  rewardDescription: f.rewardDesc,
  });
 
@@ -1064,6 +1133,7 @@
  'success'
  );
  document.querySelectorAll('#register-form .field-input, #register-form .field-select').forEach(function(el) { el.disabled = true; });
+ document.querySelectorAll('#mode-toggle button').forEach(function(el) { el.disabled = true; el.style.opacity = '0.5'; el.style.cursor = 'default'; });
  document.getElementById('register-btn').style.display = 'none';
  } catch (err) {
  setLoading('register-btn', false);
