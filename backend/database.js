@@ -487,8 +487,8 @@ const adminQueries = {
 
 const merchantQueries = {
   create: db.prepare(`
-    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone, points_per_euro, points_for_reward, reward_description)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO merchants (business_name, address, vat_number, email, phone, owner_phone, points_per_euro, points_for_reward, reward_description, loyalty_mode)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `),
   findById:    db.prepare('SELECT * FROM merchants WHERE id = ?'),
   findByVat:   db.prepare('SELECT * FROM merchants WHERE vat_number = ?'),
