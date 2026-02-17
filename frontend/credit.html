@@ -568,12 +568,14 @@
  }
  });
 
- // Switch to first enabled method
+ // Switch to first enabled method (skip if URL prefilled)
+ if (!prefilled) {
  const firstEnabled = methods.find(m => cm[m] !== false);
  if (firstEnabled && firstEnabled !== 'email') {
  switchMode(firstEnabled);
  } else if (!cm.email) {
  switchMode(firstEnabled || 'email');
+ }
  }
  } catch (_) { /* defaults — show all */ }
  })();
@@ -641,10 +643,11 @@
  // ═══════════════════════════════════════════════════════
  // PRE-FILL FROM URL
  // ═══════════════════════════════════════════════════════
+ let prefilled = false;
  (function() {
  const p = new URLSearchParams(window.location.search);
- if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); }
- else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); }
+ if (p.get('phone') && !p.get('email')) { switchMode('phone'); document.getElementById('client-phone').value = p.get('phone'); prefilled = true; }
+ else if (p.get('email')) { document.getElementById('client-email').value = p.get('email'); prefilled = true; }
  if (p.get('name')) document.getElementById('client-name').value = p.get('name');
  if (p.get('email') || p.get('phone')) setTimeout(triggerLookup, 500);
  if (p.toString()) window.history.replaceState({}, '', window.location.pathname);
@@ -687,7 +690,7 @@
  document.getElementById('client-name').value = ''; document.getElementById('client-name').classList.remove('has-value');
  qrVerifyTokenValue = null;
  hideLookup();
- if (mode === 'qr') startPendingPoll();
+ if (mode === 'qr') { if (!qrLoaded) { loadStaticQR(); qrLoaded = true; } startPendingPoll(); }
  if (mode === 'scan') startScanner();
  }
 
@@ -990,6 +993,7 @@
  let merchantQrUrl = null;
  let merchantQrToken = null;
  let qrInst = null;
+ let qrLoaded = false;
  let pendingPoll = null;
 
  async function loadStaticQR() {
@@ -1302,8 +1306,7 @@
  }
  }
 
- // Load QR on page init (lazy)
- loadStaticQR();
+ // QR loaded lazily on first switch to QR tab
 
  // Points badge pop on amount change
  document.getElementById('amount').addEventListener('input', () => {
