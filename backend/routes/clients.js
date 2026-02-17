@@ -215,7 +215,7 @@ router.post('/credit', async (req, res) => {
   }
 });
 
-router.post('/reward', (req, res) => {
+router.post('/reward', async (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const { merchantClientId, notes, idempotencyKey, pin, qrVerifyToken } = req.body;
@@ -224,7 +224,7 @@ router.post('/reward', (req, res) => {
     // Resolve QR verify token server-side (never trust a boolean from client)
     const qrVerified = resolveQrVerifyToken(qrVerifyToken);
 
-    const result = redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null, qrVerified });
+    const result = await redeemReward({ merchantId, merchantClientId: parseInt(merchantClientId), staffId: req.staff.id, notes: notes || null, idempotencyKey: idempotencyKey || null, pin: pin || null, qrVerified });
     if (!result.idempotent) logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'reward_redeemed', targetType: 'merchant_client', targetId: parseInt(merchantClientId), details: { pointsDelta: result.transaction.points_delta, qrVerified } });
     res.json({ message: 'Récompense appliquée', client: result.merchantClient, transaction: result.transaction, rewardLabel: result.rewardLabel || null });
   } catch (error) {
