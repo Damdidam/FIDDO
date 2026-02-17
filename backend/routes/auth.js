@@ -248,6 +248,7 @@ router.post('/login', async (req, res) => {
 // ═══════════════════════════════════════════════════════
 
 router.get('/verify', authenticateStaff, (req, res) => {
+  try {
   const staff = staffQueries.findById.get(req.staff.id);
   if (!staff) {
     return res.status(404).json({ error: 'Compte non trouvé' });
@@ -277,6 +278,10 @@ router.get('/verify', authenticateStaff, (req, res) => {
 
   const { password: _, ...staffData } = staff;
   res.json({ staff: staffData, merchant });
+  } catch (error) {
+    console.error('Verify error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 
