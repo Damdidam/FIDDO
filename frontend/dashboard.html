@@ -441,7 +441,7 @@
  }
 
  function goClients(filter) {
- window.location.href = '/clients' + (filter ? '?filter=' + filter : '');
+ navigateTo('/clients' + (filter ? '?filter=' + filter : ''));
  }
 
  // ═══ COLUMN SORT ═══
@@ -615,7 +615,7 @@
 
  // Col 2: Client + meta
  html += '<div class="tx-info">';
- html += '<div class="tx-client" onclick="window.location.href=\'/clients?open=' + tx.merchant_client_id + '\'">' + esc(clientLabel) + '</div>';
+ html += '<div class="tx-client" onclick="navigateTo(\'/clients?open=' + tx.merchant_client_id + '\')">' + esc(clientLabel) + '</div>';
  if (clientEmail) html += '<div class="tx-meta">' + esc(clientEmail) + '</div>';
  if (giftMeta) {
  html += '<div class="tx-meta" style="color:' + (type === 'gift_out' ? '#BE185D' : '#0F766E') + ';">' + esc(giftMeta) + '</div>';
