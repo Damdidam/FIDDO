@@ -714,7 +714,7 @@ const App = (() => {
  const todayKey = DAY_KEYS[new Date().getDay()];
  document.getElementById('cd-hours').innerHTML = Object.entries(merchant.openingHours).map(([day, hrs]) => {
  const isToday = day === todayKey;
- return `<div class="hour-row${isToday ? ' today' : ''}"><span class="hour-day">${DAYS[day] || day}</span><span class="hour-val">${hrs || 'Fermé'}</span></div>`;
+ return `<div class="hour-row${isToday ? ' today' : ''}"><span class="hour-day">${DAYS[day] || esc(day)}</span><span class="hour-val">${esc(hrs) || 'Fermé'}</span></div>`;
  }).join('');
  } else {
  hoursWrap.classList.add('hidden');
