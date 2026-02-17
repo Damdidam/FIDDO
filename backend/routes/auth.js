@@ -368,7 +368,7 @@ router.put('/settings', authenticateStaff, (req, res) => {
   }
 
   try {
-    const { pointsPerEuro, pointsForReward, rewardDescription, loyaltyMode, confirmModeSwitch } = req.body;
+    const { pointsPerEuro, pointsForReward, rewardDescription, loyaltyMode, confirmModeSwitch, birthdayGiftEnabled, birthdayGiftDescription } = req.body;
 
     const validModes = ['points', 'visits'];
     const mode = (loyaltyMode && validModes.includes(loyaltyMode)) ? loyaltyMode : 'points';
@@ -409,6 +409,13 @@ router.put('/settings', authenticateStaff, (req, res) => {
         mode === 'visits' ? 1 : ppe, pfr, rdesc, mode,
         merchantId
       );
+
+      // Update birthday gift settings
+      if (birthdayGiftEnabled !== undefined) {
+        const bgEnabled = birthdayGiftEnabled ? 1 : 0;
+        const bgDesc = (birthdayGiftDescription && birthdayGiftDescription.trim()) ? birthdayGiftDescription.trim().substring(0, 200) : null;
+        db.prepare('UPDATE merchants SET birthday_gift_enabled = ?, birthday_gift_description = ? WHERE id = ?').run(bgEnabled, bgDesc, merchantId);
+      }
 
       let converted = 0;
 
@@ -452,7 +459,8 @@ router.put('/settings', authenticateStaff, (req, res) => {
       ? `Mode changé : ${oldMode} → ${mode}. ${converted} client${converted > 1 ? 's' : ''} converti${converted > 1 ? 's' : ''}.`
       : 'Paramètres mis à jour';
 
-    res.json({ message: msg, loyaltyMode: mode, converted });
+    const updatedMerchant = merchantQueries.findById.get(merchantId);
+    res.json({ message: msg, loyaltyMode: mode, converted, merchant: updatedMerchant });
   } catch (error) {
     console.error('Erreur update settings:', error);
     res.status(500).json({ error: 'Erreur lors de la mise à jour' });

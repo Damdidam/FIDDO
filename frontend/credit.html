@@ -252,6 +252,15 @@
  color: #065F46; padding: 2px 10px; border-radius: 12px;
  font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
  }
+ .s-bday {
+ display: flex; align-items: center; gap: 8px;
+ margin-top: 0.75rem; padding: 0.6rem 1rem;
+ background: linear-gradient(135deg, #FDF2F8, #F5F3FF);
+ border: 1px solid #E9D5FF; border-radius: 10px;
+ font-size: 0.78rem; font-weight: 600; color: #7C3AED;
+ max-width: 300px; width: 100%;
+ animation: slideUp 0.35s ease 0.28s both;
+ }
  .success-reward {
  display: none; margin-top: 1rem; padding: 0.65rem 1.25rem;
  background: linear-gradient(135deg, #059669, #10B981);
@@ -505,6 +514,10 @@
  <div class="success-pts" id="s-pts"></div>
  <div class="success-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Crédités</div>
  <div class="success-info" id="s-info"></div>
+ <div class="s-bday" id="s-bday" style="display:none">
+ <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>
+ <span id="s-bday-text"></span>
+ </div>
  <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Appliquer la récompense</button>
  <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
  </div>
@@ -868,6 +881,18 @@
 
  document.getElementById('s-info').innerHTML = info;
 
+ // ── Birthday reminder ──
+ const bdayBanner = document.getElementById('s-bday');
+ if (r.birthdayGift && r.client.date_of_birth) {
+ var parts = r.client.date_of_birth.split('-'), mm = parseInt(parts[1]), dd = parseInt(parts[2]), now = new Date();
+ var isBday = false;
+ for (var d = 0; d <= 7; d++) { var chk = new Date(now); chk.setDate(chk.getDate() + d); if (chk.getMonth()+1===mm && chk.getDate()===dd) { isBday = true; break; } }
+ if (isBday) {
+ document.getElementById('s-bday-text').textContent = r.birthdayGift;
+ bdayBanner.style.display = 'flex';
+ } else { bdayBanner.style.display = 'none'; }
+ } else { bdayBanner.style.display = 'none'; }
+
  // ── Reward button if eligible ──
  const rewardBtn = document.getElementById('s-reward');
  if (r.client.can_redeem) {
@@ -935,6 +960,7 @@
  function resetForm() {
  // Hide overlay
  document.getElementById('success-overlay').classList.remove('show');
+ document.getElementById('s-bday').style.display = 'none';
 
  // Reset reward button
  const rb = document.getElementById('s-reward');

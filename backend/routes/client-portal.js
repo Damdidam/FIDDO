@@ -213,7 +213,8 @@ router.get('/cards', authenticateClient, (req, res) => {
              mc.is_favorite, mc.is_hidden,
              m.business_name, m.points_per_euro, m.points_for_reward,
              m.reward_description, m.status, m.business_type, m.allow_gifts,
-             m.loyalty_mode
+             m.loyalty_mode,
+             m.birthday_gift_enabled, m.birthday_gift_description
       FROM merchant_clients mc
       JOIN merchants m ON mc.merchant_id = m.id
       WHERE mc.end_user_id = ? AND m.status = 'active'
@@ -242,6 +243,7 @@ router.get('/cards', authenticateClient, (req, res) => {
       canRedeem: c.points_balance >= c.points_for_reward,
       progress: Math.min((c.points_balance / c.points_for_reward) * 100, 100),
       isFavorite: !!c.is_favorite,
+      birthdayGift: c.birthday_gift_enabled ? (c.birthday_gift_description || null) : null,
     }));
 
     res.json({
@@ -279,7 +281,8 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
              m.reward_description, m.address, m.phone, m.email,
              m.business_type, m.website_url, m.instagram_url, m.facebook_url,
              m.opening_hours, m.latitude, m.longitude, m.description, m.allow_gifts,
-             m.loyalty_mode
+             m.loyalty_mode,
+             m.birthday_gift_enabled, m.birthday_gift_description
       FROM merchant_clients mc
       JOIN merchants m ON mc.merchant_id = m.id
       WHERE mc.merchant_id = ? AND mc.end_user_id = ? AND m.status = 'active'
@@ -323,6 +326,7 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
         description: mc.description,
         allowGifts: !!mc.allow_gifts,
         loyaltyMode: mc.loyalty_mode || 'points',
+        birthdayGift: mc.birthday_gift_enabled ? (mc.birthday_gift_description || null) : null,
       },
     });
   } catch (error) {

@@ -161,6 +161,7 @@ router.get('/activity', (req, res) => {
     // Fetch page
     const rows = db.prepare(`
       SELECT t.id, t.amount, t.points_delta, t.transaction_type, t.source, t.notes, t.created_at,
+             t.merchant_client_id,
              eu.email AS client_email, eu.phone AS client_phone, eu.name AS client_name,
              sa.display_name AS staff_name,
              mc.points_balance AS client_balance

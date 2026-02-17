@@ -32,7 +32,7 @@
  .toolbar-count { font-size: 0.68rem; color: #94A3B8; font-weight: 500; white-space: nowrap; }
 
  /* ═══ STAT CARDS ═══ */
- .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
+ .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; margin-bottom: 1rem; }
  .st { background: white; border-radius: 8px; padding: 0.45rem 0.4rem; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
  .st.st-click { cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
  .st.st-click:hover { border-color: var(--primary); background: color-mix(in srgb, var(--primary-light, #CFFAFE) 30%, white); }
@@ -308,10 +308,11 @@
  <span class="toolbar-count" id="result-count"></span>
  </div>
 
- <div class="stats-row" id="stats-row">
+ <div class="stats-row" id="stats-row" style="grid-template-columns: repeat(4, 1fr)">
  <div class="st st-click active" id="st-total" onclick="statFilter('all')" title="Tous les clients"><div class="st-val" id="s-total">–</div><div class="st-lbl">Clients</div></div>
  <div class="st st-click" id="st-active" onclick="statFilter('active')" title="Clients actifs (30 derniers jours)"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Actifs (30j)</div></div>
  <div class="st st-click" id="st-rewards" onclick="statFilter('redeemable')" title="Récompense disponible"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses dispo</div></div>
+ <div class="st st-click" id="st-bday" onclick="statFilter('birthday')" title="Anniversaires cette semaine"><div class="st-val" id="s-bday" style="color:#9333EA;display:flex;align-items:center;justify-content:center;gap:3px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday-n">0</span></div><div class="st-lbl">Anniversaires</div></div>
  <div class="st st-action" id="csv-card" style="display:none" onclick="API.clients.exportCSV()" title="Exporter les clients">
  <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
  <div class="st-lbl">Export CSV</div>
@@ -402,7 +403,7 @@
 
  if (isOwner) {
  document.getElementById('csv-card').style.display = '';
- document.getElementById('stats-row').style.gridTemplateColumns = 'repeat(4, 1fr)';
+ document.getElementById('stats-row').style.gridTemplateColumns = 'repeat(5, 1fr)';
  }
 
  // ═══ HELPERS ═══
@@ -449,6 +450,7 @@
  document.getElementById('s-total').textContent = fmtNum(allClients.length);
  document.getElementById('s-active').textContent = fmtNum(allClients.filter(c => c._days <= 30).length);
  document.getElementById('s-rewards').textContent = fmtNum(allClients.filter(c => c._canRedeem).length);
+ document.getElementById('s-bday-n').textContent = fmtNum(allClients.filter(c => c._isBirthday).length);
  }
 
  function statFilter(filter) {
@@ -461,13 +463,15 @@
  displayedClients = allClients.filter(c => c._days <= 30);
  } else if (filter === 'redeemable') {
  displayedClients = allClients.filter(c => c._canRedeem);
+ } else if (filter === 'birthday') {
+ displayedClients = allClients.filter(c => c._isBirthday);
  } else {
  displayedClients = allClients;
  }
 
  // Update active tile
  document.querySelectorAll('.st.st-click').forEach(s => s.classList.remove('active'));
- var activeId = filter === 'active' ? 'st-active' : filter === 'redeemable' ? 'st-rewards' : 'st-total';
+ var activeId = filter === 'active' ? 'st-active' : filter === 'redeemable' ? 'st-rewards' : filter === 'birthday' ? 'st-bday' : 'st-total';
  document.getElementById(activeId).classList.add('active');
 
  renderClients();
@@ -900,7 +904,21 @@
  document.addEventListener('click', (e) => { if (!e.target.closest('.merge-search-wrap')) document.getElementById('merge-results').classList.remove('open'); });
 
  // ═══ INIT ═══
- loadClients();
+ loadClients().then(function() {
+ var params = new URLSearchParams(window.location.search);
+ var openId = params.get('open');
+ var filterParam = params.get('filter');
+ if (filterParam) {
+ statFilter(filterParam);
+ }
+ if (openId) {
+ showDetail(parseInt(openId));
+ }
+ // Clean URL
+ if (openId || filterParam) {
+ history.replaceState(null, '', '/clients');
+ }
+ });
  </script>
 </body>
 </html>

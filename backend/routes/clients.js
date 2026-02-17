@@ -202,10 +202,12 @@ router.post('/credit', async (req, res) => {
         name: result.endUser.name, points_balance: result.merchantClient.points_balance,
         total_spent: result.merchantClient.total_spent, visit_count: result.merchantClient.visit_count,
         can_redeem: canRedeem, reward_threshold: merchant.points_for_reward,
-        reward_description: result.merchantClient.custom_reward || merchant.reward_description },
+        reward_description: result.merchantClient.custom_reward || merchant.reward_description,
+        date_of_birth: result.endUser.date_of_birth },
       transaction: { amount: isVisits ? 0 : parseFloat(amount), points_delta: result.transaction.points_delta },
       isNewClient: result.isNewClient,
       loyaltyMode: isVisits ? 'visits' : 'points',
+      birthdayGift: merchant.birthday_gift_enabled ? (merchant.birthday_gift_description || null) : null,
     });
   } catch (error) {
     console.error('Erreur crédit:', error);

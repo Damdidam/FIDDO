@@ -23,6 +23,13 @@ const App = (() => {
  forest: '#059669', brick: '#e11d48', amber: '#d97706', slate: '#475569'
  };
 
+ function isBirthdayWeek(dob) {
+ if (!dob) return false;
+ var parts = dob.split('-'), mm = parseInt(parts[1]), dd = parseInt(parts[2]), now = new Date();
+ for (var d = 0; d <= 7; d++) { var chk = new Date(now); chk.setDate(chk.getDate() + d); if (chk.getMonth()+1===mm && chk.getDate()===dd) return true; }
+ return false;
+ }
+
  const BIZ_TYPES = {
  horeca: { label: 'Horeca', icon: 'restaurant' },
  boulangerie: { label: 'Boulangerie', icon: 'bakery_dining' },
@@ -441,6 +448,7 @@ const App = (() => {
  : `<span class="lc-left">Encore ${left} ${c.loyaltyMode === "visits" ? "visite" + (left > 1 ? "s" : "") : "pts"}</span>`}
  <span class="lc-date">${date}</span>
  </div>
+ ${c.birthdayGift ? `<div class="lc-bday${isBirthdayWeek(client?.dateOfBirth) ? ' lc-bday-active' : ''}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>${esc(c.birthdayGift)}</div>` : ''}
  </div>`;
  }).join('');
  }
@@ -603,7 +611,7 @@ const App = (() => {
  '</div>';
  }).join('');
  }
- openModal('hidden');
+ openModal('modal-hidden');
  } catch (e) {
  toast('Erreur');
  }
@@ -617,6 +625,7 @@ const App = (() => {
  const cardsRes = await API.getCards();
  if (cardsRes.ok) {
  cards = cardsRes.data.cards || [];
+ saveCardStates(cards); // prevent false credit animation
  renderCards();
  buildFilterPills();
  }
@@ -657,6 +666,18 @@ const App = (() => {
  const descEl = document.getElementById('cd-desc');
  if (merchant.description) { descEl.textContent = merchant.description; descEl.style.display = ''; }
  else { descEl.style.display = 'none'; }
+
+ // Birthday gift
+ const bdayEl = document.getElementById('cd-bday-gift');
+ if (merchant.birthdayGift) {
+ bdayEl.classList.remove('hidden');
+ document.getElementById('cd-bday-desc').textContent = merchant.birthdayGift;
+ var bdayActive = isBirthdayWeek(client?.dateOfBirth);
+ bdayEl.classList.toggle('active', bdayActive);
+ document.getElementById('cd-bday-label').textContent = bdayActive ? '🎂 C\'est bientôt votre anniversaire !' : 'Cadeau d\'anniversaire';
+ } else {
+ bdayEl.classList.add('hidden');
+ }
 
  const giftBtn = document.getElementById('btn-gift');
  if (merchant.allowGifts && card.pointsBalance > 0) giftBtn.classList.remove('hidden');
@@ -953,12 +974,50 @@ const App = (() => {
  openModal('modal-dob');
  }
 
+ let _dobPendingConfirm = false;
+
  async function saveDob() {
  const dob = document.getElementById('edit-dob').value;
  if (!dob) { toast('Sélectionnez une date'); return; }
+
+ if (!_dobPendingConfirm) {
+ // Show confirmation view
+ _dobPendingConfirm = true;
+ const [y, m, d] = dob.split('-');
+ const months = ['', 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+ const formatted = parseInt(d) + ' ' + months[parseInt(m)] + ' ' + y;
+ const sheet = document.querySelector('#modal-dob .modal-sheet');
+ sheet.querySelector('h2').textContent = 'Confirmer votre date';
+ sheet.querySelector('.modal-sub').innerHTML =
+ '<div style="font-size:22px;font-weight:800;color:var(--tx);margin:12px 0">' + formatted + '</div>' +
+ '<p style="font-size:13px;color:var(--tx2);line-height:1.6;margin:0">Pour éviter les abus, cette date <strong>ne pourra plus être modifiée</strong> par la suite. Un changement nécessitera une demande auprès du support.</p>';
+ sheet.querySelector('.field').style.display = 'none';
+ document.getElementById('btn-save-dob').innerHTML = '<span>Confirmer</span>';
+ return;
+ }
+
+ // Actually save
  const res = await API.updateProfile({ dateOfBirth: dob });
- if (res.ok) { client.dateOfBirth = dob; loadProfile(); closeModal(); toast('Date de naissance enregistrée'); }
- else toast(res.data?.error || 'Erreur');
+ if (res.ok) {
+ client.dateOfBirth = dob;
+ loadProfile();
+ _resetDobModal();
+ closeModal();
+ toast('Date de naissance enregistrée');
+ } else {
+ toast(res.data?.error || 'Erreur');
+ }
+ }
+
+ function _resetDobModal() {
+ _dobPendingConfirm = false;
+ const sheet = document.querySelector('#modal-dob .modal-sheet');
+ if (sheet) {
+ sheet.querySelector('h2').textContent = 'Date de naissance';
+ sheet.querySelector('.modal-sub').innerHTML = 'Renseignez-la pour recevoir une surprise le jour J. Cette information ne pourra plus être modifiée.';
+ sheet.querySelector('.field').style.display = '';
+ document.getElementById('btn-save-dob').innerHTML = '<span>Enregistrer</span>';
+ }
  }
 
  // ─── PIN ──────────────────────────────────
@@ -1134,7 +1193,7 @@ const App = (() => {
  // ─── Modals / Toast ───────────────────────
 
  function openModal(id) { document.getElementById(id).classList.add('open'); }
- function closeModal() { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); }
+ function closeModal() { document.querySelectorAll('.modal.open').forEach(m => m.classList.remove('open')); _resetDobModal(); }
 
  let toastTimer = null;
  function toast(msg) {

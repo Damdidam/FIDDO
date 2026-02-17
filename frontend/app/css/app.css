@@ -165,6 +165,10 @@ a{text-decoration:none;cursor:pointer}
 .lc-reward .material-symbols-rounded{font-size:14px}
 .lc-left{font-size:13px;opacity:.8;font-weight:500}
 .lc-date{font-size:11px;opacity:.5}
+.lc-bday{display:flex;align-items:center;gap:5px;font-size:11px;color:rgba(255,255,255,.7);margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.15);position:relative;z-index:1}
+.lc-bday svg{flex-shrink:0}
+.lc-bday-active{color:#fff;font-weight:700;animation:bdayPulse 2s ease-in-out infinite}
+@keyframes bdayPulse{0%,100%{opacity:.9}50%{opacity:1}}
 .lc-fav{position:absolute;top:12px;right:12px;z-index:2;color:rgba(255,255,255,.85)}
 .lc-fav .material-symbols-rounded{font-size:20px;font-variation-settings:'FILL' 1}
 
@@ -215,6 +219,14 @@ a{text-decoration:none;cursor:pointer}
 
 .stats-row{display:flex;gap:10px;margin-bottom:16px}
 .cd-desc{font-size:13px;color:var(--tx2);line-height:1.55;margin:0 0 16px;padding:12px 14px;background:var(--bg2);border-radius:var(--r);border-left:3px solid var(--pri)}
+.cd-bday-gift{display:flex;align-items:center;gap:12px;padding:12px 14px;background:linear-gradient(135deg,#FDF2F8,#F5F3FF);border-radius:var(--r);margin:0 0 16px;border:1px solid #F3E8FF}
+.cd-bday-gift.hidden{display:none}
+.cd-bday-icon{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#FDE7F0,#EDE9FE);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.cd-bday-text{flex:1;min-width:0}
+.cd-bday-label{font-size:12px;font-weight:700;color:#7C3AED}
+.cd-bday-desc{font-size:13px;color:#1E293B;margin-top:2px}
+.cd-bday-gift.active{border-color:#C084FC;box-shadow:0 0 12px rgba(147,51,234,.15)}
+.cd-bday-gift.active .cd-bday-label{color:#9333EA;font-size:12px}
 .stat{flex:1;background:var(--sf);border-radius:var(--r-md);padding:14px 8px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.04)}
 .stat .material-symbols-rounded{font-size:22px;color:var(--pri);display:block;margin-bottom:4px}
 .stat strong{font-size:17px;font-weight:700;display:block}

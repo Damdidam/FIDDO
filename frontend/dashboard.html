@@ -100,47 +100,6 @@
  .st.st-action .st-icon svg { width: 18px; height: 18px; }
  .st.st-action:hover .st-icon { color: var(--primary); }
 
- /* ═══ BIRTHDAY WIDGET ═══ */
-
- .bday-card {
- background: white; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.05);
- margin-bottom: 0.9rem; overflow: hidden; display: none;
- }
- .bday-card.has-data { display: block; }
- .bday-hdr {
- display: flex; align-items: center; gap: 8px; padding: 0.6rem 0.85rem;
- border-bottom: 1px solid #F1F5F9;
- }
- .bday-icon-wrap {
- width: 28px; height: 28px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
- background: linear-gradient(135deg, #FDE7F0, #F5E6FF);
- }
- .bday-title { font-size: 0.78rem; font-weight: 700; color: #1E293B; }
- .bday-count {
- margin-left: auto; font-size: 0.62rem; font-weight: 600; color: #9333EA;
- background: #F5E6FF; padding: 2px 8px; border-radius: 10px;
- }
- .bday-list { padding: 0.3rem 0; }
- .bday-row {
- display: flex; align-items: center; gap: 10px; padding: 0.45rem 0.85rem;
- cursor: pointer; transition: background 0.12s;
- }
- .bday-row:hover { background: #FAFAFA; }
- .bday-avatar {
- width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
- font-size: 0.7rem; font-weight: 700; color: white;
- background: linear-gradient(135deg, #EC407A, #AB47BC);
- }
- .bday-info { flex: 1; min-width: 0; }
- .bday-name { font-size: 0.78rem; font-weight: 600; color: #1E293B; }
- .bday-sub { font-size: 0.62rem; color: #94A3B8; }
- .bday-when {
- font-size: 0.6rem; font-weight: 700; padding: 2px 8px; border-radius: 10px;
- white-space: nowrap;
- }
- .bday-when.today { background: #FDE7F0; color: #DB2777; }
- .bday-when.soon { background: #FEF3C7; color: #92400E; }
-
  /* ═══ ACTIVITY FEED ═══ */
 
  .feed-card {
@@ -233,7 +192,9 @@
  .tx-client {
  font-weight: 600; color: #1E293B; font-size: 0.82rem;
  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+ cursor: pointer; transition: color 0.12s;
  }
+ .tx-client:hover { color: var(--primary); }
  .tx-meta {
  font-size: 0.66rem; color: #94A3B8; margin-top: 1px;
  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -335,23 +296,11 @@
  <div class="st st-click" onclick="statFilter('reward')" id="st-rewards" title="Filtrer les récompenses"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
  <div class="st st-click" onclick="goClients()" id="st-new" title="Voir les clients"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
  <div class="st st-click" onclick="goClients()" id="st-active" title="Voir les clients"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
- <div class="st st-bday" id="st-bday" onclick="scrollToBday()" title="Anniversaires cette semaine" style="display:none"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday">0</span></div><div class="st-lbl">Anniversaires</div></div>
+ <div class="st st-bday" id="st-bday" onclick="goClients('birthday')" title="Anniversaires cette semaine"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday">0</span></div><div class="st-lbl">Anniversaires</div></div>
  <div class="st st-action" onclick="API.clients.exportCSV()" title="Exporter les clients">
  <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
  <div class="st-lbl">Export CSV</div>
  </div>
- </div>
-
- <!-- ════════ BIRTHDAY WIDGET ════════ -->
- <div class="bday-card" id="bday-card">
- <div class="bday-hdr">
- <div class="bday-icon-wrap">
- <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>
- </div>
- <span class="bday-title">Anniversaires cette semaine</span>
- <span class="bday-count" id="bday-count">0</span>
- </div>
- <div class="bday-list" id="bday-list"></div>
  </div>
 
  <!-- ════════ ACTIVITY FEED ════════ -->
@@ -489,13 +438,8 @@
  setType(newType, matchBtn);
  }
 
- function goClients() {
- window.location.href = '/clients';
- }
-
- function scrollToBday() {
- var el = document.getElementById('bday-card');
- if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+ function goClients(filter) {
+ window.location.href = '/clients' + (filter ? '?filter=' + filter : '');
  }
 
  // ═══ COLUMN SORT ═══
@@ -669,7 +613,7 @@
 
  // Col 2: Client + meta
  html += '<div class="tx-info">';
- html += '<div class="tx-client">' + esc(clientLabel) + '</div>';
+ html += '<div class="tx-client" onclick="window.location.href=\'/clients?open=' + tx.merchant_client_id + '\'">' + esc(clientLabel) + '</div>';
  if (clientEmail) html += '<div class="tx-meta">' + esc(clientEmail) + '</div>';
  if (giftMeta) {
  html += '<div class="tx-meta" style="color:' + (type === 'gift_out' ? '#BE185D' : '#0F766E') + ';">' + esc(giftMeta) + '</div>';
@@ -703,36 +647,8 @@
  async function loadBirthdays() {
  try {
  const data = await API.call('/dashboard/birthdays');
- const card = document.getElementById('bday-card');
- const list = document.getElementById('bday-list');
- const count = document.getElementById('bday-count');
- const statTile = document.getElementById('st-bday');
- const statVal = document.getElementById('s-bday');
-
- if (!data.birthdays || data.birthdays.length === 0) {
- card.classList.remove('has-data');
- statTile.style.display = 'none';
- return;
- }
-
- card.classList.add('has-data');
- count.textContent = data.count;
- statTile.style.display = '';
- statVal.textContent = data.count;
-
- var html = '';
- data.birthdays.forEach(function(b) {
- var initials = (b.name || '?').split(' ').map(function(w) { return w[0]; }).join('').substring(0, 2).toUpperCase();
- var whenClass = b.daysUntil === 0 ? 'today' : 'soon';
- var whenText = b.daysUntil === 0 ? "Aujourd'hui !" : b.daysUntil === 1 ? 'Demain' : 'Dans ' + b.daysUntil + ' jours';
- html += '<div class="bday-row" onclick="window.location.href=\'/clients\'">';
- html += '<div class="bday-avatar">' + initials + '</div>';
- html += '<div class="bday-info"><div class="bday-name">' + esc(b.name) + '</div>';
- html += '<div class="bday-sub">' + esc(b.email || b.phone || '') + '</div></div>';
- html += '<span class="bday-when ' + whenClass + '">' + whenText + '</span>';
- html += '</div>';
- });
- list.innerHTML = html;
+ var statVal = document.getElementById('s-bday');
+ statVal.textContent = (data.birthdays && data.birthdays.length) || 0;
  } catch (e) {
  console.error('Erreur chargement anniversaires:', e);
  }
