@@ -5,7 +5,7 @@
 const App = (() => {
  let client = null;
  let cards = [];
- let previousCardStates = {}; // { merchantId: { points, canRedeem } }
+ let previousCardStates = loadCardStates(); // { merchantId: { points, canRedeem } }
  let pointsPollTimer = null;
  let currentCard = null;
  let currentMerchant = null;
@@ -311,7 +311,7 @@ const App = (() => {
  if (!confirm('Voulez-vous vous déconnecter ?')) return;
  stopPolling();
  stopPointsPolling();
- API.logout(); client = null; cards = []; previousCardStates = {};
+ API.logout(); client = null; cards = []; clearCardStates();
  show('screen-login'); resetLogin();
  }
 
@@ -542,10 +542,25 @@ const App = (() => {
  }
 
  function saveCardStates(cardsList) {
- previousCardStates = {};
+ // Merge with existing (preserves hidden cards' states)
+ const existing = loadCardStates();
  for (const c of cardsList) {
- previousCardStates[c.merchantId] = { points: c.pointsBalance, canRedeem: !!c.canRedeem };
+ existing[c.merchantId] = { points: c.pointsBalance, canRedeem: !!c.canRedeem };
  }
+ previousCardStates = existing;
+ try { localStorage.setItem('fiddo_card_states', JSON.stringify(previousCardStates)); } catch(e) {}
+ }
+
+ function loadCardStates() {
+ try {
+ const raw = localStorage.getItem('fiddo_card_states');
+ return raw ? JSON.parse(raw) : {};
+ } catch(e) { return {}; }
+ }
+
+ function clearCardStates() {
+ previousCardStates = {};
+ try { localStorage.removeItem('fiddo_card_states'); } catch(e) {}
  }
 
  // ─── Favorites ────────────────────────────
@@ -1318,7 +1333,7 @@ const App = (() => {
  API.clearToken();
  client = null;
  cards = [];
- previousCardStates = {};
+ clearCardStates();
  stopPointsPolling();
  show('screen-login');
  }, 2000);
