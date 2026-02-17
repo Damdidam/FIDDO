@@ -50,12 +50,12 @@
  display: none; align-items: center; gap: 0.4rem; margin-left: 0.35rem;
  }
  .period-dates.show { display: flex; }
- .period-dates input[type="date"] {
+ .period-dates input[type="text"] {
  padding: 0.22rem 0.4rem; border: 1.5px solid #E2E8F0;
  border-radius: 5px; font-family: inherit; font-size: 0.72rem;
- color: #475569; background: white;
+ color: #475569; background: white; width: 88px; text-align: center;
  }
- .period-dates input[type="date"]:focus { outline: none; border-color: var(--primary); }
+ .period-dates input[type="text"]:focus { outline: none; border-color: var(--primary); }
  .period-dates .sep { color: #94A3B8; font-size: 0.72rem; }
 
  /* ═══ STAT CARDS ═══ */
@@ -282,9 +282,9 @@
  <button class="period-pill" onclick="setPeriod('all',this)">Tout</button>
  <button class="period-pill" onclick="setPeriod('custom',this)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Période</button>
  <div class="period-dates" id="custom-dates">
- <input type="date" id="date-from">
+ <input type="text" id="date-from" placeholder="jj/mm/aaaa" maxlength="10">
  <span class="sep">→</span>
- <input type="date" id="date-to">
+ <input type="text" id="date-to" placeholder="jj/mm/aaaa" maxlength="10">
  </div>
  <span class="toolbar-spacer"></span>
  </div>
@@ -379,8 +379,10 @@
  } else if (period === 'custom') {
  const f = document.getElementById('date-from').value;
  const t = document.getElementById('date-to').value;
- if (f) from = new Date(f + 'T00:00:00');
- if (t) to = new Date(t + 'T23:59:59');
+ var pf = parseBE(f);
+ var pt = parseBE(t);
+ if (pf) { pf.setHours(0,0,0,0); from = pf; }
+ if (pt) { pt.setHours(23,59,59,0); to = pt; }
  } else {
  return {};
  }
@@ -399,15 +401,15 @@
  const custom = document.getElementById('custom-dates');
  if (period === 'custom') {
  custom.classList.add('show');
- if (document.getElementById('date-from').value && document.getElementById('date-to').value) reload();
+ if (parseBE(document.getElementById('date-from').value) && parseBE(document.getElementById('date-to').value)) reload();
  return;
  }
  custom.classList.remove('show');
  reload();
  }
 
- document.getElementById('date-from').addEventListener('change', () => { if (currentPeriod === 'custom') reload(); });
- document.getElementById('date-to').addEventListener('change', () => { if (currentPeriod === 'custom') reload(); });
+ document.getElementById('date-from').addEventListener('blur', () => { if (currentPeriod === 'custom' && parseBE(document.getElementById('date-from').value)) reload(); });
+ document.getElementById('date-to').addEventListener('blur', () => { if (currentPeriod === 'custom' && parseBE(document.getElementById('date-to').value)) reload(); });
 
  // ═══ TYPE FILTER ═══
 
@@ -654,9 +656,36 @@
  }
  }
 
- const today = new Date().toISOString().substring(0, 10);
- document.getElementById('date-from').value = today;
- document.getElementById('date-to').value = today;
+ // ═══ DATE FORMAT HELPERS (dd/mm/yyyy) ═══
+ function formatBE(d) {
+ var dd = String(d.getDate()).padStart(2, '0');
+ var mm = String(d.getMonth() + 1).padStart(2, '0');
+ return dd + '/' + mm + '/' + d.getFullYear();
+ }
+ function parseBE(s) {
+ if (!s || s.length !== 10) return null;
+ var p = s.split('/');
+ if (p.length !== 3) return null;
+ var d = parseInt(p[0]), m = parseInt(p[1]) - 1, y = parseInt(p[2]);
+ if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
+ var dt = new Date(y, m, d);
+ if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return null;
+ return dt;
+ }
+ // Auto-format: insert slashes as user types
+ function autoFormatDate(e) {
+ var v = e.target.value.replace(/[^\d]/g, '');
+ if (v.length > 8) v = v.substring(0, 8);
+ if (v.length > 4) v = v.substring(0,2) + '/' + v.substring(2,4) + '/' + v.substring(4);
+ else if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
+ e.target.value = v;
+ }
+ document.getElementById('date-from').addEventListener('input', autoFormatDate);
+ document.getElementById('date-to').addEventListener('input', autoFormatDate);
+
+ var todayBE = formatBE(new Date());
+ document.getElementById('date-from').value = todayBE;
+ document.getElementById('date-to').value = todayBE;
  reload();
  </script>
 </body>
