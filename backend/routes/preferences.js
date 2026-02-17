@@ -387,6 +387,16 @@ router.put('/merchant-info', requireRole('owner'), (req, res) => {
     if (ownerName && ownerName.length > 100) return res.status(400).json({ error: 'Nom du responsable trop long (max 100)' });
     if (description && description.length > 500) return res.status(400).json({ error: 'Description trop longue (max 500)' });
 
+    // Validate URLs — block dangerous protocols
+    const dangerousUrl = (url) => {
+      if (!url || typeof url !== 'string') return false;
+      const trimmed = url.trim().toLowerCase();
+      return trimmed.startsWith('javascript:') || trimmed.startsWith('data:') || trimmed.startsWith('vbscript:');
+    };
+    if (dangerousUrl(websiteUrl) || dangerousUrl(instagramUrl) || dangerousUrl(facebookUrl)) {
+      return res.status(400).json({ error: 'URL invalide — utilisez une adresse web commençant par http:// ou https://' });
+    }
+
     // Validate business type
     const validType = (businessType && VALID_BUSINESS_TYPES.includes(businessType)) ? businessType : (current.business_type || null);
 
