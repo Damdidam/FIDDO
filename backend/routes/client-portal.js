@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 const { db, endUserQueries, merchantClientQueries, merchantQueries, pollQueries } = require('../database');
-const { normalizeEmail } = require('../services/normalizer');
+const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 const { sendMagicLinkEmail, sendAccountDeletedEmail } = require('../services/email');
 const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
 
@@ -433,7 +433,7 @@ router.put('/profile', authenticateClient, (req, res) => {
     if (phone !== undefined) {
       updates.push('phone = ?', 'phone_e164 = ?');
       const p = phone.trim();
-      params.push(p, p.startsWith('+') ? p : (p ? '+32' + p.replace(/^0/, '') : null));
+      params.push(p, normalizePhone(p));
     }
     if (dateOfBirth !== undefined) {
       // One-time only: can't change once set
