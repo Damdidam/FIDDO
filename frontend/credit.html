@@ -95,6 +95,29 @@
  .credit-page .form-control::placeholder { color: #CBD5E1; font-weight: 400; }
  .credit-page .form-hint { font-size: 0.67rem; color: #94A3B8; margin-top: 0.15rem; }
 
+ /* ── Field error state ── */
+ .form-group.field-error .form-control {
+ border-color: #EF4444;
+ box-shadow: 0 0 0 3px rgba(239,68,68,0.1);
+ background: #FEF2F2;
+ }
+ .form-group.field-error .form-control:focus {
+ border-color: #EF4444;
+ box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
+ }
+ .form-group.field-error .form-label { color: #EF4444; }
+ .form-group.field-error .field-error-msg {
+ display: block; font-size: 0.7rem; color: #EF4444;
+ font-weight: 500; margin-top: 0.2rem;
+ }
+ .field-error-msg { display: none; }
+ @keyframes fieldShake {
+ 0%, 100% { transform: translateX(0); }
+ 20%, 60% { transform: translateX(-4px); }
+ 40%, 80% { transform: translateX(4px); }
+ }
+ .form-group.field-shake { animation: fieldShake 0.35s ease; }
+
  /* ── Input wrap + clear ── */
  .input-wrap { position: relative; }
  .input-wrap .form-control { padding-right: 28px; }
@@ -422,6 +445,7 @@
  <button type="button" class="btn-clear" onclick="clearField('client-email')">×</button>
  <div class="autocomplete-list" id="ac-email"></div>
  </div>
+ <span class="field-error-msg" id="error-client-email"></span>
  <div id="typo-email"></div>
  <div class="lookup-strip" id="lookup-email"></div>
  </div>
@@ -435,6 +459,7 @@
  <div class="autocomplete-list" id="ac-phone"></div>
  </div>
  <div class="form-hint">+32…, 0032…, 04…</div>
+ <span class="field-error-msg" id="error-client-phone"></span>
  <div class="lookup-strip" id="lookup-phone"></div>
  </div>
 
@@ -489,6 +514,7 @@
  <input type="number" id="amount" name="xfid_a8v" class="form-control" step="0.01" min="0.01" placeholder="25.50" required inputmode="decimal" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other">
  <button type="button" class="btn-clear" onclick="clearField('amount')">×</button>
  </div>
+ <span class="field-error-msg" id="error-amount"></span>
  </div>
  <div class="form-group">
  <label class="form-label">Notes <span style="font-weight:400;text-transform:none;letter-spacing:0">(opt.)</span></label>
@@ -691,8 +717,43 @@
  document.getElementById('client-name').value = ''; document.getElementById('client-name').classList.remove('has-value');
  qrVerifyTokenValue = null;
  hideLookup();
+ clearAllFieldErrors();
  if (mode === 'qr') { if (!qrLoaded) { loadStaticQR(); qrLoaded = true; } startPendingPoll(); }
  if (mode === 'scan') startScanner();
+ }
+
+ // ═══════════════════════════════════════════════════════
+ // FIELD ERROR HELPERS
+ // ═══════════════════════════════════════════════════════
+ function markFieldError(inputId, msg) {
+ const el = document.getElementById(inputId);
+ if (!el) return;
+ const group = el.closest('.form-group');
+ if (!group) return;
+ group.classList.add('field-error');
+ group.classList.remove('field-shake');
+ void group.offsetWidth;
+ group.classList.add('field-shake');
+ const msgEl = document.getElementById('error-' + inputId);
+ if (msgEl) msgEl.textContent = msg || '';
+ el.focus();
+ el.addEventListener('input', function onInput() {
+ clearFieldError(inputId);
+ el.removeEventListener('input', onInput);
+ }, { once: true });
+ }
+
+ function clearFieldError(inputId) {
+ const el = document.getElementById(inputId);
+ if (!el) return;
+ const group = el.closest('.form-group');
+ if (group) { group.classList.remove('field-error', 'field-shake'); }
+ const msgEl = document.getElementById('error-' + inputId);
+ if (msgEl) msgEl.textContent = '';
+ }
+
+ function clearAllFieldErrors() {
+ ['client-email', 'client-phone', 'amount'].forEach(clearFieldError);
  }
 
  // ═══════════════════════════════════════════════════════
@@ -841,8 +902,19 @@
  const amount = isVisitsMode ? 0 : parseFloat(document.getElementById('amount').value);
  const notes = document.getElementById('notes').value.trim();
 
- if (!email && !phone) { UI.showAlert('credit-alert', (currentMode === 'qr' || currentMode === 'scan') ? 'Scannez d\'abord le QR du client' : 'Email ou téléphone requis', 'error'); return; }
- if (!isVisitsMode && (!amount || amount <= 0)) { UI.showAlert('credit-alert', 'Montant invalide', 'error'); return; }
+ if (!email && !phone) {
+ if (currentMode === 'qr' || currentMode === 'scan') {
+ UI.showAlert('credit-alert', 'Scannez d\'abord le QR du client', 'error');
+ } else {
+ const fieldId = currentMode === 'phone' ? 'client-phone' : 'client-email';
+ markFieldError(fieldId, currentMode === 'phone' ? 'Numéro de téléphone requis' : 'Adresse email requise');
+ }
+ return;
+ }
+ if (!isVisitsMode && (!amount || amount <= 0)) {
+ markFieldError('amount', 'Indiquez le montant de l\'achat');
+ return;
+ }
 
  // ── Anti-double-credit: generate unique key per submission ──
  const creditKey = (email || '') + '|' + (phone || '') + '|' + (isVisitsMode ? 'visit' : amount) + '|' + Date.now();
@@ -855,6 +927,7 @@
  document.getElementById('submit-btn').disabled = true;
  document.getElementById('submit-btn').textContent = isVisitsMode ? 'Enregistrement…' : 'Traitement…';
  UI.clearAlert('credit-alert');
+ clearAllFieldErrors();
 
  const idempotencyKey = 'manual-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
 
@@ -974,8 +1047,7 @@
  document.getElementById('pts-badge').textContent = '0 pts';
  hideLookup();
  UI.clearAlert('credit-alert');
-
- // QR cleanup — poll refresh
+ clearAllFieldErrors();
  if (currentMode === 'qr') pollPending();
  else {
  stopPendingPoll();
