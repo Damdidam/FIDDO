@@ -40,8 +40,13 @@ function clearAdminAttempts(ip) {
 // ═══════════════════════════════════════════════════════
 
 router.get('/needs-setup', (req, res) => {
-  const { count } = adminQueries.count.get();
-  res.json({ needsSetup: count === 0 });
+  try {
+    const { count } = adminQueries.count.get();
+    res.json({ needsSetup: count === 0 });
+  } catch (error) {
+    console.error('Needs-setup error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // ═══════════════════════════════════════════════════════
@@ -136,13 +141,18 @@ router.post('/login', async (req, res) => {
 // ═══════════════════════════════════════════════════════
 
 router.get('/verify', authenticateAdmin, (req, res) => {
-  const admin = adminQueries.findById.get(req.admin.id);
-  if (!admin) {
-    return res.status(404).json({ error: 'Admin non trouvé' });
-  }
+  try {
+    const admin = adminQueries.findById.get(req.admin.id);
+    if (!admin) {
+      return res.status(404).json({ error: 'Admin non trouvé' });
+    }
 
-  const { password: _, ...adminData } = admin;
-  res.json({ admin: adminData });
+    const { password: _, ...adminData } = admin;
+    res.json({ admin: adminData });
+  } catch (error) {
+    console.error('Admin verify error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
 });
 
 // ═══════════════════════════════════════════════════════
