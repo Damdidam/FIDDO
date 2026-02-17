@@ -294,7 +294,7 @@ router.get('/info/:token', (req, res) => {
 // Returns JWT + client data for the given merchant
 // ═══════════════════════════════════════════════════════
 
-router.post('/client-auth', (req, res) => {
+router.post('/client-auth', async (req, res) => {
   try {
     const { qrToken, email, phone, pin } = req.body;
 
@@ -339,7 +339,7 @@ router.post('/client-auth', (req, res) => {
     }
 
     // Verify PIN
-    if (!bcrypt.compareSync(pin, endUser.pin_hash)) {
+    if (!(await bcrypt.compare(pin, endUser.pin_hash))) {
       const attempts = recordPinFailure(req, identifier);
       const remaining = MAX_PIN_ATTEMPTS - attempts;
       if (remaining <= 0) {
