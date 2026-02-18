@@ -15,6 +15,23 @@
  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
  <link rel="icon" href="/logo-fiddo.png">
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+ <script>
+ function brandQR(container, delay) {
+   setTimeout(function() {
+     var canvas = container.querySelector('canvas');
+     if (!canvas) return;
+     var ctx = canvas.getContext('2d');
+     var size = canvas.width;
+     var logoSize = Math.round(size * 0.22);
+     var cx = size / 2, cy = size / 2;
+     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
+     ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px -apple-system,BlinkMacSystemFont,sans-serif';
+     ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+     ctx.fillText('F', cx + 1, cy + 1);
+   }, delay || 80);
+ }
+ </script>
  <style>
  * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -810,8 +827,9 @@
  height: 240,
  colorDark: '#1E293B',
  colorLight: '#FFFFFF',
- correctLevel: QRCode.CorrectLevel.M,
+ correctLevel: QRCode.CorrectLevel.H,
  });
+ brandQR(canvas);
 
  document.getElementById('qr-overlay').classList.add('open');
  }
