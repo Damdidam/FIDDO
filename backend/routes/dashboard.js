@@ -94,6 +94,15 @@ router.get('/stats', (req, res) => {
       WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
     `).get(mid).c;
 
+    // ── Reward-ready clients (points >= threshold) ──
+    const merchantInfo = db.prepare('SELECT points_for_reward FROM merchants WHERE id = ?').get(mid);
+    const rewardReady = db.prepare(`
+      SELECT COUNT(*) as c FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL AND mc.is_blocked = 0
+        AND mc.points_balance >= ?
+    `).get(mid, merchantInfo.points_for_reward).c;
+
     res.json({
       visits,
       pointsOut,
@@ -102,6 +111,8 @@ router.get('/stats', (req, res) => {
       newClients,
       activeClients,
       totalClients,
+      rewardReady,
+      pointsForReward: merchantInfo.points_for_reward,
     });
   } catch (error) {
     console.error('Dashboard stats error:', error);
@@ -259,6 +270,38 @@ router.get('/birthdays', (req, res) => {
     res.json({ birthdays: upcoming, count: upcoming.length });
   } catch (error) {
     console.error('Erreur birthdays:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/dashboard/reward-ready — Clients who reached the reward threshold
+// ═══════════════════════════════════════════════════════
+
+router.get('/reward-ready', (req, res) => {
+  try {
+    const merchantId = req.staff.merchant_id;
+    const merchantInfo = db.prepare('SELECT points_for_reward, loyalty_mode FROM merchants WHERE id = ?').get(merchantId);
+
+    const clients = db.prepare(`
+      SELECT mc.id, mc.points_balance, mc.visit_count, mc.last_visit,
+             eu.name, eu.email, eu.phone
+      FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL AND mc.is_blocked = 0
+        AND mc.points_balance >= ?
+      ORDER BY mc.points_balance DESC
+    `).all(merchantId, merchantInfo.points_for_reward);
+
+    res.json({
+      clients,
+      threshold: merchantInfo.points_for_reward,
+      loyaltyMode: merchantInfo.loyalty_mode,
+      count: clients.length,
+    });
+  } catch (error) {
+    console.error('Reward-ready error:', error);
     res.status(500).json({ error: 'Erreur serveur' });
   }
 });
