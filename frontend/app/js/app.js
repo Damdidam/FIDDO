@@ -1088,27 +1088,28 @@ const App = (() => {
 
  const qrUrl = res.data.qrUrl;
 
- if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
+ if (typeof QRCode !== 'undefined' && QRCode.toDataURL) {
  try {
- const tmpCanvas = document.createElement('canvas');
- await QRCode.toCanvas(tmpCanvas, qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' }, errorCorrectionLevel: 'H' });
- // Brand with F logo after a tick (canvas may finalize async)
- await new Promise(function(resolve) {
-   setTimeout(function() {
-     var ctx = tmpCanvas.getContext('2d');
-     var size = tmpCanvas.width;
-     var logoSize = Math.round(size * 0.22);
-     var cx = size / 2, cy = size / 2;
-     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
-     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
-     ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px sans-serif';
-     ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-     ctx.fillText('F', cx, cy + 1);
-     resolve();
-   }, 100);
- });
- qrImg.src = tmpCanvas.toDataURL();
- qrImg.alt = 'Mon QR code';
+ const dataUrl = await QRCode.toDataURL(qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' }, errorCorrectionLevel: 'H' });
+ // Load QR into canvas, overlay F logo, export back
+ const img = new Image();
+ img.onload = function() {
+   var c = document.createElement('canvas');
+   c.width = img.width; c.height = img.height;
+   var ctx = c.getContext('2d');
+   ctx.drawImage(img, 0, 0);
+   var size = c.width;
+   var logoSize = Math.round(size * 0.22);
+   var cx = size / 2, cy = size / 2;
+   ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+   ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
+   ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px sans-serif';
+   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+   ctx.fillText('F', cx, cy + 1);
+   qrImg.src = c.toDataURL();
+   qrImg.alt = 'Mon QR code';
+ };
+ img.src = dataUrl;
  return;
  } catch (e) { console.error('QRCode lib error:', e); }
  }
