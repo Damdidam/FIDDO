@@ -758,8 +758,8 @@
  clients.forEach(function(c) {
  var name = esc(c.name || c.email || c.phone || 'N/A');
  var sub = c.name && c.email ? '<div class="tx-meta">' + esc(c.email) + '</div>' : '';
- html += '<div class="tx-row" style="cursor:pointer;" onclick="navigateTo(\'/clients?open=' + c.id + '\')">';
- html += '<div style="flex:2;" class="tx-info"><div class="tx-client">' + name + '</div>' + sub + '</div>';
+ html += '<div class="tx-row" style="display:flex;grid-template-columns:none;cursor:pointer;" onclick="navigateTo(\'/clients?open=' + c.id + '\')">';
+ html += '<div style="flex:2;min-width:0;" class="tx-info"><div class="tx-client" style="white-space:normal;overflow:visible;">' + name + '</div>' + sub + '</div>';
  columns.slice(1).forEach(function(col) {
  html += '<div style="flex:' + col.flex + ';text-align:' + (col.align || 'left') + ';color:' + (col.color || '#64748B') + ';font-size:0.8rem;' + (col.bold ? 'font-weight:600;' : '') + '">' + col.render(c) + '</div>';
  });
