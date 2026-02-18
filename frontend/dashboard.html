@@ -12,6 +12,8 @@
  <title>Tableau de bord — FIDDO</title>
  <link rel="stylesheet" href="/css/styles.css">
  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+ <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/airbnb.css">
  <style>
  :root {
  --primary-light: #CFFAFE;
@@ -300,9 +302,9 @@
  <div class="st"><div class="st-val" id="s-pts-out">–</div><div class="st-lbl">Points distribués</div></div>
  <div class="st st-click" onclick="statFilter('reward')" id="st-rewards" title="Filtrer les récompenses"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
  <div class="st st-reward-ready" id="st-reward-ready" onclick="toggleRewardReady()" title="Clients prêts pour récompense"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> <span id="s-reward-ready">0</span></div><div class="st-lbl">Seuil atteint</div></div>
- <div class="st st-click" onclick="goClients()" id="st-new" title="Voir les clients"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
- <div class="st st-click" onclick="goClients()" id="st-active" title="Voir les clients"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
- <div class="st st-bday" id="st-bday" onclick="goClients('birthday')" title="Anniversaires cette semaine"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday">0</span></div><div class="st-lbl">Anniversaires</div></div>
+ <div class="st st-click" onclick="toggleNewClients()" id="st-new" title="Nouveaux clients"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
+ <div class="st st-click" onclick="toggleActiveClients()" id="st-active" title="Clients actifs"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
+ <div class="st st-bday" id="st-bday" onclick="toggleBirthdays()" title="Anniversaires cette semaine"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday">0</span></div><div class="st-lbl">Anniversaires</div></div>
  <div class="st st-action" onclick="API.clients.exportCSV()" title="Exporter les clients">
  <div class="st-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></div>
  <div class="st-lbl">Export CSV</div>
@@ -355,6 +357,8 @@
  </div>
 
  <script src="/js/app.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+ <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/fr.js"></script>
  <script>
  if (!requireManager()) throw 'Not authorized';
 
@@ -414,8 +418,7 @@
  reload();
  }
 
- document.getElementById('date-from').addEventListener('blur', () => { if (currentPeriod === 'custom' && parseBE(document.getElementById('date-from').value)) reload(); });
- document.getElementById('date-to').addEventListener('blur', () => { if (currentPeriod === 'custom' && parseBE(document.getElementById('date-to').value)) reload(); });
+ // flatpickr onChange handles custom period reload
 
  // ═══ TYPE FILTER ═══
 
@@ -433,8 +436,8 @@
  }
 
  function statFilter(type) {
- // If reward-ready view is active, restore first
- if (rewardReadyActive) restoreFeed();
+ // If a tile view is active, restore first
+ if (activeTileView || rewardReadyActive) restoreFeed();
  // Toggle: click again to reset
  var newType = (currentType === type) ? '' : type;
  // Find matching feed tab button
@@ -670,39 +673,20 @@
  let rewardReadyActive = false;
 
  function toggleRewardReady() {
- rewardReadyActive = !rewardReadyActive;
- var tile = document.getElementById('st-reward-ready');
- var feedCard = document.querySelector('.feed-card');
-
- if (rewardReadyActive) {
- // Deactivate other stat tiles
- document.querySelectorAll('.st.st-click').forEach(s => s.classList.remove('active'));
- tile.classList.add('active');
- feedCard.style.display = '';
+ if (!enterTileView('st-reward-ready', 'Seuil atteint')) return;
+ rewardReadyActive = true;
+ document.getElementById('st-reward-ready').classList.add('active');
  loadRewardReady();
- } else {
- tile.classList.remove('active');
- // Restore normal feed
- reload();
- }
  }
 
  async function loadRewardReady() {
- var body = document.getElementById('feed-body');
- body.innerHTML = '<div class="feed-loading">Chargement…</div>';
- // Hide normal feed controls
- document.querySelector('.feed-tabs').style.display = 'none';
- document.querySelector('.col-hdr').style.display = 'none';
- document.getElementById('feed-more').style.display = 'none';
- document.querySelector('.feed-title').textContent = 'Seuil atteint';
-
  try {
  var data = await API.call('/dashboard/reward-ready');
  var unit = data.loyaltyMode === 'visits' ? 'visites' : 'pts';
  document.getElementById('feed-total').textContent = data.count + ' client(s) ≥ ' + data.threshold + ' ' + unit;
  renderRewardReady(data.clients, data.threshold, unit);
  } catch (e) {
- body.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>Erreur de chargement</div>';
+ document.getElementById('feed-body').innerHTML = '<div class="feed-empty">Erreur de chargement</div>';
  }
  }
 
@@ -731,42 +715,145 @@
 
  function restoreFeed() {
  rewardReadyActive = false;
+ activeTileView = null;
  document.getElementById('st-reward-ready').classList.remove('active');
+ document.getElementById('st-new').classList.remove('active');
+ document.getElementById('st-active').classList.remove('active');
+ document.getElementById('st-bday').classList.remove('active');
  document.querySelector('.feed-tabs').style.display = '';
  document.querySelector('.col-hdr').style.display = '';
  document.querySelector('.feed-title').textContent = 'Activité';
  }
 
- // ═══ DATE FORMAT HELPERS (dd/mm/yyyy) ═══
- function formatBE(d) {
- var dd = String(d.getDate()).padStart(2, '0');
- var mm = String(d.getMonth() + 1).padStart(2, '0');
- return dd + '/' + mm + '/' + d.getFullYear();
+ // ═══ GENERIC TILE VIEW ═══
+
+ let activeTileView = null;
+
+ function enterTileView(tileId, title) {
+ // If same tile, toggle off
+ if (activeTileView === tileId) { restoreFeed(); reload(); return false; }
+ // If another tile view was active, clear it
+ if (activeTileView || rewardReadyActive) restoreFeed();
+ activeTileView = tileId;
+ // Deactivate stat tiles
+ document.querySelectorAll('.st.st-click').forEach(s => s.classList.remove('active'));
+ document.getElementById(tileId).classList.add('active');
+ document.querySelector('.feed-tabs').style.display = 'none';
+ document.querySelector('.col-hdr').style.display = 'none';
+ document.getElementById('feed-more').style.display = 'none';
+ document.querySelector('.feed-title').textContent = title;
+ document.getElementById('feed-body').innerHTML = '<div class="feed-loading">Chargement…</div>';
+ return true;
  }
+
+ function renderClientList(clients, columns) {
+ var body = document.getElementById('feed-body');
+ if (clients.length === 0) {
+ body.innerHTML = '<div class="feed-empty"><div class="feed-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 15h8"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="9" r="1"/></svg></div>Aucun client</div>';
+ return;
+ }
+ var html = '<div style="display:flex;padding:0.35rem 0.5rem;font-size:0.6rem;color:#94A3B8;text-transform:uppercase;font-weight:600;letter-spacing:0.3px;border-bottom:1px solid #F1F5F9;">';
+ columns.forEach(function(col) { html += '<div style="flex:' + col.flex + ';text-align:' + (col.align || 'left') + ';">' + col.label + '</div>'; });
+ html += '</div>';
+ clients.forEach(function(c) {
+ var name = esc(c.name || c.email || c.phone || 'N/A');
+ var sub = c.name && c.email ? '<div class="tx-meta">' + esc(c.email) + '</div>' : '';
+ html += '<div class="tx-row" style="cursor:pointer;" onclick="navigateTo(\'/clients?open=' + c.id + '\')">';
+ html += '<div style="flex:2;" class="tx-info"><div class="tx-client">' + name + '</div>' + sub + '</div>';
+ columns.slice(1).forEach(function(col) {
+ html += '<div style="flex:' + col.flex + ';text-align:' + (col.align || 'left') + ';color:' + (col.color || '#64748B') + ';font-size:0.8rem;' + (col.bold ? 'font-weight:600;' : '') + '">' + col.render(c) + '</div>';
+ });
+ html += '</div>';
+ });
+ body.innerHTML = html;
+ }
+
+ // ═══ NEW CLIENTS TILE ═══
+
+ async function toggleNewClients() {
+ if (!enterTileView('st-new', 'Nouveaux clients')) return;
+ try {
+ var dates = periodDates(currentPeriod);
+ var qs = new URLSearchParams();
+ if (dates.from) qs.set('from', dates.from);
+ if (dates.to) qs.set('to', dates.to);
+ var data = await API.call('/dashboard/new-clients?' + qs.toString());
+ document.getElementById('feed-total').textContent = data.count + ' client(s)';
+ renderClientList(data.clients, [
+ { label: 'Client', flex: 2 },
+ { label: 'Solde', flex: 1, align: 'right', color: 'var(--primary)', bold: true, render: function(c) { return c.points_balance; } },
+ { label: 'Visites', flex: 1, align: 'right', render: function(c) { return c.visit_count; } },
+ { label: 'Inscrit le', flex: 1.2, align: 'right', color: '#94A3B8', render: function(c) {
+   return c.joined_at ? new Date(c.joined_at + 'Z').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '–'; } }
+ ]);
+ } catch (e) { document.getElementById('feed-body').innerHTML = '<div class="feed-empty">Erreur de chargement</div>'; }
+ }
+
+ // ═══ ACTIVE CLIENTS TILE ═══
+
+ async function toggleActiveClients() {
+ if (!enterTileView('st-active', 'Clients actifs')) return;
+ try {
+ var dates = periodDates(currentPeriod);
+ var qs = new URLSearchParams();
+ if (dates.from) qs.set('from', dates.from);
+ if (dates.to) qs.set('to', dates.to);
+ var data = await API.call('/dashboard/active-clients?' + qs.toString());
+ document.getElementById('feed-total').textContent = data.count + ' client(s)';
+ renderClientList(data.clients, [
+ { label: 'Client', flex: 2 },
+ { label: 'Solde', flex: 1, align: 'right', color: '#D97706', bold: true, render: function(c) { return c.points_balance; } },
+ { label: 'Visites', flex: 1, align: 'right', render: function(c) { return c.visit_count; } },
+ { label: 'Dernière visite', flex: 1.2, align: 'right', color: '#94A3B8', render: function(c) {
+   return c.last_visit ? new Date(c.last_visit + 'Z').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '–'; } }
+ ]);
+ } catch (e) { document.getElementById('feed-body').innerHTML = '<div class="feed-empty">Erreur de chargement</div>'; }
+ }
+
+ // ═══ BIRTHDAYS TILE ═══
+
+ async function toggleBirthdays() {
+ if (!enterTileView('st-bday', 'Anniversaires')) return;
+ document.getElementById('st-bday').classList.add('active');
+ try {
+ var data = await API.call('/dashboard/birthdays');
+ var list = data.birthdays || [];
+ document.getElementById('feed-total').textContent = list.length + ' anniversaire(s)';
+ if (list.length === 0) {
+ document.getElementById('feed-body').innerHTML = '<div class="feed-empty"><div class="feed-empty-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/></svg></div>Aucun anniversaire cette semaine</div>';
+ return;
+ }
+ renderClientList(list, [
+ { label: 'Client', flex: 2 },
+ { label: 'Solde', flex: 1, align: 'right', color: '#9333EA', bold: true, render: function(c) { return c.pointsBalance; } },
+ { label: 'Visites', flex: 1, align: 'right', render: function(c) { return c.visitCount; } },
+ { label: 'Anniversaire', flex: 1.2, align: 'right', color: '#9333EA', render: function(c) {
+   var d = c.daysUntil;
+   return d === 0 ? '🎂 Aujourd\'hui' : d === 1 ? 'Demain' : 'Dans ' + d + 'j'; } }
+ ]);
+ } catch (e) { document.getElementById('feed-body').innerHTML = '<div class="feed-empty">Erreur de chargement</div>'; }
+ }
+
+ // ═══ FLATPICKR DATE PICKERS ═══
+ var fpConfig = { locale: 'fr', dateFormat: 'd/m/Y', allowInput: true, disableMobile: true };
+ var fpFrom = flatpickr('#date-from', Object.assign({}, fpConfig, {
+   defaultDate: new Date(),
+   onChange: function() { if (currentPeriod === 'custom') reload(); }
+ }));
+ var fpTo = flatpickr('#date-to', Object.assign({}, fpConfig, {
+   defaultDate: new Date(),
+   onChange: function() { if (currentPeriod === 'custom') reload(); }
+ }));
+
  function parseBE(s) {
- if (!s || s.length !== 10) return null;
+ if (!s) return null;
  var p = s.split('/');
  if (p.length !== 3) return null;
  var d = parseInt(p[0]), m = parseInt(p[1]) - 1, y = parseInt(p[2]);
  if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
- var dt = new Date(y, m, d);
- if (dt.getFullYear() !== y || dt.getMonth() !== m || dt.getDate() !== d) return null;
- return dt;
+ return new Date(y, m, d);
  }
- // Auto-format: insert slashes as user types
- function autoFormatDate(e) {
- var v = e.target.value.replace(/[^\d]/g, '');
- if (v.length > 8) v = v.substring(0, 8);
- if (v.length > 4) v = v.substring(0,2) + '/' + v.substring(2,4) + '/' + v.substring(4);
- else if (v.length > 2) v = v.substring(0,2) + '/' + v.substring(2);
- e.target.value = v;
- }
- document.getElementById('date-from').addEventListener('input', autoFormatDate);
- document.getElementById('date-to').addEventListener('input', autoFormatDate);
 
- var todayBE = formatBE(new Date());
- document.getElementById('date-from').value = todayBE;
- document.getElementById('date-to').value = todayBE;
  reload();
  </script>
 </body>
