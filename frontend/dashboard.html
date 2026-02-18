@@ -85,10 +85,12 @@
  .st.st-bday .st-val { color: #9333EA; display: flex; align-items: center; justify-content: center; gap: 4px; }
  .st.st-bday .st-lbl { color: #9333EA; opacity: 0.7; }
  .st.st-reward-ready { border: 1.5px solid transparent; cursor: pointer; transition: all 0.15s; }
- .st.st-reward-ready:hover { border-color: #D97706; background: #FFFBEB; }
- .st.st-reward-ready.active { border-color: #D97706; background: #FEF3C7; }
- .st.st-reward-ready .st-val { color: #D97706; display: flex; align-items: center; justify-content: center; gap: 4px; }
- .st.st-reward-ready .st-lbl { color: #D97706; opacity: 0.7; }
+ .st.st-reward-ready:hover { border-color: #059669; background: color-mix(in srgb, #D1FAE5 30%, white); }
+ .st.st-reward-ready:active { transform: scale(0.97); }
+ .st.st-reward-ready.active { border-color: #059669; background: color-mix(in srgb, #D1FAE5 40%, white); }
+ .st.st-reward-ready .st-val { color: #059669; display: flex; align-items: center; justify-content: center; gap: 4px; }
+ .st.st-reward-ready .st-lbl { color: #059669; opacity: 0.7; }
+ .st.st-reward-ready.active .st-lbl { color: #047857; }
  .st-val {
  font-size: 1.05rem; font-weight: 700; color: var(--primary);
  line-height: 1.15; letter-spacing: -0.5px;
@@ -301,7 +303,7 @@
  <div class="st st-click" onclick="statFilter('credit')" id="st-visits" title="Filtrer les crédits"><div class="st-val" id="s-visits">–</div><div class="st-lbl">Passages</div></div>
  <div class="st"><div class="st-val" id="s-pts-out">–</div><div class="st-lbl">Points distribués</div></div>
  <div class="st st-click" onclick="statFilter('reward')" id="st-rewards" title="Filtrer les récompenses"><div class="st-val green" id="s-rewards">–</div><div class="st-lbl">Récompenses</div></div>
- <div class="st st-reward-ready" id="st-reward-ready" onclick="toggleRewardReady()" title="Clients prêts pour récompense"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> <span id="s-reward-ready">0</span></div><div class="st-lbl">Seuil atteint</div></div>
+ <div class="st st-reward-ready" id="st-reward-ready" onclick="toggleRewardReady()" title="Clients prêts pour récompense"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2z"/></svg> <span id="s-reward-ready">0</span></div><div class="st-lbl">Récompenses dispo</div></div>
  <div class="st st-click" onclick="toggleNewClients()" id="st-new" title="Nouveaux clients"><div class="st-val" id="s-new">–</div><div class="st-lbl">Nouveaux clients</div></div>
  <div class="st st-click" onclick="toggleActiveClients()" id="st-active" title="Clients actifs"><div class="st-val amber" id="s-active">–</div><div class="st-lbl">Clients actifs</div></div>
  <div class="st st-bday" id="st-bday" onclick="toggleBirthdays()" title="Anniversaires cette semaine"><div class="st-val"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg> <span id="s-bday">0</span></div><div class="st-lbl">Anniversaires</div></div>
@@ -673,7 +675,7 @@
  let rewardReadyActive = false;
 
  function toggleRewardReady() {
- if (!enterTileView('st-reward-ready', 'Seuil atteint')) return;
+ if (!enterTileView('st-reward-ready', 'Récompenses dispo')) return;
  rewardReadyActive = true;
  document.getElementById('st-reward-ready').classList.add('active');
  loadRewardReady();
@@ -705,7 +707,7 @@
  var excessLabel = excess > 0 ? ' <span style="font-size:0.65rem;color:#94A3B8;">(+' + excess + ')</span>' : '';
  html += '<div class="tx-row" style="display:flex;grid-template-columns:none;cursor:pointer;" onclick="navigateTo(\'/clients?open=' + c.id + '\')">';
  html += '<div style="flex:2;min-width:0;" class="tx-info"><div class="tx-client" style="white-space:normal;overflow:visible;">' + name + '</div>' + sub + '</div>';
- html += '<div style="flex:1;text-align:right;font-weight:600;color:#D97706;">' + c.points_balance + excessLabel + '</div>';
+ html += '<div style="flex:1;text-align:right;font-weight:600;color:#059669;">' + c.points_balance + excessLabel + '</div>';
  html += '<div style="flex:1;text-align:right;color:#64748B;">' + c.visit_count + '</div>';
  html += '<div style="flex:1.2;text-align:right;color:#94A3B8;font-size:0.75rem;">' + lastV + '</div>';
  html += '</div>';
