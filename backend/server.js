@@ -186,6 +186,36 @@ app.get('/validate', (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════
+// ERROR HANDLING — Custom FIDDO pages (no Render defaults)
+// ═══════════════════════════════════════════════════════
+
+// 404 — catch-all for unmatched routes
+app.use((req, res) => {
+  // API routes → JSON 404
+  if (req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Route introuvable' });
+  }
+  // Client app routes → app 502 page (acts as fallback)
+  if (req.path.startsWith('/app')) {
+    return res.status(404).sendFile(path.join(__dirname, '../frontend/app/502.html'));
+  }
+  // Everything else → merchant 502 page
+  res.status(404).sendFile(path.join(__dirname, '../frontend/502.html'));
+});
+
+// 500 — Express error handler (4 args = error middleware)
+app.use((err, req, res, _next) => {
+  console.error('⚠️ Express error:', err.message || err);
+  if (req.path.startsWith('/api/')) {
+    return res.status(500).json({ error: 'Erreur serveur interne' });
+  }
+  if (req.path.startsWith('/app')) {
+    return res.status(500).sendFile(path.join(__dirname, '../frontend/app/502.html'));
+  }
+  res.status(500).sendFile(path.join(__dirname, '../frontend/502.html'));
+});
+
+// ═══════════════════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════════════════
 
