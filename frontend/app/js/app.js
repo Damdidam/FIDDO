@@ -1088,10 +1088,21 @@ const App = (() => {
 
  const qrUrl = res.data.qrUrl;
 
- if (typeof QRCode !== 'undefined' && QRCode.toDataURL) {
+ if (typeof QRCode !== 'undefined' && QRCode.toCanvas) {
  try {
- const dataUrl = await QRCode.toDataURL(qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' } });
- qrImg.src = dataUrl;
+ const tmpCanvas = document.createElement('canvas');
+ await QRCode.toCanvas(tmpCanvas, qrUrl, { width: 220, margin: 2, color: { dark: '#0f172a', light: '#ffffff' }, errorCorrectionLevel: 'H' });
+ // Brand with F logo
+ const ctx = tmpCanvas.getContext('2d');
+ const size = tmpCanvas.width;
+ const logoSize = Math.round(size * 0.22);
+ const cx = size / 2, cy = size / 2;
+ ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+ ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
+ ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px -apple-system,BlinkMacSystemFont,sans-serif';
+ ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+ ctx.fillText('F', cx + 1, cy + 1);
+ qrImg.src = tmpCanvas.toDataURL();
  qrImg.alt = 'Mon QR code';
  return;
  } catch (e) { console.error('QRCode lib error:', e); }
