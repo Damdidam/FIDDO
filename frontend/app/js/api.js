@@ -116,3 +116,8 @@ const API = (() => {
     claimGift: (token) => call(`/api/me/gift/${token}/claim`, { method: 'POST' }),
   };
 })();
+
+// ═══ Service Worker — 502 fallback ═══
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/app/sw.js', { scope: '/app/' }).catch(function() {});
+}
