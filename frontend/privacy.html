@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Politique de confidentialité — FIDDO</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --teal: #0891B2;
+      --teal-light: #22D3EE;
+      --teal-dark: #0E7490;
+      --dark: #0F172A;
+      --dark-card: #1E293B;
+      --slate: #94A3B8;
+      --text: #CBD5E1;
+      --white: #FFFFFF;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      background: linear-gradient(160deg, #060810 0%, #0a1a24 50%, var(--teal-dark) 100%);
+      padding: 3rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(34,211,238,0.12), transparent 70%);
+      top: -100px; right: -80px;
+      border-radius: 50%;
+    }
+    .header-logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--teal-light);
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+    .header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 0.3rem;
+    }
+    .header .sub {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.5);
+    }
+
+    /* ─── Content ─── */
+    .wrap {
+      max-width: 800px;
+      margin: -2rem auto 3rem;
+      padding: 0 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      background: var(--dark-card);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      margin-bottom: 1rem;
+    }
+
+    h2 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--white);
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--teal);
+      display: inline-block;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--teal-light);
+      margin: 1.5rem 0 0.5rem;
+    }
+
+    p { margin-bottom: 0.8rem; }
+
+    ul {
+      margin: 0.5rem 0 1rem 1.5rem;
+      list-style: none;
+    }
+    ul li {
+      position: relative;
+      padding-left: 1.2rem;
+      margin-bottom: 0.4rem;
+    }
+    ul li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0.6rem;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+    }
+    th {
+      text-align: left;
+      padding: 0.6rem 0.8rem;
+      background: rgba(8,145,178,0.1);
+      color: var(--teal-light);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    td {
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      vertical-align: top;
+    }
+
+    a { color: var(--teal-light); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    strong { color: var(--white); font-weight: 600; }
+
+    .highlight {
+      background: rgba(8,145,178,0.08);
+      border-left: 3px solid var(--teal);
+      padding: 1rem 1.2rem;
+      border-radius: 0 8px 8px 0;
+      margin: 1rem 0;
+    }
+
+    .footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      font-size: 0.82rem;
+      color: var(--slate);
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .footer a { color: var(--teal); }
+
+    @media (max-width: 600px) {
+      .card { padding: 1.5rem 1.2rem; }
+      h2 { font-size: 1.1rem; }
+      table { font-size: 0.82rem; }
+      th, td { padding: 0.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="header-logo">FIDDO</div>
+    <h1>Politique de confidentialité</h1>
+    <p class="sub">Dernière mise à jour : 18 février 2025</p>
+  </div>
+
+  <div class="wrap">
+
+    <!-- 1. Introduction -->
+    <div class="card">
+      <h2>1. Introduction</h2>
+      <p>FIDDO (<a href="https://www.fiddo.be">www.fiddo.be</a>) est une application de fidélité qui permet aux consommateurs de cumuler des points auprès de commerçants locaux participants et d'obtenir des récompenses.</p>
+      <p>La présente politique de confidentialité décrit les données personnelles que nous collectons, pourquoi nous les collectons, comment nous les utilisons, et quels sont vos droits. Elle s'applique à :</p>
+      <ul>
+        <li>L'application mobile FIDDO (Android et iOS)</li>
+        <li>L'application web accessible sur <a href="https://www.fiddo.be">www.fiddo.be</a></li>
+      </ul>
+      <div class="highlight">
+        <strong>En résumé :</strong> nous ne collectons que le strict nécessaire au fonctionnement du programme de fidélité. Nous ne vendons jamais vos données. Nous n'affichons aucune publicité. Nous ne vous traquons pas.
+      </div>
+    </div>
+
+    <!-- 2. Responsable du traitement -->
+    <div class="card">
+      <h2>2. Responsable du traitement</h2>
+      <p>Le responsable du traitement des données est :</p>
+      <p>
+        <strong>FIDDO</strong><br>
+        Email : <a href="mailto:privacy@fiddo.be">privacy@fiddo.be</a><br>
+        Site : <a href="https://www.fiddo.be">www.fiddo.be</a>
+      </p>
+      <p>Pour toute question relative à vos données personnelles, vous pouvez nous contacter à l'adresse ci-dessus.</p>
+    </div>
+
+    <!-- 3. Données collectées -->
+    <div class="card">
+      <h2>3. Données que nous collectons</h2>
+
+      <h3>3.1 Données fournies par l'utilisateur</h3>
+      <table>
+        <thead>
+          <tr><th>Donnée</th><th>Obligatoire</th><th>Finalité</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Adresse email</td><td>Email ou téléphone requis</td><td>Identification du compte, connexion, notifications de points</td></tr>
+          <tr><td>Numéro de téléphone</td><td>Email ou téléphone requis</td><td>Identification du compte, connexion alternative</td></tr>
+          <tr><td>Nom / Prénom</td><td>Facultatif</td><td>Personnalisation de l'expérience, identification par le commerçant</td></tr>
+          <tr><td>Date de naissance</td><td>Facultatif</td><td>Cadeaux d'anniversaire proposés par les commerçants</td></tr>
+          <tr><td>Code PIN</td><td>Facultatif</td><td>Sécurisation de l'accès à l'application (stocké sous forme de hash, jamais en clair)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.2 Données générées par l'utilisation du service</h3>
+      <table>
+        <thead>
+          <tr><th>Donnée</th><th>Finalité</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Historique de transactions (points crédités, récompenses utilisées)</td><td>Fonctionnement du programme de fidélité</td></tr>
+          <tr><td>Solde de points par commerçant</td><td>Affichage de votre progression</td></tr>
+          <tr><td>QR code unique</td><td>Identification rapide en caisse</td></tr>
+          <tr><td>Date de dernière visite par commerçant</td><td>Statistiques du commerçant</td></tr>
+        </tbody>
+      </table>
+
+      <h3>3.3 Données que nous ne collectons PAS</h3>
+      <ul>
+        <li><strong>Géolocalisation</strong> — nous ne suivons pas votre position</li>
+        <li><strong>Contacts</strong> — nous n'accédons pas à votre répertoire</li>
+        <li><strong>Photos, fichiers</strong> — nous n'accédons pas à votre stockage (sauf l'appareil photo pour scanner un QR code, sans enregistrement)</li>
+        <li><strong>Identifiants publicitaires</strong> — nous n'utilisons aucun traceur publicitaire</li>
+        <li><strong>Données de navigation</strong> — pas de cookies de tracking, pas d'analytics tiers</li>
+      </ul>
+    </div>
+
+    <!-- 4. Base légale -->
+    <div class="card">
+      <h2>4. Base légale du traitement</h2>
+      <p>Conformément au Règlement Général sur la Protection des Données (RGPD), nos traitements reposent sur :</p>
+      <table>
+        <thead>
+          <tr><th>Traitement</th><th>Base légale</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Gestion du compte et du programme de fidélité</td><td>Exécution du contrat (Art. 6.1.b)</td></tr>
+          <tr><td>Notifications par email (crédits de points)</td><td>Intérêt légitime (Art. 6.1.f)</td></tr>
+          <tr><td>Cadeaux d'anniversaire (si date fournie)</td><td>Consentement (Art. 6.1.a)</td></tr>
+          <tr><td>Transfert de points entre utilisateurs</td><td>Exécution du contrat (Art. 6.1.b)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. Partage -->
+    <div class="card">
+      <h2>5. Partage des données</h2>
+
+      <h3>5.1 Avec les commerçants partenaires</h3>
+      <p>Lorsque vous interagissez avec un commerçant (scan QR, crédit de points), celui-ci peut voir :</p>
+      <ul>
+        <li>Votre nom (si fourni)</li>
+        <li>Votre email ou téléphone</li>
+        <li>Votre solde de points <strong>chez ce commerçant uniquement</strong></li>
+        <li>Votre historique de transactions <strong>chez ce commerçant uniquement</strong></li>
+      </ul>
+      <div class="highlight">
+        Un commerçant ne peut <strong>jamais</strong> voir votre solde ou vos transactions chez un autre commerçant. Chaque relation est cloisonnée.
+      </div>
+
+      <h3>5.2 Avec des tiers</h3>
+      <p>Nous ne vendons, ne louons et ne partageons <strong>aucune donnée personnelle</strong> avec des tiers à des fins commerciales ou publicitaires.</p>
+      <p>Nos sous-traitants techniques :</p>
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Usage</th><th>Localisation</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Render.com</td><td>Hébergement du serveur</td><td>Union européenne / États-Unis</td></tr>
+          <tr><td>Brevo (ex-Sendinblue)</td><td>Envoi d'emails transactionnels</td><td>France</td></tr>
+        </tbody>
+      </table>
+      <p>Ces sous-traitants traitent les données uniquement selon nos instructions et sont soumis à des obligations de confidentialité.</p>
+    </div>
+
+    <!-- 6. Sécurité -->
+    <div class="card">
+      <h2>6. Sécurité des données</h2>
+      <p>Nous mettons en œuvre des mesures techniques et organisationnelles pour protéger vos données :</p>
+      <ul>
+        <li><strong>Chiffrement HTTPS</strong> pour toutes les communications</li>
+        <li><strong>Mots de passe et PIN hashés</strong> (bcrypt) — jamais stockés en clair</li>
+        <li><strong>Cookies HTTP-only et Secure</strong> pour l'authentification</li>
+        <li><strong>Tokens à usage unique</strong> pour les liens de connexion</li>
+        <li><strong>Protection CORS</strong> limitant les origines autorisées</li>
+        <li><strong>Validation et échappement</strong> de toutes les entrées utilisateur</li>
+        <li><strong>Limitation de débit</strong> (rate limiting) contre les abus</li>
+      </ul>
+    </div>
+
+    <!-- 7. Conservation -->
+    <div class="card">
+      <h2>7. Durée de conservation</h2>
+      <table>
+        <thead>
+          <tr><th>Donnée</th><th>Durée</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Compte utilisateur</td><td>Tant que le compte est actif, puis 12 mois après la dernière utilisation</td></tr>
+          <tr><td>Historique de transactions</td><td>3 ans (obligation comptable pour les commerçants)</td></tr>
+          <tr><td>Compte supprimé</td><td>Données anonymisées sous 30 jours après la demande</td></tr>
+          <tr><td>Tokens de connexion</td><td>Expiration automatique (24h pour les liens magiques)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 8. Droits -->
+    <div class="card">
+      <h2>8. Vos droits</h2>
+      <p>Conformément au RGPD, vous disposez des droits suivants :</p>
+      <ul>
+        <li><strong>Droit d'accès</strong> — obtenir une copie de vos données personnelles</li>
+        <li><strong>Droit de rectification</strong> — corriger des données inexactes</li>
+        <li><strong>Droit à l'effacement</strong> — demander la suppression de votre compte et de vos données</li>
+        <li><strong>Droit à la portabilité</strong> — recevoir vos données dans un format structuré</li>
+        <li><strong>Droit d'opposition</strong> — vous opposer à certains traitements</li>
+        <li><strong>Droit de retrait du consentement</strong> — retirer votre consentement à tout moment (ex : date de naissance)</li>
+      </ul>
+      <div class="highlight">
+        Pour exercer vos droits, contactez-nous à <a href="mailto:privacy@fiddo.be">privacy@fiddo.be</a>. Nous répondons sous <strong>30 jours</strong>.
+      </div>
+      <p>Vous pouvez également supprimer votre compte directement depuis l'application (section Profil).</p>
+      <p>Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de l'<strong>Autorité de Protection des Données</strong> (APD) belge : <a href="https://www.autoriteprotectiondonnees.be" target="_blank">www.autoriteprotectiondonnees.be</a></p>
+    </div>
+
+    <!-- 9. Cookies -->
+    <div class="card">
+      <h2>9. Cookies</h2>
+      <p>FIDDO utilise uniquement des <strong>cookies strictement nécessaires</strong> au fonctionnement du service :</p>
+      <table>
+        <thead>
+          <tr><th>Cookie</th><th>Finalité</th><th>Durée</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>staff_token</td><td>Authentification de la session commerçant</td><td>Session</td></tr>
+          <tr><td>admin_token</td><td>Authentification de l'administration</td><td>Session</td></tr>
+        </tbody>
+      </table>
+      <p>Nous n'utilisons <strong>aucun cookie de tracking, d'analytics ou publicitaire</strong>. L'application client utilise le stockage local (localStorage) pour conserver le jeton d'authentification côté appareil uniquement.</p>
+    </div>
+
+    <!-- 10. Mineurs -->
+    <div class="card">
+      <h2>10. Mineurs</h2>
+      <p>FIDDO n'est pas destiné aux enfants de moins de 16 ans. Nous ne collectons pas sciemment de données personnelles de mineurs. Si vous êtes un parent et que vous pensez que votre enfant nous a fourni des données, contactez-nous à <a href="mailto:privacy@fiddo.be">privacy@fiddo.be</a> et nous supprimerons ces informations.</p>
+    </div>
+
+    <!-- 11. Modifications -->
+    <div class="card">
+      <h2>11. Modifications de cette politique</h2>
+      <p>Nous pouvons mettre à jour cette politique de confidentialité. En cas de modification substantielle, nous vous en informerons par email ou via l'application. La date de dernière mise à jour est indiquée en haut de cette page.</p>
+    </div>
+
+    <!-- 12. Contact -->
+    <div class="card">
+      <h2>12. Contact</h2>
+      <p>Pour toute question relative à cette politique de confidentialité ou à vos données personnelles :</p>
+      <p>
+        <strong>Email :</strong> <a href="mailto:privacy@fiddo.be">privacy@fiddo.be</a><br>
+        <strong>Support :</strong> <a href="mailto:support@fiddo.be">support@fiddo.be</a><br>
+        <strong>Site :</strong> <a href="https://www.fiddo.be">www.fiddo.be</a>
+      </p>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    <p><strong>FIDDO</strong> — Tous tes commerçants. Une seule carte.</p>
+    <p style="margin-top:0.3rem;">© 2025 FIDDO. Tous droits réservés. | <a href="https://www.fiddo.be">www.fiddo.be</a></p>
+  </div>
+
+</body>
+</html>
