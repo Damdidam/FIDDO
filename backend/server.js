@@ -143,6 +143,9 @@ app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../fron
 // QR client-facing form
 app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
 
+// Privacy policy (Google Play / App Store requirement)
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, '../frontend/privacy.html')));
+
 // QR static deep link — /q/ABC123 → redirect to PWA with merchant token
 app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/qr-landing.html')));
 
