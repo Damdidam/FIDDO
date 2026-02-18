@@ -431,8 +431,7 @@ const App = (() => {
 
  return `
  <div class="loyalty-card theme-${theme}${c.canRedeem ? ' reward-ready' : ''}" onclick="App.openCard(${c.merchantId})">
- ${c.canRedeem ? '<div class="lc-starburst"><svg viewBox="0 0 24 24"><polygon points="12,1 14.1,6.9 19.8,4.2 17.1,9.9 23,12 17.1,14.1 19.8,19.8 14.1,17.1 12,23 9.9,17.1 4.2,19.8 6.9,14.1 1,12 6.9,9.9 4.2,4.2 9.9,6.9"/></svg></div>' : ''}
- ${isFav && !c.canRedeem ? '<div class="lc-fav"><span class="material-symbols-rounded">star</span></div>' : ''}
+ ${isFav ? '<div class="lc-fav"><span class="material-symbols-rounded">star</span></div>' : ''}
  <div class="lc-head">
  <div class="lc-icon"><span class="material-symbols-rounded">${biz.icon}</span></div>
  <span class="lc-name">${esc(c.merchantName)}</span>
@@ -441,6 +440,7 @@ const App = (() => {
  <div class="lc-pts">
  <span class="lc-pts-big">${c.pointsBalance}</span>
  <span class="lc-pts-tot">/ ${c.pointsForReward} ${c.loyaltyMode === "visits" ? "visites" : "pts"}</span>
+ ${c.canRedeem ? '<div class="lc-starburst"><svg viewBox="0 0 24 24"><polygon points="12,1 14.1,6.9 19.8,4.2 17.1,9.9 23,12 17.1,14.1 19.8,19.8 14.1,17.1 12,23 9.9,17.1 4.2,19.8 6.9,14.1 1,12 6.9,9.9 4.2,4.2 9.9,6.9"/></svg></div>' : ''}
  </div>
  <div class="lc-prog"><div class="lc-prog-fill" style="width:${pct}%"></div></div>
  <div class="lc-foot">
