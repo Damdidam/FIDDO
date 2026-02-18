@@ -703,8 +703,8 @@
  var lastV = c.last_visit ? new Date(c.last_visit + 'Z').toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }) : '–';
  var excess = c.points_balance - threshold;
  var excessLabel = excess > 0 ? ' <span style="font-size:0.65rem;color:#94A3B8;">(+' + excess + ')</span>' : '';
- html += '<div class="tx-row" style="cursor:pointer;" onclick="navigateTo(\'/clients?open=' + c.id + '\')">';
- html += '<div style="flex:2;" class="tx-info"><div class="tx-client">' + name + '</div>' + sub + '</div>';
+ html += '<div class="tx-row" style="display:flex;grid-template-columns:none;cursor:pointer;" onclick="navigateTo(\'/clients?open=' + c.id + '\')">';
+ html += '<div style="flex:2;min-width:0;" class="tx-info"><div class="tx-client" style="white-space:normal;overflow:visible;">' + name + '</div>' + sub + '</div>';
  html += '<div style="flex:1;text-align:right;font-weight:600;color:#D97706;">' + c.points_balance + excessLabel + '</div>';
  html += '<div style="flex:1;text-align:right;color:#64748B;">' + c.visit_count + '</div>';
  html += '<div style="flex:1.2;text-align:right;color:#94A3B8;font-size:0.75rem;">' + lastV + '</div>';
