@@ -276,6 +276,66 @@ router.get('/birthdays', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// GET /api/dashboard/new-clients?from=&to= — New clients list for period
+// ═══════════════════════════════════════════════════════
+
+router.get('/new-clients', (req, res) => {
+  try {
+    const mid = req.staff.merchant_id;
+    const { from, to } = req.query;
+    let dateClause = '';
+    const params = [mid];
+    if (from) { dateClause += ' AND mc.created_at >= ?'; params.push(from); }
+    if (to) { dateClause += ' AND mc.created_at <= ?'; params.push(to); }
+
+    const clients = db.prepare(`
+      SELECT mc.id, mc.points_balance, mc.visit_count, mc.last_visit, mc.created_at AS joined_at,
+             eu.name, eu.email, eu.phone
+      FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL ${dateClause}
+      ORDER BY mc.created_at DESC
+    `).all(...params);
+
+    res.json({ clients, count: clients.length });
+  } catch (error) {
+    console.error('New-clients error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
+// GET /api/dashboard/active-clients?from=&to= — Active clients for period
+// ═══════════════════════════════════════════════════════
+
+router.get('/active-clients', (req, res) => {
+  try {
+    const mid = req.staff.merchant_id;
+    const { from, to } = req.query;
+    let dateClause = '';
+    const params = [mid];
+    if (from) { dateClause += ' AND mc.last_visit >= ?'; params.push(from); }
+    if (to) { dateClause += ' AND mc.last_visit <= ?'; params.push(to); }
+
+    const clients = db.prepare(`
+      SELECT mc.id, mc.points_balance, mc.visit_count, mc.last_visit,
+             eu.name, eu.email, eu.phone
+      FROM merchant_clients mc
+      JOIN end_users eu ON mc.end_user_id = eu.id
+      WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL AND mc.is_blocked = 0 ${dateClause}
+      ORDER BY mc.last_visit DESC
+    `).all(...params);
+
+    res.json({ clients, count: clients.length });
+  } catch (error) {
+    console.error('Active-clients error:', error);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // GET /api/dashboard/reward-ready — Clients who reached the reward threshold
 // ═══════════════════════════════════════════════════════
 
