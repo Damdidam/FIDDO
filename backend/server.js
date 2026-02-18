@@ -181,7 +181,9 @@ app.get('/validate', (req, res) => {
     </div>
   </body></html>`);
 });
-
+// privacy
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, '../frontend/privacy.html')));
+//
 // ═══════════════════════════════════════════════════════
 // START
 // ═══════════════════════════════════════════════════════
