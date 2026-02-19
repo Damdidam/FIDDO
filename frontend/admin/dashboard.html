@@ -379,6 +379,46 @@
  .users-search input:focus { outline: none; border-color: #0891B2; background: rgba(255,255,255,0.06); }
  .users-search .search-count { color: rgba(255,255,255,0.3); font-size: 0.8rem; white-space: nowrap; }
 
+ /* Users bulk actions */
+ .users-bulk-bar {
+ display: none; align-items: center; gap: 0.75rem;
+ padding: 0.6rem 1rem; margin-bottom: 0.75rem;
+ background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);
+ border-radius: 10px; animation: slideIn 0.2s ease;
+ }
+ .users-bulk-bar.visible { display: flex; }
+ .users-bulk-bar .bulk-count { color: #f87171; font-weight: 700; font-size: 0.85rem; }
+ .users-bulk-bar .btn-bulk-delete {
+ margin-left: auto; padding: 0.4rem 0.85rem; background: #DC2626; color: #fff;
+ border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600;
+ cursor: pointer; font-family: inherit; display: flex; align-items: center; gap: 4px;
+ transition: background 0.15s;
+ }
+ .users-bulk-bar .btn-bulk-delete:hover { background: #B91C1C; }
+ .users-bulk-bar .btn-bulk-cancel {
+ padding: 0.4rem 0.65rem; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.5);
+ border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.8rem;
+ cursor: pointer; font-family: inherit; transition: all 0.15s;
+ }
+ .users-bulk-bar .btn-bulk-cancel:hover { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.7); }
+ @keyframes slideIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+
+ /* User checkbox */
+ .user-check { width: 16px; height: 16px; accent-color: #0891B2; cursor: pointer; flex-shrink: 0; }
+ .admin-main .table th.th-check, .admin-main .table td.td-check { width: 32px; padding: 0.5rem; text-align: center; }
+
+ /* Sortable headers */
+ .admin-main .table th.sortable {
+ cursor: pointer; user-select: none; position: relative; transition: color 0.15s;
+ }
+ .admin-main .table th.sortable:hover { color: #22d3ee; }
+ .admin-main .table th.sortable .sort-arrow { font-size: 0.6rem; margin-left: 3px; opacity: 0.3; }
+ .admin-main .table th.sortable.sort-asc .sort-arrow,
+ .admin-main .table th.sortable.sort-desc .sort-arrow { opacity: 1; color: #22d3ee; }
+ .admin-main .table th.sortable.sort-asc .sort-arrow::after { content: '▲'; }
+ .admin-main .table th.sortable.sort-desc .sort-arrow::after { content: '▼'; }
+ .admin-main .table th.sortable:not(.sort-asc):not(.sort-desc) .sort-arrow::after { content: '⇅'; }
+
  /* User cards in modal */
  .user-cards-grid {
  display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;
@@ -861,38 +901,156 @@
  // MERCHANTS
  // ═══════════════════════════════════════════════════════
 
+ let merchantsData = [];
+ let selectedMerchantIds = new Set();
+ let merchantsSortCol = 'created_at';
+ let merchantsSortDir = 'desc';
+
  async function loadMerchants() {
  const container = document.getElementById('merchants-container');
  try {
  container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
  const qs = currentTab === 'all' ? '' : `?status=${currentTab}`;
  const data = await adminCall(`/merchants${qs}`);
- const merchants = data.merchants;
+ merchantsData = data.merchants;
+ selectedMerchantIds.clear();
+ renderMerchantsTable();
+ } catch (e) {
+ container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ }
+ }
+
+ function renderMerchantsTable() {
+ const container = document.getElementById('merchants-container');
+ const merchants = sortMerchants(merchantsData);
 
  if (merchants.length === 0) {
  container.innerHTML = '<div class="admin-empty"><div class="admin-empty-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div><p>Aucun commerce</p></div>';
  return;
  }
 
- let html = `<table class="table"><thead><tr>
- <th>Commerce</th><th>Propriétaire</th><th>TVA</th><th>Status</th><th>Clients</th><th>Créé le</th>
+ const sortIcon = (col) => {
+ let cls = 'sortable';
+ if (merchantsSortCol === col) cls += merchantsSortDir === 'asc' ? ' sort-asc' : ' sort-desc';
+ return cls;
+ };
+
+ let html = `
+ <div class="users-bulk-bar" id="merchants-bulk-bar">
+ <span class="bulk-count" id="merchants-bulk-count">0 sélectionné(s)</span>
+ <button class="btn-bulk-cancel" onclick="clearMerchantSelection()">Annuler</button>
+ <button class="btn-bulk-delete" onclick="bulkDeleteMerchants()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Supprimer définitivement</button>
+ </div>
+ `;
+
+ html += `<table class="table"><thead><tr>
+ <th class="th-check"><input type="checkbox" class="user-check" id="merchants-check-all" onchange="toggleAllMerchants(this.checked)"></th>
+ <th class="${sortIcon('business_name')}" onclick="sortMerchantsBy('business_name')">Commerce <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('owner_name')}" onclick="sortMerchantsBy('owner_name')">Propriétaire <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('vat_number')}" onclick="sortMerchantsBy('vat_number')">TVA <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('status')}" onclick="sortMerchantsBy('status')">Status <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('client_count')}" onclick="sortMerchantsBy('client_count')">Clients <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('created_at')}" onclick="sortMerchantsBy('created_at')">Créé le <span class="sort-arrow"></span></th>
  </tr></thead><tbody>`;
 
  merchants.forEach(m => {
  const statusClass = m.status === 'active' ? 'success' : m.status === 'pending' ? 'warning' : m.status === 'suspended' ? 'danger' : 'neutral';
- html += `<tr class="merchant-row" onclick="showMerchant(${m.id})">
- <td><strong>${esc(m.business_name)}</strong><br><small class="text-muted-dark">${esc(m.email)}</small></td>
- <td>${esc(m.owner_name) || '-'}<br><small class="text-muted-dark">${esc(m.owner_email) || '-'}</small></td>
- <td style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${esc(m.vat_number)}</td>
- <td><span class="badge badge-dark-${statusClass}">${esc(m.status)}</span></td>
- <td>${m.client_count}</td>
- <td style="color: rgba(255,255,255,0.4);">${Format.date(m.created_at)}</td>
+ const checked = selectedMerchantIds.has(m.id) ? ' checked' : '';
+
+ html += `<tr class="merchant-row">
+ <td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" class="user-check" data-mid="${m.id}" ${checked} onchange="toggleMerchantSelect(${m.id}, this.checked)"></td>
+ <td onclick="showMerchant(${m.id})"><strong>${esc(m.business_name)}</strong><br><small class="text-muted-dark">${esc(m.email)}</small></td>
+ <td onclick="showMerchant(${m.id})">${esc(m.owner_name) || '-'}<br><small class="text-muted-dark">${esc(m.owner_email) || '-'}</small></td>
+ <td onclick="showMerchant(${m.id})" style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${esc(m.vat_number)}</td>
+ <td onclick="showMerchant(${m.id})"><span class="badge badge-dark-${statusClass}">${esc(m.status)}</span></td>
+ <td onclick="showMerchant(${m.id})">${m.client_count}</td>
+ <td onclick="showMerchant(${m.id})" style="color: rgba(255,255,255,0.4);">${Format.date(m.created_at)}</td>
  </tr>`;
  });
  html += '</tbody></table>';
  container.innerHTML = html;
+ updateMerchantBulkBar();
+ }
+
+ function sortMerchants(merchants) {
+ const col = merchantsSortCol;
+ const dir = merchantsSortDir === 'asc' ? 1 : -1;
+ return [...merchants].sort((a, b) => {
+ let va = a[col], vb = b[col];
+ if (va == null) va = '';
+ if (vb == null) vb = '';
+ if (typeof va === 'string') va = va.toLowerCase();
+ if (typeof vb === 'string') vb = vb.toLowerCase();
+ if (va < vb) return -1 * dir;
+ if (va > vb) return 1 * dir;
+ return 0;
+ });
+ }
+
+ function sortMerchantsBy(col) {
+ if (merchantsSortCol === col) {
+ merchantsSortDir = merchantsSortDir === 'asc' ? 'desc' : 'asc';
+ } else {
+ merchantsSortCol = col;
+ merchantsSortDir = col === 'created_at' ? 'desc' : 'asc';
+ }
+ renderMerchantsTable();
+ }
+
+ // ─── Merchant Selection ───
+
+ function toggleMerchantSelect(id, checked) {
+ if (checked) selectedMerchantIds.add(id);
+ else selectedMerchantIds.delete(id);
+ updateMerchantBulkBar();
+ const allCb = document.getElementById('merchants-check-all');
+ if (allCb) allCb.checked = selectedMerchantIds.size === merchantsData.length && merchantsData.length > 0;
+ }
+
+ function toggleAllMerchants(checked) {
+ if (checked) merchantsData.forEach(m => selectedMerchantIds.add(m.id));
+ else selectedMerchantIds.clear();
+ document.querySelectorAll('.user-check[data-mid]').forEach(cb => cb.checked = checked);
+ updateMerchantBulkBar();
+ }
+
+ function clearMerchantSelection() {
+ selectedMerchantIds.clear();
+ document.querySelectorAll('#merchants-container .user-check').forEach(cb => cb.checked = false);
+ updateMerchantBulkBar();
+ }
+
+ function updateMerchantBulkBar() {
+ const bar = document.getElementById('merchants-bulk-bar');
+ const countEl = document.getElementById('merchants-bulk-count');
+ if (!bar) return;
+ if (selectedMerchantIds.size > 0) {
+ bar.classList.add('visible');
+ countEl.textContent = `${selectedMerchantIds.size} sélectionné(s)`;
+ } else {
+ bar.classList.remove('visible');
+ }
+ }
+
+ async function bulkDeleteMerchants() {
+ const count = selectedMerchantIds.size;
+ if (count === 0) return;
+ const msg = `⚠️ SUPPRESSION DÉFINITIVE\n\nVous allez supprimer ${count} commerce(s) et toutes leurs données :\n• Comptes staff\n• Cartes clients\n• Transactions\n• Préférences\n\nCette action est IRRÉVERSIBLE.\n\nConfirmer ?`;
+ if (!confirm(msg)) return;
+ if (!confirm(`Dernière confirmation : supprimer définitivement ${count} commerce(s) ?`)) return;
+
+ try {
+ const data = await adminCall('/merchants/bulk-delete', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ merchantIds: [...selectedMerchantIds] }),
+ });
+ alert(data.message);
+ selectedMerchantIds.clear();
+ loadMerchants();
+ loadStats();
  } catch (e) {
- container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ alert('Erreur : ' + e.message);
  }
  }
 
@@ -1017,6 +1175,10 @@
  // ═══════════════════════════════════════════════════════
 
  let usersSearchTimeout = null;
+ let usersData = [];
+ let selectedUserIds = new Set();
+ let usersSortCol = 'created_at';
+ let usersSortDir = 'desc';
 
  async function loadUsers(query = '') {
  const container = document.getElementById('users-container');
@@ -1024,13 +1186,29 @@
  container.innerHTML = '<div class="admin-loading"><div class="spinner"></div>Chargement…</div>';
  const qs = query ? `?q=${encodeURIComponent(query)}` : '';
  const data = await adminCall(`/users${qs}`);
- const users = data.users;
+ usersData = data.users;
+ selectedUserIds.clear();
+ renderUsersTable(query, data.count);
+ } catch (e) {
+ container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ }
+ }
+
+ function renderUsersTable(query, count) {
+ const container = document.getElementById('users-container');
+ const users = sortUsers(usersData);
+ count = count || users.length;
 
  let html = `
  <div class="users-search">
  <input type="text" id="users-search-input" placeholder="Rechercher par nom, email, téléphone…"
- value="${query}" oninput="onUsersSearch(this.value)">
- <span class="search-count">${data.count} utilisateur${data.count > 1 ? 's' : ''}</span>
+ value="${query || ''}" oninput="onUsersSearch(this.value)">
+ <span class="search-count">${count} utilisateur${count > 1 ? 's' : ''}</span>
+ </div>
+ <div class="users-bulk-bar" id="users-bulk-bar">
+ <span class="bulk-count" id="bulk-count">0 sélectionné(s)</span>
+ <button class="btn-bulk-cancel" onclick="clearUserSelection()">Annuler</button>
+ <button class="btn-bulk-delete" onclick="bulkDeleteUsers()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Supprimer définitivement</button>
  </div>
  `;
 
@@ -1040,8 +1218,20 @@
  return;
  }
 
+ const sortIcon = (col) => {
+ let cls = 'sortable';
+ if (usersSortCol === col) cls += usersSortDir === 'asc' ? ' sort-asc' : ' sort-desc';
+ return cls;
+ };
+
  html += `<table class="table"><thead><tr>
- <th>Nom</th><th>Email</th><th>Téléphone</th><th>Commerces</th><th>Badges</th><th>Créé le</th>
+ <th class="th-check"><input type="checkbox" class="user-check" id="users-check-all" onchange="toggleAllUsers(this.checked)"></th>
+ <th class="${sortIcon('name')}" onclick="sortUsersBy('name')">Nom <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('email')}" onclick="sortUsersBy('email')">Email <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('phone')}" onclick="sortUsersBy('phone')">Téléphone <span class="sort-arrow"></span></th>
+ <th class="${sortIcon('merchant_count')}" onclick="sortUsersBy('merchant_count')">Commerces <span class="sort-arrow"></span></th>
+ <th>Badges</th>
+ <th class="${sortIcon('created_at')}" onclick="sortUsersBy('created_at')">Créé le <span class="sort-arrow"></span></th>
  </tr></thead><tbody>`;
 
  users.forEach(u => {
@@ -1050,23 +1240,106 @@
  if (u.has_pin) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">PIN</span> ';
  if (u.has_qr) badges += '<span class="badge badge-dark-info" style="font-size:0.65rem;">QR</span> ';
  if (u.is_blocked) badges += '<span class="badge badge-dark-danger" style="font-size:0.65rem;">Bloqué</span> ';
+ const checked = selectedUserIds.has(u.id) ? ' checked' : '';
 
- html += `<tr class="merchant-row" onclick="showUser(${u.id})">
- <td><strong>${u.name ? esc(u.name) : '<em style=\"opacity:0.4\">—</em>'}</strong></td>
- <td style="font-size: 0.85rem;">${u.email ? esc(u.email) : '<em style="opacity:0.3">—</em>'}</td>
- <td style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone ? esc(u.phone) : '—'}</td>
- <td style="text-align: center;"><strong>${u.merchant_count}</strong></td>
- <td>${badges || '<span style="opacity:0.2">—</span>'}</td>
- <td style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
+ html += `<tr class="merchant-row">
+ <td class="td-check" onclick="event.stopPropagation()"><input type="checkbox" class="user-check" data-uid="${u.id}" ${checked} onchange="toggleUserSelect(${u.id}, this.checked)"></td>
+ <td onclick="showUser(${u.id})"><strong>${u.name ? esc(u.name) : '<em style="opacity:0.4">—</em>'}</strong></td>
+ <td onclick="showUser(${u.id})" style="font-size: 0.85rem;">${u.email ? esc(u.email) : '<em style="opacity:0.3">—</em>'}</td>
+ <td onclick="showUser(${u.id})" style="font-size: 0.85rem; color: rgba(255,255,255,0.5);">${u.phone ? esc(u.phone) : '—'}</td>
+ <td onclick="showUser(${u.id})" style="text-align: center;"><strong>${u.merchant_count}</strong></td>
+ <td onclick="showUser(${u.id})">${badges || '<span style="opacity:0.2">—</span>'}</td>
+ <td onclick="showUser(${u.id})" style="color: rgba(255,255,255,0.4);">${Format.date(u.created_at)}</td>
  </tr>`;
  });
  html += '</tbody></table>';
- if (data.count >= 200) {
+ if (count >= 200) {
  html += '<div style="text-align:center; padding:0.75rem; color:rgba(255,255,255,0.3); font-size:0.8rem;">Limité à 200 résultats — affinez votre recherche</div>';
  }
  container.innerHTML = html;
+ updateBulkBar();
+ }
+
+ function sortUsers(users) {
+ const col = usersSortCol;
+ const dir = usersSortDir === 'asc' ? 1 : -1;
+ return [...users].sort((a, b) => {
+ let va = a[col], vb = b[col];
+ if (va == null) va = '';
+ if (vb == null) vb = '';
+ if (typeof va === 'string') va = va.toLowerCase();
+ if (typeof vb === 'string') vb = vb.toLowerCase();
+ if (va < vb) return -1 * dir;
+ if (va > vb) return 1 * dir;
+ return 0;
+ });
+ }
+
+ function sortUsersBy(col) {
+ if (usersSortCol === col) {
+ usersSortDir = usersSortDir === 'asc' ? 'desc' : 'asc';
+ } else {
+ usersSortCol = col;
+ usersSortDir = col === 'created_at' ? 'desc' : 'asc';
+ }
+ renderUsersTable();
+ }
+
+ // ─── Selection ───
+
+ function toggleUserSelect(id, checked) {
+ if (checked) selectedUserIds.add(id);
+ else selectedUserIds.delete(id);
+ updateBulkBar();
+ const allCb = document.getElementById('users-check-all');
+ if (allCb) allCb.checked = selectedUserIds.size === usersData.length && usersData.length > 0;
+ }
+
+ function toggleAllUsers(checked) {
+ if (checked) usersData.forEach(u => selectedUserIds.add(u.id));
+ else selectedUserIds.clear();
+ document.querySelectorAll('.user-check[data-uid]').forEach(cb => cb.checked = checked);
+ updateBulkBar();
+ }
+
+ function clearUserSelection() {
+ selectedUserIds.clear();
+ document.querySelectorAll('.user-check').forEach(cb => cb.checked = false);
+ updateBulkBar();
+ }
+
+ function updateBulkBar() {
+ const bar = document.getElementById('users-bulk-bar');
+ const countEl = document.getElementById('bulk-count');
+ if (!bar) return;
+ if (selectedUserIds.size > 0) {
+ bar.classList.add('visible');
+ countEl.textContent = `${selectedUserIds.size} sélectionné(s)`;
+ } else {
+ bar.classList.remove('visible');
+ }
+ }
+
+ async function bulkDeleteUsers() {
+ const count = selectedUserIds.size;
+ if (count === 0) return;
+ const msg = `⚠️ SUPPRESSION DÉFINITIVE\n\nVous allez supprimer ${count} utilisateur(s) et toutes leurs données (cartes, transactions, aliases).\n\nCette action est IRRÉVERSIBLE.\n\nConfirmer ?`;
+ if (!confirm(msg)) return;
+ if (!confirm(`Dernière confirmation : supprimer définitivement ${count} utilisateur(s) ?`)) return;
+
+ try {
+ const data = await adminCall('/users/bulk-delete', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ userIds: [...selectedUserIds] }),
+ });
+ alert(data.message);
+ selectedUserIds.clear();
+ loadUsers(document.getElementById('users-search-input')?.value || '');
+ // Refresh stats
+ loadStats();
  } catch (e) {
- container.innerHTML = `<div class="alert alert-error">${esc(e.message)}</div>`;
+ alert('Erreur : ' + e.message);
  }
  }
 

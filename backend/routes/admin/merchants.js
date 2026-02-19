@@ -250,4 +250,117 @@ router.post('/:id/reactivate', (req, res) => {
 });
 
 
+// ═══════════════════════════════════════════════════════
+// POST /api/admin/merchants/bulk-delete — Hard delete multiple merchants
+// ═══════════════════════════════════════════════════════
+
+router.post('/bulk-delete', (req, res) => {
+  try {
+    const { merchantIds } = req.body;
+
+    if (!Array.isArray(merchantIds) || merchantIds.length === 0) {
+      return res.status(400).json({ error: 'Liste d\'IDs requise' });
+    }
+
+    if (merchantIds.length > 50) {
+      return res.status(400).json({ error: 'Maximum 50 commerces par lot' });
+    }
+
+    const ids = merchantIds.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0);
+    if (ids.length === 0) {
+      return res.status(400).json({ error: 'Aucun ID valide' });
+    }
+
+    const results = { deleted: 0, skipped: 0, details: [] };
+
+    const run = db.transaction(() => {
+      for (const id of ids) {
+        const merchant = merchantQueries.findById.get(id);
+        if (!merchant) {
+          results.skipped++;
+          results.details.push({ id, status: 'not_found' });
+          continue;
+        }
+
+        // Get all merchant_clients for this merchant
+        const cards = db.prepare('SELECT id FROM merchant_clients WHERE end_user_id IS NOT NULL AND merchant_id = ?').all(id);
+        const cardIds = db.prepare('SELECT id FROM merchant_clients WHERE merchant_id = ?').all(id).map(c => c.id);
+
+        // Get all staff for this merchant
+        const staffIds = db.prepare('SELECT id FROM staff_accounts WHERE merchant_id = ?').all(id).map(s => s.id);
+
+        // Delete transactions
+        if (cardIds.length > 0) {
+          const ph = cardIds.map(() => '?').join(',');
+          db.prepare(`DELETE FROM transactions WHERE merchant_client_id IN (${ph})`).run(...cardIds);
+        }
+        db.prepare('DELETE FROM transactions WHERE merchant_id = ?').run(id);
+
+        // Delete point vouchers
+        if (cardIds.length > 0) {
+          const ph = cardIds.map(() => '?').join(',');
+          db.prepare(`DELETE FROM point_vouchers WHERE sender_mc_id IN (${ph}) OR claimer_mc_id IN (${ph})`).run(...cardIds, ...cardIds);
+        }
+
+        // Delete merchant_clients
+        db.prepare('DELETE FROM merchant_clients WHERE merchant_id = ?').run(id);
+
+        // Delete announcement_reads for staff of this merchant
+        if (staffIds.length > 0) {
+          const ph = staffIds.map(() => '?').join(',');
+          db.prepare(`DELETE FROM announcement_reads WHERE staff_id IN (${ph})`).run(...staffIds);
+        }
+
+        // Delete announcement_targets
+        try { db.prepare('DELETE FROM announcement_targets WHERE merchant_id = ?').run(id); } catch (e) { /* */ }
+
+        // Delete admin_message_reads
+        try { db.prepare('DELETE FROM admin_message_reads WHERE merchant_id = ?').run(id); } catch (e) { /* */ }
+
+        // Delete merchant_invoices
+        try { db.prepare('DELETE FROM merchant_invoices WHERE merchant_id = ?').run(id); } catch (e) { /* */ }
+
+        // Delete staff accounts
+        db.prepare('DELETE FROM staff_accounts WHERE merchant_id = ?').run(id);
+
+        // Delete merchant preferences
+        try { db.prepare('DELETE FROM merchant_preferences WHERE merchant_id = ?').run(id); } catch (e) { /* */ }
+
+        // Delete poll sessions
+        try { db.prepare('DELETE FROM poll_sessions WHERE merchant_id = ?').run(id); } catch (e) { /* */ }
+
+        // Delete audit logs for this merchant
+        db.prepare('DELETE FROM audit_logs WHERE merchant_id = ?').run(id);
+
+        // Delete the merchant
+        db.prepare('DELETE FROM merchants WHERE id = ?').run(id);
+
+        results.deleted++;
+        results.details.push({ id, name: merchant.business_name, status: 'deleted' });
+      }
+
+      return results;
+    });
+
+    const outcome = run();
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'super_admin', actorId: req.admin.id, merchantId: null,
+      action: 'bulk_hard_delete_merchants',
+      targetType: 'merchant', targetId: null,
+      details: { count: outcome.deleted, ids },
+    });
+
+    res.json({
+      message: `${outcome.deleted} commerce(s) supprimé(s) définitivement`,
+      ...outcome,
+    });
+  } catch (error) {
+    console.error('Erreur bulk delete merchants:', error);
+    res.status(500).json({ error: error.message || 'Erreur serveur' });
+  }
+});
+
+
 module.exports = router;

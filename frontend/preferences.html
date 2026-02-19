@@ -792,20 +792,25 @@
 
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  <script>
- function brandQR(container, delay) {
-   setTimeout(function() {
-     var canvas = container.querySelector('canvas');
-     if (!canvas) return;
-     var ctx = canvas.getContext('2d');
-     var size = canvas.width;
-     var logoSize = Math.round(size * 0.22);
-     var cx = size / 2, cy = size / 2;
-     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
-     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
-     ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px -apple-system,BlinkMacSystemFont,sans-serif';
-     ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-     ctx.fillText('F', cx + 1, cy + 1);
-   }, delay || 80);
+ function brandQR(container) {
+   var old = container.querySelector('.qr-f-overlay');
+   if (old) old.remove();
+   var cs = window.getComputedStyle(container);
+   if (cs.position === 'static') container.style.position = 'relative';
+   var el = container.querySelector('canvas') || container.querySelector('img');
+   var elSize = el ? el.width : 120;
+   var oSize = Math.round(elSize * 0.22);
+   var ov = document.createElement('div');
+   ov.className = 'qr-f-overlay';
+   ov.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:' + (oSize * 1.2) + 'px;height:' + (oSize * 1.2) + 'px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;z-index:10;pointer-events:none;';
+   var inner = document.createElement('div');
+   inner.style.cssText = 'width:' + oSize + 'px;height:' + oSize + 'px;border-radius:50%;background:#0891B2;display:flex;align-items:center;justify-content:center;';
+   var letter = document.createElement('span');
+   letter.textContent = 'F';
+   letter.style.cssText = 'color:#fff;font-size:' + Math.round(oSize * 0.65) + 'px;font-weight:800;font-family:-apple-system,BlinkMacSystemFont,sans-serif;line-height:1;';
+   inner.appendChild(letter);
+   ov.appendChild(inner);
+   container.appendChild(ov);
  }
  </script>
  <script src="/js/app.js"></script>
@@ -1499,16 +1504,53 @@
  }
  };
 
+ // Stamp F logo directly onto a canvas (for PDF/print export)
+ function stampFonCanvas(canvas) {
+   if (!canvas) return;
+   var ctx = canvas.getContext('2d');
+   var size = canvas.width;
+   var logoSize = Math.round(size * 0.22);
+   var cx = size / 2, cy = size / 2;
+   ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+   ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
+   ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px -apple-system,BlinkMacSystemFont,sans-serif';
+   ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+   ctx.fillText('F', cx + 1, cy + 1);
+ }
+
  function downloadQRPdf() {
  if (!merchantQrUrl) return;
 
- // Get QR as data URL from canvas
  const qrCanvas = document.getElementById('pref-qr-canvas').querySelector('canvas');
  if (!qrCanvas) { showAlert('qrcode-alert', 'QR non chargé', 'error'); return; }
+ stampFonCanvas(qrCanvas);
  const qrDataUrl = qrCanvas.toDataURL('image/png');
 
- // Build a printable HTML page, then trigger print-to-PDF
  const name = merchant.business_name || 'FIDDO';
+ const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent) || window.Capacitor;
+
+ if (isMobile) {
+ // Mobile/Capacitor — use native share sheet (works on iOS + Android)
+ if (navigator.share && navigator.canShare) {
+ qrCanvas.toBlob(async function(blob) {
+ try {
+ const file = new File([blob], 'QR-' + name.replace(/[^a-zA-Z0-9]/g, '_') + '.png', { type: 'image/png' });
+ if (navigator.canShare({ files: [file] })) {
+ await navigator.share({ title: 'QR ' + name, files: [file] });
+ } else {
+ showQRImageOverlay(qrDataUrl, name);
+ }
+ } catch (e) {
+ if (e.name !== 'AbortError') showQRImageOverlay(qrDataUrl, name);
+ }
+ }, 'image/png');
+ } else {
+ showQRImageOverlay(qrDataUrl, name);
+ }
+ return;
+ }
+
+ // Desktop — hidden iframe for print (auto-cleanup)
  const printHtml = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
 <style>
@@ -1535,17 +1577,33 @@
  <div class="footer">Propuls&eacute; par FIDDO</div>
 </body></html>`;
 
- const win = window.open('', '_blank');
- win.document.write(printHtml);
- win.document.close();
- // Small delay for image to render
+ const iframe = document.createElement('iframe');
+ iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:0;height:0;border:none;';
+ document.body.appendChild(iframe);
+ iframe.contentDocument.write(printHtml);
+ iframe.contentDocument.close();
  setTimeout(() => {
- win.print();
+ iframe.contentWindow.print();
+ setTimeout(() => document.body.removeChild(iframe), 1000);
  }, 400);
  }
 
+ function showQRImageOverlay(dataUrl, name) {
+ // Fullscreen overlay with the QR — user can long-press to save
+ var ov = document.createElement('div');
+ ov.id = 'qr-save-overlay';
+ ov.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;';
+ ov.innerHTML = '<div style="background:#fff;border-radius:16px;padding:28px 24px;text-align:center;max-width:340px;width:100%;">'
+ + '<div style="font-size:16px;font-weight:700;color:#1E293B;margin-bottom:4px;">' + (name || 'FIDDO') + '</div>'
+ + '<div style="font-size:12px;color:#64748B;margin-bottom:16px;">Maintenez l\'image pour enregistrer</div>'
+ + '<img src="' + dataUrl + '" style="width:220px;height:220px;border-radius:8px;display:block;margin:0 auto;">'
+ + '<button onclick="document.getElementById(\'qr-save-overlay\').remove()" style="margin-top:20px;padding:12px 32px;background:#1E293B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">Fermer</button>'
+ + '</div>';
+ document.body.appendChild(ov);
+ }
+
  function printQR() {
- downloadQRPdf(); // same flow — browser print dialog handles both print & save-as-PDF
+ downloadQRPdf();
  }
  </script>
 <!-- Mode switch confirmation modal -->

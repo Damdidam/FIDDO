@@ -153,18 +153,20 @@
  /* ── Autocomplete ── */
  .autocomplete-list {
  position: absolute; top: 100%; left: 0; right: 0; z-index: 50;
- background: white; border: 1.5px solid #E2E8F0; border-top: none;
+ background: linear-gradient(180deg, #F0FDFA, #fff);
+ border: 1.5px solid #99F6E4; border-top: none;
  border-radius: 0 0 9px 9px; max-height: 200px; overflow-y: auto;
- box-shadow: 0 8px 24px rgba(0,0,0,0.1); display: none;
+ box-shadow: 0 8px 24px rgba(8,145,178,0.1); display: none;
  }
  .autocomplete-list.show { display: block; }
  .ac-item {
  padding: 0.45rem 0.7rem; cursor: pointer;
- border-bottom: 1px solid #F8FAFC; font-size: 0.78rem;
- transition: background 0.1s;
+ border-bottom: 1px solid rgba(8,145,178,0.06); font-size: 0.78rem;
+ transition: background 0.15s, border-left 0.15s;
+ border-left: 3px solid transparent;
  }
  .ac-item:last-child { border-bottom: none; }
- .ac-item:hover, .ac-item.selected { background: #F0FDFA; }
+ .ac-item:hover, .ac-item.selected { background: rgba(8,145,178,0.08); border-left-color: #0891B2; }
  .ac-item .ac-name { font-weight: 600; color: #1E293B; }
  .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
  .ac-item .ac-pts { float: right; color: var(--primary, #0891B2); font-weight: 700; font-size: 0.78rem; }
@@ -327,6 +329,9 @@
  }
  @keyframes qrPulse { 0%,100% { opacity: 0.25; } 50% { opacity: 0.6; } }
  .qr-frame img { display: block; border-radius: 3px; }
+ #qr-canvas, #qr-fs-canvas { display: inline-grid; vertical-align: middle; }
+ #qr-canvas > canvas, #qr-canvas > img,
+ #qr-fs-canvas > canvas, #qr-fs-canvas > img { grid-area: 1 / 1; }
 
  .qr-fullscreen-btn {
  display: inline-flex; align-items: center; gap: 5px;
@@ -561,32 +566,30 @@
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
  <script>
- // Brand QR with F logo overlay
- function brandQR(container, delay) {
-   setTimeout(function() {
-     var canvas = container.querySelector('canvas');
-     if (!canvas) return;
-     var ctx = canvas.getContext('2d');
-     var size = canvas.width;
-     var logoSize = Math.round(size * 0.22);
-     var cx = size / 2, cy = size / 2;
-     // White circle background
-     ctx.beginPath();
-     ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2);
-     ctx.fillStyle = '#ffffff';
-     ctx.fill();
-     // Teal circle
-     ctx.beginPath();
-     ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2);
-     ctx.fillStyle = '#0891B2';
-     ctx.fill();
-     // F letter
-     ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px -apple-system,BlinkMacSystemFont,sans-serif';
-     ctx.fillStyle = '#ffffff';
-     ctx.textAlign = 'center';
-     ctx.textBaseline = 'middle';
-     ctx.fillText('F', cx + 1, cy + 1);
-   }, delay || 80);
+ // Brand QR with F logo overlay (HTML overlay — works with both canvas & img)
+ function brandQR(container) {
+   // Remove any existing overlay
+   var old = container.querySelector('.qr-f-overlay');
+   if (old) old.remove();
+   // Ensure container can anchor the overlay, but don't force inline-block
+   var cs = window.getComputedStyle(container);
+   if (cs.position === 'static') container.style.position = 'relative';
+   // Determine size from canvas or img
+   var el = container.querySelector('canvas') || container.querySelector('img');
+   var elSize = el ? el.width : 120;
+   var oSize = Math.round(elSize * 0.22);
+   // Create overlay
+   var ov = document.createElement('div');
+   ov.className = 'qr-f-overlay';
+   ov.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:' + (oSize * 1.2) + 'px;height:' + (oSize * 1.2) + 'px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;z-index:10;pointer-events:none;';
+   var inner = document.createElement('div');
+   inner.style.cssText = 'width:' + oSize + 'px;height:' + oSize + 'px;border-radius:50%;background:#0891B2;display:flex;align-items:center;justify-content:center;';
+   var letter = document.createElement('span');
+   letter.textContent = 'F';
+   letter.style.cssText = 'color:#fff;font-size:' + Math.round(oSize * 0.65) + 'px;font-weight:800;font-family:-apple-system,BlinkMacSystemFont,sans-serif;line-height:1;';
+   inner.appendChild(letter);
+   ov.appendChild(inner);
+   container.appendChild(ov);
  }
  </script>
  <script src="/js/app.js"></script>
@@ -1195,10 +1198,6 @@
  async function consumeIdent(identId) {
  try {
  const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
-
- // Client authenticated via their device — store server token for PIN bypass
- if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
-
  // Pre-fill the credit form
  if (d.email) {
  switchMode('email');
@@ -1213,6 +1212,10 @@
  document.getElementById('client-name').value = d.name;
  document.getElementById('client-name').classList.add('has-value');
  }
+
+  // Client authenticated via their device — store server token for PIN bypass
+  // MUST be after switchMode() which resets qrVerifyTokenValue to null
+  if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
 
  setTimeout(triggerLookup, 300);
  setTimeout(() => document.getElementById('amount').focus(), 600);
@@ -1382,10 +1385,6 @@
  // Lookup client
  try {
  const d = await API.call('/qr/client-lookup/' + clientQrToken);
-
- // Store server-issued verify token for PIN bypass on redeem
- if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
-
  // Pre-fill credit form
  if (d.email) {
  switchMode('email');
@@ -1400,6 +1399,10 @@
  document.getElementById('client-name').value = d.name;
  document.getElementById('client-name').classList.add('has-value');
  }
+
+  // Store server-issued verify token for PIN bypass on redeem
+  // MUST be after switchMode() which resets qrVerifyTokenValue to null
+  if (d.qrVerifyToken) qrVerifyTokenValue = d.qrVerifyToken;
 
  UI.showAlert('credit-alert',
  (d.isNew ? 'Nouveau client : ' : 'Client identifié : ') +

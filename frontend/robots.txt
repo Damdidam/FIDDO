@@ -1,0 +1,27 @@
+# FIDDO — robots.txt
+# H3001 SRL · https://www.fiddo.be
+
+User-agent: *
+Allow: /
+Allow: /privacy
+
+# Merchant app — no indexing
+Disallow: /login
+Disallow: /dashboard
+Disallow: /clients
+Disallow: /credit
+Disallow: /staff
+Disallow: /preferences
+Disallow: /messages
+Disallow: /admin
+Disallow: /app
+Disallow: /client-form
+
+# API
+Disallow: /api/
+
+# Internal resources
+Disallow: /downloads/
+Disallow: /sw.js
+
+Sitemap: https://www.fiddo.be/sitemap.xml

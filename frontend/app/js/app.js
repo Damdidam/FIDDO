@@ -430,7 +430,7 @@ const App = (() => {
  const isFav = c.isFavorite;
 
  return `
- <div class="loyalty-card theme-${theme}${c.canRedeem ? ' reward-ready' : ''}" onclick="App.openCard(${c.merchantId})">
+ <div class="loyalty-card theme-${theme}" onclick="App.openCard(${c.merchantId})">
  ${isFav ? '<div class="lc-fav"><span class="material-symbols-rounded">star</span></div>' : ''}
  <div class="lc-head">
  <div class="lc-icon"><span class="material-symbols-rounded">${biz.icon}</span></div>
@@ -440,7 +440,6 @@ const App = (() => {
  <div class="lc-pts">
  <span class="lc-pts-big">${c.pointsBalance}</span>
  <span class="lc-pts-tot">/ ${c.pointsForReward} ${c.loyaltyMode === "visits" ? "visites" : "pts"}</span>
- ${c.canRedeem ? '<div class="lc-starburst"><svg viewBox="0 0 24 24"><polygon points="12,1 14.1,6.9 19.8,4.2 17.1,9.9 23,12 17.1,14.1 19.8,19.8 14.1,17.1 12,23 9.9,17.1 4.2,19.8 6.9,14.1 1,12 6.9,9.9 4.2,4.2 9.9,6.9"/></svg></div>' : ''}
  </div>
  <div class="lc-prog"><div class="lc-prog-fill" style="width:${pct}%"></div></div>
  <div class="lc-foot">
@@ -527,7 +526,7 @@ const App = (() => {
  saveCardStates(newCards);
 
  // Only re-render if display-relevant data changed AND not in cooldown
- const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.isFavorite}:${c.businessType}:${c.theme}`;
+ const fingerprint = c => `${c.merchantId}:${c.pointsBalance}:${c.canRedeem}:${c.visitCount}:${c.isFavorite}:${c.businessType}:${c.theme}:${c.birthdayGift || ''}:${c.allowGifts}:${c.description || ''}`;
  const newFp = newCards.map(fingerprint).sort().join('|');
  const oldFp = cards.map(fingerprint).sort().join('|');
  cards = newCards;

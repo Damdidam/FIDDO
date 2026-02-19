@@ -16,20 +16,25 @@
  <link rel="icon" href="/logo-fiddo.png">
  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
  <script>
- function brandQR(container, delay) {
-   setTimeout(function() {
-     var canvas = container.querySelector('canvas');
-     if (!canvas) return;
-     var ctx = canvas.getContext('2d');
-     var size = canvas.width;
-     var logoSize = Math.round(size * 0.22);
-     var cx = size / 2, cy = size / 2;
-     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
-     ctx.beginPath(); ctx.arc(cx, cy, logoSize * 0.5, 0, Math.PI * 2); ctx.fillStyle = '#0891B2'; ctx.fill();
-     ctx.font = 'bold ' + Math.round(logoSize * 0.65) + 'px -apple-system,BlinkMacSystemFont,sans-serif';
-     ctx.fillStyle = '#ffffff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-     ctx.fillText('F', cx + 1, cy + 1);
-   }, delay || 80);
+ function brandQR(container) {
+   var old = container.querySelector('.qr-f-overlay');
+   if (old) old.remove();
+   var cs = window.getComputedStyle(container);
+   if (cs.position === 'static') container.style.position = 'relative';
+   var el = container.querySelector('canvas') || container.querySelector('img');
+   var elSize = el ? el.width : 120;
+   var oSize = Math.round(elSize * 0.22);
+   var ov = document.createElement('div');
+   ov.className = 'qr-f-overlay';
+   ov.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:' + (oSize * 1.2) + 'px;height:' + (oSize * 1.2) + 'px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #fff;z-index:10;pointer-events:none;';
+   var inner = document.createElement('div');
+   inner.style.cssText = 'width:' + oSize + 'px;height:' + oSize + 'px;border-radius:50%;background:#0891B2;display:flex;align-items:center;justify-content:center;';
+   var letter = document.createElement('span');
+   letter.textContent = 'F';
+   letter.style.cssText = 'color:#fff;font-size:' + Math.round(oSize * 0.65) + 'px;font-weight:800;font-family:-apple-system,BlinkMacSystemFont,sans-serif;line-height:1;';
+   inner.appendChild(letter);
+   ov.appendChild(inner);
+   container.appendChild(ov);
  }
  </script>
  <style>

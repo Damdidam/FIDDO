@@ -349,7 +349,7 @@ router.post('/:id/merge', (req, res) => {
 
     logAudit({
       ...auditCtx(req),
-      actorType: 'admin', actorId: req.admin.id, merchantId: null,
+      actorType: 'super_admin', actorId: req.admin.id, merchantId: null,
       action: 'global_user_merge',
       targetType: 'end_user', targetId: targetId,
       details: { sourceId, targetId, reason: reason || null, ...results },
@@ -369,6 +369,84 @@ router.post('/:id/merge', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// POST /api/admin/users/bulk-delete — Hard delete multiple users
+// ═══════════════════════════════════════════════════════
+
+router.post('/bulk-delete', (req, res) => {
+  try {
+    const { userIds } = req.body;
+
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ error: 'Liste d\'IDs requise' });
+    }
+
+    if (userIds.length > 100) {
+      return res.status(400).json({ error: 'Maximum 100 utilisateurs par lot' });
+    }
+
+    const ids = userIds.map(id => parseInt(id)).filter(id => !isNaN(id) && id > 0);
+    if (ids.length === 0) {
+      return res.status(400).json({ error: 'Aucun ID valide' });
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    const results = { deleted: 0, skipped: 0, details: [] };
+
+    const run = db.transaction(() => {
+      for (const id of ids) {
+        const user = endUserQueries.findById.get(id);
+        if (!user) {
+          results.skipped++;
+          results.details.push({ id, status: 'not_found' });
+          continue;
+        }
+
+        // Delete all merchant_clients cards
+        const cards = db.prepare('SELECT id, merchant_id FROM merchant_clients WHERE end_user_id = ?').all(id);
+        for (const card of cards) {
+          // Delete transactions for this card
+          db.prepare('DELETE FROM transactions WHERE merchant_client_id = ?').run(card.id);
+        }
+        db.prepare('DELETE FROM merchant_clients WHERE end_user_id = ?').run(id);
+
+        // Delete aliases
+        aliasQueries.deleteByUser.run(id);
+
+        // Delete merge records (both as source and target)
+        db.prepare('DELETE FROM end_user_merges WHERE source_user_id = ? OR target_user_id = ?').run(id, id);
+
+        // Delete the user (hard delete)
+        db.prepare('DELETE FROM end_users WHERE id = ?').run(id);
+
+        results.deleted++;
+        results.details.push({ id, name: user.name || user.email || user.phone, status: 'deleted' });
+      }
+
+      return results;
+    });
+
+    const outcome = run();
+
+    logAudit({
+      ...auditCtx(req),
+      actorType: 'super_admin', actorId: req.admin.id, merchantId: null,
+      action: 'bulk_hard_delete_users',
+      targetType: 'end_user', targetId: null,
+      details: { count: outcome.deleted, ids },
+    });
+
+    res.json({
+      message: `${outcome.deleted} utilisateur(s) supprimé(s) définitivement`,
+      ...outcome,
+    });
+  } catch (error) {
+    console.error('Erreur bulk delete users:', error);
+    res.status(500).json({ error: error.message || 'Erreur serveur' });
+  }
+});
+
+
+// ═══════════════════════════════════════════════════════
 // POST /api/admin/users/:id/block — Global block
 // POST /api/admin/users/:id/unblock — Global unblock
 // ═══════════════════════════════════════════════════════
@@ -383,7 +461,7 @@ router.post('/:id/block', (req, res) => {
 
     logAudit({
       ...auditCtx(req),
-      actorType: 'admin', actorId: req.admin.id, merchantId: null,
+      actorType: 'super_admin', actorId: req.admin.id, merchantId: null,
       action: 'global_user_blocked',
       targetType: 'end_user', targetId: userId,
     });
@@ -405,7 +483,7 @@ router.post('/:id/unblock', (req, res) => {
 
     logAudit({
       ...auditCtx(req),
-      actorType: 'admin', actorId: req.admin.id, merchantId: null,
+      actorType: 'super_admin', actorId: req.admin.id, merchantId: null,
       action: 'global_user_unblocked',
       targetType: 'end_user', targetId: userId,
     });
