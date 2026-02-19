@@ -3,6 +3,7 @@
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="format-detection" content="email=no, telephone=no">
  <link rel="manifest" href="/manifest.json">
  <meta name="apple-mobile-web-app-capable" content="yes">
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -169,6 +170,7 @@
  .ac-item:hover, .ac-item.selected { background: rgba(8,145,178,0.08); border-left-color: #0891B2; }
  .ac-item .ac-name { font-weight: 600; color: #1E293B; }
  .ac-item .ac-meta { color: #64748B; font-size: 0.7rem; margin-top: 1px; }
+ .ac-item .ac-meta a, .ac-item .ac-name a { color: inherit; text-decoration: none; pointer-events: none; }
  .ac-item .ac-pts { float: right; color: var(--primary, #0891B2); font-weight: 700; font-size: 0.78rem; }
 
  /* ── Lookup strip ── */

@@ -3,6 +3,7 @@
 <head>
  <meta charset="UTF-8">
  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta name="format-detection" content="email=no, telephone=no">
  <link rel="manifest" href="/manifest.json">
  <meta name="apple-mobile-web-app-capable" content="yes">
  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -68,6 +69,7 @@
  .cl-info { min-width: 0; }
  .cl-name { font-weight: 600; color: #1E293B; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
  .cl-sub { font-size: 0.66rem; color: #94A3B8; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .cl-sub a { color: inherit; text-decoration: none; pointer-events: none; }
  .cl-badges { display: flex; gap: 3px; margin-top: 2px; }
  .cl-badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.55rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.2px; }
  .cl-badge.active { background: #D1FAE5; color: #047857; }
@@ -100,6 +102,7 @@
  .hero-close:hover { background: rgba(255,255,255,0.25); }
  .hero-name { font-size: 1.15rem; font-weight: 700; margin-bottom: 2px; }
  .hero-sub { font-size: 0.78rem; opacity: 0.6; }
+ .hero-sub a { color: inherit; text-decoration: none; pointer-events: none; }
  .hero-badges { display: flex; gap: 5px; margin-top: 6px; flex-wrap: wrap; }
  .hero-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.6rem; font-weight: 600; letter-spacing: 0.2px; }
  .hero-badge.custom { background: rgba(8,145,178,0.25); color: #67e8f9; }
@@ -531,7 +534,7 @@
  const hasCustom = !!c.custom_reward;
  html += '<div class="cl-row" onclick="showDetail(' + c.id + ')">';
  html += '<div class="cl-info"><div class="cl-name">' + esc(c._label) + '</div>';
- if (c._sub) html += '<div class="cl-sub">' + esc(c._sub) + '</div>';
+ if (c._sub) html += '<div class="cl-sub">' + esc(c._sub).replace(/@/g, '@\u200B') + '</div>';
  html += '<div class="cl-badges">';
  if (c.is_blocked) html += '<span class="cl-badge blocked">bloqué</span>';
  else if (isActive) html += '<span class="cl-badge active">actif</span>';
@@ -572,7 +575,7 @@
  // ── HERO ──
  h += '<div class="hero"><button class="hero-close" onclick="closeDetail()">×</button>';
  h += '<div class="hero-name">' + esc(displayName) + '</div>';
- if (subLine) h += '<div class="hero-sub">' + esc(subLine) + '</div>';
+ if (subLine) h += '<div class="hero-sub">' + esc(subLine).replace(/@/g, '@\u200B') + '</div>';
  h += '<div class="hero-badges">';
  if (hasCustom) h += '<span class="hero-badge custom"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Récompense perso</span>';
  if (c.is_blocked) h += '<span class="hero-badge blocked">Bloqué</span>';
