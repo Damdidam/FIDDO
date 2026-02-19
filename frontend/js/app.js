@@ -302,20 +302,20 @@ function setupNavbar() {
 
  // Build links based on role
  const links = [];
- links.push({ href: '/credit', label: 'Créditer' });
+ links.push({ href: '/credit', label: 'Créditer', icon: 'credit' });
 
  if (['owner', 'manager'].includes(staff.role)) {
- links.push({ href: '/dashboard', label: 'Tableau de bord' });
- links.push({ href: '/clients', label: 'Clients' });
+ links.push({ href: '/dashboard', label: 'Dashboard', icon: 'dashboard' });
+ links.push({ href: '/clients', label: 'Clients', icon: 'clients' });
  }
 
  if (staff.role === 'owner') {
- links.push({ href: '/staff', label: 'Équipe' });
- links.push({ href: '/preferences', label: 'Préférences' });
+ links.push({ href: '/staff', label: 'Équipe', icon: 'staff' });
+ links.push({ href: '/preferences', label: 'Préférences', icon: 'preferences' });
  }
 
  // V3.5: All staff can see messages
- links.push({ href: '/messages', label: 'Messages', id: 'nav-messages' });
+ links.push({ href: '/messages', label: 'Messages', icon: 'messages', id: 'navrow-messages' });
 
  // Generate initials for avatar
  const initials = (staff.display_name || 'U')
@@ -325,25 +325,29 @@ function setupNavbar() {
  .substring(0, 2)
  .toUpperCase();
 
- // Build complete navbar inner HTML (desktop menu)
- const linksHTML = links.map(l =>
- `<a href="${l.href}" class="navbar-link${path === l.href ? ' active' : ''}"${l.id ? ` id="${l.id}"` : ''}>${l.label}</a>`
+ // Build navrow items (icon + label, same style as bottom-nav)
+ const navItemsHTML = links.map(l =>
+ `<a href="${l.href}" class="nav-item${path === l.href ? ' active' : ''}"${l.id ? ` id="${l.id}"` : ''}>${NAV_ICONS[l.icon]}<span>${l.label}</span></a>`
  ).join('');
 
  navbar.innerHTML = `
- <div class="navbar-inner">
- <a href="/credit" class="navbar-brand">
- <span class="brand-mark">FIDDO</span>
- <span class="brand-divider"></span>
- <span class="brand-merchant">${merchant.business_name}</span>
- </a>
- <div class="navbar-menu">${linksHTML}</div>
- <div class="navbar-user">
- <span class="navbar-user-name">${staff.display_name}</span>
- <div class="navbar-avatar" onclick="Auth.logout()" title="Déconnexion"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
+ <div class="topbar">
+ <div class="topbar-left">
+ <span class="topbar-logo">FIDDO</span>
+ <span class="topbar-sep"></span>
+ <span class="topbar-merchant">${merchant.business_name}</span>
+ </div>
+ <div class="topbar-right">
+ <span class="topbar-user">${staff.display_name}</span>
+ <div class="topbar-avatar" onclick="Auth.logout()" title="Déconnexion"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg></div>
  </div>
  </div>
+ <nav class="navrow">
+ <div class="navrow-inner">${navItemsHTML}</div>
+ </nav>
  `;
+
+ document.body.classList.add('has-topnav');
 
  // ── Bottom Navigation (mobile) ──
  buildBottomNav(staff, path);
@@ -451,11 +455,14 @@ async function loadUnreadBadge() {
  try {
  const data = await API.messages.getUnreadCount();
  if (data.unread > 0) {
- // Desktop navbar badge
- const navLink = document.getElementById('nav-messages');
- if (navLink) {
- navLink.innerHTML = `Messages <span class="navbar-badge">${data.unread}</span>`;
- }
+     // Navrow badge
+     const navrowLink = document.getElementById('navrow-messages');
+     if (navrowLink && !navrowLink.querySelector('.nav-badge')) {
+     const badge = document.createElement('span');
+     badge.className = 'nav-badge';
+     badge.textContent = data.unread;
+     navrowLink.appendChild(badge);
+     }
  // Bottom nav badge
  const bnavLink = document.getElementById('bnav-messages');
  if (bnavLink) {
