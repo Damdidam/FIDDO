@@ -964,21 +964,25 @@ select.form-control { appearance: auto; }
  /* Show bottom nav */
  .bottom-nav { display: block; }
 
- /* Compact topbar on mobile */
- .topbar { padding: 0.4rem 0.75rem; }
- .topbar-logo { font-size: 1.05rem; }
- .topbar-sep { height: 16px; }
- .topbar-merchant { max-width: 130px; font-size: 0.68rem; }
+ /* HIDE navrow on mobile — bottom-nav handles navigation */
+ .navrow { display: none !important; }
+
+ /* Topbar → dark slim bar (identical to old mobile navbar) */
+ .topbar {
+ background: linear-gradient(135deg, #0f172a 0%, #1a2236 50%, #0f172a 100%);
+ border-bottom: 1px solid rgba(255,255,255,0.06);
+ box-shadow: 0 2px 16px rgba(0,0,0,0.3);
+ padding: 0.35rem 0.75rem;
+ }
+ .topbar-logo { font-size: 1.1rem; }
+ .topbar-sep { height: 16px; background: rgba(255,255,255,0.1); }
+ .topbar-merchant { color: rgba(255,255,255,0.38); font-size: 0.6rem; text-transform: uppercase; letter-spacing: 1px; max-width: 140px; }
  .topbar-user { display: none; }
- .topbar-avatar { width: 26px; height: 26px; font-size: 0.55rem; border-radius: 8px; }
+ .topbar-avatar { width: 28px; height: 28px; font-size: 0.62rem; border-radius: 8px; }
 
- /* Compact navrow on mobile */
- .nav-item { min-height: 50px; }
- .nav-item svg { width: 20px; height: 20px; }
- .nav-item { font-size: 0.54rem; }
-
- body.has-topnav { padding-top: 88px; } /* topbar 38px + navrow 50px */
- body.has-topnav .dash { min-height: calc(100dvh - 88px); }
+ /* Only topbar height on mobile — no navrow */
+ body.has-topnav { padding-top: 42px; }
+ body.has-topnav .dash { min-height: calc(100dvh - 42px); }
 
  /* Body padding for bottom nav */
  body.has-bnav { padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)); }
