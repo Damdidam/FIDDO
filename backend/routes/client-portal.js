@@ -804,6 +804,7 @@ router.delete('/account', authenticateClient, async (req, res) => {
         phone_e164 = NULL,
         date_of_birth = NULL,
         pin_hash = NULL,
+        qr_token = NULL,
         is_active = 0,
         updated_at = datetime('now')
       WHERE id = ?

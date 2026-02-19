@@ -505,6 +505,9 @@
  </div>
 
  <!-- Duplicate warning -->
+ <!-- Credit form fields (hidden when QR/Scan active) -->
+ <div id="credit-fields">
+
  <div id="dup-container"></div>
 
  <!-- Name -->
@@ -536,6 +539,8 @@
  </div>
 
  <button type="button" class="btn-credit" id="submit-btn">Créditer les points</button>
+
+ </div><!-- /credit-fields -->
  </div>
  </div>
 
@@ -756,6 +761,8 @@
  hideLookup();
  clearAllFieldErrors();
  UI.clearAlert('credit-alert');
+ // Hide credit form fields when QR/Scan (client will be redirected to email/phone after identification)
+ document.getElementById('credit-fields').style.display = (mode === 'qr' || mode === 'scan') ? 'none' : '';
  if (mode === 'qr') { if (!qrLoaded) { loadStaticQR(); qrLoaded = true; } startPendingPoll(); }
  if (mode === 'scan') startScanner();
  }
@@ -1415,7 +1422,8 @@
  setTimeout(triggerLookup, 300);
  setTimeout(() => document.getElementById('amount').focus(), 600);
  } catch (e) {
- document.getElementById('scan-status').textContent = 'Client non trouvé';
+ const msg = (e.message || '').includes('supprimé') ? 'Compte client supprimé' : 'Client non trouvé';
+ document.getElementById('scan-status').textContent = msg;
  document.getElementById('scan-status').style.color = '#DC2626';
  scannerBusy = false;
  setTimeout(() => switchMode('scan'), 2000); // restart scanner
