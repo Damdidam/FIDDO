@@ -1,4 +1,8 @@
 require('dotenv').config();
+
+// ═══ BUILD VERSION — change this to verify deployment ═══
+const BUILD_VERSION = '2026-02-20-hotfix-qr-scan';
+
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -71,10 +75,25 @@ app.use(requestIdMiddleware);
 app.use('/.well-known', express.static(path.join(__dirname, '../frontend/.well-known')));
 
 // Static files — index: false so that GET / hits our landing route, not index.html
-app.use(express.static(path.join(__dirname, '../frontend'), { index: false }));
+// No cache for HTML to prevent stale page issues after deployments
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  index: false,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // PWA static files (css, js, assets, manifest)
-app.use('/app', express.static(path.join(__dirname, '../frontend/app'), { index: false }));
+app.use('/app', express.static(path.join(__dirname, '../frontend/app'), {
+  index: false,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // ═══════════════════════════════════════════════════════
 // INIT ADDITIONAL TABLES (V3.5)
@@ -229,8 +248,11 @@ if (require.main === module) {
   const { startScheduler: startEmailScheduler } = require('./scheduler');
   startEmailScheduler();
 
+  // Version check endpoint — accessible at /api/version
+  app.get('/api/version', (req, res) => res.json({ version: BUILD_VERSION }));
+
   app.listen(PORT, () => {
-    console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT}`);
+    console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT} — Build: ${BUILD_VERSION}`);
   });
 }
 
