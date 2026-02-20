@@ -637,6 +637,7 @@ const aliasQueries = {
   findByTypeAndValue: db.prepare('SELECT * FROM end_user_aliases WHERE alias_type = ? AND alias_value = ?'),
   getByUser:        db.prepare('SELECT * FROM end_user_aliases WHERE end_user_id = ?'),
   deleteByUser:     db.prepare('DELETE FROM end_user_aliases WHERE end_user_id = ?'),
+  deleteByUserAndValue: db.prepare('DELETE FROM end_user_aliases WHERE end_user_id = ? AND alias_value = ?'),
 };
 
 // ─── Merchant Clients ────────────────────────────────
