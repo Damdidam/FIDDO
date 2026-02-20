@@ -233,8 +233,8 @@ function initDatabase() {
   // ───────────────────────────────────────────
   try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
-  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_email TEXT'); } catch (e) { /* already exists */ }
-  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_phone TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_email TEXT'); console.log('  ✅ local_email column added'); } catch (e) { console.log('  ℹ️  local_email column exists'); }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_phone TEXT'); console.log('  ✅ local_phone column added'); } catch (e) { console.log('  ℹ️  local_phone column exists'); }
   try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
   try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token TEXT'); } catch (e) { /* already exists */ }
