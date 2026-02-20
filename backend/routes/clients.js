@@ -437,6 +437,16 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
       try { aliasQueries.create.run(endUser.id, 'phone', endUser.phone_e164); } catch (e) { /* dup */ }
     }
 
+    // Remove aliases when identifiers are deliberately removed (dissociation)
+    const emailRemoved = endUser.email_lower && !newEmailLower;
+    const phoneRemoved = endUser.phone_e164 && !newPhoneE164;
+    if (emailRemoved) {
+      aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.email_lower);
+    }
+    if (phoneRemoved) {
+      aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.phone_e164);
+    }
+
     const newEmailCanonical = newEmailLower ? canonicalizeEmail(newEmailLower) : null;
 
     endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, newEmailCanonical, endUser.id);
