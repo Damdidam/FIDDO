@@ -204,6 +204,9 @@ app.get('/validate', (req, res) => {
   </body></html>`);
 });
 
+// Version check endpoint — verify deployment
+app.get('/api/version', (req, res) => res.json({ version: BUILD_VERSION }));
+
 // ═══════════════════════════════════════════════════════
 // ERROR HANDLING — Custom FIDDO pages (no Render defaults)
 // ═══════════════════════════════════════════════════════
@@ -247,9 +250,6 @@ if (require.main === module) {
   // Start email reminder scheduler (J+3 app download reminders)
   const { startScheduler: startEmailScheduler } = require('./scheduler');
   startEmailScheduler();
-
-  // Version check endpoint — accessible at /api/version
-  app.get('/api/version', (req, res) => res.json({ version: BUILD_VERSION }));
 
   app.listen(PORT, () => {
     console.log(`🐕 FIDDO V4.0 Multi-Tenant — Port ${PORT} — Build: ${BUILD_VERSION}`);
