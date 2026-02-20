@@ -1422,8 +1422,7 @@
  setTimeout(triggerLookup, 300);
  setTimeout(() => document.getElementById('amount').focus(), 600);
  } catch (e) {
- const msg = (e.message || '').includes('supprimé') ? 'Compte client supprimé' : 'Client non trouvé';
- document.getElementById('scan-status').textContent = msg;
+ document.getElementById('scan-status').textContent = e.message || 'Client non trouvé';
  document.getElementById('scan-status').style.color = '#DC2626';
  scannerBusy = false;
  setTimeout(() => switchMode('scan'), 2000); // restart scanner

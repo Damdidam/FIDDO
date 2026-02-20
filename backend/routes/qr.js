@@ -707,10 +707,7 @@ router.get('/client-lookup/:token', authenticateStaff, (req, res) => {
       return res.status(404).json({ error: 'Client non trouvé' });
     }
 
-    // Reject deleted/anonymized accounts
-    if (endUser.deleted_at) {
-      return res.status(410).json({ error: 'Ce compte client a été supprimé' });
-    }
+    // Note: deleted accounts already excluded by findByQrToken query (WHERE deleted_at IS NULL)
 
     // Check merchant_client relationship
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
