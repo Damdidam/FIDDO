@@ -940,8 +940,11 @@ router.get('/:id', requireRole('owner', 'manager'), (req, res) => {
     const eu = endUserQueries.findById.get(mc.end_user_id);
     const txs = transactionQueries.getByMerchantClient.all(mc.id);
     const m = merchantQueries.findById.get(req.staff.merchant_id);
+    // Respect local overrides: NULL=global, ''=hidden, 'x'=override
+    const visEmail = (mc.local_email == null) ? eu?.email : (mc.local_email === '' ? null : mc.local_email);
+    const visPhone = (mc.local_phone == null) ? eu?.phone : (mc.local_phone === '' ? null : mc.local_phone);
     res.json({
-      client: { ...mc, email: eu?.email, phone: eu?.phone, name: eu?.name, email_validated: eu?.email_validated,
+      client: { ...mc, email: visEmail, phone: visPhone, name: eu?.name, email_validated: eu?.email_validated,
         reward_threshold: m.points_for_reward, reward_description: mc.custom_reward || m.reward_description,
         custom_reward: mc.custom_reward || null, default_reward: m.reward_description,
         can_redeem: mc.points_balance >= m.points_for_reward, has_pin: !!eu?.pin_hash },
