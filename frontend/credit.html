@@ -1246,6 +1246,9 @@
  return;
  }
 
+ // Auto-close fullscreen QR — client identified, merchant needs to see the form
+ closeQRFullscreen();
+
  // Auto-select if only one client AND not a recent credit
  if (clients.length === 1 && !clients[0].recentCredit) {
  consumeIdent(clients[0].identId);
