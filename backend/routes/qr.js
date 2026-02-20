@@ -708,7 +708,7 @@ router.get('/client-lookup/:token', authenticateStaff, (req, res) => {
     }
 
     // Reject deleted/anonymized accounts
-    if (!endUser.is_active) {
+    if (endUser.deleted_at) {
       return res.status(410).json({ error: 'Ce compte client a été supprimé' });
     }
 

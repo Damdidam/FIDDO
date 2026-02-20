@@ -799,13 +799,13 @@ router.delete('/account', authenticateClient, async (req, res) => {
       UPDATE end_users SET
         name = ?,
         email = ?,
-        email_normalized = ?,
+        email_lower = ?,
         phone = NULL,
         phone_e164 = NULL,
         date_of_birth = NULL,
         pin_hash = NULL,
         qr_token = NULL,
-        is_active = 0,
+        deleted_at = datetime('now'),
         updated_at = datetime('now')
       WHERE id = ?
     `).run(anonName, anonEmail, anonEmail.toLowerCase(), endUser.id);
