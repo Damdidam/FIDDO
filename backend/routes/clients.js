@@ -277,8 +277,8 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
       return res.status(403).json({ error: 'Seul le propriétaire peut modifier l\'email ou le téléphone (impact multi-commerce)' });
     }
 
-    const newEmailLower = email ? normalizeEmail(email) : endUser.email_lower;
-    const newPhoneE164 = phone ? normalizePhone(phone) : endUser.phone_e164;
+    const newEmailLower = email !== undefined ? normalizeEmail(email) : endUser.email_lower;
+    const newPhoneE164 = phone !== undefined ? normalizePhone(phone) : endUser.phone_e164;
 
     if (!newEmailLower && !newPhoneE164) return res.status(400).json({ error: 'Au moins un email ou téléphone requis' });
 
