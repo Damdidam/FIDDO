@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 // ═══ BUILD VERSION — change this to verify deployment ═══
-const BUILD_VERSION = '2026-02-20-v2-nocache';
+const BUILD_VERSION = '2026-02-20-v3-cachebust';
 
 const express = require('express');
 const cors = require('cors');
@@ -70,6 +70,14 @@ app.use(express.json({ limit: '1mb' }));
 app.use('/api/preferences/backup', express.json({ limit: '10mb' }));
 app.use(cookieParser());
 app.use(requestIdMiddleware);
+
+// Prevent browser from caching ANY API response (fixes stale 410/404 cache issues)
+app.use('/api/', (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+});
 
 // Android App Links verification
 app.use('/.well-known', express.static(path.join(__dirname, '../frontend/.well-known')));

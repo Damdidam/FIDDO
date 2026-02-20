@@ -499,7 +499,7 @@
  <div id="scan-reader" style="width:100%;min-height:250px;"></div>
  </div>
  <div id="scan-status" style="text-align:center;padding:0.75rem;font-size:0.8rem;color:#64748B;">
- Scannez le QR du client (v2-debug)
+ Scannez le QR du client
  </div>
  <div class="lookup-strip" id="lookup-scan"></div>
  </div>
@@ -1206,7 +1206,7 @@
 
  async function consumeIdent(identId) {
  try {
- const d = await API.call('/qr/consume/' + identId, { method: 'POST' });
+ const d = await API.call('/qr/consume/' + identId + '?_=' + Date.now(), { method: 'POST' });
  // Pre-fill the credit form
  if (d.email) {
  switchMode('email');
@@ -1393,8 +1393,7 @@
 
  // Lookup client
  try {
- console.log('[SCAN-DEBUG] calling /qr/client-lookup/' + clientQrToken);
- const d = await API.call('/qr/client-lookup/' + clientQrToken);
+ const d = await API.call('/qr/client-lookup/' + clientQrToken + '?_=' + Date.now());
  // Pre-fill credit form
  if (d.email) {
  switchMode('email');
@@ -1423,9 +1422,8 @@
  setTimeout(triggerLookup, 300);
  setTimeout(() => document.getElementById('amount').focus(), 600);
  } catch (e) {
- document.getElementById('scan-status').textContent = '[DEBUG v2] ' + (e.message || 'Client non trouvé');
- console.log('[SCAN-DEBUG] error:', e.message, e.stack);
- document.getElementById('scan-status').style.color = '#DC2626';
+ document.getElementById('scan-status').textContent = e.message || 'Client non trouvé';
+  document.getElementById('scan-status').style.color = '#DC2626';
  scannerBusy = false;
  setTimeout(() => switchMode('scan'), 2000); // restart scanner
  }
