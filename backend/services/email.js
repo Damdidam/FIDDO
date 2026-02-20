@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const crypto = require('crypto');
 
 /**
  * Escape HTML entities in strings used in email templates.
@@ -57,259 +58,347 @@ async function sendMail(mailOptions) {
 
 
 // ═══════════════════════════════════════════════════════
+// UNSUBSCRIBE TOKENS (HMAC-signed, no DB lookup needed)
+// ═══════════════════════════════════════════════════════
+
+const UNSUB_SECRET = process.env.JWT_SECRET || 'fiddo-secret-change-me';
+
+/**
+ * Generate a tamper-proof unsubscribe token for an end_user.
+ * Format: base64url(userId + ':' + hmac)
+ */
+function generateUnsubToken(endUserId) {
+  const payload = String(endUserId);
+  const hmac = crypto.createHmac('sha256', UNSUB_SECRET).update('unsub:' + payload).digest('hex').substring(0, 16);
+  return Buffer.from(payload + ':' + hmac).toString('base64url');
+}
+
+/**
+ * Verify and extract userId from unsubscribe token. Returns userId or null.
+ */
+function verifyUnsubToken(token) {
+  try {
+    const decoded = Buffer.from(token, 'base64url').toString('utf-8');
+    const [userId, hmac] = decoded.split(':');
+    if (!userId || !hmac) return null;
+    const expected = crypto.createHmac('sha256', UNSUB_SECRET).update('unsub:' + userId).digest('hex').substring(0, 16);
+    if (hmac !== expected) return null;
+    return parseInt(userId);
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
+ * Build full unsubscribe URL for an end_user.
+ */
+function buildUnsubUrl(endUserId) {
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+  return `${baseUrl}/unsubscribe?token=${generateUnsubToken(endUserId)}`;
+}
+
+
+// ═══════════════════════════════════════════════════════
+// UNIFIED TEMPLATE
+// ═══════════════════════════════════════════════════════
+
+const B = {
+  teal: '#0891B2',
+  tealDk: '#0E7490',
+  mint: '#06D6A0',
+  navy: '#0F172A',
+  text: '#1E293B',
+  muted: '#64748B',
+  light: '#94A3B8',
+  bg: '#F8FAFC',
+  border: '#E2E8F0',
+  ok: '#059669',
+  warn: '#D97706',
+  danger: '#DC2626',
+};
+
+/**
+ * Wrap email body in FIDDO branded template.
+ * Consistent header, footer, typography across ALL emails.
+ * @param {string} body - HTML content
+ * @param {string|null} unsubUrl - If provided, adds unsubscribe link in footer
+ */
+function template(body, unsubUrl) {
+  const unsubLine = unsubUrl
+    ? `<p style="margin:8px 0 0;font-size:11px;color:${B.light};">
+        <a href="${unsubUrl}" style="color:${B.light};text-decoration:underline;">Se désinscrire des emails promotionnels</a>
+      </p>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:${B.bg};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${B.bg};padding:32px 16px;">
+<tr><td align="center">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:white;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.06);">
+
+<!-- HEADER -->
+<tr>
+<td style="background:linear-gradient(135deg,${B.navy},#1E293B);padding:24px 32px;text-align:center;">
+  <div style="font-size:22px;font-weight:800;color:${B.teal};letter-spacing:1px;">FIDDO</div>
+  <div style="font-size:11px;color:${B.light};letter-spacing:0.5px;margin-top:2px;">Programme de fidélité digital</div>
+</td>
+</tr>
+
+<!-- BODY -->
+<tr>
+<td style="padding:32px 28px;color:${B.text};font-size:15px;line-height:1.6;">
+${body}
+</td>
+</tr>
+
+<!-- FOOTER -->
+<tr>
+<td style="padding:20px 28px;border-top:1px solid ${B.border};text-align:center;">
+  <p style="margin:0;font-size:11px;color:${B.light};line-height:1.5;">
+    FIDDO — H3001 SRL &middot; Belgique<br>
+    <a href="https://www.fiddo.be/privacy" style="color:${B.teal};text-decoration:none;">Politique de confidentialité</a>
+    &nbsp;&middot;&nbsp;
+    <a href="mailto:support@fiddo.be" style="color:${B.teal};text-decoration:none;">support@fiddo.be</a>
+  </p>
+  ${unsubLine}
+</td>
+</tr>
+
+</table>
+</td></tr></table>
+</body>
+</html>`;
+}
+
+/** Branded CTA button */
+function cta(text, url) {
+  return `<div style="text-align:center;margin:24px 0;">
+  <a href="${url}" style="display:inline-block;background:linear-gradient(135deg,${B.teal},${B.tealDk});color:white;padding:13px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;">
+    ${text}
+  </a>
+</div>`;
+}
+
+/** Info box (neutral — teal left border) */
+function infoBox(content) {
+  return `<div style="background:${B.bg};border-left:3px solid ${B.teal};padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:14px;">${content}</div>`;
+}
+
+/** Warning box (amber left border) */
+function warnBox(content) {
+  return `<div style="background:#FFFBEB;border-left:3px solid ${B.warn};padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0;font-size:13px;color:#92400E;">${content}</div>`;
+}
+
+/** Big number highlight (points, balance…) */
+function bigNum(number, label) {
+  return `<div style="background:linear-gradient(135deg,${B.teal},${B.tealDk});border-radius:14px;padding:24px;margin:20px 0;text-align:center;color:white;">
+  <div style="font-size:40px;font-weight:800;line-height:1;">${number}</div>
+  <div style="font-size:13px;opacity:0.9;margin-top:4px;">${label}</div>
+</div>`;
+}
+
+/** Progress bar for points */
+function progressBar(current, target, rewardDesc) {
+  const pct = Math.min((current / target) * 100, 100);
+  const remaining = Math.max(target - current, 0);
+
+  if (current >= target) {
+    return `<div style="background:${B.ok};color:white;padding:18px;border-radius:12px;text-align:center;margin:20px 0;">
+  <div style="font-size:15px;font-weight:700;">Récompense disponible</div>
+  <div style="font-size:13px;opacity:0.9;margin-top:4px;">${escHtml(rewardDesc)}</div>
+</div>`;
+  }
+
+  return `<div style="background:${B.bg};padding:14px 16px;border-radius:10px;margin:20px 0;">
+  <div style="font-size:12px;color:${B.muted};margin-bottom:6px;">
+    Encore <strong>${remaining}</strong> point${remaining > 1 ? 's' : ''} avant votre récompense
+    <span style="float:right;font-weight:600;color:${B.navy};">${current} / ${target}</span>
+  </div>
+  <div style="background:${B.border};height:8px;border-radius:4px;overflow:hidden;">
+    <div style="background:linear-gradient(90deg,${B.teal},${B.mint});height:100%;width:${pct}%;border-radius:4px;"></div>
+  </div>
+</div>`;
+}
+
+/** Heading (consistent across all emails) */
+function heading(text) {
+  return `<h2 style="color:${B.navy};font-size:20px;font-weight:700;margin:0 0 12px;">${text}</h2>`;
+}
+
+
+// ═══════════════════════════════════════════════════════
 // TEMPLATES
 // ═══════════════════════════════════════════════════════
 
 /**
- * Email de validation initiale (nouveau client).
+ * 1. Validation email (nouveau client)
  */
 function sendValidationEmail(clientEmail, validationToken, businessName) {
   const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
-  const validationUrl = `${baseUrl}/validate?token=${validationToken}`;
+  const url = `${baseUrl}/validate?token=${validationToken}`;
 
   sendMail({
     to: clientEmail,
-    subject: `Bienvenue chez ${businessName} - Validez votre compte fidélité`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3b82f6;">Bienvenue chez ${escHtml(businessName)} ! 🎉</h2>
-        <p>Vous êtes inscrit(e) à notre programme de fidélité.</p>
-        <p>Cliquez ci-dessous pour valider votre compte :</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${validationUrl}"
-             style="background-color: #3b82f6; color: white; padding: 15px 30px;
-                    text-decoration: none; border-radius: 5px; font-weight: bold;">
-            Valider mon compte
-          </a>
-        </div>
-        <p style="font-size: 12px; color: #666;">
-          Lien : ${validationUrl}
-        </p>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
-        <p style="font-size: 12px; color: #666;">
-          Conformément au RGPD, vous pouvez demander la suppression de vos données à tout moment.
-        </p>
-      </div>
-    `,
+    subject: `Bienvenue chez ${businessName} — Validez votre compte`,
+    html: template(`
+      ${heading('Bienvenue chez ' + escHtml(businessName) + ' !')}
+      <p>Vous êtes inscrit(e) à notre programme de fidélité. Cliquez ci-dessous pour valider votre adresse email :</p>
+      ${cta('Valider mon compte', url)}
+      <p style="font-size:12px;color:${B.light};word-break:break-all;">${url}</p>
+    `),
   });
 }
 
 /**
- * Email de confirmation de points crédités.
+ * 2. Points crédités
  */
 function sendPointsCreditedEmail(clientEmail, pointsEarned, newBalance, businessName, merchantSettings) {
-  const progressPercent = Math.min((newBalance / merchantSettings.points_for_reward) * 100, 100);
-  const pointsRemaining = Math.max(merchantSettings.points_for_reward - newBalance, 0);
-
-  let rewardSection;
-  if (newBalance >= merchantSettings.points_for_reward) {
-    rewardSection = `
-      <div style="background-color: #10B981; color: white; padding: 20px; border-radius: 10px; text-align: center; margin: 20px 0;">
-        <h3 style="margin: 0;">🎁 Récompense disponible !</h3>
-        <p style="margin: 10px 0 0;">Présentez-vous pour bénéficier de : <strong>${escHtml(merchantSettings.reward_description)}</strong></p>
-      </div>
-    `;
-  } else {
-    rewardSection = `
-      <div style="background-color: #f5f5f5; padding: 15px; border-radius: 10px; margin: 20px 0;">
-        <p style="margin: 0;">Plus que <strong>${pointsRemaining} points</strong> avant votre récompense !</p>
-        <div style="background-color: #ddd; height: 20px; border-radius: 10px; overflow: hidden; margin-top: 10px;">
-          <div style="background-color: #3b82f6; height: 100%; width: ${progressPercent}%;"></div>
-        </div>
-      </div>
-    `;
-  }
-
   sendMail({
     to: clientEmail,
-    subject: `${businessName} - +${pointsEarned} points gagnés ! 🌟`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3b82f6;">Merci de votre visite ! ✨</h2>
-        <div style="background-color: #3b82f6; color: white; padding: 20px; border-radius: 10px; text-align: center;">
-          <p style="margin: 0; font-size: 16px;">Vous avez gagné</p>
-          <p style="margin: 10px 0; font-size: 48px; font-weight: bold;">+${pointsEarned}</p>
-          <p style="margin: 0; font-size: 16px;">points</p>
-        </div>
-        <div style="text-align: center; margin: 20px 0; font-size: 24px;">
-          <strong>Solde : ${newBalance} points</strong>
-        </div>
-        ${rewardSection}
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
-        <p style="font-size: 12px; color: #666; text-align: center;">
-          ${escHtml(businessName)} | Programme de fidélité
-        </p>
-      </div>
-    `,
+    subject: `+${pointsEarned} points chez ${businessName}`,
+    html: template(`
+      ${heading('Merci de votre visite !')}
+      <p>Vous avez gagné des points chez <strong>${escHtml(businessName)}</strong>.</p>
+      ${bigNum('+' + pointsEarned, 'points gagnés')}
+      <p style="text-align:center;font-size:13px;color:${B.muted};">Nouveau solde : <strong style="color:${B.navy};">${newBalance} points</strong></p>
+      ${progressBar(newBalance, merchantSettings.points_for_reward, merchantSettings.reward_description)}
+    `),
   });
 }
 
 /**
- * Email de confirmation de validation du merchant.
+ * 3. Compte marchand validé
  */
 function sendMerchantValidatedEmail(merchantEmail, businessName) {
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+
   sendMail({
     to: merchantEmail,
-    subject: `FIDDO - Votre compte ${businessName} est activé ! 🎉`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3b82f6;">Félicitations ! 🎉</h2>
-        <p>Votre commerce <strong>${escHtml(businessName)}</strong> a été validé sur FIDDO.</p>
-        <p>Vous pouvez maintenant vous connecter et commencer à fidéliser vos clients.</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.BASE_URL || 'http://localhost:3000'}"
-             style="background-color: #3b82f6; color: white; padding: 15px 30px;
-                    text-decoration: none; border-radius: 5px; font-weight: bold;">
-            Se connecter
-          </a>
-        </div>
-      </div>
-    `,
+    subject: `Votre compte ${businessName} est activé — FIDDO`,
+    html: template(`
+      ${heading('Votre commerce est activé !')}
+      <p>Votre commerce <strong>${escHtml(businessName)}</strong> a été validé sur FIDDO.</p>
+      <p>Vous pouvez maintenant vous connecter et commencer à fidéliser vos clients.</p>
+      ${cta('Se connecter', baseUrl)}
+    `),
   });
 }
 
 /**
- * Email de refus du merchant.
+ * 4. Demande marchand refusée
  */
 function sendMerchantRejectedEmail(merchantEmail, businessName, reason) {
   sendMail({
     to: merchantEmail,
-    subject: `FIDDO - Demande pour ${businessName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #EF4444;">Demande non approuvée</h2>
-        <p>Votre demande d'inscription pour <strong>${escHtml(businessName)}</strong> n'a pas pu être approuvée.</p>
-        ${reason ? `<p><strong>Raison :</strong> ${escHtml(reason)}</p>` : ''}
-        <p>Si vous pensez qu'il s'agit d'une erreur, contactez-nous à support@fiddo.be.</p>
-      </div>
-    `,
+    subject: `Demande pour ${businessName} — FIDDO`,
+    html: template(`
+      ${heading('Demande non approuvée')}
+      <p>Votre demande d'inscription pour <strong>${escHtml(businessName)}</strong> n'a pas pu être approuvée.</p>
+      ${reason ? infoBox('<strong>Raison :</strong> ' + escHtml(reason)) : ''}
+      <p>Si vous pensez qu'il s'agit d'une erreur, contactez-nous à <a href="mailto:support@fiddo.be" style="color:${B.teal};">support@fiddo.be</a>.</p>
+    `),
   });
 }
 
 /**
- * Email de notification au super admin quand un merchant modifie ses infos.
+ * 5. Notification super admin — marchand modifie ses infos
  */
 function sendMerchantInfoChangedEmail(adminEmail, oldName, newName, ownerEmail, changes) {
-  const changeRows = changes.map(c =>
-    `<tr><td style="padding:6px 12px;border:1px solid #ddd;font-weight:600;">${escHtml(c.field)}</td>
-     <td style="padding:6px 12px;border:1px solid #ddd;color:#EF4444;text-decoration:line-through;">${escHtml(c.old)}</td>
-     <td style="padding:6px 12px;border:1px solid #ddd;color:#10B981;font-weight:600;">${escHtml(c.new)}</td></tr>`
+  const rows = changes.map(c =>
+    `<tr>
+      <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">${escHtml(c.field)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid ${B.border};color:${B.danger};text-decoration:line-through;font-size:13px;">${escHtml(c.old)}</td>
+      <td style="padding:8px 12px;border-bottom:1px solid ${B.border};color:${B.ok};font-weight:600;font-size:13px;">${escHtml(c.new)}</td>
+    </tr>`
   ).join('');
 
   sendMail({
     to: adminEmail,
-    subject: `🔔 FIDDO Admin — ${oldName} a modifié ses informations`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #1F2937;">🔔 Modification d'informations commerce</h2>
-        <p>Le propriétaire <strong>${escHtml(ownerEmail)}</strong> a modifié les informations de <strong>${escHtml(oldName)}</strong>.</p>
-        <table style="width:100%;border-collapse:collapse;margin:20px 0;">
-          <thead>
-            <tr style="background:#1F2937;color:white;">
-              <th style="padding:8px 12px;text-align:left;">Champ</th>
-              <th style="padding:8px 12px;text-align:left;">Ancien</th>
-              <th style="padding:8px 12px;text-align:left;">Nouveau</th>
-            </tr>
-          </thead>
-          <tbody>${changeRows}</tbody>
-        </table>
-        <p style="font-size:12px;color:#666;">Aucune action requise — notification automatique.</p>
-      </div>
-    `,
+    subject: `${oldName} a modifié ses informations — FIDDO Admin`,
+    html: template(`
+      ${heading('Modification d\'informations')}
+      <p>Le propriétaire <strong>${escHtml(ownerEmail)}</strong> a modifié les informations de <strong>${escHtml(oldName)}</strong>.</p>
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:8px;overflow:hidden;border:1px solid ${B.border};">
+        <thead>
+          <tr style="background:${B.navy};color:white;">
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Champ</th>
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Ancien</th>
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Nouveau</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p style="font-size:13px;color:${B.light};">Notification automatique — aucune action requise.</p>
+    `),
   });
 }
 
 /**
- * Email de confirmation de changement de mot de passe.
+ * 6. Mot de passe modifié (staff)
  */
 function sendPasswordChangedEmail(staffEmail, displayName) {
   sendMail({
     to: staffEmail,
-    subject: 'FIDDO — Votre mot de passe a été modifié',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3b82f6;">Mot de passe modifié 🔒</h2>
-        <p>Bonjour ${escHtml(displayName)},</p>
-        <p>Votre mot de passe FIDDO a été modifié avec succès.</p>
-        <p>Si vous n'êtes pas à l'origine de cette modification, contactez immédiatement <strong>support@fiddo.be</strong>.</p>
-        <hr style="margin:30px 0;border:none;border-top:1px solid #ddd;">
-        <p style="font-size:12px;color:#666;">Email de sécurité envoyé automatiquement.</p>
-      </div>
-    `,
+    subject: 'Mot de passe modifié — FIDDO',
+    html: template(`
+      ${heading('Mot de passe modifié')}
+      <p>Bonjour ${escHtml(displayName)},</p>
+      <p>Votre mot de passe FIDDO a été modifié avec succès.</p>
+      ${warnBox('Si vous n\'êtes pas à l\'origine de cette modification, contactez immédiatement <a href="mailto:support@fiddo.be" style="color:#92400E;font-weight:600;">support@fiddo.be</a>.')}
+      <p style="font-size:13px;color:${B.light};">Email de sécurité envoyé automatiquement.</p>
+    `),
   });
 }
 
 /**
- * Email de notification de changement de code PIN fidélité.
+ * 7. Code PIN modifié (client)
  */
 function sendPinChangedEmail(clientEmail, businessName) {
   return sendMail({
     to: clientEmail,
-    subject: `Votre code PIN a été modifié — ${businessName}`,
-    html: `
-      <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
-        <h2 style="color: #3b82f6;">🔒 Code PIN modifié</h2>
-        <p>Bonjour,</p>
-        <p>Votre code PIN pour <strong>${escHtml(businessName)}</strong> a été mis à jour.</p>
-        <div style="background: #FEF3C7; border-left: 3px solid #F59E0B; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
-          <p style="margin: 0; font-size: 0.9rem;">⚠️ Si vous n'êtes pas à l'origine de ce changement, veuillez contacter le commerce immédiatement.</p>
-        </div>
-        <p style="color: #6b7280; font-size: 0.85rem;">Ce code est utilisé pour réclamer vos récompenses. Ne le partagez avec personne.</p>
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
-        <p style="font-size: 0.75rem; color: #94a3b8;">FIDDO — Programme de fidélité</p>
-      </div>
-    `,
-  });
-}
-
-
-function sendMagicLinkEmail(clientEmail, magicUrl) {
-  sendMail({
-    to: clientEmail,
-    subject: 'Votre lien de connexion FIDDO',
-    html: `
-      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-        <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 8px;">FIDDO</h1>
-        <p style="color: #64748B; font-size: 14px; margin-bottom: 24px;">Votre espace fidélité</p>
-        <p style="color: #1E293B; font-size: 16px; line-height: 1.5;">
-          Cliquez sur le bouton ci-dessous pour accéder à vos cartes de fidélité :
-        </p>
-        <div style="text-align: center; margin: 32px 0;">
-          <a href="${magicUrl}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
-            Accéder à mon compte
-          </a>
-        </div>
-        <p style="color: #94A3B8; font-size: 13px; line-height: 1.5;">
-          Ce lien est valable 15 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
-        </p>
-      </div>
-    `,
+    subject: `Code PIN modifié — ${businessName}`,
+    html: template(`
+      ${heading('Code PIN modifié')}
+      <p>Votre code PIN pour <strong>${escHtml(businessName)}</strong> a été mis à jour.</p>
+      ${warnBox('Si vous n\'êtes pas à l\'origine de ce changement, contactez le commerce immédiatement.')}
+      <p style="font-size:13px;color:${B.light};">Ce code est utilisé pour réclamer vos récompenses. Ne le partagez avec personne.</p>
+    `),
   });
 }
 
 /**
- * Email d'export avec pièce jointe (CSV ou backup).
+ * 8. Magic link (connexion client)
+ */
+function sendMagicLinkEmail(clientEmail, magicUrl) {
+  sendMail({
+    to: clientEmail,
+    subject: 'Votre lien de connexion — FIDDO',
+    html: template(`
+      ${heading('Connexion à votre espace')}
+      <p>Cliquez sur le bouton ci-dessous pour accéder à vos cartes de fidélité :</p>
+      ${cta('Accéder à mon compte', magicUrl)}
+      <p style="font-size:13px;color:${B.light};">Ce lien est valable 15 minutes. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+    `),
+  });
+}
+
+/**
+ * 9. Export (CSV / backup) avec pièce jointe
  */
 function sendExportEmail(ownerEmail, businessName, filename, content, mimeType) {
   const isCSV = filename.endsWith('.csv');
+
   return sendMail({
     to: ownerEmail,
-    subject: `FIDDO — ${isCSV ? 'Export clients' : 'Backup'} ${businessName}`,
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-        <h2 style="color: #3b82f6;">${isCSV ? '📥 Export clients' : '💾 Backup'}</h2>
-        <p>Bonjour,</p>
-        <p>Vous trouverez ci-joint ${isCSV ? "l'export CSV de vos clients" : 'le backup complet de vos données'} pour <strong>${escHtml(businessName)}</strong>.</p>
-        <p style="background: #F1F5F9; padding: 12px 16px; border-radius: 8px; font-size: 14px;">
-          📎 <strong>${escHtml(filename)}</strong>
-        </p>
-        <hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
-        <p style="font-size: 12px; color: #666;">
-          Cet email a été envoyé suite à votre demande depuis l'interface FIDDO.
-          Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.
-        </p>
-      </div>
-    `,
+    subject: `${isCSV ? 'Export clients' : 'Backup'} — ${businessName}`,
+    html: template(`
+      ${heading(isCSV ? 'Export clients' : 'Backup complet')}
+      <p>Vous trouverez ci-joint ${isCSV ? "l'export CSV de vos clients" : 'le backup complet de vos données'} pour <strong>${escHtml(businessName)}</strong>.</p>
+      ${infoBox('<strong>' + escHtml(filename) + '</strong>')}
+      <p style="font-size:13px;color:${B.light};">Cet email a été envoyé suite à votre demande. Si vous n'êtes pas à l'origine de cette demande, ignorez cet email.</p>
+    `),
     attachments: [{
       filename,
       content,
@@ -319,7 +408,7 @@ function sendExportEmail(ownerEmail, businessName, filename, content, mimeType) 
 }
 
 /**
- * Notify merchant owner that a global merge affected one of their clients.
+ * 10. Notification fusion globale (admin → marchand)
  */
 function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sourceName, reason) {
   const actionLabel = action === 'merge'
@@ -328,135 +417,80 @@ function sendGlobalMergeNotificationEmail(ownerEmail, businessName, action, sour
 
   return sendMail({
     to: ownerEmail,
-    subject: `[FIDDO] Fusion de comptes client — ${businessName}`,
-    html: `
-      <div style="font-family: -apple-system, sans-serif; max-width: 500px; margin: auto; padding: 2rem;">
-        <h2 style="color: #3b82f6;">🔀 Fusion de comptes client</h2>
-        <p>Bonjour,</p>
-        <p>L'équipe FIDDO a effectué une fusion de comptes client qui concerne <strong>${escHtml(businessName)}</strong>.</p>
-        <div style="background: #f8fafc; border-left: 3px solid #3b82f6; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
-          <p style="margin: 0;"><strong>Action :</strong> Fiche client ${actionLabel}</p>
-          <p style="margin: 0.5rem 0 0;"><strong>Client concerné :</strong> ${escHtml(sourceName) || '—'}</p>
-          <p style="margin: 0.5rem 0 0;"><strong>Motif :</strong> ${escHtml(reason)}</p>
-        </div>
-        <p>Les détails sont visibles dans l'historique des transactions du client (type : <em>merge</em>).</p>
-        <p style="color: #6b7280; font-size: 0.85rem;">Aucune action requise de votre part.</p>
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 1.5rem 0;">
-        <p style="font-size: 0.75rem; color: #94a3b8;">FIDDO — Programme de fidélité</p>
-      </div>
-    `,
+    subject: `Fusion de comptes client — ${businessName}`,
+    html: template(`
+      ${heading('Fusion de comptes client')}
+      <p>L'équipe FIDDO a effectué une fusion de comptes client qui concerne <strong>${escHtml(businessName)}</strong>.</p>
+      ${infoBox(`
+        <strong>Action :</strong> Fiche client ${actionLabel}<br>
+        <strong>Client concerné :</strong> ${escHtml(sourceName) || '—'}<br>
+        <strong>Motif :</strong> ${escHtml(reason)}
+      `)}
+      <p>Les détails sont visibles dans l'historique des transactions du client.</p>
+      <p style="font-size:13px;color:${B.light};">Notification automatique — aucune action requise.</p>
+    `),
   });
 }
 
 /**
- * Welcome email — sent after first identification at a merchant via QR landing.
- * Includes points info and app download link.
+ * 11. Welcome (premier passage chez un marchand)
  */
-function sendWelcomeEmail(clientEmail, merchantName, pointsBalance, appUrl) {
-  const pointsSection = pointsBalance > 0
-    ? `<div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; color: white;">
-          <div style="font-size: 36px; font-weight: 800;">${pointsBalance}</div>
-          <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">points chez ${escHtml(merchantName)}</div>
-        </div>`
-    : `<div style="background: linear-gradient(135deg, #3b82f6, #2563eb); border-radius: 16px; padding: 24px; margin: 24px 0; text-align: center; color: white;">
-          <div style="font-size: 24px; font-weight: 800;">✓ Carte activée</div>
-          <div style="font-size: 14px; opacity: 0.9; margin-top: 4px;">chez ${escHtml(merchantName)}</div>
-        </div>`;
+function sendWelcomeEmail(clientEmail, merchantName, pointsBalance, appUrl, endUserId) {
+  const hero = pointsBalance > 0
+    ? bigNum(pointsBalance, 'points chez ' + escHtml(merchantName))
+    : bigNum('✓', 'Carte activée chez ' + escHtml(merchantName));
+
+  const unsubUrl = endUserId ? buildUnsubUrl(endUserId) : null;
 
   sendMail({
     to: clientEmail,
     subject: `Bienvenue chez ${merchantName} — FIDDO`,
-    html: `
-      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-        <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 4px;">FIDDO</h1>
-        <p style="color: #64748B; font-size: 14px; margin-bottom: 28px;">Votre fidélité récompensée</p>
-
-        <h2 style="color: #1E293B; font-size: 20px; margin-bottom: 16px;">Bienvenue chez ${escHtml(merchantName)} ! 🎉</h2>
-
-        <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
-          Votre carte de fidélité est activée. Vous cumulez des points à chaque visite et
-          débloquez des récompenses exclusives.
-        </p>
-
-        ${pointsSection}
-
-        <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
-          Téléchargez l'app FIDDO pour suivre vos points, recevoir des notifications
-          et vous identifier plus rapidement :
-        </p>
-
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${appUrl || 'https://www.fiddo.be/app/'}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
-            Télécharger l'app
-          </a>
-        </div>
-
-        <p style="color: #94A3B8; font-size: 12px; line-height: 1.5;">
-          Pas besoin de l'app pour accumuler des points — elle est 100% optionnelle.
-          Votre carte fonctionne avec votre adresse email.
-        </p>
-      </div>
-    `,
+    headers: unsubUrl ? { 'List-Unsubscribe': `<${unsubUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : {},
+    html: template(`
+      ${heading('Bienvenue chez ' + escHtml(merchantName) + ' !')}
+      <p>Votre carte de fidélité est activée. Vous cumulez des points à chaque visite et débloquez des récompenses exclusives.</p>
+      ${hero}
+      <p>Téléchargez l'app FIDDO pour suivre vos points et vous identifier plus rapidement :</p>
+      ${cta("Ouvrir l'app FIDDO", appUrl || 'https://www.fiddo.be/app/')}
+      <p style="font-size:12px;color:${B.light};">Pas besoin de l'app pour accumuler des points — elle est 100% optionnelle. Votre carte fonctionne avec votre adresse email.</p>
+    `, unsubUrl),
   });
 }
 
-
 /**
- * App reminder — sent 3 days after first identification if user hasn't opened the app.
+ * 12. Rappel app (3 jours après premier passage)
  */
-function sendAppReminderEmail(clientEmail, merchantName, pointsBalance, appUrl) {
+function sendAppReminderEmail(clientEmail, merchantName, pointsBalance, appUrl, endUserId) {
+  const unsubUrl = endUserId ? buildUnsubUrl(endUserId) : null;
+
   sendMail({
     to: clientEmail,
     subject: `Vos ${pointsBalance} points vous attendent — FIDDO`,
-    html: `
-      <div style="font-family: 'Helvetica Neue', Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px 24px;">
-        <h1 style="color: #3b82f6; font-size: 24px; margin-bottom: 4px;">FIDDO</h1>
-        <p style="color: #64748B; font-size: 14px; margin-bottom: 28px;">Votre fidélité récompensée</p>
-
-        <h2 style="color: #1E293B; font-size: 20px; margin-bottom: 16px;">Vos points vous attendent ! 📱</h2>
-
-        <p style="color: #1E293B; font-size: 15px; line-height: 1.6;">
-          Vous avez <strong>${pointsBalance} points</strong> chez <strong>${escHtml(merchantName)}</strong>.
-          Téléchargez l'app pour suivre votre progression et ne manquer aucune récompense.
-        </p>
-
-        <div style="text-align: center; margin: 28px 0;">
-          <a href="${appUrl || 'https://www.fiddo.be/app/'}" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 16px; display: inline-block;">
-            Télécharger l'app
-          </a>
-        </div>
-
-        <p style="color: #94A3B8; font-size: 12px; line-height: 1.5;">
-          L'app est gratuite et ne prend que quelques secondes à installer.
-        </p>
-      </div>
-    `,
+    headers: unsubUrl ? { 'List-Unsubscribe': `<${unsubUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : {},
+    html: template(`
+      ${heading('Vos points vous attendent !')}
+      <p>Vous avez <strong>${pointsBalance} points</strong> chez <strong>${escHtml(merchantName)}</strong>. Téléchargez l'app pour suivre votre progression et ne manquer aucune récompense.</p>
+      ${cta("Ouvrir l'app FIDDO", appUrl || 'https://www.fiddo.be/app/')}
+      <p style="font-size:12px;color:${B.light};">L'app est gratuite et ne prend que quelques secondes à installer.</p>
+    `, unsubUrl),
   });
 }
 
-
+/**
+ * 13. Compte supprimé (client)
+ */
 function sendAccountDeletedEmail(clientEmail) {
   return sendMail({
     to: clientEmail,
-    subject: 'FIDDO — Votre compte a été supprimé',
-    html: `
-      <div style="font-family:-apple-system,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:inline-flex;align-items:center;justify-content:center;">
-            <span style="font-size:28px;">🗑️</span>
-          </div>
-        </div>
-        <h2 style="text-align:center;font-size:20px;margin-bottom:12px;">Compte supprimé</h2>
-        <p style="color:#64748b;line-height:1.6;text-align:center;">
-          Votre compte FIDDO a été supprimé avec succès. Toutes vos données personnelles ont été anonymisées.
-        </p>
-        <p style="color:#94a3b8;font-size:13px;line-height:1.6;text-align:center;margin-top:20px;">
-          Si vous n'êtes pas à l'origine de cette demande, contactez-nous immédiatement à <a href="mailto:support@fiddo.be" style="color:#3b82f6;">support@fiddo.be</a>.
-        </p>
-        <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;">
-        <p style="color:#cbd5e1;font-size:12px;text-align:center;">FIDDO — Programme de fidélité digital</p>
+    subject: 'Votre compte a été supprimé — FIDDO',
+    html: template(`
+      <div style="text-align:center;margin-bottom:20px;">
+        <div style="width:56px;height:56px;border-radius:50%;background:#FEE2E2;display:inline-flex;align-items:center;justify-content:center;font-size:24px;color:${B.danger};">✕</div>
       </div>
-    `,
+      ${heading('<div style="text-align:center;">Compte supprimé</div>')}
+      <p style="text-align:center;">Votre compte FIDDO a été supprimé avec succès. Toutes vos données personnelles ont été anonymisées.</p>
+      ${warnBox('Si vous n\'êtes pas à l\'origine de cette demande, contactez-nous immédiatement à <a href="mailto:support@fiddo.be" style="color:#92400E;font-weight:600;">support@fiddo.be</a>.')}
+    `),
   });
 }
 
@@ -476,4 +510,5 @@ module.exports = {
   sendWelcomeEmail,
   sendAppReminderEmail,
   sendAccountDeletedEmail,
+  verifyUnsubToken,
 };

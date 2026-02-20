@@ -240,6 +240,7 @@ function initDatabase() {
   try { db.exec('ALTER TABLE end_users ADD COLUMN last_app_login TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE end_users ADD COLUMN first_merchant_id INTEGER'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE end_users ADD COLUMN date_of_birth TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE end_users ADD COLUMN marketing_optout INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN birthday_gift_enabled INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN birthday_gift_description TEXT'); } catch (e) { /* already exists */ }
 
@@ -599,6 +600,7 @@ const endUserQueries = {
   setMagicToken: db.prepare("UPDATE end_users SET magic_token = ?, magic_token_expires = ?, updated_at = datetime('now') WHERE id = ?"),
   findByMagicToken: db.prepare('SELECT * FROM end_users WHERE magic_token = ? AND deleted_at IS NULL'),
   clearMagicToken: db.prepare("UPDATE end_users SET magic_token = NULL, magic_token_expires = NULL, updated_at = datetime('now') WHERE id = ?"),
+  setMarketingOptout: db.prepare("UPDATE end_users SET marketing_optout = 1, updated_at = datetime('now') WHERE id = ?"),
 };
 
 // ─── End User Aliases ────────────────────────────────

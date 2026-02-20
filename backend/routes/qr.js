@@ -621,7 +621,7 @@ router.post('/register', (req, res) => {
     // Send welcome email for new users (fire-and-forget, after response)
     if (isNew && emailLower) {
       const appUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/app/';
-      sendWelcomeEmail(email, merchant.business_name, 0, appUrl);
+      sendWelcomeEmail(email, merchant.business_name, 0, appUrl, existing?.id);
     }
   } catch (error) {
     console.error('Register error:', error);

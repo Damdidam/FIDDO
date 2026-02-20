@@ -21,6 +21,7 @@ function sendAppReminders() {
       LEFT JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = eu.first_merchant_id
       WHERE eu.deleted_at IS NULL
         AND eu.is_blocked = 0
+        AND eu.marketing_optout = 0
         AND eu.email IS NOT NULL
         AND eu.last_app_login IS NULL
         AND eu.created_at BETWEEN datetime('now', '-3.5 days') AND datetime('now', '-2.5 days')
@@ -42,7 +43,7 @@ function sendAppReminders() {
       }
 
       const appUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/app/';
-      sendAppReminderEmail(user.email, merchantName, user.points_balance || 0, appUrl);
+      sendAppReminderEmail(user.email, merchantName, user.points_balance || 0, appUrl, user.id);
     }
 
     console.log(`✅ App reminders sent to ${users.length} user(s)`);

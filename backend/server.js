@@ -220,6 +220,51 @@ app.get('/validate', (req, res) => {
   </body></html>`);
 });
 
+// ── Unsubscribe from marketing emails ──
+app.get('/unsubscribe', (req, res) => {
+  const { token } = req.query;
+  if (!token || typeof token !== 'string' || token.length > 200) {
+    return res.status(400).send(unsubPage('Token manquant ou invalide.', true));
+  }
+
+  const { verifyUnsubToken } = require('./services/email');
+  const { endUserQueries } = require('./database');
+
+  const endUserId = verifyUnsubToken(token);
+  if (!endUserId) {
+    return res.status(400).send(unsubPage('Ce lien de désinscription est invalide ou a expiré.', true));
+  }
+
+  const user = endUserQueries.findById.get(endUserId);
+  if (!user || user.deleted_at) {
+    return res.status(404).send(unsubPage('Ce compte n\'existe plus.', true));
+  }
+
+  if (user.marketing_optout) {
+    return res.send(unsubPage('Vous êtes déjà désinscrit(e) des emails promotionnels.', false));
+  }
+
+  endUserQueries.setMarketingOptout.run(endUserId);
+  res.send(unsubPage('Vous avez été désinscrit(e) des emails promotionnels. Vous continuerez à recevoir les emails liés à votre compte (points, sécurité, etc.).', false));
+});
+
+function unsubPage(message, isError) {
+  const color = isError ? '#DC2626' : '#059669';
+  const icon = isError ? '✕' : '✓';
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>FIDDO — Désinscription</title></head>
+<body style="margin:0;padding:0;background:#F8FAFC;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:480px;margin:80px auto;padding:32px 24px;text-align:center;">
+  <div style="font-size:28px;font-weight:800;color:#0891B2;letter-spacing:1px;margin-bottom:32px;">FIDDO</div>
+  <div style="width:64px;height:64px;border-radius:50%;background:${isError ? '#FEE2E2' : '#D1FAE5'};display:inline-flex;align-items:center;justify-content:center;font-size:28px;color:${color};">${icon}</div>
+  <h2 style="color:#0F172A;font-size:20px;margin:16px 0 8px;">Désinscription</h2>
+  <p style="color:#64748B;font-size:15px;line-height:1.6;">${message}</p>
+  <a href="https://www.fiddo.be" style="display:inline-block;margin-top:24px;color:#0891B2;font-size:14px;text-decoration:none;font-weight:600;">← Retour à fiddo.be</a>
+</div>
+</body></html>`;
+}
+
 // Version check endpoint — verify deployment
 app.get('/api/version', (req, res) => res.json({ version: BUILD_VERSION }));
 
