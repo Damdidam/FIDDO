@@ -834,17 +834,28 @@ router.get('/lookup', (req, res) => {
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
     const emailLower = normalizeEmail(email); const phoneE164 = normalizePhone(phone);
     let endUser = null;
-    if (emailLower) endUser = endUserQueries.findByEmailLower.get(emailLower);
-    if (!endUser && phoneE164) endUser = endUserQueries.findByPhoneE164.get(phoneE164);
+    let foundVia = null; // track which identifier resolved the match
+    if (emailLower) { endUser = endUserQueries.findByEmailLower.get(emailLower); if (endUser) foundVia = 'email'; }
+    if (!endUser && phoneE164) { endUser = endUserQueries.findByPhoneE164.get(phoneE164); if (endUser) foundVia = 'phone'; }
     // Gmail dedup: hakim.abbes+75@gmail.com → hakimabbes@gmail.com
-    if (!endUser && emailLower) { const can = canonicalizeEmail(emailLower); if (can && can !== emailLower) endUser = endUserQueries.findByCanonicalEmail.get(can); }
-    if (!endUser && emailLower) { const a = aliasQueries.findByValue.get(emailLower); if (a) endUser = endUserQueries.findById.get(a.end_user_id); }
-    if (!endUser && phoneE164) { const a = aliasQueries.findByValue.get(phoneE164); if (a) endUser = endUserQueries.findById.get(a.end_user_id); }
+    if (!endUser && emailLower) { const can = canonicalizeEmail(emailLower); if (can && can !== emailLower) { endUser = endUserQueries.findByCanonicalEmail.get(can); if (endUser) foundVia = 'email'; } }
+    if (!endUser && emailLower) { const a = aliasQueries.findByValue.get(emailLower); if (a) { endUser = endUserQueries.findById.get(a.end_user_id); if (endUser) foundVia = 'email'; } }
+    if (!endUser && phoneE164) { const a = aliasQueries.findByValue.get(phoneE164); if (a) { endUser = endUserQueries.findById.get(a.end_user_id); if (endUser) foundVia = 'phone'; } }
     if (!endUser) return res.json({ found: false });
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
+
+    // If the identifier used to find this client has been locally hidden at this merchant, treat as not found
+    if (mc) {
+      if (foundVia === 'email' && mc.local_email === '') return res.json({ found: false });
+      if (foundVia === 'phone' && mc.local_phone === '') return res.json({ found: false });
+    }
+
     if (!mc) return res.json({ found: true, isNew: true, client: { name: endUser.name, email: endUser.email, phone: endUser.phone } });
+    // Respect local overrides for display
+    const visEmail = (mc.local_email == null) ? endUser.email : (mc.local_email === '' ? null : mc.local_email);
+    const visPhone = (mc.local_phone == null) ? endUser.phone : (mc.local_phone === '' ? null : mc.local_phone);
     const merchant = merchantQueries.findById.get(merchantId);
-    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: endUser.email, phone: endUser.phone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: mc.custom_reward || merchant.reward_description, custom_reward: mc.custom_reward || null, can_redeem: mc.points_balance >= merchant.points_for_reward, has_pin: !!endUser.pin_hash } });
+    res.json({ found: true, isNew: false, client: { id: mc.id, name: endUser.name, email: visEmail, phone: visPhone, points_balance: mc.points_balance, visit_count: mc.visit_count, is_blocked: mc.is_blocked, reward_threshold: merchant.points_for_reward, reward_description: mc.custom_reward || merchant.reward_description, custom_reward: mc.custom_reward || null, can_redeem: mc.points_balance >= merchant.points_for_reward, has_pin: !!endUser.pin_hash } });
   } catch (error) { res.status(500).json({ error: 'Erreur' }); }
 });
 
