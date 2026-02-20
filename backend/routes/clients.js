@@ -282,8 +282,10 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
 
     // ── Determine what the merchant currently sees (local view) ──
-    const visibleEmail = mc.local_email === null ? endUser.email : (mc.local_email === '' ? null : mc.local_email);
-    const visiblePhone = mc.local_phone === null ? endUser.phone : (mc.local_phone === '' ? null : mc.local_phone);
+    const visibleEmail = (mc.local_email == null) ? endUser.email : (mc.local_email === '' ? null : mc.local_email);
+    const visiblePhone = (mc.local_phone == null) ? endUser.phone : (mc.local_phone === '' ? null : mc.local_phone);
+
+    console.log('[EDIT DEBUG]', { email, phone, mcLocalEmail: mc.local_email, mcLocalPhone: mc.local_phone, euEmail: endUser.email, euPhone: endUser.phone, visibleEmail, visiblePhone });
 
     // ── Classify each field change ──
     const emailSent = email !== undefined;
@@ -300,6 +302,8 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     // Adding/changing = sent as non-empty AND different from what merchant sees
     const emailChanging = emailSent && newEmailNorm && newEmailNorm !== visibleEmailNorm;
     const phoneChanging = phoneSent && newPhoneNorm && newPhoneNorm !== visiblePhoneNorm;
+
+    console.log('[EDIT DETECT]', { emailSent, phoneSent, newEmailNorm, newPhoneNorm, visibleEmailNorm, visiblePhoneNorm, emailRemoving, phoneRemoving, emailChanging, phoneChanging });
 
     // ── Compute what the merchant will see after the edit ──
     const postEmail = emailRemoving ? null : (emailChanging ? newEmailNorm : visibleEmailNorm);
@@ -476,8 +480,8 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const finalMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
 
     // Compute what merchant now sees
-    const finalVisibleEmail = finalMc.local_email === null ? finalEndUser.email : (finalMc.local_email === '' ? null : finalMc.local_email);
-    const finalVisiblePhone = finalMc.local_phone === null ? finalEndUser.phone : (finalMc.local_phone === '' ? null : finalMc.local_phone);
+    const finalVisibleEmail = (finalMc.local_email == null) ? finalEndUser.email : (finalMc.local_email === '' ? null : finalMc.local_email);
+    const finalVisiblePhone = (finalMc.local_phone == null) ? finalEndUser.phone : (finalMc.local_phone === '' ? null : finalMc.local_phone);
 
     const otherMerchantCount = db.prepare(
       'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
