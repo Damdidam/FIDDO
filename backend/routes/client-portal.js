@@ -174,6 +174,12 @@ router.post('/verify', (req, res) => {
     // Clear magic token (one-time use)
     endUserQueries.clearMagicToken.run(endUser.id);
 
+    // Magic link clicked = email ownership proved → validate
+    if (!endUser.email_validated) {
+      db.prepare("UPDATE end_users SET email_validated = 1, consent_date = COALESCE(consent_date, datetime('now')), consent_method = COALESCE(consent_method, 'magic_link'), updated_at = datetime('now') WHERE id = ?")
+        .run(endUser.id);
+    }
+
     // Generate JWT
     const clientToken = generateClientToken(endUser.id);
 
