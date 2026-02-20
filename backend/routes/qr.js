@@ -693,6 +693,28 @@ router.post('/identify', (req, res) => {
 
 
 // ═══════════════════════════════════════════════════════
+// TEMPORARY DIAGNOSTIC — DELETE AFTER DEBUGGING
+// ═══════════════════════════════════════════════════════
+router.get('/debug-lookup/:token', (req, res) => {
+  try {
+    const { token } = req.params;
+    // Raw query WITHOUT deleted_at filter
+    const raw = db.prepare('SELECT id, name, email, phone, qr_token, deleted_at, created_at FROM end_users WHERE qr_token = ?').get(token);
+    // Query WITH deleted_at filter (the normal one)
+    const filtered = endUserQueries.findByQrToken.get(token);
+    res.json({
+      _debug: 'TEMPORARY — delete after fix',
+      qr_version: 'hotfix-2026-02-20',
+      tokenSearched: token,
+      rawResult: raw || null,
+      filteredResult: filtered ? { id: filtered.id, name: filtered.name, email: filtered.email, deleted_at: filtered.deleted_at } : null,
+    });
+  } catch (error) {
+    res.json({ error: error.message });
+  }
+});
+
+// ═══════════════════════════════════════════════════════
 // GET /api/qr/client-lookup/:token — Staff scans client QR
 // Looks up end_user by qr_token, returns client info for credit form
 // ═══════════════════════════════════════════════════════
@@ -703,6 +725,7 @@ router.get('/client-lookup/:token', authenticateStaff, (req, res) => {
     const merchantId = req.staff.merchant_id;
 
     const endUser = endUserQueries.findByQrToken.get(token);
+    console.log('[DEBUG client-lookup] token:', token, '→ endUser:', endUser ? { id: endUser.id, name: endUser.name, email: endUser.email, deleted_at: endUser.deleted_at } : 'NULL');
     if (!endUser) {
       return res.status(404).json({ error: 'Client non trouvé' });
     }
