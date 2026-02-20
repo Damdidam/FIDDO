@@ -256,7 +256,7 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const mcId = parseInt(req.params.id);
-    const { name, email, phone } = req.body;
+    const { name, email, phone, confirmMerge } = req.body;
 
     const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
     if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
@@ -282,16 +282,142 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
 
     if (!newEmailLower && !newPhoneE164) return res.status(400).json({ error: 'Au moins un email ou téléphone requis' });
 
+    // ── Conflict detection (may find 2 different users) ──
+    const conflicts = []; // { field, user, mc }
+
     if (newEmailLower && newEmailLower !== endUser.email_lower) {
-      const existing = endUserQueries.findByEmailLower.get(newEmailLower);
-      if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Cet email est déjà utilisé par un autre client' });
+      let found = endUserQueries.findByEmailLower.get(newEmailLower);
+      if (!found) {
+        const can = canonicalizeEmail(newEmailLower);
+        if (can && can !== newEmailLower) found = endUserQueries.findByCanonicalEmail.get(can);
+      }
+      if (found && found.id !== endUser.id) {
+        conflicts.push({ field: 'email', user: found, mc: merchantClientQueries.find.get(merchantId, found.id) });
+      }
     }
     if (newPhoneE164 && newPhoneE164 !== endUser.phone_e164) {
-      const existing = endUserQueries.findByPhoneE164.get(newPhoneE164);
-      if (existing && existing.id !== endUser.id) return res.status(400).json({ error: 'Ce téléphone est déjà utilisé par un autre client' });
+      const found = endUserQueries.findByPhoneE164.get(newPhoneE164);
+      if (found && found.id !== endUser.id && !conflicts.some(c => c.user.id === found.id)) {
+        conflicts.push({ field: 'phone', user: found, mc: merchantClientQueries.find.get(merchantId, found.id) });
+      }
     }
 
-    // ── FIX: null-safe trim ──
+    // ── Conflicts found: suggest merge or execute ──
+    if (conflicts.length > 0) {
+      if (!confirmMerge) {
+        return res.status(409).json({
+          conflict: true,
+          conflicts: conflicts.map(c => ({
+            field: c.field,
+            name: c.user.name, email: c.user.email, phone: c.user.phone,
+            points: c.mc ? c.mc.points_balance : 0,
+            visits: c.mc ? c.mc.visit_count : 0,
+            hasLocalCard: !!c.mc
+          })),
+          current: {
+            name: endUser.name, email: endUser.email, phone: endUser.phone,
+            points: mc.points_balance, visits: mc.visit_count
+          }
+        });
+      }
+
+      // ── confirmMerge: true → Execute global merge for ALL conflict users ──
+      db.transaction(() => {
+        const targetId = endUser.id;
+
+        for (const conflict of conflicts) {
+          const sourceId = conflict.user.id;
+          // Re-check source still exists (not already merged if same user appeared twice)
+          const sourceCheck = endUserQueries.findById.get(sourceId);
+          if (!sourceCheck) continue;
+
+          // 1. Transfer merchant_clients from source → target
+          const sourceMcs = db.prepare('SELECT * FROM merchant_clients WHERE end_user_id = ?').all(sourceId);
+          for (const sMc of sourceMcs) {
+            const targetMc = merchantClientQueries.find.get(sMc.merchant_id, targetId);
+            if (targetMc) {
+              merchantClientQueries.mergeStats.run(sMc.points_balance, sMc.total_spent, sMc.visit_count, sMc.first_visit, sMc.last_visit, targetMc.id);
+              transactionQueries.reassignClient.run(targetMc.id, sMc.id);
+              voucherQueries.reassignSender.run(targetMc.id, sMc.id);
+              voucherQueries.reassignClaimer.run(targetMc.id, sMc.id);
+              merchantClientQueries.delete.run(sMc.id);
+            } else {
+              db.prepare('UPDATE merchant_clients SET end_user_id = ? WHERE id = ?').run(targetId, sMc.id);
+            }
+          }
+
+          // 2. Transfer aliases
+          const sourceAliases = db.prepare('SELECT * FROM end_user_aliases WHERE end_user_id = ?').all(sourceId);
+          for (const a of sourceAliases) {
+            try { aliasQueries.create.run(targetId, a.alias_type, a.alias_value); } catch (e) { /* dup */ }
+          }
+          aliasQueries.deleteByUser.run(sourceId);
+
+          // 3. Preserve source identifiers as aliases
+          if (conflict.user.email_lower) {
+            try { aliasQueries.create.run(targetId, 'email', conflict.user.email_lower); } catch (e) { /* dup */ }
+          }
+          if (conflict.user.phone_e164) {
+            try { aliasQueries.create.run(targetId, 'phone', conflict.user.phone_e164); } catch (e) { /* dup */ }
+          }
+
+          // 4. Enrich target with missing data
+          if (!endUser.name && conflict.user.name) {
+            db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(conflict.user.name, targetId);
+          }
+          if (!endUser.pin_hash && conflict.user.pin_hash) {
+            db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?").run(conflict.user.pin_hash, targetId);
+          }
+
+          // 5. Soft-delete source
+          endUserQueries.softDelete.run(sourceId);
+
+          // 6. Audit
+          logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'end_users_merged', targetType: 'end_user', targetId,
+            details: { sourceId, targetId, conflictField: conflict.field, sourceName: conflict.user.name || conflict.user.email || conflict.user.phone } });
+        }
+      })();
+
+      // Apply the originally requested edit after all merges
+      let updatedEndUser = endUserQueries.findById.get(endUser.id);
+
+      const postMergeName = name !== undefined ? ((name || '').trim() || null) : updatedEndUser.name;
+      const postMergeEmail = email !== undefined ? ((email || '').trim() || null) : updatedEndUser.email;
+      const postMergePhone = phone !== undefined ? ((phone || '').trim() || null) : updatedEndUser.phone;
+      const postMergeEmailLower = postMergeEmail ? normalizeEmail(postMergeEmail) : null;
+      const postMergePhoneE164 = postMergePhone ? normalizePhone(postMergePhone) : null;
+      const postMergeCanonical = postMergeEmailLower ? canonicalizeEmail(postMergeEmailLower) : null;
+
+      // Save old identifiers as aliases before overwriting
+      if (updatedEndUser.email_lower && postMergeEmailLower !== updatedEndUser.email_lower) {
+        try { aliasQueries.create.run(updatedEndUser.id, 'email', updatedEndUser.email_lower); } catch (e) { /* dup */ }
+      }
+      if (updatedEndUser.phone_e164 && postMergePhoneE164 !== updatedEndUser.phone_e164) {
+        try { aliasQueries.create.run(updatedEndUser.id, 'phone', updatedEndUser.phone_e164); } catch (e) { /* dup */ }
+      }
+
+      endUserQueries.updateIdentifiers.run(
+        postMergeEmail, postMergePhone,
+        postMergeEmailLower, postMergePhoneE164,
+        postMergeEmailLower ? 1 : updatedEndUser.email_validated,
+        postMergeCanonical, updatedEndUser.id
+      );
+      if (name !== undefined) {
+        db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(postMergeName, updatedEndUser.id);
+      }
+
+      updatedEndUser = endUserQueries.findById.get(endUser.id);
+      const updatedMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+
+      const mergedCount = conflicts.length;
+      return res.json({
+        message: `${mergedCount} client${mergedCount > 1 ? 's' : ''} fusionné${mergedCount > 1 ? 's' : ''}. ${updatedMc.points_balance} points au total.`,
+        merged: true,
+        client: { name: updatedEndUser.name, email: updatedEndUser.email, phone: updatedEndUser.phone }
+      });
+    }
+
+    // ── No conflict: normal edit ──
     const newName = name !== undefined ? ((name || '').trim() || null) : endUser.name;
     const newEmail = email !== undefined ? ((email || '').trim() || null) : endUser.email;
     const newPhone = phone !== undefined ? ((phone || '').trim() || null) : endUser.phone;

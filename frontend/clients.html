@@ -706,14 +706,55 @@
 
  function toggleEditForm() { const el = document.getElementById('edit-section'); if (el) el.classList.toggle('show'); }
 
- async function saveEdit() {
+ async function saveEdit(mergeConfirmed = false) {
  try {
  const name = document.getElementById('edit-name').value.trim();
  const email = document.getElementById('edit-email').value.trim();
  const phone = document.getElementById('edit-phone').value.trim();
  if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
- await API.call('/clients/' + currentClientId + '/edit', { method: 'PUT', body: JSON.stringify({ name: name || null, email: email || null, phone: phone || null }) });
+ const body = { name: name || null, email: email || null, phone: phone || null };
+ if (mergeConfirmed) body.confirmMerge = true;
+
+ const response = await fetch(`${API_BASE_URL}/clients/${currentClientId}/edit`, {
+ method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
+ body: JSON.stringify(body)
+ });
+ const data = await response.json();
+
+ // ── Conflict: suggest merge ──
+ if (response.status === 409 && data.conflict) {
+ const c = data.current;
+ const currentLabel = c.name || c.email || c.phone || 'Client actuel';
+ let totalPts = c.points;
+
+ let msg = 'Les identifiants saisis appartiennent à d\'autres clients :\n\n';
+ msg += `📋 Client actuel : ${currentLabel}\n   → ${c.points} pts · ${c.visits} visite(s)\n\n`;
+
+ for (const o of data.conflicts) {
+ const otherLabel = o.name || o.email || o.phone || 'Client';
+ const fieldLabel = o.field === 'email' ? 'Email' : 'Téléphone';
+ msg += `⚠️ ${fieldLabel} → ${otherLabel}\n   → ${o.points} pts · ${o.visits} visite(s)\n\n`;
+ totalPts += o.points;
+ }
+
+ msg += `Fusionner ${data.conflicts.length > 1 ? 'les ' + (data.conflicts.length + 1) + ' fiches' : 'les deux fiches'} ?\n`;
+ msg += `Les points et l'historique seront combinés (${totalPts} pts au total).`;
+
+ if (confirm(msg)) {
+ await saveEdit(true);
+ }
+ return;
+ }
+
+ if (!response.ok) throw new Error(data.error || 'Erreur');
+
+ // Success (normal edit or merge)
+ if (data.merged) {
+ UI.showAlert('edit-alert', data.message, 'success');
+ setTimeout(() => { closeDetail(); loadClients(); }, 1500);
+ } else {
  closeDetail(); loadClients();
+ }
  } catch (err) { UI.showAlert('edit-alert', err.message, 'error'); }
  }
 
