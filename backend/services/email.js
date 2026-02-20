@@ -247,6 +247,7 @@ function sendValidationEmail(clientEmail, validationToken, businessName) {
       <p>Vous êtes inscrit(e) à notre programme de fidélité. Cliquez ci-dessous pour valider votre adresse email :</p>
       ${cta('Valider mon compte', url)}
       <p style="font-size:12px;color:${B.light};word-break:break-all;">${url}</p>
+      <p style="font-size:12px;color:${B.light};">Après validation, retrouvez toutes vos cartes de fidélité sur <a href="https://www.fiddo.be/app/" style="color:${B.teal};">l'app FIDDO</a>.</p>
     `),
   });
 }
@@ -264,6 +265,8 @@ function sendPointsCreditedEmail(clientEmail, pointsEarned, newBalance, business
       ${bigNum('+' + pointsEarned, 'points gagnés')}
       <p style="text-align:center;font-size:13px;color:${B.muted};">Nouveau solde : <strong style="color:${B.navy};">${newBalance} points</strong></p>
       ${progressBar(newBalance, merchantSettings.points_for_reward, merchantSettings.reward_description)}
+      ${cta('Voir mes cartes fidélité', 'https://www.fiddo.be/app/')}
+      <p style="font-size:12px;color:${B.light};text-align:center;">Suivez vos points et récompenses en temps réel depuis l'app FIDDO.</p>
     `),
   });
 }
@@ -364,6 +367,7 @@ function sendPinChangedEmail(clientEmail, businessName) {
       <p>Votre code PIN pour <strong>${escHtml(businessName)}</strong> a été mis à jour.</p>
       ${warnBox('Si vous n\'êtes pas à l\'origine de ce changement, contactez le commerce immédiatement.')}
       <p style="font-size:13px;color:${B.light};">Ce code est utilisé pour réclamer vos récompenses. Ne le partagez avec personne.</p>
+      ${cta('Voir mes cartes fidélité', 'https://www.fiddo.be/app/')}
     `),
   });
 }
