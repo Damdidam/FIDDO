@@ -8,7 +8,7 @@ const {
   merchantQueries,
   transactionQueries,
 } = require('../database');
-const { normalizeEmail, normalizePhone } = require('./normalizer');
+const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('./normalizer');
 const { pushPointsCredited, pushRewardAvailable, pushRewardRedeemed } = require('./push');
 
 // ═══════════════════════════════════════════════════════
@@ -18,6 +18,7 @@ const { pushPointsCredited, pushRewardAvailable, pushRewardRedeemed } = require(
 
 function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
   const emailLower = normalizeEmail(email);
+  const emailCanonical = canonicalizeEmail(email);
   const phoneE164 = normalizePhone(phone);
 
   if (!emailLower && !phoneE164) {
@@ -32,6 +33,12 @@ function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
   }
   if (!endUser && phoneE164) {
     endUser = endUserQueries.findByPhoneE164.get(phoneE164);
+  }
+
+  // ── Step 1b: Gmail dedup — canonical email lookup ──
+  // hakim.abbes+75@gmail.com matches hakim.abbes@gmail.com
+  if (!endUser && emailCanonical && emailCanonical !== emailLower) {
+    endUser = endUserQueries.findByCanonicalEmail.get(emailCanonical);
   }
 
   if (endUser) {
@@ -66,6 +73,11 @@ function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
   );
 
   endUser = endUserQueries.findById.get(result.lastInsertRowid);
+
+  // Store canonical email for future dedup
+  if (endUser && emailCanonical) {
+    db.prepare("UPDATE end_users SET email_canonical = ? WHERE id = ?").run(emailCanonical, endUser.id);
+  }
 
   // Generate unique QR token for client portal
   if (endUser) {

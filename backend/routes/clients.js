@@ -5,7 +5,7 @@ const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
 const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail, sendEmailAddedEmail } = require('../services/email');
-const { normalizeEmail, normalizePhone } = require('../services/normalizer');
+const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('../services/normalizer');
 const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
 const router = express.Router();
@@ -301,7 +301,9 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const emailAdded = emailChanged && !endUser.email_lower && newEmailLower;
     const keepValidated = emailAdded ? 1 : (emailChanged ? 0 : endUser.email_validated);
 
-    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, endUser.id);
+    const newEmailCanonical = newEmailLower ? canonicalizeEmail(newEmailLower) : null;
+
+    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, newEmailCanonical, endUser.id);
     if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
 
     // If email was just added → auto-validate + set consent + send dedicated email with magic link
@@ -621,6 +623,8 @@ router.get('/lookup', (req, res) => {
     let endUser = null;
     if (emailLower) endUser = endUserQueries.findByEmailLower.get(emailLower);
     if (!endUser && phoneE164) endUser = endUserQueries.findByPhoneE164.get(phoneE164);
+    // Gmail dedup: hakim.abbes+75@gmail.com → hakimabbes@gmail.com
+    if (!endUser && emailLower) { const can = canonicalizeEmail(emailLower); if (can && can !== emailLower) endUser = endUserQueries.findByCanonicalEmail.get(can); }
     if (!endUser && emailLower) { const a = aliasQueries.findByValue.get(emailLower); if (a) endUser = endUserQueries.findById.get(a.end_user_id); }
     if (!endUser && phoneE164) { const a = aliasQueries.findByValue.get(phoneE164); if (a) endUser = endUserQueries.findById.get(a.end_user_id); }
     if (!endUser) return res.json({ found: false });

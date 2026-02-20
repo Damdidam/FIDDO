@@ -241,6 +241,8 @@ function initDatabase() {
   try { db.exec('ALTER TABLE end_users ADD COLUMN first_merchant_id INTEGER'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE end_users ADD COLUMN date_of_birth TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE end_users ADD COLUMN marketing_optout INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE end_users ADD COLUMN email_canonical TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('CREATE INDEX IF NOT EXISTS idx_end_users_email_canonical ON end_users(email_canonical)'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN birthday_gift_enabled INTEGER NOT NULL DEFAULT 0'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN birthday_gift_description TEXT'); } catch (e) { /* already exists */ }
 
@@ -470,6 +472,29 @@ initDatabase();
   console.log('✅ Database V4 migration complete');
 })();
 
+// ── Backfill email_canonical for existing users ──
+(() => {
+  const unfilled = db.prepare("SELECT id, email_lower FROM end_users WHERE email_lower IS NOT NULL AND email_canonical IS NULL").all();
+  if (unfilled.length > 0) {
+    const update = db.prepare("UPDATE end_users SET email_canonical = ? WHERE id = ?");
+    const canonicalize = (email) => {
+      if (!email) return null;
+      const [local, domain] = email.split('@');
+      if (domain === 'gmail.com' || domain === 'googlemail.com') {
+        return local.split('+')[0].replace(/\./g, '') + '@gmail.com';
+      }
+      return email;
+    };
+    const tx = db.transaction(() => {
+      for (const u of unfilled) {
+        update.run(canonicalize(u.email_lower), u.id);
+      }
+    });
+    tx();
+    console.log(`✅ Backfilled email_canonical for ${unfilled.length} users`);
+  }
+})();
+
 
 // ═══════════════════════════════════════════════════════
 // PREPARED STATEMENTS
@@ -558,6 +583,7 @@ const endUserQueries = {
   `),
   findById:         db.prepare('SELECT * FROM end_users WHERE id = ? AND deleted_at IS NULL'),
   findByEmailLower: db.prepare('SELECT * FROM end_users WHERE email_lower = ? AND deleted_at IS NULL'),
+  findByCanonicalEmail: db.prepare('SELECT * FROM end_users WHERE email_canonical = ? AND deleted_at IS NULL'),
   findByPhoneE164:  db.prepare('SELECT * FROM end_users WHERE phone_e164 = ? AND deleted_at IS NULL'),
 
   validateEmail: db.prepare(`
@@ -589,7 +615,7 @@ const endUserQueries = {
   updateIdentifiers: db.prepare(`
     UPDATE end_users
     SET email = ?, phone = ?, email_lower = ?, phone_e164 = ?,
-        email_validated = ?,
+        email_validated = ?, email_canonical = ?,
         updated_at = datetime('now')
     WHERE id = ?
   `),

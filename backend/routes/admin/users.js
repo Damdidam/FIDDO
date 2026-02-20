@@ -3,6 +3,7 @@ const { db, endUserQueries, aliasQueries, merchantClientQueries, transactionQuer
 const { authenticateAdmin } = require('../../middleware/admin-auth');
 const { logAudit, auditCtx } = require('../../middleware/audit');
 const { sendGlobalMergeNotificationEmail } = require('../../services/email');
+const { canonicalizeEmail } = require('../../services/normalizer');
 
 const router = express.Router();
 router.use(authenticateAdmin);
@@ -286,8 +287,8 @@ router.post('/:id/merge', (req, res) => {
       if (!target.email && source.email) {
         const conflict = db.prepare("SELECT id FROM end_users WHERE email_lower = ? AND id != ? AND deleted_at IS NULL").get(source.email_lower, targetId);
         if (!conflict) {
-          db.prepare("UPDATE end_users SET email = ?, email_lower = ?, updated_at = datetime('now') WHERE id = ?")
-            .run(source.email, source.email_lower, targetId);
+          db.prepare("UPDATE end_users SET email = ?, email_lower = ?, email_canonical = ?, updated_at = datetime('now') WHERE id = ?")
+            .run(source.email, source.email_lower, canonicalizeEmail(source.email_lower), targetId);
         }
       }
       if (!target.phone && source.phone) {

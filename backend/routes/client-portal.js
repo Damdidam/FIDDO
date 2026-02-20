@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 const { db, endUserQueries, merchantClientQueries, merchantQueries, pollQueries } = require('../database');
-const { normalizeEmail, normalizePhone } = require('../services/normalizer');
+const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('../services/normalizer');
 const { sendMagicLinkEmail, sendAccountDeletedEmail } = require('../services/email');
 const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
 
@@ -67,13 +67,22 @@ router.post('/login', (req, res) => {
     // Always respond OK to prevent account enumeration
     let endUser = endUserQueries.findByEmailLower.get(emailLower);
 
+    // Gmail dedup: hakim.abbes+75@gmail.com → hakimabbes@gmail.com
+    if (!endUser) {
+      const canonical = canonicalizeEmail(emailLower);
+      if (canonical && canonical !== emailLower) {
+        endUser = endUserQueries.findByCanonicalEmail.get(canonical);
+      }
+    }
+
     // Auto-create account if new user
     if (!endUser) {
       const qrToken = crypto.randomBytes(8).toString('base64url');
+      const emailCanonical = canonicalizeEmail(emailLower);
       const result = db.prepare(`
-        INSERT INTO end_users (email, email_lower, email_validated, qr_token, created_at, updated_at)
-        VALUES (?, ?, 0, ?, datetime('now'), datetime('now'))
-      `).run(email.trim(), emailLower, qrToken);
+        INSERT INTO end_users (email, email_lower, email_canonical, email_validated, qr_token, created_at, updated_at)
+        VALUES (?, ?, ?, 0, ?, datetime('now'), datetime('now'))
+      `).run(email.trim(), emailLower, emailCanonical, qrToken);
       endUser = endUserQueries.findById.get(result.lastInsertRowid);
     }
 
@@ -490,8 +499,8 @@ router.put('/email', authenticateClient, async (req, res) => {
     }
 
     db.prepare(`
-      UPDATE end_users SET email = ?, email_lower = ?, updated_at = datetime('now') WHERE id = ?
-    `).run(newEmail.trim(), emailLower, endUser.id);
+      UPDATE end_users SET email = ?, email_lower = ?, email_canonical = ?, updated_at = datetime('now') WHERE id = ?
+    `).run(newEmail.trim(), emailLower, canonicalizeEmail(emailLower), endUser.id);
 
     res.json({ ok: true, email: newEmail.trim() });
   } catch (error) {

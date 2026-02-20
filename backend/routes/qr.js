@@ -7,7 +7,7 @@ const router = express.Router();
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { generateClientToken, verifyClientToken } = require('../middleware/client-auth');
 const { db, merchantQueries, endUserQueries, merchantClientQueries, aliasQueries } = require('../database');
-const { normalizeEmail, normalizePhone } = require('../services/normalizer');
+const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('../services/normalizer');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { sendWelcomeEmail } = require('../services/email');
 
@@ -171,6 +171,13 @@ function findEndUser(emailLower, phoneE164) {
   }
   if (!endUser && phoneE164) {
     endUser = endUserQueries.findByPhoneE164.get(phoneE164);
+  }
+  // Gmail dedup: hakim.abbes+75@gmail.com → hakimabbes@gmail.com
+  if (!endUser && emailLower) {
+    const canonical = canonicalizeEmail(emailLower);
+    if (canonical && canonical !== emailLower) {
+      endUser = endUserQueries.findByCanonicalEmail.get(canonical);
+    }
   }
   if (!endUser && emailLower) {
     const alias = aliasQueries.findByValue.get(emailLower);
@@ -559,8 +566,10 @@ router.post('/register', (req, res) => {
       if (result.lastInsertRowid) {
         endUserQueries.setQrToken.run(qrToken2, result.lastInsertRowid);
         // Implicit consent: user provided their own email → validated
-        db.prepare("UPDATE end_users SET email_validated = 1, consent_date = datetime('now'), consent_method = 'qr_landing', first_merchant_id = ? WHERE id = ?")
-          .run(merchant.id, result.lastInsertRowid);
+        // Also store canonical email for Gmail dedup
+        const emailCan = canonicalizeEmail(emailLower);
+        db.prepare("UPDATE end_users SET email_validated = 1, email_canonical = ?, consent_date = datetime('now'), consent_method = 'qr_landing', first_merchant_id = ? WHERE id = ?")
+          .run(emailCan, merchant.id, result.lastInsertRowid);
         existing = endUserQueries.findById.get(result.lastInsertRowid);
       }
     }
