@@ -528,6 +528,50 @@ function sendEmailAddedEmail(clientEmail, merchantName, pointsBalance, visitCoun
   });
 }
 
+function sendMergeNotificationEmail(clientEmail, merchantName, mergedIdentifiers, totalPoints, appUrl, endUserId) {
+  const hero = totalPoints > 0
+    ? bigNum(totalPoints, 'points au total chez ' + escHtml(merchantName))
+    : bigNum('✓', 'Compte unifié chez ' + escHtml(merchantName));
+
+  // Build the "your identifiers" list
+  let identifiersHtml = '';
+  if (mergedIdentifiers.email) {
+    identifiersHtml += `<p style="margin:4px 0;">📧 Email : <strong>${escHtml(mergedIdentifiers.email)}</strong></p>`;
+  }
+  if (mergedIdentifiers.phone) {
+    identifiersHtml += `<p style="margin:4px 0;">📱 Téléphone : <strong>${escHtml(mergedIdentifiers.phone)}</strong></p>`;
+  }
+
+  // Build absorbed accounts description
+  let absorbedHtml = '';
+  if (mergedIdentifiers.absorbed && mergedIdentifiers.absorbed.length > 0) {
+    const labels = mergedIdentifiers.absorbed.map(a => `<strong>${escHtml(a)}</strong>`).join(', ');
+    absorbedHtml = `<p>Le${mergedIdentifiers.absorbed.length > 1 ? 's' : ''} compte${mergedIdentifiers.absorbed.length > 1 ? 's' : ''} ${labels} ${mergedIdentifiers.absorbed.length > 1 ? 'ont été fusionnés' : 'a été fusionné'} avec votre compte principal.</p>`;
+  }
+
+  const unsubUrl = endUserId ? buildUnsubUrl(endUserId) : null;
+
+  sendMail({
+    to: clientEmail,
+    subject: `Vos comptes fidélité ont été regroupés — ${merchantName}`,
+    headers: unsubUrl ? { 'List-Unsubscribe': `<${unsubUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : {},
+    html: template(`
+      ${heading('Vos comptes ont été regroupés')}
+      <p>Bonne nouvelle ! Chez <strong>${escHtml(merchantName)}</strong>, nous avons regroupé vos comptes fidélité pour simplifier votre expérience.</p>
+      ${absorbedHtml}
+      ${hero}
+      <div style="background:${B.bg};border-radius:8px;padding:16px;margin:20px 0;">
+        <p style="margin:0 0 8px 0;font-weight:600;color:${B.dark};">Vos coordonnées :</p>
+        ${identifiersHtml}
+      </div>
+      <p>Tous vos points et votre historique de visites ont été conservés. Rien n'est perdu !</p>
+      <p>Vous pouvez vous identifier avec n'importe lequel de ces identifiants lors de vos prochaines visites.</p>
+      ${cta('Voir mes cartes fidélité', appUrl || 'https://www.fiddo.be/app/')}
+      <p style="font-size:12px;color:${B.light};text-align:center;">Suivez vos points et récompenses en temps réel depuis l'app FIDDO.</p>
+    `, unsubUrl),
+  });
+}
+
 module.exports = {
   sendMail,
   escHtml,
@@ -545,5 +589,6 @@ module.exports = {
   sendAppReminderEmail,
   sendAccountDeletedEmail,
   sendEmailAddedEmail,
+  sendMergeNotificationEmail,
   verifyUnsubToken,
 };

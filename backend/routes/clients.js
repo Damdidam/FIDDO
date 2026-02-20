@@ -4,7 +4,7 @@ const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQ
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail, sendEmailAddedEmail } = require('../services/email');
+const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail, sendEmailAddedEmail, sendMergeNotificationEmail } = require('../services/email');
 const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('../services/normalizer');
 const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
@@ -467,6 +467,24 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
         const freshMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
         sendEmailAddedEmail(newGlobalEmail, merchant.business_name, freshMc.points_balance || 0, freshMc.visit_count || 0, magicUrl, freshEndUser.id);
       }
+
+      // Send merge notification email to the client (if merge happened and client has email)
+      if (confirmMerge && conflicts.length > 0) {
+        const mergedUser = endUserQueries.findById.get(endUser.id);
+        const mergedMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+        if (mergedUser.email && mergedUser.email_validated) {
+          const merchant = merchantQueries.findById.get(merchantId);
+          const absorbed = conflicts.map(c => c.user.name || c.user.email || c.user.phone).filter(Boolean);
+          sendMergeNotificationEmail(
+            mergedUser.email,
+            merchant.business_name,
+            { email: mergedUser.email, phone: mergedUser.phone, absorbed },
+            mergedMc.points_balance || 0,
+            'https://www.fiddo.be/app/',
+            mergedUser.id
+          );
+        }
+      }
     }
 
     // ═══ STEP 3: Handle name change (always global) ═══
@@ -635,7 +653,27 @@ router.post('/:id/merge', requireRole('owner'), (req, res) => {
       return merchantClientQueries.findById.get(targetMcId);
     });
 
+    // Get source info before merge (will be soft-deleted after)
+    const preSourceMc = merchantClientQueries.findByIdAndMerchant.get(sourceMcId, merchantId);
+    const preSourceEu = preSourceMc ? endUserQueries.findById.get(preSourceMc.end_user_id) : null;
+    const sourceLabel = preSourceEu ? (preSourceEu.name || preSourceEu.email || preSourceEu.phone) : '#' + sourceMcId;
+
     const updated = run();
+
+    // Send merge notification email to the client
+    const targetEu = endUserQueries.findById.get(updated.end_user_id);
+    if (targetEu && targetEu.email && targetEu.email_validated) {
+      const merchant = merchantQueries.findById.get(merchantId);
+      sendMergeNotificationEmail(
+        targetEu.email,
+        merchant.business_name,
+        { email: targetEu.email, phone: targetEu.phone, absorbed: [sourceLabel] },
+        updated.points_balance || 0,
+        'https://www.fiddo.be/app/',
+        targetEu.id
+      );
+    }
+
     res.json({ message: 'Clients fusionnés avec succès', client: updated });
   } catch (error) {
     console.error('Erreur merge:', error);
