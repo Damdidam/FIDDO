@@ -425,7 +425,17 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     // Email added for first time (phone-only → now has email) vs email changed (one email → another)
     const emailChanged = newEmailLower && newEmailLower !== endUser.email_lower;
     const emailAdded = emailChanged && !endUser.email_lower && newEmailLower;
+    const phoneReplaced = endUser.phone_e164 && newPhoneE164 && newPhoneE164 !== endUser.phone_e164;
+    const emailReplaced = endUser.email_lower && newEmailLower && newEmailLower !== endUser.email_lower;
     const keepValidated = emailAdded ? 1 : (emailChanged ? 0 : endUser.email_validated);
+
+    // Save replaced (not removed) identifiers as aliases for cross-merchant lookup
+    if (emailReplaced) {
+      try { aliasQueries.create.run(endUser.id, 'email', endUser.email_lower); } catch (e) { /* dup */ }
+    }
+    if (phoneReplaced) {
+      try { aliasQueries.create.run(endUser.id, 'phone', endUser.phone_e164); } catch (e) { /* dup */ }
+    }
 
     const newEmailCanonical = newEmailLower ? canonicalizeEmail(newEmailLower) : null;
 
