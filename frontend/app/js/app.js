@@ -1211,6 +1211,8 @@ const App = (() => {
  const pts = res.data.pointsBalance != null ? ` (${res.data.pointsBalance} pts)` : '';
  toast(`${name} identifié${pts}`);
  }
+ // Switch to cards tab — client is identified, nothing more to scan
+ switchTab('cards');
  setTimeout(() => refreshCards(), 1500);
  } else {
  toast(res.data?.error || 'Erreur identification');
