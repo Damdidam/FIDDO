@@ -4,7 +4,7 @@ const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQ
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
+const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail, sendEmailAddedEmail } = require('../services/email');
 const { normalizeEmail, normalizePhone } = require('../services/normalizer');
 const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
@@ -296,12 +296,25 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const newEmail = email !== undefined ? ((email || '').trim() || null) : endUser.email;
     const newPhone = phone !== undefined ? ((phone || '').trim() || null) : endUser.phone;
 
-    // Reset email_validated if email actually changed
+    // Email added for first time (phone-only → now has email) vs email changed (one email → another)
     const emailChanged = newEmailLower && newEmailLower !== endUser.email_lower;
-    const keepValidated = emailChanged ? 0 : endUser.email_validated;
+    const emailAdded = emailChanged && !endUser.email_lower && newEmailLower;
+    const keepValidated = emailAdded ? 1 : (emailChanged ? 0 : endUser.email_validated);
 
     endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, endUser.id);
     if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
+
+    // If email was just added → auto-validate + set consent + send dedicated email with magic link
+    if (emailAdded) {
+      db.prepare("UPDATE end_users SET consent_date = datetime('now'), consent_method = 'merchant_edit', updated_at = datetime('now') WHERE id = ?").run(endUser.id);
+      // Generate magic link for instant app access
+      const magicToken = require('crypto').randomBytes(32).toString('hex');
+      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h for first access
+      endUserQueries.setMagicToken.run(magicToken, expires, endUser.id);
+      const magicUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/me/verify/' + magicToken;
+      const merchant = merchantQueries.findById.get(merchantId);
+      sendEmailAddedEmail(newEmail, merchant.business_name, mc.points_balance || 0, mc.visit_count || 0, magicUrl, endUser.id);
+    }
 
     // ── Audit with cross-merchant impact tracking ──
     const otherMerchantCount = db.prepare(

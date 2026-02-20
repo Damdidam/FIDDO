@@ -494,6 +494,36 @@ function sendAccountDeletedEmail(clientEmail) {
   });
 }
 
+/**
+ * 14. Email ajouté par le marchand (client phone-only → a maintenant un email)
+ */
+function sendEmailAddedEmail(clientEmail, merchantName, pointsBalance, visitCount, magicUrl, endUserId) {
+  const hero = pointsBalance > 0
+    ? bigNum(pointsBalance, 'points chez ' + escHtml(merchantName))
+    : bigNum('✓', 'Carte activée chez ' + escHtml(merchantName));
+
+  const visits = visitCount > 0
+    ? `<p>Vous avez déjà <strong>${visitCount} visite${visitCount > 1 ? 's' : ''}</strong> enregistrée${visitCount > 1 ? 's' : ''}.</p>`
+    : '';
+
+  const unsubUrl = endUserId ? buildUnsubUrl(endUserId) : null;
+
+  sendMail({
+    to: clientEmail,
+    subject: `Votre espace fidélité chez ${merchantName} — FIDDO`,
+    headers: unsubUrl ? { 'List-Unsubscribe': `<${unsubUrl}>`, 'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click' } : {},
+    html: template(`
+      ${heading('Bonne nouvelle !')}
+      <p><strong>${escHtml(merchantName)}</strong> vous a ajouté au programme de fidélité FIDDO. Vous cumulez des points à chaque visite et débloquez des récompenses exclusives.</p>
+      ${hero}
+      ${visits}
+      <p>Accédez à votre espace pour suivre vos points, consulter vos récompenses et vous identifier plus rapidement lors de vos prochaines visites :</p>
+      ${cta('Accéder à mon espace fidélité', magicUrl)}
+      <p style="font-size:12px;color:${B.light};">Ce lien est valable 24 heures. Vous pourrez ensuite vous connecter avec votre adresse email depuis l'app FIDDO.</p>
+    `, unsubUrl),
+  });
+}
+
 module.exports = {
   sendMail,
   escHtml,
@@ -510,5 +540,6 @@ module.exports = {
   sendWelcomeEmail,
   sendAppReminderEmail,
   sendAccountDeletedEmail,
+  sendEmailAddedEmail,
   verifyUnsubToken,
 };

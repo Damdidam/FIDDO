@@ -74,6 +74,13 @@ function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
     endUser = endUserQueries.findById.get(endUser.id);
   }
 
+  // Auto-validate email — client is physically present at the merchant counter
+  if (endUser && emailLower) {
+    db.prepare("UPDATE end_users SET email_validated = 1, consent_date = datetime('now'), consent_method = 'merchant_credit', updated_at = datetime('now') WHERE id = ?")
+      .run(endUser.id);
+    endUser = endUserQueries.findById.get(endUser.id);
+  }
+
   // Set PIN if provided (new client only)
   if (pinHash && endUser) {
     endUserQueries.setPin.run(pinHash, endUser.id);

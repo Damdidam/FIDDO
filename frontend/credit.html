@@ -522,6 +522,14 @@
  <div class="form-hint">+32…, 0032…, 04…</div>
  <span class="field-error-msg" id="error-client-phone"></span>
  <div class="lookup-strip" id="lookup-phone"></div>
+ <div id="new-pin-wrap" style="display:none; margin-top:0.5rem;">
+ <label class="form-label" style="color:#0891B2;">Code PIN (4 chiffres) *</label>
+ <div style="font-size:0.72rem;color:#64748B;margin-bottom:0.3rem;">Demandez au client de choisir un code pour protéger ses récompenses</div>
+ <div class="input-wrap">
+ <input type="tel" id="new-pin" class="form-control" placeholder="• • • •" maxlength="4" pattern="\d{4}" inputmode="numeric" autocomplete="off" data-lpignore="true" data-1p-ignore data-form-type="other" style="text-align:center;letter-spacing:8px;font-size:1.2rem;font-weight:700;">
+ </div>
+ <span class="field-error-msg" id="error-new-pin"></span>
+ </div>
  </div>
 
  <!-- QR (static) -->
@@ -728,6 +736,7 @@
  lookupIsNew = true;
  el.className = 'lookup-strip show new-client';
  el.innerHTML = 'Nouveau client — sera créé au crédit.';
+ showNewPinIfNeeded();
  checkNearDuplicates();
  return;
  }
@@ -740,11 +749,13 @@
  document.getElementById('client-name').value = c.name;
  document.getElementById('client-name').classList.add('has-value');
  }
+ showNewPinIfNeeded();
  return;
  }
 
  lookupIsNew = false;
  el.className = 'lookup-strip show found';
+ hideNewPin();
  const pct = Math.min((c.points_balance / c.reward_threshold) * 100, 100);
  let h = '<span class="l-pts">' + c.points_balance + ' pts</span>' +
  '<span class="l-name">' + esc(c.name || c.email || c.phone) + '</span>' +
@@ -770,6 +781,25 @@
  });
  document.getElementById('dup-container').innerHTML = '';
  lookupIsNew = false;
+ hideNewPin();
+ }
+
+ function showNewPinIfNeeded() {
+ const wrap = document.getElementById('new-pin-wrap');
+ const email = document.getElementById('client-email').value.trim();
+ // Show PIN only for phone-only new clients (no email = can't access app to set PIN later)
+ if (currentMode === 'phone' && !email && lookupIsNew) {
+ wrap.style.display = 'block';
+ } else {
+ hideNewPin();
+ }
+ }
+
+ function hideNewPin() {
+ const wrap = document.getElementById('new-pin-wrap');
+ wrap.style.display = 'none';
+ document.getElementById('new-pin').value = '';
+ document.getElementById('error-new-pin').textContent = '';
  }
 
  // ═══════════════════════════════════════════════════════
@@ -1028,6 +1058,22 @@
  return;
  }
 
+ // ── PIN required for new phone-only clients ──
+ const newPinWrap = document.getElementById('new-pin-wrap');
+ const newPinValue = document.getElementById('new-pin').value.trim();
+ if (newPinWrap.style.display !== 'none' && lookupIsNew) {
+ if (!newPinValue) {
+ document.getElementById('error-new-pin').textContent = 'Code PIN requis pour les clients sans email';
+ document.getElementById('new-pin').focus();
+ return;
+ }
+ if (!/^\d{4}$/.test(newPinValue)) {
+ document.getElementById('error-new-pin').textContent = 'Le code PIN doit contenir exactement 4 chiffres';
+ document.getElementById('new-pin').focus();
+ return;
+ }
+ }
+
  // ── Anti-double-credit: generate unique key per submission ──
  const creditKey = (email || '') + '|' + (phone || '') + '|' + (isVisitsMode ? 'visit' : amount) + '|' + Date.now();
  if (lastCreditKey && lastCreditKey === creditKey) {
@@ -1046,6 +1092,7 @@
  const r = await API.clients.credit({
  email: email || undefined, phone: phone || undefined,
  name: name || undefined, amount, notes: notes || undefined,
+ pin: newPinValue || undefined,
  idempotencyKey,
  });
 
