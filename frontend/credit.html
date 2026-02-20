@@ -248,61 +248,112 @@
  display: none; flex-direction: column;
  align-items: center; justify-content: center;
  text-align: center; padding: 2rem 1.5rem;
+ overflow: hidden;
  }
  .success-overlay.show {
  display: flex;
- animation: scaleIn 0.1s ease-out;
+ animation: scaleIn 0.25s ease-out;
  }
 
+ /* ── Animated check circle ── */
+ .s-check {
+ width: 56px; height: 56px; border-radius: 50%;
+ background: linear-gradient(135deg, #059669, #10B981);
+ display: flex; align-items: center; justify-content: center;
+ box-shadow: 0 4px 20px rgba(5,150,105,0.3);
+ animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1) 0.1s both;
+ }
+ .s-check svg { stroke: white; stroke-width: 3; }
+ @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+ /* ── Points ── */
  .success-pts {
- font-size: 2.6rem; font-weight: 700; color: #059669;
- line-height: 1; letter-spacing: -1.5px;
+ font-size: 2.4rem; font-weight: 800; color: #059669;
+ line-height: 1; letter-spacing: -1.5px; margin-top: 0.6rem;
+ animation: slideUp 0.3s ease-out 0.15s both;
  }
  .success-label {
- font-size: 0.73rem; color: #10B981; text-transform: uppercase;
- letter-spacing: 1px; margin-top: 3px; font-weight: 600;
+ font-size: 0.68rem; color: #10B981; text-transform: uppercase;
+ letter-spacing: 1.5px; margin-top: 2px; font-weight: 700;
+ animation: slideUp 0.3s ease-out 0.2s both;
  }
- .success-info {
- margin-top: 1rem; font-size: 0.84rem; color: #1E293B;
- line-height: 1.7;
- background: #F0FDF4; border: 1px solid #BBF7D0;
- border-radius: 10px; padding: 0.75rem 1.2rem;
- min-width: 240px;
+ @keyframes slideUp { 0% { transform: translateY(10px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+
+ /* ── Client card ── */
+ .s-client {
+ margin-top: 1.2rem; width: 100%; max-width: 300px;
+ animation: slideUp 0.3s ease-out 0.25s both;
  }
- .success-info strong { color: #047857; }
- .success-info .s-detail { color: #64748B; font-size: 0.78rem; }
- .success-badge {
- display: inline-block;
+ .s-client-name {
+ font-size: 0.95rem; font-weight: 700; color: #0F172A;
+ }
+ .s-client-detail {
+ font-size: 0.72rem; color: #94A3B8; margin-top: 2px;
+ }
+ .s-client-badge {
+ display: inline-block; margin-top: 0.4rem;
  background: linear-gradient(135deg, #CFFAFE, #A7F3D0);
  color: #065F46; padding: 2px 10px; border-radius: 12px;
- font-size: 0.7rem; font-weight: 600; margin-top: 0.4rem;
+ font-size: 0.65rem; font-weight: 700; letter-spacing: 0.3px;
  }
+
+ /* ── Progress bar ── */
+ .s-progress {
+ margin-top: 1rem; width: 100%; max-width: 300px;
+ animation: slideUp 0.3s ease-out 0.3s both;
+ }
+ .s-progress-label {
+ display: flex; justify-content: space-between; align-items: baseline;
+ font-size: 0.65rem; color: #94A3B8; margin-bottom: 4px; font-weight: 500;
+ }
+ .s-progress-label strong { color: #0F172A; font-size: 0.72rem; }
+ .s-progress-bar {
+ height: 6px; border-radius: 3px; background: #F1F5F9;
+ overflow: hidden;
+ }
+ .s-progress-fill {
+ height: 100%; border-radius: 3px;
+ background: linear-gradient(90deg, #0891B2, #06D6A0);
+ transition: width 0.8s cubic-bezier(0.34,1.56,0.64,1) 0.5s;
+ }
+ .s-progress-fill.full {
+ background: linear-gradient(90deg, #059669, #10B981);
+ }
+
+ /* ── Birthday ── */
  .s-bday {
  display: flex; align-items: center; gap: 8px;
- margin-top: 0.75rem; padding: 0.6rem 1rem;
+ margin-top: 0.8rem; padding: 0.5rem 0.85rem;
  background: linear-gradient(135deg, #FDF2F8, #F5F3FF);
- border: 1px solid #E9D5FF; border-radius: 10px;
- font-size: 0.78rem; font-weight: 600; color: #7C3AED;
+ border: 1px solid #E9D5FF; border-radius: 9px;
+ font-size: 0.72rem; font-weight: 600; color: #7C3AED;
  max-width: 300px; width: 100%;
+ animation: slideUp 0.3s ease-out 0.35s both;
  }
+
+ /* ── Reward button ── */
  .success-reward {
- display: none; margin-top: 1rem; padding: 0.65rem 1.25rem;
+ display: none; margin-top: 0.8rem; padding: 0.65rem 1.25rem;
  background: linear-gradient(135deg, #059669, #10B981);
- color: white; border: none; border-radius: 9px;
- font-family: inherit; font-size: 0.82rem; font-weight: 600;
+ color: white; border: none; border-radius: 10px;
+ font-family: inherit; font-size: 0.8rem; font-weight: 700;
  cursor: pointer; transition: all 0.2s; width: 100%; max-width: 300px;
- box-shadow: 0 3px 10px rgba(5,150,105,0.25);
+ box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+ animation: slideUp 0.3s ease-out 0.4s both;
  }
- .success-reward:hover { box-shadow: 0 5px 16px rgba(5,150,105,0.35); transform: translateY(-1px); }
- .success-reward.show { display: block; }
+ .success-reward:hover { box-shadow: 0 6px 20px rgba(5,150,105,0.4); transform: translateY(-1px); }
+ .success-reward.show { display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+ /* ── New credit button ── */
  .success-btn {
- margin-top: 1.5rem; padding: 0.55rem 2rem; border: none; border-radius: 9px;
+ margin-top: 1rem; padding: 0.55rem 2.5rem; border: none; border-radius: 10px;
  background: linear-gradient(135deg, #0891B2, #06B6D4); color: white;
- font-family: inherit; font-size: 0.86rem; font-weight: 600; cursor: pointer;
- box-shadow: 0 2px 6px rgba(8,145,178,0.18);
+ font-family: inherit; font-size: 0.84rem; font-weight: 700; cursor: pointer;
+ box-shadow: 0 3px 12px rgba(8,145,178,0.2);
  transition: all 0.2s;
+ animation: slideUp 0.3s ease-out 0.45s both;
  }
- .success-btn:hover { box-shadow: 0 3px 10px rgba(8,145,178,0.28); }
+ .success-btn:hover { box-shadow: 0 5px 16px rgba(8,145,178,0.3); transform: translateY(-1px); }
 
  /* ═══════════════════════════════════════════════════════
  QR
@@ -402,7 +453,7 @@
 
  .success-overlay { padding: 1.5rem 1rem; }
  .success-pts { font-size: 2rem; }
- .success-info { min-width: auto; }
+ .s-client, .s-progress { max-width: 260px; }
  .dup-match { min-height: 40px; padding: 6px 8px; }
  }
 
@@ -546,14 +597,26 @@
 
  <!-- ══════ SUCCESS OVERLAY — covers entire card ══════ -->
  <div class="success-overlay" id="success-overlay">
+ <div class="s-check"><svg width="28" height="28" viewBox="0 0 24 24" fill="none"><polyline points="20 6 9 17 4 12"/></svg></div>
  <div class="success-pts" id="s-pts"></div>
- <div class="success-label"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Crédités</div>
- <div class="success-info" id="s-info"></div>
+ <div class="success-label">Crédités</div>
+
+ <div class="s-client">
+ <div class="s-client-name" id="s-name"></div>
+ <div class="s-client-detail" id="s-detail"></div>
+ <div id="s-badge-wrap"></div>
+ </div>
+
+ <div class="s-progress" id="s-progress">
+ <div class="s-progress-label"><span id="s-prog-text"></span><strong id="s-prog-val"></strong></div>
+ <div class="s-progress-bar"><div class="s-progress-fill" id="s-prog-fill"></div></div>
+ </div>
+
  <div class="s-bday" id="s-bday" style="display:none">
  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2.5 2 4 2 2-1 2-1"/><path d="M2 21h20"/><path d="M7 8v3"/><path d="M12 8v3"/><path d="M17 8v3"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>
  <span id="s-bday-text"></span>
  </div>
- <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> Appliquer la récompense</button>
+ <button class="success-reward" id="s-reward" onclick="redeemFromSuccess()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg> <span>Appliquer la récompense</span></button>
  <button class="success-btn" onclick="resetForm()">Nouveau crédit</button>
  </div>
 
@@ -993,13 +1056,25 @@
  const n = r.client.name || r.client.email || r.client.phone || 'Client';
  document.getElementById('s-pts').textContent = isVisitsMode ? '+1 visite' : ('+' + r.transaction.points_delta + ' pts');
 
- let info = '<strong>' + esc(n) + '</strong>';
- info += '<br>Nouveau solde : <strong>' + r.client.points_balance + (isVisitsMode ? ' visite' + (r.client.points_balance > 1 ? 's' : '') : ' points') + '</strong>';
- if (r.client.email) info += '<br><span class="s-detail">' + esc(r.client.email) + '</span>';
- if (r.client.phone) info += '<br><span class="s-detail">' + esc(r.client.phone) + '</span>';
- if (r.isNewClient) info += '<br><span class="success-badge">Nouveau client</span>';
+ // Client info
+ document.getElementById('s-name').textContent = n;
+ const details = [r.client.email, r.client.phone].filter(Boolean).join(' · ');
+ document.getElementById('s-detail').textContent = details;
+ document.getElementById('s-badge-wrap').innerHTML = r.isNewClient
+ ? '<span class="s-client-badge">✨ Nouveau client</span>' : '';
 
- document.getElementById('s-info').innerHTML = info;
+ // Progress bar toward reward
+ const bal = r.client.points_balance;
+ const threshold = r.client.reward_threshold;
+ const pct = Math.min((bal / threshold) * 100, 100);
+ const isFull = bal >= threshold;
+ document.getElementById('s-prog-text').textContent = isFull ? 'Récompense disponible !' : (isVisitsMode ? 'Progrès' : 'Progrès fidélité');
+ document.getElementById('s-prog-val').textContent = bal + ' / ' + threshold + (isVisitsMode ? '' : ' pts');
+ const fillEl = document.getElementById('s-prog-fill');
+ fillEl.style.width = '0%';
+ fillEl.classList.toggle('full', isFull);
+ setTimeout(() => { fillEl.style.width = pct + '%'; }, 50);
+
 
  // ── Birthday reminder ──
  const bdayBanner = document.getElementById('s-bday');
@@ -1016,7 +1091,7 @@
  // ── Reward button if eligible ──
  const rewardBtn = document.getElementById('s-reward');
  if (r.client.can_redeem) {
- rewardBtn.textContent = ' ' + r.client.reward_description + ' — Appliquer';
+ rewardBtn.querySelector('span').textContent = esc(r.client.reward_description) + ' — Appliquer';
  rewardBtn.dataset.clientId = r.client.id;
  rewardBtn.classList.add('show');
  } else {
@@ -1048,30 +1123,30 @@
  pin = prompt('Code PIN du client (4 chiffres) :');
  if (!pin) return; // cancelled
  if (!/^\d{4}$/.test(pin)) {
- btn.textContent = 'Le code PIN doit contenir 4 chiffres';
+ btn.querySelector('span').textContent = 'PIN : 4 chiffres requis';
  btn.style.background = '#DC2626';
- setTimeout(() => { btn.textContent = 'Réessayer'; btn.style.background = ''; }, 2000);
+ setTimeout(() => { btn.querySelector('span').textContent = 'Réessayer'; btn.style.background = ''; }, 2000);
  return;
  }
  }
 
  btn.disabled = true;
- btn.textContent = 'Traitement…';
+ btn.querySelector('span').textContent = 'Traitement…';
  try {
  const r = await API.clients.reward({
  merchantClientId: mcId,
  pin: pin || undefined,
  qrVerifyToken: qrVerifyTokenValue || undefined,
  });
- btn.textContent = 'Récompense appliquée — Solde : ' + r.client.points_balance + ' pts';
+ btn.querySelector('span').textContent = '✓ Récompense appliquée — ' + r.client.points_balance + ' pts';
  btn.style.background = '#047857';
  btn.onclick = null;
  } catch (e) {
- btn.textContent = ' ' + e.message;
+ btn.querySelector('span').textContent = e.message;
  btn.style.background = '#DC2626';
  setTimeout(() => {
  btn.disabled = false;
- btn.textContent = 'Réessayer';
+ btn.querySelector('span').textContent = 'Réessayer';
  btn.style.background = '';
  }, 2000);
  }
