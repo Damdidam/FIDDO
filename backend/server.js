@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 // ═══ BUILD VERSION — change this to verify deployment ═══
-const BUILD_VERSION = '2026-02-20-hotfix-qr-scan';
+const BUILD_VERSION = '2026-02-20-v2-nocache';
 
 const express = require('express');
 const cors = require('cors');
@@ -147,40 +147,48 @@ app.get('/api/health', (req, res) => {
 // HTML PAGES
 // ═══════════════════════════════════════════════════════
 
+// Force no-cache on all HTML pages to prevent stale deployments
+function noCache(req, res, next) {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  next();
+}
+
 // Landing page (public)
-app.get('/',            (req, res) => res.sendFile(path.join(__dirname, '../frontend/landing.html')));
-app.get('/login',       (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
+app.get('/',            noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/landing.html')));
+app.get('/login',       noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/index.html')));
 
 // Merchant pages
-app.get('/dashboard',   (req, res) => res.sendFile(path.join(__dirname, '../frontend/dashboard.html')));
-app.get('/clients',     (req, res) => res.sendFile(path.join(__dirname, '../frontend/clients.html')));
-app.get('/credit',      (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
-app.get('/staff',       (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
-app.get('/preferences', (req, res) => res.sendFile(path.join(__dirname, '../frontend/preferences.html')));
-app.get('/messages',    (req, res) => res.sendFile(path.join(__dirname, '../frontend/messages.html')));
+app.get('/dashboard',   noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/dashboard.html')));
+app.get('/clients',     noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/clients.html')));
+app.get('/credit',      noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/credit.html')));
+app.get('/staff',       noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/staff.html')));
+app.get('/preferences', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/preferences.html')));
+app.get('/messages',    noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/messages.html')));
 
 // QR client-facing form
-app.get('/client-form', (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
+app.get('/client-form', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/client-form.html')));
 
 // Privacy policy (Google Play / App Store requirement)
-app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, '../frontend/privacy.html')));
+app.get('/privacy', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/privacy.html')));
 
 // QR static deep link — /q/ABC123 → redirect to PWA with merchant token
-app.get('/q/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/qr-landing.html')));
+app.get('/q/:token', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/qr-landing.html')));
 
 // Client portal (legacy me.html)
 app.get('/me', (req, res) => res.redirect(301, '/app/'));
-app.get('/me/verify/:token', (req, res) => res.sendFile(path.join(__dirname, '../frontend/verify.html')));
+app.get('/me/verify/:token', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/verify.html')));
 app.get('/c/:token', (req, res) => res.redirect(301, '/app/'));
 
 // PWA client app — serves index.html for all /app routes (SPA)
-app.get('/app', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
-app.get('/app/*', (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
+app.get('/app', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
+app.get('/app/*', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/app/index.html')));
 
 // Super admin pages
-app.get('/admin',           (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
-app.get('/admin/dashboard', (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html')));
-app.get('/admin/messages',  (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/messages.html')));
+app.get('/admin',           noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/index.html')));
+app.get('/admin/dashboard', noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/dashboard.html')));
+app.get('/admin/messages',  noCache, (req, res) => res.sendFile(path.join(__dirname, '../frontend/admin/messages.html')));
 
 // Email validation
 app.get('/validate', (req, res) => {
