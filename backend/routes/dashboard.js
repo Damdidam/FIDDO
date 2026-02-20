@@ -173,7 +173,9 @@ router.get('/activity', (req, res) => {
     const rows = db.prepare(`
       SELECT t.id, t.amount, t.points_delta, t.transaction_type, t.source, t.notes, t.created_at,
              t.merchant_client_id,
-             eu.email AS client_email, eu.phone AS client_phone, eu.name AS client_name,
+             CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END AS client_email,
+             CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END AS client_phone,
+             eu.name AS client_name,
              sa.display_name AS staff_name,
              mc.points_balance AS client_balance
       FROM transactions t

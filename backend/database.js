@@ -233,6 +233,8 @@ function initDatabase() {
   // ───────────────────────────────────────────
   try { db.exec('ALTER TABLE end_users ADD COLUMN pin_hash TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_email TEXT'); } catch (e) { /* already exists */ }
+  try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_phone TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
   try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token TEXT'); } catch (e) { /* already exists */ }
@@ -650,7 +652,10 @@ const merchantClientQueries = {
   find:               db.prepare('SELECT * FROM merchant_clients WHERE merchant_id = ? AND end_user_id = ?'),
 
   getByMerchant: db.prepare(`
-    SELECT mc.*, eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked
+    SELECT mc.*,
+           CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+           CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone,
+           eu.name, eu.email_validated, eu.is_blocked as eu_blocked
     FROM merchant_clients mc
     JOIN end_users eu ON mc.end_user_id = eu.id
     WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
@@ -658,17 +663,23 @@ const merchantClientQueries = {
   `),
 
   searchByMerchant: db.prepare(`
-    SELECT mc.*, eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked
+    SELECT mc.*,
+           CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+           CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone,
+           eu.name, eu.email_validated, eu.is_blocked as eu_blocked
     FROM merchant_clients mc
     JOIN end_users eu ON mc.end_user_id = eu.id
     WHERE mc.merchant_id = ? AND eu.deleted_at IS NULL
-      AND (eu.email_lower LIKE ? OR eu.phone_e164 LIKE ? OR eu.name LIKE ?)
+      AND (eu.email_lower LIKE ? OR eu.phone_e164 LIKE ? OR eu.name LIKE ?
+           OR mc.local_email LIKE ? OR mc.local_phone LIKE ?)
     ORDER BY mc.last_visit DESC
   `),
 
   lookupByMerchant: db.prepare(`
     SELECT mc.id, mc.points_balance, mc.visit_count, mc.is_blocked,
-           eu.name, eu.email, eu.phone
+           eu.name,
+           CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+           CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone
     FROM merchant_clients mc
     JOIN end_users eu ON mc.end_user_id = eu.id
     WHERE mc.merchant_id = ? AND mc.end_user_id = ? AND eu.deleted_at IS NULL
@@ -727,7 +738,10 @@ const transactionQueries = {
   `),
 
   getByMerchant: db.prepare(`
-    SELECT t.*, eu.email, eu.phone, eu.name as client_name, sa.display_name as staff_name
+    SELECT t.*,
+           CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+           CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone,
+           eu.name as client_name, sa.display_name as staff_name
     FROM transactions t
     JOIN merchant_clients mc ON t.merchant_client_id = mc.id
     JOIN end_users eu ON mc.end_user_id = eu.id

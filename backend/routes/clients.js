@@ -30,32 +30,40 @@ router.get('/quick-search', (req, res) => {
       const digits = q.replace(/[^\d]/g, '');
       if (digits.length < 3) return res.json({ results: [] });
       endUsers = db.prepare(`
-        SELECT eu.id, eu.email, eu.phone, eu.phone_e164, eu.name
+        SELECT eu.id,
+               CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+               CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone,
+               eu.phone_e164, eu.name, mc.id as mc_id,
+               mc.points_balance, mc.visit_count, mc.total_spent, mc.is_blocked
         FROM end_users eu
         JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = ?
         WHERE eu.deleted_at IS NULL
+          AND (mc.local_phone IS NULL OR mc.local_phone != '')
           AND (REPLACE(REPLACE(REPLACE(REPLACE(eu.phone_e164,'+',''),' ',''),'-',''),'.','') LIKE ? OR eu.name LIKE ?)
         ORDER BY eu.updated_at DESC LIMIT 10
       `).all(merchantId, `%${digits}%`, termLike);
     } else {
       endUsers = db.prepare(`
-        SELECT eu.id, eu.email, eu.phone, eu.phone_e164, eu.name
+        SELECT eu.id,
+               CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+               CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone,
+               eu.phone_e164, eu.name, mc.id as mc_id,
+               mc.points_balance, mc.visit_count, mc.total_spent, mc.is_blocked
         FROM end_users eu
         JOIN merchant_clients mc ON mc.end_user_id = eu.id AND mc.merchant_id = ?
-        WHERE eu.deleted_at IS NULL AND (eu.email_lower LIKE ? OR eu.name LIKE ?)
+        WHERE eu.deleted_at IS NULL
+          AND (mc.local_email IS NULL OR mc.local_email != '')
+          AND (eu.email_lower LIKE ? OR eu.name LIKE ?)
         ORDER BY eu.updated_at DESC LIMIT 10
       `).all(merchantId, termLike, termLike);
     }
 
-    const results = endUsers.map(eu => {
-      const mc = merchantClientQueries.find.get(merchantId, eu.id);
-      return {
-        end_user_id: eu.id, email: eu.email, phone: eu.phone, name: eu.name,
-        id: mc ? mc.id : null, points_balance: mc ? mc.points_balance : undefined,
-        visit_count: mc ? mc.visit_count : undefined, total_spent: mc ? mc.total_spent : undefined,
-        is_blocked: mc ? mc.is_blocked : false,
-      };
-    });
+    const results = endUsers.map(eu => ({
+      end_user_id: eu.id, email: eu.email, phone: eu.phone, name: eu.name,
+      id: eu.mc_id, points_balance: eu.points_balance,
+      visit_count: eu.visit_count, total_spent: eu.total_spent,
+      is_blocked: eu.is_blocked,
+    }));
     res.json({ results, count: results.length });
   } catch (error) {
     console.error('Erreur quick-search:', error);
@@ -76,7 +84,9 @@ router.get('/recent-activity', requireRole('owner', 'manager'), (req, res) => {
 
     const rows = db.prepare(`
       SELECT t.id, t.amount, t.points_delta, t.transaction_type, t.source, t.notes, t.created_at,
-             eu.email as client_email, eu.phone as client_phone, eu.name as client_name,
+             CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as client_email,
+             CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as client_phone,
+             eu.name as client_name,
              mc.points_balance as current_balance, mc.id as merchant_client_id,
              mc.custom_reward,
              sa.display_name as staff_name, sa.role as staff_role
@@ -114,7 +124,9 @@ router.get('/enriched', requireRole('owner', 'manager'), (req, res) => {
       SELECT mc.id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.first_visit, mc.last_visit, mc.is_blocked, mc.created_at,
              mc.end_user_id, mc.notes_private, mc.custom_reward,
-             eu.email, eu.phone, eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
+             CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+             CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone,
+             eu.name, eu.email_validated, eu.is_blocked as eu_blocked,
              eu.date_of_birth,
              last_tx.staff_name as last_credited_by,
              last_tx.created_at as last_tx_at,
@@ -269,215 +281,228 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     if (phone && phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
     if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
 
-    // ── Email/phone edits: owner only (global impact on all merchants) ──
-    const emailChanging = email !== undefined && normalizeEmail(email) !== endUser.email_lower;
-    const phoneChanging = phone !== undefined && normalizePhone(phone) !== endUser.phone_e164;
+    // ── Determine what the merchant currently sees (local view) ──
+    const visibleEmail = mc.local_email === null ? endUser.email : (mc.local_email === '' ? null : mc.local_email);
+    const visiblePhone = mc.local_phone === null ? endUser.phone : (mc.local_phone === '' ? null : mc.local_phone);
 
+    // ── Classify each field change ──
+    const emailSent = email !== undefined;
+    const phoneSent = phone !== undefined;
+    const newEmailNorm = emailSent ? normalizeEmail(email) : null;
+    const newPhoneNorm = phoneSent ? normalizePhone(phone) : null;
+    const visibleEmailNorm = visibleEmail ? normalizeEmail(visibleEmail) : null;
+    const visiblePhoneNorm = visiblePhone ? normalizePhone(visiblePhone) : null;
+
+    // Removal = sent as empty AND the merchant currently sees a value
+    const emailRemoving = emailSent && !newEmailNorm && visibleEmailNorm;
+    const phoneRemoving = phoneSent && !newPhoneNorm && visiblePhoneNorm;
+
+    // Adding/changing = sent as non-empty AND different from what merchant sees
+    const emailChanging = emailSent && newEmailNorm && newEmailNorm !== visibleEmailNorm;
+    const phoneChanging = phoneSent && newPhoneNorm && newPhoneNorm !== visiblePhoneNorm;
+
+    // ── Compute what the merchant will see after the edit ──
+    const postEmail = emailRemoving ? null : (emailChanging ? newEmailNorm : visibleEmailNorm);
+    const postPhone = phoneRemoving ? null : (phoneChanging ? newPhoneNorm : visiblePhoneNorm);
+    if (!postEmail && !postPhone) {
+      return res.status(400).json({ error: 'Au moins un email ou téléphone doit rester visible' });
+    }
+
+    // ── Permission: global changes need owner ──
     if ((emailChanging || phoneChanging) && req.staff.role !== 'owner') {
       return res.status(403).json({ error: 'Seul le propriétaire peut modifier l\'email ou le téléphone (impact multi-commerce)' });
     }
 
-    const newEmailLower = email !== undefined ? normalizeEmail(email) : endUser.email_lower;
-    const newPhoneE164 = phone !== undefined ? normalizePhone(phone) : endUser.phone_e164;
-
-    if (!newEmailLower && !newPhoneE164) return res.status(400).json({ error: 'Au moins un email ou téléphone requis' });
-
-    // ── Conflict detection (may find 2 different users) ──
-    const conflicts = []; // { field, user, mc }
-
-    if (newEmailLower && newEmailLower !== endUser.email_lower) {
-      let found = endUserQueries.findByEmailLower.get(newEmailLower);
-      if (!found) {
-        const can = canonicalizeEmail(newEmailLower);
-        if (can && can !== newEmailLower) found = endUserQueries.findByCanonicalEmail.get(can);
-      }
-      if (found && found.id !== endUser.id) {
-        conflicts.push({ field: 'email', user: found, mc: merchantClientQueries.find.get(merchantId, found.id) });
-      }
+    // ═══ STEP 1: Handle LOCAL removals (no cross-merchant impact) ═══
+    if (emailRemoving) {
+      db.prepare("UPDATE merchant_clients SET local_email = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
     }
-    if (newPhoneE164 && newPhoneE164 !== endUser.phone_e164) {
-      const found = endUserQueries.findByPhoneE164.get(newPhoneE164);
-      if (found && found.id !== endUser.id && !conflicts.some(c => c.user.id === found.id)) {
-        conflicts.push({ field: 'phone', user: found, mc: merchantClientQueries.find.get(merchantId, found.id) });
-      }
+    if (phoneRemoving) {
+      db.prepare("UPDATE merchant_clients SET local_phone = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
     }
 
-    // ── Conflicts found: suggest merge or execute ──
-    if (conflicts.length > 0) {
-      if (!confirmMerge) {
-        return res.status(409).json({
-          conflict: true,
-          conflicts: conflicts.map(c => ({
-            field: c.field,
-            name: c.user.name, email: c.user.email, phone: c.user.phone,
-            points: c.mc ? c.mc.points_balance : 0,
-            visits: c.mc ? c.mc.visit_count : 0,
-            hasLocalCard: !!c.mc
-          })),
-          current: {
-            name: endUser.name, email: endUser.email, phone: endUser.phone,
-            points: mc.points_balance, visits: mc.visit_count
-          }
-        });
-      }
+    // ═══ STEP 2: Handle GLOBAL adds/changes (if any) ═══
+    const conflicts = [];
 
-      // ── confirmMerge: true → Execute global merge for ALL conflict users ──
-      db.transaction(() => {
-        const targetId = endUser.id;
+    if (emailChanging || phoneChanging) {
+      // Compute global target values (only change fields that are actually being added/changed)
+      const globalEmailLower = emailChanging ? newEmailNorm : endUser.email_lower;
+      const globalPhoneE164 = phoneChanging ? newPhoneNorm : endUser.phone_e164;
 
-        for (const conflict of conflicts) {
-          const sourceId = conflict.user.id;
-          // Re-check source still exists (not already merged if same user appeared twice)
-          const sourceCheck = endUserQueries.findById.get(sourceId);
-          if (!sourceCheck) continue;
+      // ── Conflict detection ──
 
-          // 1. Transfer merchant_clients from source → target
-          const sourceMcs = db.prepare('SELECT * FROM merchant_clients WHERE end_user_id = ?').all(sourceId);
-          for (const sMc of sourceMcs) {
-            const targetMc = merchantClientQueries.find.get(sMc.merchant_id, targetId);
-            if (targetMc) {
-              merchantClientQueries.mergeStats.run(sMc.points_balance, sMc.total_spent, sMc.visit_count, sMc.first_visit, sMc.last_visit, targetMc.id);
-              transactionQueries.reassignClient.run(targetMc.id, sMc.id);
-              voucherQueries.reassignSender.run(targetMc.id, sMc.id);
-              voucherQueries.reassignClaimer.run(targetMc.id, sMc.id);
-              merchantClientQueries.delete.run(sMc.id);
-            } else {
-              db.prepare('UPDATE merchant_clients SET end_user_id = ? WHERE id = ?').run(targetId, sMc.id);
-            }
-          }
-
-          // 2. Transfer aliases
-          const sourceAliases = db.prepare('SELECT * FROM end_user_aliases WHERE end_user_id = ?').all(sourceId);
-          for (const a of sourceAliases) {
-            try { aliasQueries.create.run(targetId, a.alias_type, a.alias_value); } catch (e) { /* dup */ }
-          }
-          aliasQueries.deleteByUser.run(sourceId);
-
-          // 3. Preserve source identifiers as aliases
-          if (conflict.user.email_lower) {
-            try { aliasQueries.create.run(targetId, 'email', conflict.user.email_lower); } catch (e) { /* dup */ }
-          }
-          if (conflict.user.phone_e164) {
-            try { aliasQueries.create.run(targetId, 'phone', conflict.user.phone_e164); } catch (e) { /* dup */ }
-          }
-
-          // 4. Enrich target with missing data
-          if (!endUser.name && conflict.user.name) {
-            db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(conflict.user.name, targetId);
-          }
-          if (!endUser.pin_hash && conflict.user.pin_hash) {
-            db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?").run(conflict.user.pin_hash, targetId);
-          }
-
-          // 5. Soft-delete source
-          endUserQueries.softDelete.run(sourceId);
-
-          // 6. Audit
-          logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'end_users_merged', targetType: 'end_user', targetId,
-            details: { sourceId, targetId, conflictField: conflict.field, sourceName: conflict.user.name || conflict.user.email || conflict.user.phone } });
+      if (emailChanging && globalEmailLower !== endUser.email_lower) {
+        let found = endUserQueries.findByEmailLower.get(globalEmailLower);
+        if (!found) {
+          const can = canonicalizeEmail(globalEmailLower);
+          if (can && can !== globalEmailLower) found = endUserQueries.findByCanonicalEmail.get(can);
         }
-      })();
-
-      // Apply the originally requested edit after all merges
-      let updatedEndUser = endUserQueries.findById.get(endUser.id);
-
-      const postMergeName = name !== undefined ? ((name || '').trim() || null) : updatedEndUser.name;
-      const postMergeEmail = email !== undefined ? ((email || '').trim() || null) : updatedEndUser.email;
-      const postMergePhone = phone !== undefined ? ((phone || '').trim() || null) : updatedEndUser.phone;
-      const postMergeEmailLower = postMergeEmail ? normalizeEmail(postMergeEmail) : null;
-      const postMergePhoneE164 = postMergePhone ? normalizePhone(postMergePhone) : null;
-      const postMergeCanonical = postMergeEmailLower ? canonicalizeEmail(postMergeEmailLower) : null;
-
-      // Save old identifiers as aliases before overwriting
-      if (updatedEndUser.email_lower && postMergeEmailLower !== updatedEndUser.email_lower) {
-        try { aliasQueries.create.run(updatedEndUser.id, 'email', updatedEndUser.email_lower); } catch (e) { /* dup */ }
+        if (found && found.id !== endUser.id) {
+          conflicts.push({ field: 'email', user: found, mc: merchantClientQueries.find.get(merchantId, found.id) });
+        }
       }
-      if (updatedEndUser.phone_e164 && postMergePhoneE164 !== updatedEndUser.phone_e164) {
-        try { aliasQueries.create.run(updatedEndUser.id, 'phone', updatedEndUser.phone_e164); } catch (e) { /* dup */ }
+      if (phoneChanging && globalPhoneE164 !== endUser.phone_e164) {
+        const found = endUserQueries.findByPhoneE164.get(globalPhoneE164);
+        if (found && found.id !== endUser.id && !conflicts.some(c => c.user.id === found.id)) {
+          conflicts.push({ field: 'phone', user: found, mc: merchantClientQueries.find.get(merchantId, found.id) });
+        }
       }
+
+      // ── Conflicts → 409 or merge ──
+      if (conflicts.length > 0) {
+        if (!confirmMerge) {
+          return res.status(409).json({
+            conflict: true,
+            conflicts: conflicts.map(c => ({
+              field: c.field,
+              name: c.user.name, email: c.user.email, phone: c.user.phone,
+              points: c.mc ? c.mc.points_balance : 0,
+              visits: c.mc ? c.mc.visit_count : 0,
+              hasLocalCard: !!c.mc
+            })),
+            current: {
+              name: endUser.name, email: visibleEmail, phone: visiblePhone,
+              points: mc.points_balance, visits: mc.visit_count
+            }
+          });
+        }
+
+        // Execute merge
+        db.transaction(() => {
+          const targetId = endUser.id;
+          for (const conflict of conflicts) {
+            const sourceId = conflict.user.id;
+            const sourceCheck = endUserQueries.findById.get(sourceId);
+            if (!sourceCheck) continue;
+
+            const sourceMcs = db.prepare('SELECT * FROM merchant_clients WHERE end_user_id = ?').all(sourceId);
+            for (const sMc of sourceMcs) {
+              const targetMc = merchantClientQueries.find.get(sMc.merchant_id, targetId);
+              if (targetMc) {
+                merchantClientQueries.mergeStats.run(sMc.points_balance, sMc.total_spent, sMc.visit_count, sMc.first_visit, sMc.last_visit, targetMc.id);
+                transactionQueries.reassignClient.run(targetMc.id, sMc.id);
+                voucherQueries.reassignSender.run(targetMc.id, sMc.id);
+                voucherQueries.reassignClaimer.run(targetMc.id, sMc.id);
+                merchantClientQueries.delete.run(sMc.id);
+              } else {
+                db.prepare('UPDATE merchant_clients SET end_user_id = ? WHERE id = ?').run(targetId, sMc.id);
+              }
+            }
+
+            const sourceAliases = db.prepare('SELECT * FROM end_user_aliases WHERE end_user_id = ?').all(sourceId);
+            for (const a of sourceAliases) {
+              try { aliasQueries.create.run(targetId, a.alias_type, a.alias_value); } catch (e) { /* dup */ }
+            }
+            aliasQueries.deleteByUser.run(sourceId);
+
+            if (conflict.user.email_lower) {
+              try { aliasQueries.create.run(targetId, 'email', conflict.user.email_lower); } catch (e) { /* dup */ }
+            }
+            if (conflict.user.phone_e164) {
+              try { aliasQueries.create.run(targetId, 'phone', conflict.user.phone_e164); } catch (e) { /* dup */ }
+            }
+
+            if (!endUser.name && conflict.user.name) {
+              db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(conflict.user.name, targetId);
+            }
+            if (!endUser.pin_hash && conflict.user.pin_hash) {
+              db.prepare("UPDATE end_users SET pin_hash = ?, updated_at = datetime('now') WHERE id = ?").run(conflict.user.pin_hash, targetId);
+            }
+
+            endUserQueries.softDelete.run(sourceId);
+
+            logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'end_users_merged', targetType: 'end_user', targetId,
+              details: { sourceId, targetId, conflictField: conflict.field, sourceName: conflict.user.name || conflict.user.email || conflict.user.phone } });
+          }
+        })();
+      }
+
+      // Apply the global identifier changes
+      let freshEndUser = endUserQueries.findById.get(endUser.id);
+      const newGlobalEmail = emailChanging ? ((email || '').trim() || null) : freshEndUser.email;
+      const newGlobalPhone = phoneChanging ? ((phone || '').trim() || null) : freshEndUser.phone;
+      const newGlobalEmailLower = emailChanging ? globalEmailLower : freshEndUser.email_lower;
+      const newGlobalPhoneE164 = phoneChanging ? globalPhoneE164 : freshEndUser.phone_e164;
+      const newGlobalCanonical = newGlobalEmailLower ? canonicalizeEmail(newGlobalEmailLower) : null;
+
+      // Save replaced identifiers as aliases
+      if (emailChanging && freshEndUser.email_lower && newGlobalEmailLower !== freshEndUser.email_lower) {
+        try { aliasQueries.create.run(freshEndUser.id, 'email', freshEndUser.email_lower); } catch (e) { /* dup */ }
+      }
+      if (phoneChanging && freshEndUser.phone_e164 && newGlobalPhoneE164 !== freshEndUser.phone_e164) {
+        try { aliasQueries.create.run(freshEndUser.id, 'phone', freshEndUser.phone_e164); } catch (e) { /* dup */ }
+      }
+
+      // Email validation logic
+      const emailAdded = emailChanging && !freshEndUser.email_lower && newGlobalEmailLower;
+      const keepValidated = emailAdded ? 1 : (emailChanging ? 0 : freshEndUser.email_validated);
 
       endUserQueries.updateIdentifiers.run(
-        postMergeEmail, postMergePhone,
-        postMergeEmailLower, postMergePhoneE164,
-        postMergeEmailLower ? 1 : updatedEndUser.email_validated,
-        postMergeCanonical, updatedEndUser.id
+        newGlobalEmail, newGlobalPhone,
+        newGlobalEmailLower || null, newGlobalPhoneE164 || null,
+        newGlobalEmailLower ? (emailAdded ? 1 : keepValidated) : freshEndUser.email_validated,
+        newGlobalCanonical, freshEndUser.id
       );
-      if (name !== undefined) {
-        db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(postMergeName, updatedEndUser.id);
+
+      // Reset local overrides for changed fields (merchant now sees the new global value)
+      if (emailChanging) {
+        db.prepare("UPDATE merchant_clients SET local_email = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
+      }
+      if (phoneChanging) {
+        db.prepare("UPDATE merchant_clients SET local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
       }
 
-      updatedEndUser = endUserQueries.findById.get(endUser.id);
-      const updatedMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-
-      const mergedCount = conflicts.length;
-      return res.json({
-        message: `${mergedCount} client${mergedCount > 1 ? 's' : ''} fusionné${mergedCount > 1 ? 's' : ''}. ${updatedMc.points_balance} points au total.`,
-        merged: true,
-        client: { name: updatedEndUser.name, email: updatedEndUser.email, phone: updatedEndUser.phone }
-      });
+      // Email-added flow
+      if (emailAdded) {
+        db.prepare("UPDATE end_users SET consent_date = datetime('now'), consent_method = 'merchant_edit', updated_at = datetime('now') WHERE id = ?").run(freshEndUser.id);
+        const magicToken = require('crypto').randomBytes(32).toString('hex');
+        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        endUserQueries.setMagicToken.run(magicToken, expires, freshEndUser.id);
+        const magicUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/me/verify/' + magicToken;
+        const merchant = merchantQueries.findById.get(merchantId);
+        const freshMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+        sendEmailAddedEmail(newGlobalEmail, merchant.business_name, freshMc.points_balance || 0, freshMc.visit_count || 0, magicUrl, freshEndUser.id);
+      }
     }
 
-    // ── No conflict: normal edit ──
-    const newName = name !== undefined ? ((name || '').trim() || null) : endUser.name;
-    const newEmail = email !== undefined ? ((email || '').trim() || null) : endUser.email;
-    const newPhone = phone !== undefined ? ((phone || '').trim() || null) : endUser.phone;
-
-    // Email added for first time (phone-only → now has email) vs email changed (one email → another)
-    const emailChanged = newEmailLower && newEmailLower !== endUser.email_lower;
-    const emailAdded = emailChanged && !endUser.email_lower && newEmailLower;
-    const phoneReplaced = endUser.phone_e164 && newPhoneE164 && newPhoneE164 !== endUser.phone_e164;
-    const emailReplaced = endUser.email_lower && newEmailLower && newEmailLower !== endUser.email_lower;
-    const keepValidated = emailAdded ? 1 : (emailChanged ? 0 : endUser.email_validated);
-
-    // Save replaced (not removed) identifiers as aliases for cross-merchant lookup
-    if (emailReplaced) {
-      try { aliasQueries.create.run(endUser.id, 'email', endUser.email_lower); } catch (e) { /* dup */ }
-    }
-    if (phoneReplaced) {
-      try { aliasQueries.create.run(endUser.id, 'phone', endUser.phone_e164); } catch (e) { /* dup */ }
+    // ═══ STEP 3: Handle name change (always global) ═══
+    if (name !== undefined) {
+      const newName = (name || '').trim() || null;
+      db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
     }
 
-    // Remove aliases when identifiers are deliberately removed (dissociation)
-    const emailRemoved = endUser.email_lower && !newEmailLower;
-    const phoneRemoved = endUser.phone_e164 && !newPhoneE164;
-    if (emailRemoved) {
-      aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.email_lower);
-    }
-    if (phoneRemoved) {
-      aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.phone_e164);
-    }
+    // ═══ STEP 4: Audit + Response ═══
+    const finalEndUser = endUserQueries.findById.get(endUser.id);
+    const finalMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
 
-    const newEmailCanonical = newEmailLower ? canonicalizeEmail(newEmailLower) : null;
+    // Compute what merchant now sees
+    const finalVisibleEmail = finalMc.local_email === null ? finalEndUser.email : (finalMc.local_email === '' ? null : finalMc.local_email);
+    const finalVisiblePhone = finalMc.local_phone === null ? finalEndUser.phone : (finalMc.local_phone === '' ? null : finalMc.local_phone);
 
-    endUserQueries.updateIdentifiers.run(newEmail, newPhone, newEmailLower || null, newPhoneE164 || null, keepValidated, newEmailCanonical, endUser.id);
-    if (name !== undefined) db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
-
-    // If email was just added → auto-validate + set consent + send dedicated email with magic link
-    if (emailAdded) {
-      db.prepare("UPDATE end_users SET consent_date = datetime('now'), consent_method = 'merchant_edit', updated_at = datetime('now') WHERE id = ?").run(endUser.id);
-      // Generate magic link for instant app access
-      const magicToken = require('crypto').randomBytes(32).toString('hex');
-      const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(); // 24h for first access
-      endUserQueries.setMagicToken.run(magicToken, expires, endUser.id);
-      const magicUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/me/verify/' + magicToken;
-      const merchant = merchantQueries.findById.get(merchantId);
-      sendEmailAddedEmail(newEmail, merchant.business_name, mc.points_balance || 0, mc.visit_count || 0, magicUrl, endUser.id);
-    }
-
-    // ── Audit with cross-merchant impact tracking ──
     const otherMerchantCount = db.prepare(
       'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
     ).get(mc.end_user_id, merchantId).count;
 
     logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id,
-      details: { name: newName, email: newEmail, phone: newPhone, emailChanged, phoneChanged: phoneChanging, otherMerchantsAffected: otherMerchantCount } });
+      details: { name: finalEndUser.name, email: finalVisibleEmail, phone: finalVisiblePhone,
+        emailChanging, phoneChanging, emailRemoving, phoneRemoving,
+        otherMerchantsAffected: otherMerchantCount } });
 
-    const updated = endUserQueries.findById.get(endUser.id);
-    const warning = otherMerchantCount > 0 && (emailChanged || phoneChanging)
-      ? ` ⚠️ Ce client est inscrit chez ${otherMerchantCount} autre(s) commerce(s) — la modification s'applique partout.`
-      : '';
+    const isMerge = confirmMerge && conflicts && conflicts.length > 0;
+    let message = isMerge
+      ? `Client${conflicts.length > 1 ? 's' : ''} fusionné${conflicts.length > 1 ? 's' : ''}. ${finalMc.points_balance} points au total.`
+      : 'Client mis à jour';
 
-    res.json({ message: 'Client mis à jour' + warning, client: { name: updated.name, email: updated.email, phone: updated.phone }, crossMerchantImpact: otherMerchantCount });
+    if (!isMerge && otherMerchantCount > 0 && (emailChanging || phoneChanging)) {
+      message += ` ⚠️ Ce client est inscrit chez ${otherMerchantCount} autre(s) commerce(s) — la modification s'applique partout.`;
+    }
+
+    res.json({
+      message,
+      merged: !!isMerge,
+      client: { name: finalEndUser.name, email: finalVisibleEmail, phone: finalVisiblePhone },
+      crossMerchantImpact: otherMerchantCount
+    });
   } catch (error) {
     console.error('Erreur edit:', error);
     res.status(500).json({ error: error.message || 'Erreur lors de la mise à jour' });
@@ -788,7 +813,7 @@ router.get('/', requireRole('owner', 'manager'), (req, res) => {
 
 router.get('/search', requireRole('owner', 'manager'), (req, res) => {
   try { const { q } = req.query; if (!q || q.length < 2) return res.status(400).json({ error: 'Min 2 caractères' });
-    const term = `%${q.toLowerCase()}%`; const clients = merchantClientQueries.searchByMerchant.all(req.staff.merchant_id, term, term, term);
+    const term = `%${q.toLowerCase()}%`; const clients = merchantClientQueries.searchByMerchant.all(req.staff.merchant_id, term, term, term, term, term);
     res.json({ count: clients.length, clients }); }
   catch (error) { res.status(500).json({ error: 'Erreur serveur' }); }
 });

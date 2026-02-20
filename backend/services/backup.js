@@ -103,6 +103,9 @@ function exportMerchantData(merchantId) {
       visit_count: mc.visit_count,
       is_blocked: mc.is_blocked,
       notes_private: mc.notes_private,
+      custom_reward: mc.custom_reward,
+      local_email: mc.local_email,
+      local_phone: mc.local_phone,
       first_visit: mc.first_visit,
       last_visit: mc.last_visit,
       created_at: mc.created_at,
@@ -278,8 +281,9 @@ function importMerchantData(merchantId, data) {
     const createMC = db.prepare(`
       INSERT INTO merchant_clients
         (merchant_id, end_user_id, points_balance, total_spent, visit_count,
-         is_blocked, notes_private, first_visit, last_visit, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+         is_blocked, notes_private, custom_reward, local_email, local_phone,
+         first_visit, last_visit, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `);
 
     for (const mc of data.merchant_clients) {
@@ -290,6 +294,7 @@ function importMerchantData(merchantId, data) {
         merchantId, newEuId,
         mc.points_balance, mc.total_spent, mc.visit_count,
         mc.is_blocked || 0, mc.notes_private,
+        mc.custom_reward || null, mc.local_email || null, mc.local_phone || null,
         mc.first_visit, mc.last_visit, mc.created_at
       );
       mcIdMap.set(mc.id, result.lastInsertRowid);

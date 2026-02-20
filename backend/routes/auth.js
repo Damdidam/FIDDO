@@ -327,7 +327,9 @@ router.post('/settings/preview-switch', authenticateStaff, (req, res) => {
 
     // Get all active clients with balance > 0
     const clients = db.prepare(`
-      SELECT mc.id, mc.points_balance, mc.visit_count, eu.name, eu.email, eu.phone
+      SELECT mc.id, mc.points_balance, mc.visit_count, eu.name,
+             CASE WHEN mc.local_email IS NULL THEN eu.email WHEN mc.local_email = '' THEN NULL ELSE mc.local_email END as email,
+             CASE WHEN mc.local_phone IS NULL THEN eu.phone WHEN mc.local_phone = '' THEN NULL ELSE mc.local_phone END as phone
       FROM merchant_clients mc
       JOIN end_users eu ON mc.end_user_id = eu.id
       WHERE mc.merchant_id = ? AND mc.points_balance > 0
