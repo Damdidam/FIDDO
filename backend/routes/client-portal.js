@@ -512,11 +512,10 @@ router.put('/email', authenticateClient, async (req, res) => {
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
     const { newEmail } = req.body;
-    if (!newEmail || !newEmail.includes('@')) {
-      return res.status(400).json({ error: 'Email invalide' });
+    const emailLower = normalizeEmail(newEmail);
+    if (!emailLower) {
+      return res.status(400).json({ error: 'Adresse email invalide' });
     }
-
-    const emailLower = newEmail.trim().toLowerCase();
 
     const existing = endUserQueries.findByEmailLower.get(emailLower);
     if (existing && existing.id !== endUser.id) {
