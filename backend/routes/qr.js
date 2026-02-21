@@ -179,14 +179,8 @@ function findEndUser(emailLower, phoneE164) {
       endUser = endUserQueries.findByCanonicalEmail.get(canonical);
     }
   }
-  if (!endUser && emailLower) {
-    const alias = aliasQueries.findByValue.get(emailLower);
-    if (alias) endUser = endUserQueries.findById.get(alias.end_user_id);
-  }
-  if (!endUser && phoneE164) {
-    const alias = aliasQueries.findByValue.get(phoneE164);
-    if (alias) endUser = endUserQueries.findById.get(alias.end_user_id);
-  }
+
+  // (Alias lookup removed — old identifiers freed when user changes them)
 
   return endUser;
 }

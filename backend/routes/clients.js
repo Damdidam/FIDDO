@@ -559,13 +559,11 @@ router.get('/lookup', (req, res) => {
     if (!email && !phone) return res.status(400).json({ error: 'Email ou téléphone requis' });
     const emailLower = normalizeEmail(email); const phoneE164 = normalizePhone(phone);
     let endUser = null;
-    let foundVia = null; // track which identifier resolved the match
+    let foundVia = null;
     if (emailLower) { endUser = endUserQueries.findByEmailLower.get(emailLower); if (endUser) foundVia = 'email'; }
     if (!endUser && phoneE164) { endUser = endUserQueries.findByPhoneE164.get(phoneE164); if (endUser) foundVia = 'phone'; }
     // Gmail dedup: hakim.abbes+75@gmail.com → hakimabbes@gmail.com
     if (!endUser && emailLower) { const can = canonicalizeEmail(emailLower); if (can && can !== emailLower) { endUser = endUserQueries.findByCanonicalEmail.get(can); if (endUser) foundVia = 'email'; } }
-    if (!endUser && emailLower) { const a = aliasQueries.findByValue.get(emailLower); if (a) { endUser = endUserQueries.findById.get(a.end_user_id); if (endUser) foundVia = 'email'; } }
-    if (!endUser && phoneE164) { const a = aliasQueries.findByValue.get(phoneE164); if (a) { endUser = endUserQueries.findById.get(a.end_user_id); if (endUser) foundVia = 'phone'; } }
     if (!endUser) return res.json({ found: false });
     const mc = merchantClientQueries.find.get(merchantId, endUser.id);
 
