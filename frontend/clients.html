@@ -640,8 +640,9 @@
  h += '<div class="edit-form" id="edit-section"><div id="edit-alert"></div>';
  h += '<div class="edit-grid">';
  h += '<div class="fg full"><label>Nom / surnom</label><input type="text" id="edit-name" value="' + esc(c.name || '') + '"></div>';
- h += '<div class="fg"><label>Email</label><input type="email" id="edit-email" value="' + esc(c.email || '') + '"></div>';
- h += '<div class="fg"><label>Téléphone</label><input type="tel" id="edit-phone" value="' + esc(c.phone || '') + '"></div>';
+ h += '<div class="fg"><label>Email</label><input type="email" id="edit-email" value="' + esc(c.email || '') + '" readonly style="opacity:0.6;cursor:not-allowed;"></div>';
+ h += '<div class="fg"><label>Téléphone</label><input type="tel" id="edit-phone" value="' + esc(c.phone || '') + '" readonly style="opacity:0.6;cursor:not-allowed;"></div>';
+ h += '<div style="font-size:0.68rem;color:#94A3B8;margin:-0.2rem 0 0.5rem;padding:0 0.2rem;">Email et téléphone modifiables par le client depuis son app</div>';
  h += '</div><div class="edit-actions">';
  h += '<button class="edit-cancel" onclick="toggleEditForm()">Annuler</button>';
  h += '<button class="edit-save" onclick="saveEdit()">Enregistrer</button>';
@@ -711,24 +712,13 @@
  async function saveEdit() {
  try {
  const name = document.getElementById('edit-name').value.trim();
- const email = document.getElementById('edit-email').value.trim();
- const phone = document.getElementById('edit-phone').value.trim();
- if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
-      if (email && !/^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/i.test(email)) { UI.showAlert('edit-alert', 'Adresse email invalide', 'error'); return; }
- const body = { name: name || null, email: email || null, phone: phone || null };
+ const body = { name: name || null };
 
  const response = await fetch(`${API_BASE_URL}/clients/${currentClientId}/edit`, {
  method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
  body: JSON.stringify(body)
  });
  const data = await response.json();
-
- // ── Conflict: merge request sent to admin ──
- if (response.status === 409 && data.conflict) {
- UI.showAlert('edit-alert', data.message || 'Demande de fusion envoyée à l\'administrateur.', 'success');
- return;
- }
-
  if (!response.ok) throw new Error(data.error || 'Erreur');
 
  closeDetail(); loadClients();

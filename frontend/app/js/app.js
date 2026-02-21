@@ -978,6 +978,7 @@ const App = (() => {
  if (!email || !/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/.test(email)) { toast('Email invalide'); return; }
  const res = await API.updateEmail(email);
  if (res.ok) { client.email = email; loadProfile(); closeModal(); toast('Email mis à jour'); }
+ else if (res.status === 409 && res.data?.conflict) { toast(res.data.message || 'Demande de fusion envoyée'); closeModal(); }
  else toast(res.data?.error || 'Erreur');
  }
 

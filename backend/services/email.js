@@ -627,6 +627,50 @@ function sendMergeRequestEmail(adminEmail, { merchantName, staffName, staffRole,
   });
 }
 
+/**
+ * Client-initiated merge request — sent to super admin when client's new email/phone conflicts
+ */
+function sendClientMergeRequestEmail(adminEmail, { clientEmail, clientName, conflictField, currentAccount, conflictAccount }) {
+  sendMail({
+    to: adminEmail,
+    subject: `Demande de fusion (client) — ${clientEmail || clientName || 'Utilisateur'}`,
+    html: template(`
+      ${heading('Demande de fusion — initiée par le client')}
+      <p>Le client <strong>${escHtml(clientName || clientEmail || 'Utilisateur')}</strong> a tenté de modifier son ${conflictField === 'email' ? 'adresse email' : 'numéro de téléphone'}, mais la nouvelle valeur appartient déjà à un autre compte.</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:8px;overflow:hidden;border:1px solid ${B.border};">
+        <thead>
+          <tr style="background:${B.navy};color:white;">
+            <th style="padding:10px 12px;text-align:left;font-size:12px;"></th>
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Compte actuel</th>
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Compte en conflit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">Nom</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(currentAccount.name || '—')}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(conflictAccount.name || '—')}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">Email</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(currentAccount.email || '—')}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(conflictAccount.email || '—')}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;font-weight:600;font-size:13px;">Téléphone</td>
+            <td style="padding:8px 12px;font-size:13px;">${escHtml(currentAccount.phone || '—')}</td>
+            <td style="padding:8px 12px;font-size:13px;">${escHtml(conflictAccount.phone || '—')}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:13px;">Le client souhaite utiliser le ${conflictField === 'email' ? 'mail' : 'numéro'} <strong>${escHtml(conflictField === 'email' ? conflictAccount.email : conflictAccount.phone)}</strong>. Fusionnez les deux comptes si nécessaire.</p>
+      <p style="font-size:13px;color:${B.light};">Connectez-vous au panel super admin pour traiter cette demande.</p>
+    `),
+  });
+}
+
 module.exports = {
   sendMail,
   escHtml,
@@ -646,5 +690,6 @@ module.exports = {
   sendEmailAddedEmail,
   sendMergeNotificationEmail,
   sendMergeRequestEmail,
+  sendClientMergeRequestEmail,
   verifyUnsubToken,
 };

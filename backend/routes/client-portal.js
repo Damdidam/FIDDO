@@ -6,7 +6,7 @@ const router = express.Router();
 
 const { db, endUserQueries, merchantClientQueries, merchantQueries, pollQueries } = require('../database');
 const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('../services/normalizer');
-const { sendMagicLinkEmail, sendAccountDeletedEmail } = require('../services/email');
+const { sendMagicLinkEmail, sendAccountDeletedEmail, sendClientMergeRequestEmail } = require('../services/email');
 const { generateClientToken, authenticateClient } = require('../middleware/client-auth');
 
 // ═══════════════════════════════════════════════════════
@@ -443,6 +443,30 @@ router.put('/profile', authenticateClient, (req, res) => {
       if (name.trim().length > 100) return res.status(400).json({ error: 'Nom trop long' });
     }
 
+    // Phone conflict detection
+    if (phone !== undefined) {
+      const phoneE164 = normalizePhone(phone.trim());
+      if (phone.trim() && phoneE164 && phoneE164 !== endUser.phone_e164) {
+        const existing = endUserQueries.findByPhoneE164.get(phoneE164);
+        if (existing && existing.id !== endUser.id) {
+          const adminEmail = process.env.SUPER_ADMIN_EMAIL;
+          if (adminEmail) {
+            sendClientMergeRequestEmail(adminEmail, {
+              clientEmail: endUser.email,
+              clientName: endUser.name,
+              conflictField: 'phone',
+              currentAccount: { name: endUser.name, email: endUser.email, phone: endUser.phone },
+              conflictAccount: { name: existing.name, email: existing.email, phone: existing.phone },
+            });
+          }
+          return res.status(409).json({
+            conflict: true,
+            message: 'Ce numéro est déjà associé à un autre compte. Une demande de fusion a été envoyée à l\'administrateur.',
+          });
+        }
+      }
+    }
+
     const updates = [];
     const params = [];
 
@@ -500,9 +524,34 @@ router.put('/email', authenticateClient, async (req, res) => {
       return res.status(400).json({ error: 'Adresse email invalide' });
     }
 
-    const existing = endUserQueries.findByEmailLower.get(emailLower);
+    // Same email → no-op
+    if (emailLower === endUser.email_lower) {
+      return res.json({ ok: true, email: endUser.email });
+    }
+
+    // Check conflict (direct + canonical)
+    let existing = endUserQueries.findByEmailLower.get(emailLower);
+    if (!existing) {
+      const can = canonicalizeEmail(emailLower);
+      if (can && can !== emailLower) existing = endUserQueries.findByCanonicalEmail.get(can);
+    }
+
     if (existing && existing.id !== endUser.id) {
-      return res.status(400).json({ error: 'Cet email est déjà utilisé' });
+      // Conflict → send merge request to super admin
+      const adminEmail = process.env.SUPER_ADMIN_EMAIL;
+      if (adminEmail) {
+        sendClientMergeRequestEmail(adminEmail, {
+          clientEmail: endUser.email,
+          clientName: endUser.name,
+          conflictField: 'email',
+          currentAccount: { name: endUser.name, email: endUser.email, phone: endUser.phone },
+          conflictAccount: { name: existing.name, email: existing.email, phone: existing.phone },
+        });
+      }
+      return res.status(409).json({
+        conflict: true,
+        message: 'Cet email est déjà associé à un autre compte. Une demande de fusion a été envoyée à l\'administrateur.',
+      });
     }
 
     db.prepare(`

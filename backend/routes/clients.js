@@ -4,7 +4,7 @@ const { db, merchantQueries, merchantClientQueries, transactionQueries, endUserQ
 const { authenticateStaff, requireRole } = require('../middleware/auth');
 const { logAudit, auditCtx } = require('../middleware/audit');
 const { creditPoints, redeemReward, adjustPoints } = require('../services/points');
-const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail, sendEmailAddedEmail } = require('../services/email');
+const { sendPointsCreditedEmail, sendPinChangedEmail, sendExportEmail } = require('../services/email');
 const { normalizeEmail, canonicalizeEmail, normalizePhone } = require('../services/normalizer');
 const { resolvePinToken, resolveQrVerifyToken } = require('./qr');
 
@@ -260,7 +260,7 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
   try {
     const merchantId = req.staff.merchant_id;
     const mcId = parseInt(req.params.id);
-    const { name, email, phone } = req.body;
+    const { name } = req.body;
 
     const mc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
     if (!mc) return res.status(404).json({ error: 'Client non trouvé' });
@@ -268,152 +268,18 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     const endUser = endUserQueries.findById.get(mc.end_user_id);
     if (!endUser) return res.status(404).json({ error: 'Utilisateur non trouvé' });
 
-    // Input length limits
-    if (email && email.length > 254) return res.status(400).json({ error: 'Email trop long (max 254)' });
-    if (phone && phone.length > 20) return res.status(400).json({ error: 'Téléphone trop long (max 20)' });
+    if (name === undefined) return res.status(400).json({ error: 'Rien à modifier' });
     if (name && name.length > 100) return res.status(400).json({ error: 'Nom trop long (max 100)' });
 
-    // ── Classify each field change ──
-    const emailSent = email !== undefined;
-    const phoneSent = phone !== undefined;
-    const newEmailNorm = emailSent ? normalizeEmail(email) : null;
-    const newPhoneNorm = phoneSent ? normalizePhone(phone) : null;
-
-    // Removal = sent as empty AND user currently has a value → BLOCKED
-    if (emailSent && !newEmailNorm && endUser.email_lower) {
-      return res.status(400).json({ error: 'Seul le client peut supprimer son email depuis son application' });
-    }
-    if (phoneSent && !newPhoneNorm && endUser.phone_e164) {
-      return res.status(400).json({ error: 'Seul le client peut supprimer son téléphone depuis son application' });
-    }
-
-    // Adding/changing = sent as non-empty AND different from current
-    const emailChanging = emailSent && newEmailNorm && newEmailNorm !== endUser.email_lower;
-    const phoneChanging = phoneSent && newPhoneNorm && newPhoneNorm !== endUser.phone_e164;
-
-    // ── Permission: global changes need owner ──
-    if ((emailChanging || phoneChanging) && req.staff.role !== 'owner') {
-      return res.status(403).json({ error: 'Seul le propriétaire peut modifier l\'email ou le téléphone (impact multi-commerce)' });
-    }
-
-    // ═══ STEP 1: Handle identifier changes (if any) ═══
-    if (emailChanging || phoneChanging) {
-      const globalEmailLower = emailChanging ? newEmailNorm : endUser.email_lower;
-      const globalPhoneE164 = phoneChanging ? newPhoneNorm : endUser.phone_e164;
-
-      // ── Conflict detection ──
-      const conflicts = [];
-
-      if (emailChanging && globalEmailLower !== endUser.email_lower) {
-        let found = endUserQueries.findByEmailLower.get(globalEmailLower);
-        if (!found) {
-          const can = canonicalizeEmail(globalEmailLower);
-          if (can && can !== globalEmailLower) found = endUserQueries.findByCanonicalEmail.get(can);
-        }
-        if (found && found.id !== endUser.id) {
-          const foundMc = merchantClientQueries.find.get(merchantId, found.id);
-          conflicts.push({ field: 'email', user: found, mc: foundMc });
-        }
-      }
-      if (phoneChanging && globalPhoneE164 !== endUser.phone_e164) {
-        const found = endUserQueries.findByPhoneE164.get(globalPhoneE164);
-        if (found && found.id !== endUser.id && !conflicts.some(c => c.user.id === found.id)) {
-          const foundMc = merchantClientQueries.find.get(merchantId, found.id);
-          conflicts.push({ field: 'phone', user: found, mc: foundMc });
-        }
-      }
-
-      // ── Conflicts → notify super admin, don't merge ──
-      if (conflicts.length > 0) {
-        const merchant = merchantQueries.findById.get(merchantId);
-        const adminEmail = process.env.SUPER_ADMIN_EMAIL;
-        if (adminEmail) {
-          const { sendMergeRequestEmail } = require('../services/email');
-          for (const conflict of conflicts) {
-            sendMergeRequestEmail(adminEmail, {
-              merchantName: merchant.business_name,
-              staffName: req.staff.display_name || req.staff.email,
-              staffRole: req.staff.role,
-              target: { name: endUser.name, email: endUser.email, phone: endUser.phone, points: mc.points_balance, visits: mc.visit_count },
-              source: { name: conflict.user.name, email: conflict.user.email, phone: conflict.user.phone, points: conflict.mc ? conflict.mc.points_balance : 0, visits: conflict.mc ? conflict.mc.visit_count : 0 },
-              reason: `Modification ${conflict.field} depuis le modal client`,
-            });
-          }
-        }
-
-        return res.status(409).json({
-          conflict: true,
-          message: 'Cet identifiant appartient à un autre client. Une demande de fusion a été envoyée à l\'administrateur.',
-        });
-      }
-
-      // ── No conflict: apply the changes ──
-      let freshEndUser = endUserQueries.findById.get(endUser.id);
-      const newGlobalEmail = emailChanging ? ((email || '').trim() || null) : freshEndUser.email;
-      const newGlobalPhone = phoneChanging ? ((phone || '').trim() || null) : freshEndUser.phone;
-      const newGlobalEmailLower = emailChanging ? globalEmailLower : freshEndUser.email_lower;
-      const newGlobalPhoneE164 = phoneChanging ? globalPhoneE164 : freshEndUser.phone_e164;
-      const newGlobalCanonical = newGlobalEmailLower ? canonicalizeEmail(newGlobalEmailLower) : null;
-
-      // Save replaced identifiers as aliases
-      if (emailChanging && freshEndUser.email_lower && newGlobalEmailLower !== freshEndUser.email_lower) {
-        try { aliasQueries.create.run(freshEndUser.id, 'email', freshEndUser.email_lower); } catch (e) { /* dup */ }
-      }
-      if (phoneChanging && freshEndUser.phone_e164 && newGlobalPhoneE164 !== freshEndUser.phone_e164) {
-        try { aliasQueries.create.run(freshEndUser.id, 'phone', freshEndUser.phone_e164); } catch (e) { /* dup */ }
-      }
-
-      // Email validation logic
-      const emailAdded = emailChanging && !freshEndUser.email_lower && newGlobalEmailLower;
-      const keepValidated = emailAdded ? 1 : (emailChanging ? 0 : freshEndUser.email_validated);
-
-      endUserQueries.updateIdentifiers.run(
-        newGlobalEmail, newGlobalPhone,
-        newGlobalEmailLower || null, newGlobalPhoneE164 || null,
-        newGlobalEmailLower ? (emailAdded ? 1 : keepValidated) : freshEndUser.email_validated,
-        newGlobalCanonical, freshEndUser.id
-      );
-
-      // Email-added flow: send welcome email with magic link
-      if (emailAdded) {
-        db.prepare("UPDATE end_users SET consent_date = datetime('now'), consent_method = 'merchant_edit', updated_at = datetime('now') WHERE id = ?").run(freshEndUser.id);
-        const magicToken = require('crypto').randomBytes(32).toString('hex');
-        const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-        endUserQueries.setMagicToken.run(magicToken, expires, freshEndUser.id);
-        const magicUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/me/verify/' + magicToken;
-        const merchant = merchantQueries.findById.get(merchantId);
-        const freshMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-        sendEmailAddedEmail(newGlobalEmail, merchant.business_name, freshMc.points_balance || 0, freshMc.visit_count || 0, magicUrl, freshEndUser.id);
-      }
-    }
-
-    // ═══ STEP 2: Handle name change (always global) ═══
-    if (name !== undefined) {
-      const newName = (name || '').trim() || null;
-      db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
-    }
-
-    // ═══ STEP 3: Audit + Response ═══
-    const finalEndUser = endUserQueries.findById.get(endUser.id);
-    const finalMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-
-    const otherMerchantCount = db.prepare(
-      'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
-    ).get(mc.end_user_id, merchantId).count;
+    const newName = (name || '').trim() || null;
+    db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(newName, endUser.id);
 
     logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id,
-      details: { name: finalEndUser.name, email: finalEndUser.email, phone: finalEndUser.phone,
-        emailChanging, phoneChanging, otherMerchantsAffected: otherMerchantCount } });
-
-    let message = 'Client mis à jour';
-    if (otherMerchantCount > 0 && (emailChanging || phoneChanging)) {
-      message += ` ⚠️ Ce client est inscrit chez ${otherMerchantCount} autre(s) commerce(s) — la modification s'applique partout.`;
-    }
+      details: { name: newName } });
 
     res.json({
-      message,
-      client: { name: finalEndUser.name, email: finalEndUser.email, phone: finalEndUser.phone },
-      crossMerchantImpact: otherMerchantCount
+      message: 'Client mis à jour',
+      client: { name: newName, email: endUser.email, phone: endUser.phone },
     });
   } catch (error) {
     console.error('Erreur edit:', error);
