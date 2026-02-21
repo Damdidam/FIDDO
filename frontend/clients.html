@@ -339,6 +339,7 @@
  <!-- ═══ DETAIL MODAL ═══ -->
  <div class="modal-overlay" id="detail-modal">
  <div class="modal-box" id="detail-box">
+ <div id="detail-alert"></div>
  <div id="modal-body"></div>
  </div>
  </div>
@@ -359,11 +360,11 @@
  <!-- ═══ MERGE MODAL ═══ -->
  <div class="modal-overlay" id="merge-modal">
  <div class="modal-box" style="max-width:420px;">
- <div class="sub-top"><h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Fusionner</h2><button class="sub-close" onclick="closeMerge()">×</button></div>
+ <div class="sub-top"><h2><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Demander une fusion</h2><button class="sub-close" onclick="closeMerge()">×</button></div>
  <div class="sub-body">
  <div id="merge-alert"></div>
  <div class="alert alert-info" style="font-size:0.72rem;padding:6px 10px;margin-bottom:0.6rem;">
- Le client source sera <strong>supprimé</strong>. Points, visites et historique transférés vers le client cible.
+ La demande sera envoyée à l'administrateur qui effectuera la fusion après validation.
  </div>
  <div class="merge-section-title"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg> Cible (conservé)</div>
  <div class="merge-target-box" id="merge-target"></div>
@@ -377,7 +378,7 @@
  <button class="merge-clear" onclick="clearMergeSelection()"></button>
  </div>
  <div class="sub-fg" style="margin-top:0.6rem;"><label>Raison (optionnel)</label><input type="text" id="merge-reason" placeholder="Doublon, couple..."></div>
- <button class="sub-btn sub-btn-danger" id="merge-confirm-btn" onclick="submitMerge()" disabled>Confirmer la fusion</button>
+ <button class="sub-btn sub-btn-primary" id="merge-confirm-btn" onclick="submitMerge()" disabled>Envoyer la demande</button>
  </div>
  </div>
  </div>
@@ -559,6 +560,7 @@
  async function showDetail(mcId) {
  try {
  currentClientId = mcId;
+ document.getElementById('detail-alert').innerHTML = '';
  const data = await API.clients.getById(mcId);
  const c = data.client;
  const txs = data.transactions;
@@ -625,7 +627,7 @@
  h += '<a href="/credit?' + cp + (c.name ? '&name=' + encodeURIComponent(c.name) : '') + '" class="act-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Créditer</a>';
  h += '<button class="act-btn" onclick="toggleEditForm()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Modifier</button>';
  h += '<button class="act-btn" onclick="openAdjust()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="M6 12h4"/><path d="M6 8h2"/><path d="M6 16h2"/></svg> Ajuster</button>';
- if (isOwner) h += '<button class="act-btn" onclick="openMerge()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Fusionner</button>';
+ if (isOwner) h += '<button class="act-btn" onclick="openMerge()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg> Demander une fusion</button>';
  h += c.is_blocked
  ? '<button class="act-btn" onclick="toggleBlock(false)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Débloquer</button>'
  : '<button class="act-btn" onclick="toggleBlock(true)"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Bloquer</button>';
@@ -706,7 +708,7 @@
 
  function toggleEditForm() { const el = document.getElementById('edit-section'); if (el) el.classList.toggle('show'); }
 
- async function saveEdit(mergeConfirmed = false) {
+ async function saveEdit() {
  try {
  const name = document.getElementById('edit-name').value.trim();
  const email = document.getElementById('edit-email').value.trim();
@@ -714,7 +716,6 @@
  if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
       if (email && !/^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/i.test(email)) { UI.showAlert('edit-alert', 'Adresse email invalide', 'error'); return; }
  const body = { name: name || null, email: email || null, phone: phone || null };
- if (mergeConfirmed) body.confirmMerge = true;
 
  const response = await fetch(`${API_BASE_URL}/clients/${currentClientId}/edit`, {
  method: 'PUT', headers: { 'Content-Type': 'application/json' }, credentials: 'include',
@@ -722,40 +723,15 @@
  });
  const data = await response.json();
 
- // ── Conflict: suggest merge ──
+ // ── Conflict: merge request sent to admin ──
  if (response.status === 409 && data.conflict) {
- const c = data.current;
- const currentLabel = c.name || c.email || c.phone || 'Client actuel';
- let totalPts = c.points;
-
- let msg = 'Les identifiants saisis appartiennent à d\'autres clients :\n\n';
- msg += `📋 Client actuel : ${currentLabel}\n   → ${c.points} pts · ${c.visits} visite(s)\n\n`;
-
- for (const o of data.conflicts) {
- const otherLabel = o.name || o.email || o.phone || 'Client';
- const fieldLabel = o.field === 'email' ? 'Email' : 'Téléphone';
- msg += `⚠️ ${fieldLabel} → ${otherLabel}\n   → ${o.points} pts · ${o.visits} visite(s)\n\n`;
- totalPts += o.points;
- }
-
- msg += `Fusionner ${data.conflicts.length > 1 ? 'les ' + (data.conflicts.length + 1) + ' fiches' : 'les deux fiches'} ?\n`;
- msg += `Les points et l'historique seront combinés (${totalPts} pts au total).`;
-
- if (confirm(msg)) {
- await saveEdit(true);
- }
+ UI.showAlert('edit-alert', data.message || 'Demande de fusion envoyée à l\'administrateur.', 'success');
  return;
  }
 
  if (!response.ok) throw new Error(data.error || 'Erreur');
 
- // Success (normal edit or merge)
- if (data.merged) {
- UI.showAlert('edit-alert', data.message, 'success');
- setTimeout(() => { closeDetail(); loadClients(); }, 1500);
- } else {
  closeDetail(); loadClients();
- }
  } catch (err) { UI.showAlert('edit-alert', err.message, 'error'); }
  }
 
@@ -937,12 +913,12 @@
  if (!mergeSourceId) return;
  const src = allClients.find(x => x.id === mergeSourceId);
  const label = src ? (src.name || src.email || src.phone) : '#' + mergeSourceId;
- if (!confirm('ATTENTION\n\n"' + label + '" sera SUPPRIMÉ.\nSes points et historique transférés vers le client actuel.\n\nIrréversible. Continuer ?')) return;
+ if (!confirm('Envoyer une demande de fusion à l\'administrateur ?\n\nClient à conserver : le client actuel\nClient à absorber : "' + label + '"\n\nLa fusion sera effectuée après validation.')) return;
  try {
  const reason = document.getElementById('merge-reason').value.trim();
- await API.call('/clients/' + currentClientId + '/merge', { method: 'POST', body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason || 'Fusion manuelle' }) });
- closeMerge(); closeDetail(); loadClients();
- setTimeout(() => showDetail(currentClientId), 300);
+ const res = await API.call('/clients/' + currentClientId + '/merge', { method: 'POST', body: JSON.stringify({ sourceMerchantClientId: mergeSourceId, reason: reason || 'Demande de fusion' }) });
+ closeMerge();
+ UI.showAlert('detail-alert', res.message || 'Demande envoyée à l\'administrateur', 'success');
  } catch (err) { document.getElementById('merge-alert').innerHTML = '<div class="alert alert-error" style="font-size:0.72rem">' + esc(err.message) + '</div>'; }
  }
 
