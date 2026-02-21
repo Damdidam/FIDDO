@@ -215,7 +215,7 @@
 
  function goConfirm() {
  emailValue = document.getElementById('input-email').value.trim().toLowerCase();
- if (!emailValue || !emailValue.includes('@') || !emailValue.includes('.')) {
+ if (!emailValue || !/^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/.test(emailValue)) {
  showErr('err-email', 'Entrez une adresse email valide');
  return;
  }
