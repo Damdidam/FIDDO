@@ -38,6 +38,19 @@ function getClientIP(req) {
     || req.socket?.remoteAddress || 'unknown';
 }
 
+// Check if a merchant has dissociated ALL of a user's identifiers (local_email='' AND local_phone='')
+// If at least one identifier is still visible, the card is active.
+function isCardDissociated(mc, endUser, authMethod) {
+  if (!mc) return false;
+  // If the identifier the user authenticated with is dissociated at this merchant → hide the card
+  if (authMethod === 'email' && mc.local_email === '') return true;
+  if (authMethod === 'phone' && mc.local_phone === '') return true;
+  // Fallback: both identifiers dissociated → always hide
+  const emailVis = (mc.local_email == null) ? !!endUser.email : mc.local_email !== '';
+  const phoneVis = (mc.local_phone == null) ? !!endUser.phone : mc.local_phone !== '';
+  return !emailVis && !phoneVis;
+}
+
 
 // ═══════════════════════════════════════════════════════
 // POST /api/me/login — Send magic link email + return sessionId for polling
@@ -226,6 +239,7 @@ router.get('/cards', authenticateClient, (req, res) => {
       SELECT mc.merchant_id, mc.points_balance, mc.total_spent, mc.visit_count,
              mc.last_visit, mc.is_blocked, mc.custom_reward,
              mc.is_favorite, mc.is_hidden,
+             mc.local_email, mc.local_phone,
              m.business_name, m.points_per_euro, m.points_for_reward,
              m.reward_description, m.status, m.business_type, m.allow_gifts,
              m.loyalty_mode,
@@ -241,6 +255,8 @@ router.get('/cards', authenticateClient, (req, res) => {
 
     const result = cards
       .filter(c => !c.is_hidden)
+      // Filter out cards where the merchant has dissociated ALL of this user's identifiers
+      .filter(c => !isCardDissociated(c, endUser, 'email'))
       .map(c => ({
       merchantId: c.merchant_id,
       merchantName: c.business_name,
@@ -304,6 +320,9 @@ router.get('/cards/:merchantId', authenticateClient, (req, res) => {
     `).get(merchantId, endUser.id);
 
     if (!mc) return res.status(404).json({ error: 'Carte non trouvée' });
+
+    // Check if merchant has dissociated the identifier the user authenticated with
+    if (mc.local_email === '') return res.status(404).json({ error: 'Carte non trouvée' });
 
     const theme = db.prepare('SELECT theme FROM merchant_preferences WHERE merchant_id = ?')
       .get(merchantId)?.theme || 'teal';
@@ -749,10 +768,12 @@ router.get('/cards-hidden', authenticateClient, (req, res) => {
   try {
     const cards = db.prepare(`
       SELECT mc.merchant_id, mc.points_balance, mc.visit_count, mc.last_visit,
+             mc.local_email, mc.local_phone,
              m.business_name, m.business_type, m.loyalty_mode
       FROM merchant_clients mc
       JOIN merchants m ON mc.merchant_id = m.id
       WHERE mc.end_user_id = ? AND mc.is_hidden = 1 AND m.status = 'active'
+        AND (mc.local_email IS NULL OR mc.local_email != '')
       ORDER BY mc.last_visit DESC
     `).all(req.endUserId);
 
