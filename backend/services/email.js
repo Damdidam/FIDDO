@@ -572,6 +572,61 @@ function sendMergeNotificationEmail(clientEmail, merchantName, mergedIdentifiers
   });
 }
 
+/**
+ * Merge request notification — sent to super admin when merchant requests a merge
+ */
+function sendMergeRequestEmail(adminEmail, { merchantName, staffName, staffRole, target, source, reason }) {
+  sendMail({
+    to: adminEmail,
+    subject: `Demande de fusion — ${merchantName}`,
+    html: template(`
+      ${heading('Demande de fusion de clients')}
+      <p><strong>${escHtml(staffName)}</strong> (${escHtml(staffRole)}) chez <strong>${escHtml(merchantName)}</strong> demande la fusion de deux clients.</p>
+
+      <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;border-radius:8px;overflow:hidden;border:1px solid ${B.border};">
+        <thead>
+          <tr style="background:${B.navy};color:white;">
+            <th style="padding:10px 12px;text-align:left;font-size:12px;"></th>
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Client à conserver</th>
+            <th style="padding:10px 12px;text-align:left;font-size:12px;">Client à absorber</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">Nom</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(target.name || '—')}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(source.name || '—')}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">Email</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(target.email || '—')}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(source.email || '—')}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">Téléphone</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(target.phone || '—')}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${escHtml(source.phone || '—')}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-weight:600;font-size:13px;">Points</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${target.points}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid ${B.border};font-size:13px;">${source.points}</td>
+          </tr>
+          <tr>
+            <td style="padding:8px 12px;font-weight:600;font-size:13px;">Visites</td>
+            <td style="padding:8px 12px;font-size:13px;">${target.visits}</td>
+            <td style="padding:8px 12px;font-size:13px;">${source.visits}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      ${reason ? `<p style="font-size:13px;"><strong>Raison :</strong> ${escHtml(reason)}</p>` : ''}
+
+      <p style="font-size:13px;color:${B.light};">Connectez-vous au panel super admin pour traiter cette demande.</p>
+    `),
+  });
+}
+
 module.exports = {
   sendMail,
   escHtml,
@@ -590,5 +645,6 @@ module.exports = {
   sendAccountDeletedEmail,
   sendEmailAddedEmail,
   sendMergeNotificationEmail,
+  sendMergeRequestEmail,
   verifyUnsubToken,
 };
