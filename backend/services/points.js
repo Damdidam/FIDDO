@@ -173,20 +173,7 @@ function creditPoints({
 
     const { merchantClient, isNew: isNewRelation } = findOrCreateMerchantClient(merchantId, endUser.id);
 
-    // Check local overrides: if the identifier used for lookup is locally hidden, reject
-    if (!isNewRelation) {
-      const usedEmail = normalizeEmail(email);
-      const usedPhone = normalizePhone(phone);
-      // If merchant credits with a previously dissociated identifier, re-associate it
-      if (usedEmail && merchantClient.local_email === '') {
-        db.prepare("UPDATE merchant_clients SET local_email = NULL, updated_at = datetime('now') WHERE id = ?").run(merchantClient.id);
-        console.log('[CREDIT] Re-associated email for mc #' + merchantClient.id);
-      }
-      if (usedPhone && merchantClient.local_phone === '') {
-        db.prepare("UPDATE merchant_clients SET local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(merchantClient.id);
-        console.log('[CREDIT] Re-associated phone for mc #' + merchantClient.id);
-      }
-    }
+    // (local_email/local_phone overrides removed — merchant can no longer dissociate identifiers)
 
     if (merchantClient.is_blocked) {
       throw new Error('Ce client est bloqué dans votre commerce');
