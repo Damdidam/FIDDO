@@ -177,11 +177,14 @@ function creditPoints({
     if (!isNewRelation) {
       const usedEmail = normalizeEmail(email);
       const usedPhone = normalizePhone(phone);
-      if (usedEmail && !usedPhone && merchantClient.local_email === '') {
-        throw new Error('Cet email a été dissocié de ce client dans votre commerce');
+      // If merchant credits with a previously dissociated identifier, re-associate it
+      if (usedEmail && merchantClient.local_email === '') {
+        db.prepare("UPDATE merchant_clients SET local_email = NULL, updated_at = datetime('now') WHERE id = ?").run(merchantClient.id);
+        console.log('[CREDIT] Re-associated email for mc #' + merchantClient.id);
       }
-      if (usedPhone && !usedEmail && merchantClient.local_phone === '') {
-        throw new Error('Ce téléphone a été dissocié de ce client dans votre commerce');
+      if (usedPhone && merchantClient.local_phone === '') {
+        db.prepare("UPDATE merchant_clients SET local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(merchantClient.id);
+        console.log('[CREDIT] Re-associated phone for mc #' + merchantClient.id);
       }
     }
 
