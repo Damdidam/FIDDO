@@ -712,6 +712,7 @@
  const email = document.getElementById('edit-email').value.trim();
  const phone = document.getElementById('edit-phone').value.trim();
  if (!email && !phone) { UI.showAlert('edit-alert', 'Email ou téléphone requis', 'error'); return; }
+      if (email && !/^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/i.test(email)) { UI.showAlert('edit-alert', 'Adresse email invalide', 'error'); return; }
  const body = { name: name || null, email: email || null, phone: phone || null };
  if (mergeConfirmed) body.confirmMerge = true;
 
