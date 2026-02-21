@@ -317,52 +317,22 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
       return res.status(403).json({ error: 'Seul le propriétaire peut modifier l\'email ou le téléphone (impact multi-commerce)' });
     }
 
-    // ── Count other merchants (used for removal strategy + response) ──
+    // ── Count other merchants (used for response warning) ──
     const otherMerchantCount = db.prepare(
       'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
     ).get(mc.end_user_id, merchantId).count;
 
-    // ═══ STEP 1: Handle identifier removals ═══
+    // ═══ STEP 1: Handle identifier removals (ALWAYS local — never touch end_users) ═══
+    // end_users is the user's identity → belongs to THEM, not the merchant.
+    // Merchant can only hide it locally via local_email/local_phone = ''
 
-    if (emailRemoving || phoneRemoving) {
-      if (otherMerchantCount === 0) {
-        // ── Single merchant: remove globally from end_users ──
-        const keepEmail = emailRemoving ? null : endUser.email;
-        const keepPhone = phoneRemoving ? null : endUser.phone;
-        const keepEmailLower = emailRemoving ? null : endUser.email_lower;
-        const keepPhoneE164 = phoneRemoving ? null : endUser.phone_e164;
-        const keepCanonical = keepEmailLower ? canonicalizeEmail(keepEmailLower) : null;
-
-        endUserQueries.updateIdentifiers.run(
-          keepEmail, keepPhone, keepEmailLower, keepPhoneE164,
-          keepEmailLower ? endUser.email_validated : 0,
-          keepCanonical, endUser.id
-        );
-
-        // Clean aliases for removed identifiers
-        if (emailRemoving && endUser.email_lower) {
-          aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.email_lower);
-        }
-        if (phoneRemoving && endUser.phone_e164) {
-          aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.phone_e164);
-        }
-
-        // Reset local overrides (global is now clean)
-        if (emailRemoving) db.prepare("UPDATE merchant_clients SET local_email = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
-        if (phoneRemoving) db.prepare("UPDATE merchant_clients SET local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
-
-        console.log('[EDIT] Single-merchant global removal:', { emailRemoving, phoneRemoving, endUserId: endUser.id });
-      } else {
-        // ── Multi-merchant: local override only (other merchants keep seeing the identifier) ──
-        if (emailRemoving) {
-          db.prepare("UPDATE merchant_clients SET local_email = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
-        }
-        if (phoneRemoving) {
-          db.prepare("UPDATE merchant_clients SET local_phone = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
-        }
-
-        console.log('[EDIT] Multi-merchant local removal:', { emailRemoving, phoneRemoving, otherMerchantCount });
-      }
+    if (emailRemoving) {
+      db.prepare("UPDATE merchant_clients SET local_email = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
+      console.log('[EDIT] Local email removal for mc #' + mcId);
+    }
+    if (phoneRemoving) {
+      db.prepare("UPDATE merchant_clients SET local_phone = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
+      console.log('[EDIT] Local phone removal for mc #' + mcId);
     }
 
     // ═══ STEP 2: Handle GLOBAL adds/changes (if any) ═══
@@ -496,16 +466,18 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
         db.prepare("UPDATE merchant_clients SET local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
       }
 
-      // Email-added flow
+      // Email-added flow (skip welcome email if merge — merge notification covers it)
       if (emailAdded) {
         db.prepare("UPDATE end_users SET consent_date = datetime('now'), consent_method = 'merchant_edit', updated_at = datetime('now') WHERE id = ?").run(freshEndUser.id);
         const magicToken = require('crypto').randomBytes(32).toString('hex');
         const expires = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
         endUserQueries.setMagicToken.run(magicToken, expires, freshEndUser.id);
         const magicUrl = (process.env.BASE_URL || 'https://www.fiddo.be') + '/me/verify/' + magicToken;
-        const merchant = merchantQueries.findById.get(merchantId);
-        const freshMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
-        sendEmailAddedEmail(newGlobalEmail, merchant.business_name, freshMc.points_balance || 0, freshMc.visit_count || 0, magicUrl, freshEndUser.id);
+        if (!(confirmMerge && conflicts.length > 0)) {
+          const merchant = merchantQueries.findById.get(merchantId);
+          const freshMc = merchantClientQueries.findByIdAndMerchant.get(mcId, merchantId);
+          sendEmailAddedEmail(newGlobalEmail, merchant.business_name, freshMc.points_balance || 0, freshMc.visit_count || 0, magicUrl, freshEndUser.id);
+        }
       }
 
       // Send merge notification email to the client (if merge happened and client has email)
