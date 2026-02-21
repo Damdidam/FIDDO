@@ -474,11 +474,13 @@ const App = (() => {
  loadProfile();
  const newCards = res.data.cards || [];
 
- // Detect points changes for animation
+ // Detect points changes for animation (only if credit < 30s ago)
+ const ANIM_FRESHNESS_MS = 30 * 1000;
  for (const card of newCards) {
  const prev = previousCardStates[card.merchantId];
+ const isFresh = card.lastVisit && (Date.now() - new Date(card.lastVisit + 'Z').getTime()) < ANIM_FRESHNESS_MS;
  if (prev) {
- if (card.pointsBalance > prev.points) {
+ if (card.pointsBalance > prev.points && isFresh) {
  const diff = card.pointsBalance - prev.points;
  animating = true;
  saveCardStates(newCards);
@@ -492,7 +494,7 @@ const App = (() => {
  }, 300);
  refreshing = false;
  return;
- } else if (card.canRedeem && !prev.canRedeem) {
+ } else if (card.canRedeem && !prev.canRedeem && isFresh) {
  animating = true;
  saveCardStates(newCards);
  cards = newCards;
@@ -506,7 +508,7 @@ const App = (() => {
  refreshing = false;
  return;
  }
- } else if (card.pointsBalance > 0) {
+ } else if (card.pointsBalance > 0 && isFresh) {
  // Card was hidden and just reappeared after a credit
  animating = true;
  saveCardStates(newCards);
