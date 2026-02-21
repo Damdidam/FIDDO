@@ -16,8 +16,9 @@ function normalizeEmail(email) {
   if (!email || typeof email !== 'string') return null;
   const trimmed = email.trim().toLowerCase();
   if (!trimmed) return null;
-  // Basic format check
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return null;
+  // Strict format: local part allows letters, digits, dots, hyphens, underscores, plus
+  // Domain allows letters, digits, dots, hyphens
+  if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/.test(trimmed)) return null;
   return trimmed;
 }
 
@@ -72,7 +73,7 @@ function normalizePhone(phone, defaultCountryCode = '+32') {
  */
 function isValidEmail(email) {
   if (!email || typeof email !== 'string') return false;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  return /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/.test(email.trim());
 }
 
 /**
