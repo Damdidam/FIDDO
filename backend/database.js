@@ -235,6 +235,38 @@ function initDatabase() {
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN custom_reward TEXT'); } catch (e) { /* already exists */ }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_email TEXT'); console.log('  ✅ local_email column added'); } catch (e) { console.log('  ℹ️  local_email column exists'); }
   try { db.exec('ALTER TABLE merchant_clients ADD COLUMN local_phone TEXT'); console.log('  ✅ local_phone column added'); } catch (e) { console.log('  ℹ️  local_phone column exists'); }
+
+  // One-time cleanup: if local_email='' or local_phone='' on single-merchant clients,
+  // convert to global removal (the correct behavior)
+  try {
+    const staleOverrides = db.prepare(`
+      SELECT mc.id as mc_id, mc.end_user_id, mc.merchant_id, mc.local_email, mc.local_phone,
+             eu.email_lower, eu.phone_e164,
+             (SELECT COUNT(*) FROM merchant_clients mc2 WHERE mc2.end_user_id = mc.end_user_id AND mc2.merchant_id != mc.merchant_id) as other_merchants
+      FROM merchant_clients mc
+      JOIN end_users eu ON eu.id = mc.end_user_id
+      WHERE (mc.local_email = '' OR mc.local_phone = '')
+    `).all();
+
+    for (const row of staleOverrides) {
+      if (row.other_merchants === 0) {
+        // Single-merchant: convert local hide → global removal
+        if (row.local_email === '' && row.email_lower) {
+          db.prepare("UPDATE end_users SET email = NULL, email_lower = NULL, email_canonical = NULL, email_validated = 0, updated_at = datetime('now') WHERE id = ?").run(row.end_user_id);
+          db.prepare('DELETE FROM end_user_aliases WHERE end_user_id = ? AND alias_value = ?').run(row.end_user_id, row.email_lower);
+          console.log(`  🧹 Cleaned global email for end_user #${row.end_user_id}`);
+        }
+        if (row.local_phone === '' && row.phone_e164) {
+          db.prepare("UPDATE end_users SET phone = NULL, phone_e164 = NULL, updated_at = datetime('now') WHERE id = ?").run(row.end_user_id);
+          db.prepare('DELETE FROM end_user_aliases WHERE end_user_id = ? AND alias_value = ?').run(row.end_user_id, row.phone_e164);
+          console.log(`  🧹 Cleaned global phone for end_user #${row.end_user_id}`);
+        }
+        // Reset local overrides (no longer needed, global is clean)
+        db.prepare("UPDATE merchant_clients SET local_email = NULL, local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(row.mc_id);
+      }
+    }
+    if (staleOverrides.length > 0) console.log(`  🧹 Migrated ${staleOverrides.length} stale local override(s)`);
+  } catch (e) { console.error('  ⚠️  Override cleanup error:', e.message); }
   try { db.exec('ALTER TABLE merchants ADD COLUMN qr_token TEXT'); } catch (e) { /* already exists */ }
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS ux_merchants_qr_token ON merchants(qr_token)');
   try { db.exec('ALTER TABLE end_users ADD COLUMN magic_token TEXT'); } catch (e) { /* already exists */ }
