@@ -1055,7 +1055,11 @@
  }
  return;
  }
- if (!isVisitsMode && (!amount || amount <= 0)) {
+ if (email && !/^[a-z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/i.test(email)) {
+      markFieldError('client-email', 'Adresse email invalide');
+      return;
+    }
+    if (!isVisitsMode && (!amount || amount <= 0)) {
  markFieldError('amount', 'Indiquez le montant de l\'achat');
  return;
  }
