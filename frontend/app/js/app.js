@@ -421,8 +421,8 @@ const App = (() => {
  });
 
  list.innerHTML = filtered.map(c => {
- const theme = c.theme || 'navy';
- const color = THEMES[theme] || THEMES.navy;
+ const theme = c.canRedeem ? 'amber' : 'teal';
+ const color = THEMES[theme];
  const left = Math.max(c.pointsForReward - c.pointsBalance, 0);
  const pct = Math.min(c.progress || 0, 100);
  const date = c.lastVisit ? relDate(c.lastVisit) : '';
@@ -430,7 +430,7 @@ const App = (() => {
  const isFav = c.isFavorite;
 
  return `
- <div class="loyalty-card theme-${theme}" onclick="App.openCard(${c.merchantId})">
+ <div class="loyalty-card theme-${theme}${c.canRedeem ? ' reward-ready' : ''}" onclick="App.openCard(${c.merchantId})">
  ${isFav ? '<div class="lc-fav"><span class="material-symbols-rounded">star</span></div>' : ''}
  <div class="lc-head">
  <div class="lc-icon"><span class="material-symbols-rounded">${biz.icon}</span></div>
@@ -659,11 +659,11 @@ const App = (() => {
  const { card, merchant } = res.data;
  currentCard = card;
  currentMerchant = merchant;
- const theme = merchant.theme || 'navy';
- const color = THEMES[theme] || THEMES.navy;
+ const theme = card.canRedeem ? 'amber' : 'teal';
+ const color = THEMES[theme];
  const biz = BIZ_TYPES[merchant.businessType || 'autre'] || BIZ_TYPES.autre;
 
- document.getElementById('card-hero').className = 'card-hero theme-' + theme;
+ document.getElementById('card-hero').className = 'card-hero theme-' + (card.canRedeem ? 'amber reward-ready' : 'teal');
  document.getElementById('cd-name').textContent = merchant.name;
  document.getElementById('cd-type').textContent = biz.label;
  document.getElementById('cd-pts').textContent = card.pointsBalance;
