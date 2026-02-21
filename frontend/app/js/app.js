@@ -182,7 +182,7 @@ const App = (() => {
  async function handleLogin() {
  const input = document.getElementById('login-email');
  const email = input.value.trim().toLowerCase();
- if (!email || !email.includes('@')) { toast('Email invalide'); return; }
+ if (!email || !/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/.test(email)) { toast('Email invalide'); return; }
 
  const btn = document.getElementById('btn-login');
  btn.classList.add('loading');
@@ -975,7 +975,7 @@ const App = (() => {
 
  async function saveEmail() {
  const email = document.getElementById('edit-email').value.trim().toLowerCase();
- if (!email || !email.includes('@')) { toast('Email invalide'); return; }
+ if (!email || !/^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*\.[a-z]{2,}$/.test(email)) { toast('Email invalide'); return; }
  const res = await API.updateEmail(email);
  if (res.ok) { client.email = email; loadProfile(); closeModal(); toast('Email mis à jour'); }
  else toast(res.data?.error || 'Erreur');
