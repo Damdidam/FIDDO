@@ -471,6 +471,7 @@ const App = (() => {
  const res = await API.getCards();
  if (res.ok) {
  client = res.data.client || client;
+ loadProfile();
  const newCards = res.data.cards || [];
 
  // Detect points changes for animation
