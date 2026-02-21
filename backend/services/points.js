@@ -173,6 +173,18 @@ function creditPoints({
 
     const { merchantClient, isNew: isNewRelation } = findOrCreateMerchantClient(merchantId, endUser.id);
 
+    // Check local overrides: if the identifier used for lookup is locally hidden, reject
+    if (!isNewRelation) {
+      const usedEmail = normalizeEmail(email);
+      const usedPhone = normalizePhone(phone);
+      if (usedEmail && !usedPhone && merchantClient.local_email === '') {
+        throw new Error('Cet email a été dissocié de ce client dans votre commerce');
+      }
+      if (usedPhone && !usedEmail && merchantClient.local_phone === '') {
+        throw new Error('Ce téléphone a été dissocié de ce client dans votre commerce');
+      }
+    }
+
     if (merchantClient.is_blocked) {
       throw new Error('Ce client est bloqué dans votre commerce');
     }
