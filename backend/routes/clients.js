@@ -317,12 +317,52 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
       return res.status(403).json({ error: 'Seul le propriétaire peut modifier l\'email ou le téléphone (impact multi-commerce)' });
     }
 
-    // ═══ STEP 1: Handle LOCAL removals (no cross-merchant impact) ═══
-    if (emailRemoving) {
-      db.prepare("UPDATE merchant_clients SET local_email = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
-    }
-    if (phoneRemoving) {
-      db.prepare("UPDATE merchant_clients SET local_phone = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
+    // ── Count other merchants (used for removal strategy + response) ──
+    const otherMerchantCount = db.prepare(
+      'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
+    ).get(mc.end_user_id, merchantId).count;
+
+    // ═══ STEP 1: Handle identifier removals ═══
+
+    if (emailRemoving || phoneRemoving) {
+      if (otherMerchantCount === 0) {
+        // ── Single merchant: remove globally from end_users ──
+        const keepEmail = emailRemoving ? null : endUser.email;
+        const keepPhone = phoneRemoving ? null : endUser.phone;
+        const keepEmailLower = emailRemoving ? null : endUser.email_lower;
+        const keepPhoneE164 = phoneRemoving ? null : endUser.phone_e164;
+        const keepCanonical = keepEmailLower ? canonicalizeEmail(keepEmailLower) : null;
+
+        endUserQueries.updateIdentifiers.run(
+          keepEmail, keepPhone, keepEmailLower, keepPhoneE164,
+          keepEmailLower ? endUser.email_validated : 0,
+          keepCanonical, endUser.id
+        );
+
+        // Clean aliases for removed identifiers
+        if (emailRemoving && endUser.email_lower) {
+          aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.email_lower);
+        }
+        if (phoneRemoving && endUser.phone_e164) {
+          aliasQueries.deleteByUserAndValue.run(endUser.id, endUser.phone_e164);
+        }
+
+        // Reset local overrides (global is now clean)
+        if (emailRemoving) db.prepare("UPDATE merchant_clients SET local_email = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
+        if (phoneRemoving) db.prepare("UPDATE merchant_clients SET local_phone = NULL, updated_at = datetime('now') WHERE id = ?").run(mcId);
+
+        console.log('[EDIT] Single-merchant global removal:', { emailRemoving, phoneRemoving, endUserId: endUser.id });
+      } else {
+        // ── Multi-merchant: local override only (other merchants keep seeing the identifier) ──
+        if (emailRemoving) {
+          db.prepare("UPDATE merchant_clients SET local_email = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
+        }
+        if (phoneRemoving) {
+          db.prepare("UPDATE merchant_clients SET local_phone = '', updated_at = datetime('now') WHERE id = ?").run(mcId);
+        }
+
+        console.log('[EDIT] Multi-merchant local removal:', { emailRemoving, phoneRemoving, otherMerchantCount });
+      }
     }
 
     // ═══ STEP 2: Handle GLOBAL adds/changes (if any) ═══
@@ -500,10 +540,6 @@ router.put('/:id/edit', requireRole('owner', 'manager'), (req, res) => {
     // Compute what merchant now sees
     const finalVisibleEmail = (finalMc.local_email == null) ? finalEndUser.email : (finalMc.local_email === '' ? null : finalMc.local_email);
     const finalVisiblePhone = (finalMc.local_phone == null) ? finalEndUser.phone : (finalMc.local_phone === '' ? null : finalMc.local_phone);
-
-    const otherMerchantCount = db.prepare(
-      'SELECT COUNT(*) as count FROM merchant_clients WHERE end_user_id = ? AND merchant_id != ?'
-    ).get(mc.end_user_id, merchantId).count;
 
     logAudit({ ...auditCtx(req), actorType: 'staff', actorId: req.staff.id, merchantId, action: 'client_edited', targetType: 'end_user', targetId: endUser.id,
       details: { name: finalEndUser.name, email: finalVisibleEmail, phone: finalVisiblePhone,
