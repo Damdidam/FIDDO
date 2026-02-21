@@ -42,6 +42,11 @@ function findOrCreateEndUser({ email, phone, name, pinHash = null }) {
   }
 
   if (endUser) {
+    // Update name if merchant provides one (merchant is face-to-face with client)
+    if (name && name.trim() && name.trim() !== endUser.name) {
+      db.prepare("UPDATE end_users SET name = ?, updated_at = datetime('now') WHERE id = ?").run(name.trim(), endUser.id);
+      endUser = endUserQueries.findById.get(endUser.id);
+    }
     return { endUser, isNew: false };
   }
 
