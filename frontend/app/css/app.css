@@ -184,10 +184,7 @@ a{text-decoration:none;cursor:pointer}
 .theme-slate{background:linear-gradient(135deg,#1e293b,#475569)}
 
 /* ── Reward-ready card premium effect ── */
-.loyalty-card.reward-ready{box-shadow:0 0 0 2px rgba(251,191,36,.6),0 4px 20px rgba(251,191,36,.2);position:relative}
-.loyalty-card.reward-ready::after{content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);animation:rewardShimmer 3s ease-in-out infinite;z-index:1;pointer-events:none}
-@keyframes rewardShimmer{0%{left:-100%}40%,100%{left:200%}}
-.loyalty-card.reward-ready .lc-prog-fill{background:linear-gradient(90deg,#FCD34D,#FBBF24,#F59E0B)}
+.loyalty-card.reward-ready{background:linear-gradient(135deg,#92400e,#d97706)!important}
 .lc-starburst{position:relative;z-index:3;background:rgba(251,191,36,.9);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(251,191,36,.4);animation:starPulse 2s ease-in-out infinite;margin-left:8px;flex-shrink:0;align-self:center}
 .lc-starburst svg{width:14px;height:14px;fill:#fff}
 @keyframes starPulse{0%,100%{transform:scale(1);box-shadow:0 2px 8px rgba(251,191,36,.4)}50%{transform:scale(1.08);box-shadow:0 2px 14px rgba(251,191,36,.55)}}
@@ -209,6 +206,7 @@ a{text-decoration:none;cursor:pointer}
  CARD DETAIL
  ═══════════════════════════════════════════════ */
 .card-hero{padding:calc(var(--sat) + 12px) 24px 28px;border-radius:0 0 var(--r-xl) var(--r-xl);color:#fff;position:relative;overflow:hidden}
+.card-hero.reward-ready{background:linear-gradient(135deg,#92400e,#d97706)!important}
 .card-hero::before{content:'';position:absolute;top:-60%;right:-30%;width:300px;height:300px;background:radial-gradient(circle,rgba(255,255,255,.1),transparent 70%);border-radius:50%}
 .card-hero-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;position:relative;z-index:1}
 .btn-back,.btn-fav{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;color:#fff;transition:background .2s}
